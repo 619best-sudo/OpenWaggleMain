@@ -1,0 +1,478 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@theme {
+  /* Surfaces */
+  --color-bg: #141619;
+  --color-bg-secondary: #1a1d22;
+  --color-bg-tertiary: #1f232a;
+  --color-bg-hover: #262b33;
+  --color-bg-active: #1d1a10;
+
+  /* Borders */
+  --color-border: #1e2229;
+  --color-border-light: #2a3240;
+
+  /* Text hierarchy */
+  --color-text-primary: #e7e9ee;
+  --color-text-secondary: #c9cdd6;
+  --color-text-tertiary: #9098a8;
+  --color-text-muted: #666f7d;
+
+  /* Semantic + brand */
+  --color-accent: #f5a623;
+  --color-accent-dim: #b87410;
+  --color-success: #4caf72;
+  --color-error: #ef4444;
+  --color-warning: #f5a623;
+  --color-info: #61a8ff;
+
+  /* Design-specific tokens */
+  --color-input-card-border: #2a2f3a;
+  --color-button-border: #252c36;
+  --color-diff-card-bg: #0f1115;
+  --color-diff-card-border: #252018;
+  --color-link-yellow: #ffd166;
+  --color-thinking-text: #808080;
+  --radius-panel: 22px;
+
+  /* Diff panel */
+  --color-diff-bg: #0d0f12;
+  --color-diff-file-bg: #141922;
+  --color-diff-file-border: #343d4d;
+  --color-diff-header-bg: #111418;
+  --color-diff-add-bg: #0d2e1a;
+  --color-diff-remove-bg: #2d1214;
+  --color-diff-add-text: #ffd166;
+  --color-diff-add-mark: #f5a623;
+  --color-diff-remove-text: #ef4444;
+  --color-diff-remove-num: #ef444466;
+  --color-diff-add-num: #f5a62366;
+  --color-diff-context-text: #c9cdd6;
+  --color-diff-highlight-bg: #17130a;
+  --color-diff-stage-bg: #1a2e1a;
+
+  /* Typography */
+  --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
+  --font-sans:
+    Poppins, Inter, "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: #0d0f12;
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.45;
+    letter-spacing: 0.006em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body.right-sidebar-resizing {
+    cursor: col-resize;
+    user-select: none;
+  }
+
+  /* Drag region for titlebar */
+  .drag-region {
+    -webkit-app-region: drag;
+    user-select: none;
+  }
+
+  .no-drag {
+    -webkit-app-region: no-drag;
+  }
+
+  /* Scrollbar — thin and subtle globally (Chromium/Electron only) */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-text-muted) 45%, transparent);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--color-text-secondary) 50%, transparent);
+  }
+
+  /* Chat scroll — auto-hide scrollbar */
+  .chat-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .chat-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .chat-scroll::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+  }
+  .chat-scroll.is-scrolling::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-text-muted) 45%, transparent);
+  }
+  .chat-scroll.is-scrolling::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--color-text-secondary) 50%, transparent);
+  }
+
+  /* Diff scroll — thinner than global scrollbars */
+  .diff-scroll::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .diff-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .diff-scroll::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-text-muted) 55%, transparent);
+    border-radius: 999px;
+  }
+  .diff-scroll::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--color-text-secondary) 45%, transparent);
+  }
+
+  /* Selection */
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, #9aa3b2 76%, transparent),
+      0 0 0 3px color-mix(in srgb, #9aa3b2 15%, transparent);
+  }
+
+  .model-selector-search-input:focus,
+  .model-selector-search-input:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Code blocks */
+  pre code {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  /* Markdown prose */
+  .prose {
+    color: var(--color-text-primary);
+    line-height: 1.65;
+    font-size: 14px;
+  }
+
+  .prose p {
+    margin-bottom: 0.72em;
+  }
+  .prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Inline code */
+  .prose code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: color-mix(in srgb, var(--color-bg-tertiary) 84%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+    padding: 0.15em 0.4em;
+    border-radius: 6px;
+    color: var(--color-text-secondary);
+  }
+
+  /* Code blocks */
+  .prose pre {
+    background: var(--color-bg-secondary);
+    border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+    border-radius: 12px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    padding: 1em;
+    overflow-x: auto;
+    margin: 0.75em 0;
+  }
+  .prose pre code {
+    background: none;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    color: inherit;
+  }
+
+  /* Lists */
+  .prose ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+    margin-bottom: 0.75em;
+  }
+  .prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+    margin-bottom: 0.75em;
+  }
+  .prose ul ul {
+    list-style-type: circle;
+  }
+  .prose ul ul ul {
+    list-style-type: square;
+  }
+  .prose ol ol {
+    list-style-type: lower-alpha;
+  }
+  .prose li {
+    margin-bottom: 0.25em;
+  }
+  .prose li > ul,
+  .prose li > ol {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+  }
+
+  /* Task list checkboxes (GFM) */
+  .prose ul:has(> li > input[type="checkbox"]) {
+    list-style-type: none;
+    padding-left: 0.5em;
+  }
+  .prose li > input[type="checkbox"] {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--color-text-muted);
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-right: 0.5em;
+    position: relative;
+    top: -1px;
+    cursor: default;
+  }
+  .prose li > input[type="checkbox"]:checked {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .prose li > input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 0px;
+    width: 5px;
+    height: 9px;
+    border: solid var(--color-bg);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  /* Links */
+  .prose a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+  .prose a:hover {
+    text-decoration: underline;
+  }
+
+  /* Headings */
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4 {
+    font-weight: 600;
+    margin: 1.15em 0 0.48em;
+    letter-spacing: -0.008em;
+  }
+  .prose h1 {
+    font-size: 1.4em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  }
+  .prose h2 {
+    font-size: 1.2em;
+  }
+  .prose h3 {
+    font-size: 1.05em;
+    color: var(--color-text-secondary);
+  }
+  .prose h4 {
+    font-size: 1em;
+    color: var(--color-text-secondary);
+  }
+
+  /* Emphasis */
+  .prose strong {
+    font-weight: 650;
+    color: var(--color-text-primary);
+  }
+  .prose em {
+    font-style: italic;
+    color: var(--color-text-secondary);
+  }
+
+  /* Horizontal rule */
+  .prose hr {
+    border: none;
+    height: 1px;
+    background: color-mix(in srgb, var(--color-border-light) 70%, transparent);
+    margin: 1.5em 0;
+  }
+
+  /* Blockquote */
+  .prose blockquote {
+    border-left: 3px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-border-light));
+    padding: 0.5em 1em;
+    background: color-mix(in srgb, var(--color-bg-secondary) 50%, transparent);
+    border-radius: 0 6px 6px 0;
+    color: var(--color-text-secondary);
+    margin: 0.75em 0;
+  }
+
+  /* Tables */
+  .prose table {
+    border-collapse: collapse;
+    margin: 0.75em 0;
+    width: 100%;
+  }
+  .prose th,
+  .prose td {
+    border: 1px solid var(--color-border);
+    padding: 0.5em 0.75em;
+    text-align: left;
+  }
+  .prose th {
+    background: var(--color-bg-tertiary);
+    font-weight: 600;
+    font-size: 0.875em;
+    color: var(--color-text-secondary);
+  }
+  .prose tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--color-bg-tertiary) 40%, transparent);
+  }
+
+  /* Spacing refinement between element types */
+  .prose > * + h1,
+  .prose > * + h2,
+  .prose > * + h3 {
+    margin-top: 1.5em;
+  }
+  .prose pre + p,
+  .prose p + pre {
+    margin-top: 0.85em;
+  }
+
+  /* User bubble compact modifier — must appear after .prose rules (overrides via source order) */
+  .prose-user {
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .prose-user p {
+    margin-bottom: 0.5em;
+  }
+  .prose-user p:last-child {
+    margin-bottom: 0;
+  }
+  .prose-user pre {
+    margin: 0.5em 0;
+    padding: 0.75em;
+    border-radius: 8px;
+  }
+  .prose-user h1,
+  .prose-user h2,
+  .prose-user h3,
+  .prose-user h4 {
+    margin: 0.75em 0 0.35em;
+  }
+  .prose-user h1 {
+    font-size: 1.15em;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .prose-user h2 {
+    font-size: 1.075em;
+  }
+  .prose-user h3 {
+    font-size: 1em;
+  }
+  .prose-user ul,
+  .prose-user ol {
+    margin-bottom: 0.5em;
+  }
+  .prose-user blockquote {
+    margin: 0.5em 0;
+  }
+
+  .prose-thinking,
+  .prose-thinking p,
+  .prose-thinking li,
+  .prose-thinking ol,
+  .prose-thinking ul,
+  .prose-thinking blockquote,
+  .prose-thinking strong,
+  .prose-thinking em,
+  .prose-thinking code,
+  .prose-thinking pre,
+  .prose-thinking a,
+  .prose-thinking h1,
+  .prose-thinking h2,
+  .prose-thinking h3,
+  .prose-thinking h4,
+  .prose-thinking th,
+  .prose-thinking td {
+    color: var(--color-thinking-text);
+  }
+
+  .prose-thinking blockquote {
+    border-left-color: color-mix(in srgb, var(--color-thinking-text) 55%, transparent);
+  }
+}
+
+@layer components {
+  @keyframes session-tree-row-enter {
+    from {
+      opacity: 0;
+      transform: translateY(3px) scale(0.995);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .session-tree-row-enter {
+    animation: session-tree-row-enter 140ms ease-out both;
+  }
+
+  .session-tree-active-dot {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--color-accent) 16%, transparent),
+      0 0 10px color-mix(in srgb, var(--color-accent) 10%, transparent);
+  }
+
+  .session-tree-node-dot:is(:hover, :focus-visible) {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent),
+      0 0 12px color-mix(in srgb, var(--color-accent) 14%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .session-tree-row-enter {
+      animation: none;
+    }
+  }
+}

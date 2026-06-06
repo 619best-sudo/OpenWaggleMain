@@ -1,0 +1,201 @@
+import { randomUUID } from 'node:crypto'
+import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import {
+  decodeUnknownOrThrow,
+  parseJsonUnknown,
+  type SchemaType,
+  safeDecodeUnknown,
+} from '@shared/schema'
+import { projectSettingsFileSchema } from '@shared/schemas/validation'
+import type { JsonObject } from '@shared/types/json'
+import type { ThinkingLevel } from '@shared/types/settings'
+import { isEnoent } from '@shared/utils/node-error'
+import { createLogger } from '../logger'
+
+const JSON_INDENT_SPACES = 2
+const OPENWAGGLE_CONFIG_DIR = '.openwaggle'
+const PROJECT_SETTINGS_FILE_NAME = 'settings.json'
+const EMPTY_SETTINGS_JSON = '{}\n'
+
+const logger = createLogger('project-config')
+
+export interface ProjectPreferences {
+  readonly model?: string
+  readonly thinkingLevel?: ThinkingLevel
+}
+
+export interface ProjectConfig {
+  readonly preferences?: ProjectPreferences
+  readonly pi?: JsonObject
+}
+
+const EMPTY_CONFIG: ProjectConfig = {}
+type ParsedProjectSettingsFile = SchemaType<typeof projectSettingsFileSchema>
+
+function getConfigDirectoryPath(projectPath: string) {
+  return join(projectPath, OPENWAGGLE_CONFIG_DIR)
+}
+
+export function getProjectSettingsPath(projectPath: string): string {
+  return join(getConfigDirectoryPath(projectPath), PROJECT_SETTINGS_FILE_NAME)
+}
+
+function getConfigTempPath(configPath: string) {
+  return `${configPath}.${randomUUID()}.tmp`
+}
+
+function parseSettingsJson(raw: string) {
+  return raw.trim().length > 0 ? parseJsonUnknown(raw) : {}
+}
+
+async function readValidatedProjectSettings(
+  filePath: string,
+  options: {
+    strict: boolean
+    logLabel: string
+  },
+) {
+  try {
+    const raw = await readFile(filePath, 'utf-8')
+    const parsedJson = parseSettingsJson(raw)
+    const validated = safeDecodeUnknown(projectSettingsFileSchema, parsedJson)
+    if (!validated.success) {
+      const message = `Invalid project settings schema: ${validated.issues.join('; ')}`
+      if (options.strict) {
+        throw new Error(message)
+      }
+      logger.warn(`Failed to validate ${options.logLabel}`, { message })
+      return null
+    }
+    return validated.data
+  } catch (error) {
+    if (isEnoent(error)) {
+      return null
+    }
+    if (options.strict) {
+      throw error
+    }
+    logger.warn(`Failed to parse ${options.logLabel}`, {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
+}
+
+export async function loadProjectConfig(projectPath: string): Promise<ProjectConfig> {
+  const settingsPath = getProjectSettingsPath(projectPath)
+
+  const settings = await readValidatedProjectSettings(settingsPath, {
+    strict: false,
+    logLabel: '.openwaggle/settings.json',
+  })
+
+  return parseProjectConfig(settings)
+}
+
+async function ensureSettingsFile(projectPath: string, configPath: string) {
+  const configDir = getConfigDirectoryPath(projectPath)
+
+  await mkdir(configDir, { recursive: true })
+
+  try {
+    await stat(configPath)
+  } catch (error) {
+    if (!isEnoent(error)) {
+      throw error
+    }
+    await writeFile(configPath, EMPTY_SETTINGS_JSON, 'utf-8')
+  }
+
+  return configPath
+}
+
+export async function ensureProjectSettingsFile(projectPath: string): Promise<string> {
+  return ensureSettingsFile(projectPath, getProjectSettingsPath(projectPath))
+}
+
+async function updateProjectSettingsFile(
+  configPath: string,
+  updater: (current: ParsedProjectSettingsFile) => ParsedProjectSettingsFile,
+) {
+  const current =
+    (await readValidatedProjectSettings(configPath, {
+      strict: true,
+      logLabel: '.openwaggle/settings.json',
+    })) ?? decodeUnknownOrThrow(projectSettingsFileSchema, {})
+  const next = decodeUnknownOrThrow(projectSettingsFileSchema, updater(current))
+
+  const serialized = `${JSON.stringify(next, null, JSON_INDENT_SPACES)}\n`
+  const tempPath = getConfigTempPath(configPath)
+
+  try {
+    await writeFile(tempPath, serialized, 'utf-8')
+    await rename(tempPath, configPath)
+  } catch (error) {
+    await rm(tempPath, { force: true }).catch(() => undefined)
+    throw error
+  }
+
+  return next
+}
+
+export async function updateProjectConfig(
+  projectPath: string,
+  updater: (current: ParsedProjectSettingsFile) => ParsedProjectSettingsFile,
+): Promise<ProjectConfig> {
+  const configPath = await ensureProjectSettingsFile(projectPath)
+  const next = await updateProjectSettingsFile(configPath, updater)
+  return parseProjectConfig(next)
+}
+
+export async function getProjectPreferences(
+  projectPath: string,
+): Promise<ProjectPreferences | undefined> {
+  const config = await loadProjectConfig(projectPath)
+  return config.preferences
+}
+
+export async function setProjectPreferences(
+  projectPath: string,
+  preferences: ProjectPreferences,
+): Promise<void> {
+  await updateProjectConfig(projectPath, (current) => ({
+    ...current,
+    preferences: {
+      ...current.preferences,
+      ...(preferences.model !== undefined ? { model: preferences.model } : {}),
+      ...(preferences.thinkingLevel !== undefined
+        ? { thinkingLevel: preferences.thinkingLevel }
+        : {}),
+    },
+  }))
+}
+
+function parseProjectConfig(settings: ParsedProjectSettingsFile | null) {
+  const preferences = parseProjectPreferences(settings)
+
+  if (!preferences && !settings?.pi) {
+    return EMPTY_CONFIG
+  }
+
+  return {
+    ...(preferences ? { preferences } : {}),
+    ...(settings?.pi ? { pi: settings.pi } : {}),
+  }
+}
+
+function parseProjectPreferences(
+  settings: ParsedProjectSettingsFile | null,
+): ProjectPreferences | undefined {
+  const model = settings?.preferences?.model
+  const thinkingLevel = settings?.preferences?.thinkingLevel
+  if (!model && !thinkingLevel) {
+    return undefined
+  }
+
+  return {
+    ...(model ? { model } : {}),
+    ...(thinkingLevel ? { thinkingLevel } : {}),
+  }
+}

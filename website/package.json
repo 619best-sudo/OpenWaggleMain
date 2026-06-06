@@ -1,0 +1,27 @@
+{
+  "name": "@openwaggle/website",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "vitest run -c vitest.config.ts"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.3.0",
+    "@astrojs/sitemap": "^3.3.1",
+    "@fontsource/inter": "^5.1.1",
+    "@fontsource/poppins": "^5.2.7",
+    "@fontsource/space-grotesk": "^5.1.1",
+    "astro": "^5.9.3",
+    "lucide-astro": "^0.469.0",
+    "rehype-external-links": "^3.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "tailwindcss": "^4.1.18",
+    "vitest": "4.1.0"
+  }
+}

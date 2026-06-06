@@ -1,0 +1,48 @@
+import { Folder } from 'lucide-react'
+import type { SidebarProjectGroups } from '../lib/sidebar-project-groups'
+import type {
+  SidebarBranchActions,
+  SidebarProjectActions,
+  SidebarProjectRenderState,
+  SidebarSessionActions,
+} from '../model'
+import { SidebarProjectGroupSection } from './SidebarProjectGroupSection'
+
+interface SidebarProjectListProps {
+  readonly sessionGroups: SidebarProjectGroups
+  readonly renderState: SidebarProjectRenderState
+  readonly displayProjectName: (path: string) => string
+  readonly projectActions: SidebarProjectActions
+  readonly sessionActions: SidebarSessionActions
+  readonly branchActions: SidebarBranchActions
+}
+
+export function SidebarProjectList({
+  sessionGroups,
+  renderState,
+  displayProjectName,
+  projectActions,
+  sessionActions,
+  branchActions,
+}: SidebarProjectListProps) {
+  if (sessionGroups.projects.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-2 px-5 py-12 text-center">
+        <Folder className="size-5 text-[#667062]" />
+        <p className="text-[13px] text-[#7a8377]">No projects yet</p>
+      </div>
+    )
+  }
+
+  return sessionGroups.projects.map((group) => (
+    <SidebarProjectGroupSection
+      key={group.projectPath}
+      group={group}
+      renderState={renderState}
+      displayProjectName={displayProjectName}
+      projectActions={projectActions}
+      sessionActions={sessionActions}
+      branchActions={branchActions}
+    />
+  ))
+}

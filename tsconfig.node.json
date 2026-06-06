@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "./out",
+    "rootDir": ".",
+    "paths": {
+      "*": ["./*"],
+      "@shared/*": ["./src/shared/*"],
+      "@openwaggle/pi-waggle": ["./packages/pi-waggle/src/index.ts"],
+      "@openwaggle/pi-waggle/*": ["./packages/pi-waggle/src/*"],
+      "@openwaggle/waggle-core": ["./packages/waggle-core/src/index.ts"],
+      "@openwaggle/waggle-core/*": ["./packages/waggle-core/src/*"]
+    }
+  },
+  "include": [
+    "src/main/**/*",
+    "src/preload/**/*",
+    "src/shared/**/*",
+    "packages/**/*.ts",
+    "e2e/support/session-fixtures.ts",
+    "scripts/**/*.ts",
+    "eslint.config.ts",
+    "electron.vite.config.ts"
+  ]
+}
