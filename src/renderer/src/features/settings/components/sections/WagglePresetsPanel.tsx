@@ -1,6 +1,5 @@
-import { generateDisplayName } from '@shared/types/llm'
 import type { WagglePreset } from '@shared/types/waggle'
-import { Plus, Save, Trash2 } from 'lucide-react'
+import { ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { AGENT_BG } from '@/features/waggle/lib'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
@@ -11,8 +10,7 @@ interface WagglePresetsPanelProps {
   isModified: boolean
   onLoadPreset: (preset: WagglePreset) => void
   onDeletePreset: (id: string) => Promise<void>
-  onSaveEdits: () => Promise<void>
-  onNewCustom: () => Promise<void>
+  onStartCreate: () => void
 }
 
 export function WagglePresetsPanel({
@@ -21,14 +19,39 @@ export function WagglePresetsPanel({
   isModified,
   onLoadPreset,
   onDeletePreset,
-  onSaveEdits,
-  onNewCustom,
+  onStartCreate,
 }: WagglePresetsPanelProps) {
   return (
     <div className="rounded-lg border border-border bg-[#111418] p-5">
-      <h3 className="text-sm font-medium text-text-secondary mb-4">Waggle Presets</h3>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h3 className="text-sm font-medium text-text-secondary">Waggles</h3>
+          <p className="max-w-[640px] text-[13px] leading-5 text-text-tertiary">
+            Browse saved setups first. Open one to edit it, or start a new Waggle from a blank
+            draft.
+          </p>
+        </div>
+        <Button
+          variant="accent"
+          size="sm"
+          type="button"
+          onClick={onStartCreate}
+          leftIcon={<Plus className="size-3.5" />}
+          className="shrink-0"
+        >
+          New Waggle
+        </Button>
+      </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="mt-5 space-y-3">
+        {presets.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center">
+            <p className="text-[13px] font-medium text-text-primary">No Waggles yet</p>
+            <p className="mt-1 text-[12px] text-text-tertiary">
+              Create your first Waggle, then return here to edit or reuse it later.
+            </p>
+          </div>
+        ) : null}
         {presets.map((preset) => (
           <WagglePresetCard
             key={preset.id}
@@ -39,30 +62,6 @@ export function WagglePresetsPanel({
             onDelete={() => onDeletePreset(preset.id)}
           />
         ))}
-      </div>
-
-      <div className="mt-3 flex gap-2">
-        {isModified && (
-          <Button
-            variant="unstyled"
-            type="button"
-            onClick={() => void onSaveEdits()}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-accent/30 bg-accent/5 p-2.5 text-[12px] font-medium text-accent hover:bg-accent/10 transition-colors"
-          >
-            <Save className="size-3" />
-            Save Changes
-          </Button>
-        )}
-
-        <Button
-          variant="unstyled"
-          type="button"
-          onClick={() => void onNewCustom()}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed border-border p-2.5 text-[12px] font-medium text-text-muted hover:border-border-light hover:text-text-secondary transition-colors"
-        >
-          <Plus className="size-3" />
-          New Custom Preset
-        </Button>
       </div>
     </div>
   )
@@ -83,66 +82,92 @@ function WagglePresetCard({
   onSelect,
   onDelete,
 }: WagglePresetCardProps) {
+  const stopLabel = preset.config.stop.primary === 'consensus' ? 'Consensus' : 'Manual stop'
+
   return (
     <Button
       variant="unstyled"
       type="button"
       className={cn(
-        'rounded-lg border p-3 cursor-pointer transition-colors text-left',
-        isActive && !isActiveModified && 'border-accent/40 bg-accent/5',
-        isActiveModified && 'border-accent/20 bg-accent/5',
-        !isActive && 'border-border bg-bg hover:border-border-light',
+        'w-full rounded-md border px-4 py-3.5 cursor-pointer text-left transition-colors',
+        isActive && !isActiveModified && 'border-accent/40 bg-white/[0.02]',
+        isActiveModified && 'border-blue-500/30 bg-white/[0.02]',
+        !isActive &&
+          'border-border bg-transparent hover:border-border-light hover:bg-white/[0.015]',
       )}
       onClick={onSelect}
     >
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[13px] font-medium text-text-primary truncate">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[14px] font-medium text-text-primary truncate">
               {preset.name}
             </span>
-            <span className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium bg-bg-tertiary text-text-muted">
-              Sequential
-            </span>
-            {!preset.isBuiltIn && (
-              <span className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium bg-accent/10 text-accent">
-                Custom
-              </span>
-            )}
-            {isActiveModified && (
-              <span className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium bg-blue-500/10 text-blue-400">
-                Edited
-              </span>
-            )}
+            <PresetBadge tone={preset.isBuiltIn ? 'muted' : 'accent'}>
+              {preset.isBuiltIn ? 'Built-in' : 'Custom'}
+            </PresetBadge>
+            {isActiveModified ? <PresetBadge tone="info">Edited</PresetBadge> : null}
           </div>
-          <p className="text-[12px] text-text-tertiary line-clamp-2">{preset.description}</p>
-          <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-text-muted">
-            <div className={cn('size-1.5 rounded-full', AGENT_BG[preset.config.agents[0].color])} />
-            <span className="truncate">{generateDisplayName(preset.config.agents[0].model)}</span>
-            <span className="text-text-tertiary">vs</span>
-            <div className={cn('size-1.5 rounded-full', AGENT_BG[preset.config.agents[1].color])} />
-            <span className="truncate">{generateDisplayName(preset.config.agents[1].model)}</span>
+          <p className="mt-1.5 text-[13px] leading-5 text-text-secondary">{preset.description}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-text-tertiary">
+            <div className="flex items-center gap-1.5">
+              <div
+                className={cn('size-1.5 rounded-full', AGENT_BG[preset.config.agents[0].color])}
+              />
+              <span>{preset.config.agents[0].label}</span>
+              <span className="text-text-muted">+</span>
+              <div
+                className={cn('size-1.5 rounded-full', AGENT_BG[preset.config.agents[1].color])}
+              />
+              <span>{preset.config.agents[1].label}</span>
+            </div>
+            <span>{stopLabel}</span>
+            <span>{preset.config.stop.maxTurnsSafety} turns max</span>
           </div>
         </div>
-        {!preset.isBuiltIn && (
-          <span
-            role="none"
-            onClick={(event) => {
-              event.stopPropagation()
-              void onDelete()
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
+        <div className="flex items-start gap-2">
+          {!preset.isBuiltIn ? (
+            <span
+              role="none"
+              onClick={(event) => {
                 event.stopPropagation()
                 void onDelete()
-              }
-            }}
-            className="p-1 rounded text-text-muted hover:text-error transition-colors cursor-pointer"
-          >
-            <Trash2 className="size-3" />
-          </span>
-        )}
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.stopPropagation()
+                  void onDelete()
+                }
+              }}
+              className="mt-0.5 rounded p-1 text-text-muted hover:text-error transition-colors cursor-pointer"
+            >
+              <Trash2 className="size-3.5" />
+            </span>
+          ) : null}
+          <ChevronRight className="mt-0.5 size-4 shrink-0 text-text-muted" />
+        </div>
       </div>
     </Button>
+  )
+}
+
+function PresetBadge({
+  children,
+  tone = 'muted',
+}: {
+  readonly children: React.ReactNode
+  readonly tone?: 'muted' | 'accent' | 'info'
+}) {
+  return (
+    <span
+      className={cn(
+        'shrink-0 rounded-sm px-1.5 py-0.5 text-[10px] font-medium',
+        tone === 'muted' && 'bg-white/[0.04] text-text-muted',
+        tone === 'accent' && 'bg-accent/8 text-accent',
+        tone === 'info' && 'bg-blue-500/10 text-blue-300',
+      )}
+    >
+      {children}
+    </span>
   )
 }

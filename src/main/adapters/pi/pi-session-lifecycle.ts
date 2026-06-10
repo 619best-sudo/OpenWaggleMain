@@ -47,7 +47,8 @@ export async function createOpenWaggleAgentSessionFromServices(
             sessionId: debugSessionId,
             runId: 'pre-fix',
             hypothesisId: 'B',
-            location: 'src/main/adapters/pi/pi-session-lifecycle.ts:createOpenWaggleAgentSessionFromServices',
+            location:
+              'src/main/adapters/pi/pi-session-lifecycle.ts:createOpenWaggleAgentSessionFromServices',
             msg: '[DEBUG] Bound Pi session extensions',
             data: {
               sessionId: result.session.sessionId,

@@ -96,7 +96,7 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
         return (
           <div
             key={getChatRowKey(row)}
-            className="mx-auto w-full max-w-[720px] px-12 pb-6"
+            className="mx-auto w-full max-w-[720px] px-5 pb-6"
             {...(isUserMessage ? { 'data-user-message-id': row.message.id } : {})}
             style={index === 0 ? { paddingTop: PADDING_TOP } : undefined}
           >

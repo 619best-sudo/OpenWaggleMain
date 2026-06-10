@@ -28,6 +28,7 @@ import type {
   AgentsInstructionStatus,
   AgentsResolutionResult,
   SkillCatalogResult,
+  SkillImportResult,
 } from './standards'
 import type { UpdateStatus } from './updater'
 import type { VoiceTranscriptionRequest, VoiceTranscriptionResult } from './voice'
@@ -129,6 +130,10 @@ export interface IpcIntegrationInvokeChannelMap {
   'skills:get-preview': {
     args: [projectPath: string, skillId: string]
     return: { markdown: string }
+  }
+  'skills:import-from-url': {
+    args: [projectPath: string, sourceUrl: string]
+    return: SkillImportResult
   }
   'dialog:confirm': {
     args: [message: string, detail?: string]

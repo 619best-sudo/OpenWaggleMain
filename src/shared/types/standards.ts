@@ -47,6 +47,23 @@ export interface SkillCatalogResult {
   readonly skills: readonly SkillDiscoveryItem[]
 }
 
+export interface SkillImportChoice {
+  readonly id: string
+  readonly name: string
+  readonly path: string
+  readonly sourceUrl: string
+}
+
+export type SkillImportResult =
+  | {
+      readonly status: 'imported'
+      readonly skillId: string
+    }
+  | {
+      readonly status: 'requires-selection'
+      readonly choices: readonly SkillImportChoice[]
+    }
+
 export interface SkillActivationResult {
   readonly explicitSkillIds: readonly string[]
   readonly heuristicSkillIds: readonly string[]

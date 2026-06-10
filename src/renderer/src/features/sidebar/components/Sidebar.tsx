@@ -59,7 +59,7 @@ export function Sidebar() {
     >
       <nav
         aria-label="Sidebar"
-        className={`flex h-full ${SIDEBAR_LAYOUT.WIDTH_CLASS} shrink-0 flex-col justify-between border-r border-white/5 bg-[#09090b] text-[#f1f4ee]`}
+        className={`flex h-full ${SIDEBAR_LAYOUT.WIDTH_CLASS} shrink-0 flex-col justify-between bg-[#09090b] text-[#f1f4ee]`}
       >
         <div className="flex flex-1 flex-col overflow-hidden">
           <SidebarBrandArea isFullscreen={controller.isFullscreen} />
@@ -68,6 +68,7 @@ export function Sidebar() {
             onNewSession={controller.handleNewSession}
             onOpenMcp={controller.handleOpenMcp}
             onOpenSkills={controller.handleOpenSkills}
+            onOpenWaggle={controller.handleOpenWaggle}
           />
           <SidebarProjectsHeader
             sortMenuOpen={controller.sortMenuOpen}

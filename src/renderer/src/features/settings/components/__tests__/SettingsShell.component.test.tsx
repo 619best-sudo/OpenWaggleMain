@@ -24,8 +24,6 @@ vi.mock('@/shell/useFullscreen', () => ({
 }))
 
 vi.mock('../sections/GeneralSection', () => ({ GeneralSection: () => <div>General settings</div> }))
-vi.mock('../sections/WaggleSection', () => ({ WaggleSection: () => <div>Waggle settings</div> }))
-vi.mock('../sections/McpSection', () => ({ McpSection: () => <div>MCP settings</div> }))
 vi.mock('../sections/ConnectionsSection', () => ({
   ConnectionsSection: () => <div>Connections settings</div>,
 }))
@@ -40,18 +38,20 @@ describe('settings shell components', () => {
     chatMock.mockReturnValue({ activeSessionId: null })
   })
 
-  it('navigates between active settings tabs and omits inactive placeholders', () => {
+  it('navigates between the remaining settings tabs and omits removed placeholders', () => {
     render(<SettingsNav activeTab="general" />)
 
-    fireEvent.click(screen.getByRole('button', { name: /Waggle Mode/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Connections/ }))
     fireEvent.click(screen.getByRole('button', { name: /General/ }))
 
+    expect(screen.queryByRole('button', { name: /Waggle Mode/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^MCP$/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Git/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Worktrees/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Personalization/ })).not.toBeInTheDocument()
     expect(navigateMock).toHaveBeenNthCalledWith(1, {
       to: '/settings/$tab',
-      params: { tab: 'waggle' },
+      params: { tab: 'connections' },
     })
     expect(navigateMock).toHaveBeenNthCalledWith(2, { to: '/settings' })
   })
@@ -70,9 +70,9 @@ describe('settings shell components', () => {
   })
 
   it('renders AppSettingsView through the panel boundary', () => {
-    render(<AppSettingsView activeTab="mcp" />)
+    render(<AppSettingsView activeTab="connections" />)
 
-    expect(screen.getByText('MCP settings')).toBeInTheDocument()
+    expect(screen.getByText('Connections settings')).toBeInTheDocument()
     expect(screen.getByText('Settings')).toBeInTheDocument()
   })
 })

@@ -66,17 +66,14 @@ export function HeaderLeft({
 
       <Hash className="no-drag size-3.5 shrink-0 text-[#52525b]" />
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-        <span className="no-drag min-w-0 flex-[2] truncate text-[14px] font-medium text-[#f1f4ee]">
+        <span className="no-drag min-w-0 shrink truncate text-[14px] font-medium text-[#f1f4ee]">
           {title}
         </span>
-        <span className="no-drag min-w-0 flex-1 truncate text-[12px] text-[#a1a1aa]">
-          / {activeBranchName}
-        </span>
+        <span className="no-drag shrink-0 text-[12px] text-[#a1a1aa]">/ {activeBranchName}</span>
         <span className="no-drag inline-flex min-w-0 max-w-[30vw] shrink items-center rounded-md border border-white/10 bg-white/5 px-2 text-[12px] text-[#a1a1aa]">
           <span className="truncate">{projectName(projectPath)}</span>
         </span>
       </div>
-      <span className="no-drag shrink-0 text-[16px] leading-none text-[#52525b]">···</span>
     </div>
   )
 }

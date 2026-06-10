@@ -1,10 +1,12 @@
+import { useEffect, useMemo, useState } from 'react'
 import { usePreferences, useProviders } from '@/features/settings/hooks/useSettings'
 import { useWaggleForm } from '../../hooks/useWaggleForm'
-import { WaggleAgentSlotCard } from './WaggleAgentSlotCard'
-import { CollaborationSettingsCard } from './WaggleCollaborationSettingsCard'
+import { WaggleEditorDialog } from './WaggleEditorDialog'
 import { WagglePresetsPanel } from './WagglePresetsPanel'
 
-export function WaggleSection() {
+type WaggleEditorMode = 'closed' | 'create' | 'edit'
+
+export function WaggleSection({ showHeading = true }: { readonly showHeading?: boolean }) {
   const { settings } = usePreferences()
   const { providerModels } = useProviders()
   const {
@@ -15,17 +17,60 @@ export function WaggleSection() {
     isModified,
     displayedError,
     loadPreset,
+    startNewDraft,
     handleSaveEdits,
-    handleNewCustom,
+    handleCreatePreset,
     handleDeletePreset,
   } = useWaggleForm()
+  const [editorMode, setEditorMode] = useState<WaggleEditorMode>('closed')
 
-  const [agentA, agentB] = formState.agents
+  const activePreset = useMemo(
+    () => presets.find((preset) => preset.id === activePresetId) ?? null,
+    [activePresetId, presets],
+  )
+
+  useEffect(() => {
+    if (editorMode === 'create' && activePresetId) {
+      setEditorMode('edit')
+    }
+    if (editorMode === 'edit' && !activePresetId) {
+      setEditorMode('closed')
+    }
+  }, [activePresetId, editorMode])
+
+  function handleSelectPreset(preset: (typeof presets)[number]) {
+    loadPreset(preset)
+    setEditorMode('edit')
+  }
+
+  function handleStartCreate() {
+    startNewDraft()
+    setEditorMode('create')
+  }
+
+  function handleCloseEditor() {
+    setEditorMode('closed')
+  }
+
+  const editorTitle =
+    editorMode === 'create'
+      ? 'Create Waggle'
+      : activePreset
+        ? `Edit ${activePreset.name}`
+        : 'Edit Waggle'
+  const editorDescription =
+    editorMode === 'create'
+      ? 'Define the two agent roles and stop rules, then save this setup when it is ready.'
+      : 'Adjust the selected setup here after reviewing it from the list.'
+  const primaryActionLabel = editorMode === 'create' ? 'Create Waggle' : 'Save Changes'
+  const isDialogOpen = editorMode !== 'closed'
 
   return (
     <div className="space-y-6">
-      <h2 className="text-[20px] font-semibold text-text-primary">Waggle Mode</h2>
-      {displayedError && (
+      {showHeading ? (
+        <h2 className="text-[20px] font-semibold text-text-primary">Waggle Mode</h2>
+      ) : null}
+      {!isDialogOpen && displayedError && (
         <p
           role="alert"
           className="rounded-lg border border-error/25 bg-error/6 px-3 py-2 text-sm text-error"
@@ -37,35 +82,26 @@ export function WaggleSection() {
         presets={presets}
         activePresetId={activePresetId}
         isModified={isModified}
-        onLoadPreset={loadPreset}
+        onLoadPreset={handleSelectPreset}
         onDeletePreset={handleDeletePreset}
-        onSaveEdits={handleSaveEdits}
-        onNewCustom={handleNewCustom}
+        onStartCreate={handleStartCreate}
       />
-      <WaggleAgentSlotCard
-        index={0}
-        agent={agentA}
-        dispatchForm={dispatchForm}
-        dotLabel="A"
-        settings={settings}
-        providerModels={providerModels}
-      />
-      <WaggleAgentSlotCard
-        index={1}
-        agent={agentB}
-        dispatchForm={dispatchForm}
-        dotLabel="B"
-        settings={settings}
-        providerModels={providerModels}
-      />
-      <CollaborationSettingsCard
-        stopCondition={formState.stopCondition}
-        maxTurns={formState.maxTurns}
-        onStopConditionChange={(stopCondition) =>
-          dispatchForm({ type: 'set-stop-condition', stopCondition })
-        }
-        onMaxTurnsChange={(maxTurns) => dispatchForm({ type: 'set-max-turns', maxTurns })}
-      />
+      {isDialogOpen ? (
+        <WaggleEditorDialog
+          mode={editorMode}
+          title={editorTitle}
+          description={editorDescription}
+          primaryActionLabel={primaryActionLabel}
+          canSubmit={editorMode === 'create' || isModified}
+          errorMessage={displayedError}
+          settings={settings}
+          providerModels={providerModels}
+          formState={formState}
+          dispatchForm={dispatchForm}
+          onClose={handleCloseEditor}
+          onSubmit={() => void (editorMode === 'create' ? handleCreatePreset() : handleSaveEdits())}
+        />
+      ) : null}
     </div>
   )
 }

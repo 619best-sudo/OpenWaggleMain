@@ -146,6 +146,8 @@ export const api: OpenWaggleApi = {
   listSkills: invoke('skills:list'),
   setSkillEnabled: invoke('skills:set-enabled'),
   getSkillPreview: invoke('skills:get-preview'),
+  importSkillFromUrl: (projectPath, sourceUrl) =>
+    ipcRenderer.invoke('skills:import-from-url', projectPath, sourceUrl),
 
   // Shell / App
   copyToClipboard: send('clipboard:write-text'),

@@ -9,16 +9,13 @@ vi.mock('@/features/waggle/components/TurnDivider', () => ({
   TurnDivider: ({
     turnNumber,
     agentLabel,
-    agentModel,
   }: {
     turnNumber: number
     agentLabel: string
     agentColor: WaggleAgentColor
-    agentModel?: string
   }) => (
     <div data-testid="turn-divider">
       Turn {turnNumber + 1}: {agentLabel}
-      {agentModel ? ` · ${agentModel}` : ''}
     </div>
   ),
 }))
@@ -100,7 +97,6 @@ describe('ChatRowRenderer', () => {
     )
 
     expect(screen.getByTestId('turn-divider')).toHaveTextContent('Turn 1: Architect')
-    expect(screen.getByTestId('turn-divider')).toHaveTextContent('openai/gpt-5.5')
     expect(screen.getAllByTestId('message-bubble')).toHaveLength(2)
     expect(screen.queryByTestId('message-agent-label')).toBeNull()
   })

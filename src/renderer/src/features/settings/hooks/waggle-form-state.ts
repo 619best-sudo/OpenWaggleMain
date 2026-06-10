@@ -27,6 +27,7 @@ export interface WagglePresetState {
 
 export type WaggleFormAction =
   | { readonly type: 'load-preset'; readonly config: WaggleConfig }
+  | { readonly type: 'reset' }
   | { readonly type: 'set-agent-label'; readonly index: 0 | 1; readonly label: string }
   | { readonly type: 'set-agent-model'; readonly index: 0 | 1; readonly model: SupportedModelId }
   | { readonly type: 'set-agent-role'; readonly index: 0 | 1; readonly roleDescription: string }
@@ -114,6 +115,7 @@ export function waggleFormReducer(
       stopCondition: value.config.stop.primary,
       maxTurns: value.config.stop.maxTurnsSafety,
     }))
+    .with('reset', () => INITIAL_WAGGLE_FORM_STATE)
     .with('set-agent-label', (value) => ({
       ...state,
       agents: updateAgentAt(state.agents, value.index, (agent) => ({

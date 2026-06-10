@@ -10,8 +10,6 @@ import { SettingsNav } from './SettingsNav'
 import { ArchivedSection } from './sections/ArchivedSection'
 import { ConnectionsSection } from './sections/ConnectionsSection'
 import { GeneralSection } from './sections/GeneralSection'
-import { McpSection } from './sections/McpSection'
-import { WaggleSection } from './sections/WaggleSection'
 
 interface SettingsPageProps {
   readonly activeTab: SettingsTab
@@ -71,8 +69,6 @@ export function SettingsPage({ activeTab }: SettingsPageProps) {
 function SettingsTabContent({ tab }: { tab: SettingsTab }) {
   return match(tab)
     .with('general', () => <GeneralSection />)
-    .with('waggle', () => <WaggleSection />)
-    .with('mcp', () => <McpSection />)
     .with('connections', () => <ConnectionsSection />)
     .with('archived', () => <ArchivedSection />)
     .otherwise(() => <GeneralSection />)

@@ -135,18 +135,6 @@ describe('AssistantMessageBubble', () => {
     expect(screen.getByTestId('agent-label')).toHaveTextContent('Architect')
   })
 
-  it('renders AgentLabel when assistantModel provided', () => {
-    const message = createMessage('m1', [textPart('Hello')])
-    render(
-      <AssistantMessageBubble
-        message={message}
-        sessionId={defaultSessionId}
-        assistantModel={SupportedModelId('claude-sonnet-4-5')}
-      />,
-    )
-    expect(screen.getByTestId('agent-label')).toHaveTextContent('claude-sonnet-4-5')
-  })
-
   it('renders StreamingText for text parts', () => {
     const message = createMessage('m1', [textPart('Hello world')])
     render(<AssistantMessageBubble message={message} sessionId={defaultSessionId} />)

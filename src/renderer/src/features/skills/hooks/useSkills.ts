@@ -1,4 +1,4 @@
-import type { SkillCatalogResult } from '@shared/types/standards'
+import type { SkillCatalogResult, SkillImportResult } from '@shared/types/standards'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { queryKeys } from '@/queries/query-keys'
@@ -17,10 +17,12 @@ interface UseSkillsResult {
   previewMarkdown: string
   isLoading: boolean
   isPreviewLoading: boolean
+  isImporting: boolean
   error: string | null
   refresh: () => Promise<void>
   selectSkill: (skillId: string) => void
   toggleSkill: (skillId: string, enabled: boolean) => Promise<void>
+  importSkill: (sourceUrl: string) => Promise<SkillImportResult>
 }
 
 function describeSkillsError(error: unknown, fallback: string) {
@@ -42,6 +44,15 @@ export function useSkills(projectPath: string | null): UseSkillsResult {
       readonly skillId: string
       readonly enabled: boolean
     }) => api.setSkillEnabled(nextProjectPath, skillId, enabled),
+  })
+  const importSkillMutation = useMutation({
+    mutationFn: ({
+      nextProjectPath,
+      sourceUrl,
+    }: {
+      readonly nextProjectPath: string
+      readonly sourceUrl: string
+    }) => api.importSkillFromUrl(nextProjectPath, sourceUrl),
   })
 
   const catalog = skillResourcesQuery.data?.catalog ?? null
@@ -110,6 +121,26 @@ export function useSkills(projectPath: string | null): UseSkillsResult {
     }
   }
 
+  async function importSkill(sourceUrl: string) {
+    if (!projectPath) {
+      throw new Error('Project path is required to import a skill.')
+    }
+
+    const result = await importSkillMutation.mutateAsync({
+      nextProjectPath: projectPath,
+      sourceUrl,
+    })
+    if (result.status === 'imported') {
+      setSelectedSkillId(result.skillId)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.skills(projectPath), exact: true })
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.skillPreview(projectPath, result.skillId),
+        exact: true,
+      })
+    }
+    return result
+  }
+
   function getErrorMessage() {
     if (skillResourcesQuery.error) {
       return describeSkillsError(skillResourcesQuery.error, 'Failed to load skills.')
@@ -130,9 +161,11 @@ export function useSkills(projectPath: string | null): UseSkillsResult {
     previewMarkdown: previewQuery.data?.markdown ?? '',
     isLoading: skillResourcesQuery.isPending,
     isPreviewLoading: previewQuery.isPending,
+    isImporting: importSkillMutation.isPending,
     error: getErrorMessage(),
     refresh,
     selectSkill: setSelectedSkillId,
     toggleSkill,
+    importSkill,
   }
 }

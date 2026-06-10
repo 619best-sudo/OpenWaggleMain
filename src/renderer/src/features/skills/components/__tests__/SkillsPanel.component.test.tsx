@@ -1,5 +1,5 @@
-import type { SkillCatalogResult } from '@shared/types/standards'
-import { render, screen } from '@testing-library/react'
+import type { SkillCatalogResult, SkillImportResult } from '@shared/types/standards'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SkillsPanel } from '../SkillsPanel'
 
@@ -23,8 +23,16 @@ const mockState = vi.hoisted(() => {
   return {
     previewMarkdown: '',
     catalog,
+    importSkill: vi.fn<(_: string) => Promise<SkillImportResult>>().mockResolvedValue({
+      status: 'imported',
+      skillId: 'skill-one',
+    }),
   }
 })
+
+vi.mock('@/shared/hooks/useEscapeHotkey', () => ({
+  useEscapeHotkey: vi.fn(),
+}))
 
 vi.mock('@/features/sessions/hooks/useProject', () => ({
   useProject: () => ({
@@ -46,6 +54,8 @@ vi.mock('@/features/skills/hooks/useSkills', () => ({
     refresh: vi.fn(),
     selectSkill: vi.fn(),
     toggleSkill: vi.fn(),
+    isImporting: false,
+    importSkill: mockState.importSkill,
   }),
 }))
 
@@ -57,6 +67,7 @@ function renderPanel(previewMarkdown: string) {
 describe('SkillsPanel markdown safety', () => {
   beforeEach(() => {
     mockState.previewMarkdown = ''
+    mockState.importSkill.mockClear()
   })
 
   it('renders allowed links and blocks unsafe protocols', () => {
@@ -89,5 +100,63 @@ describe('SkillsPanel markdown safety', () => {
 
     expect(code).toBeTruthy()
     expect(code?.className).toContain('language-ts')
+  })
+
+  it('opens the import dialog and submits a URL through the skills hook', async () => {
+    renderPanel('')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Import Skill' }))
+    fireEvent.change(screen.getByPlaceholderText('e.g. https://github.com/owner/repo'), {
+      target: { value: 'https://example.com/SKILL.md' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }))
+
+    await waitFor(() =>
+      expect(mockState.importSkill).toHaveBeenCalledWith('https://example.com/SKILL.md'),
+    )
+  })
+
+  it('shows a picker when the import resolves to multiple skills', async () => {
+    mockState.importSkill
+      .mockResolvedValueOnce({
+        status: 'requires-selection',
+        choices: [
+          {
+            id: 'banner-design',
+            name: 'Banner Design',
+            path: '.claude/skills/banner-design/SKILL.md',
+            sourceUrl:
+              'https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/blob/main/.claude/skills/banner-design/SKILL.md',
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        status: 'imported',
+        skillId: 'banner-design',
+      })
+
+    renderPanel('')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Import Skill' }))
+    fireEvent.change(screen.getByPlaceholderText('e.g. https://github.com/owner/repo'), {
+      target: { value: 'https://github.com/nextlevelbuilder/ui-ux-pro-max-skill' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }))
+
+    expect(await screen.findByText('Choose a skill')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Banner Design/i }))
+
+    await waitFor(() =>
+      expect(mockState.importSkill).toHaveBeenNthCalledWith(
+        2,
+        'https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/blob/main/.claude/skills/banner-design/SKILL.md',
+      ),
+    )
+  })
+
+  it('shows the import CTA even when the panel header is hidden', () => {
+    render(<SkillsPanel showHeader={false} />)
+
+    expect(screen.getByRole('button', { name: 'Import Skill' })).toBeInTheDocument()
   })
 })

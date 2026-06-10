@@ -1,5 +1,8 @@
 import { matchBy } from '@diegogbrisa/ts-match'
+import { MCP_CONFIG } from '@shared/constants/mcp'
 import type {
+  McpConfigFile,
+  McpConfigObject,
   McpConfigSourceId,
   McpConfigSourceSummary,
   McpServerSummary,
@@ -103,6 +106,14 @@ function getSelectedSource(view: McpSettingsView, selectedSourceId: McpConfigSou
   return sourceById(view.sources, selectedSourceId) ?? view.sources[0] ?? null
 }
 
+interface AddMcpServerInput {
+  readonly transport: 'stdio' | 'http'
+  readonly name: string
+  readonly command?: string
+  readonly args?: string
+  readonly url?: string
+}
+
 export function useMcpSectionController(projectPath: string | null) {
   const [state, dispatch] = useReducer(mcpSectionReducer, MCP_SECTION_INITIAL_STATE)
   const showToast = useUIStore((state) => state.showToast)
@@ -185,6 +196,49 @@ export function useMcpSectionController(projectPath: string | null) {
     }
   }
 
+  async function addServer(input: AddMcpServerInput) {
+    if (!view) return
+    const selectedSource = getSelectedSource(view, selectedSourceId)
+    if (!selectedSource) {
+      showToast('Select an MCP source first.', 'error')
+      return
+    }
+    if (!selectedSource.editable) {
+      showToast('The selected MCP source is read-only.', 'error')
+      return
+    }
+
+    let nextRawJson: string
+    try {
+      const parsed = parseMcpSource(rawEdits[selectedSource.id] ?? selectedSource.rawJson)
+      const nextConfig = buildConfigWithServer(parsed, input)
+      nextRawJson = JSON.stringify(nextConfig, null, MCP_CONFIG.JSON_INDENT_SPACES)
+      if (!nextRawJson.endsWith('\n')) {
+        nextRawJson = `${nextRawJson}\n`
+      }
+    } catch (error) {
+      const message = getErrorMessage(error)
+      dispatch({ type: 'mutation:error', error: message })
+      showToast(`Quick add failed: ${message}`, 'error')
+      return
+    }
+
+    dispatch({ type: 'save:start' })
+    try {
+      const nextView = await api.writeMcpSourceConfig({
+        projectPath,
+        sourceId: selectedSource.id,
+        rawJson: nextRawJson,
+      })
+      dispatch({ type: 'source-save:success', view: nextView, sourceId: selectedSource.id })
+      showToast(`Added MCP server "${input.name}".`, 'success')
+    } catch (saveError) {
+      const message = getErrorMessage(saveError)
+      dispatch({ type: 'mutation:error', error: message })
+      showToast(`Quick add failed: ${message}`, 'error')
+    }
+  }
+
   const selectedSource = view ? getSelectedSource(view, selectedSourceId) : null
   const rawJson = selectedSource ? (rawEdits[selectedSource.id] ?? selectedSource.rawJson) : ''
 
@@ -198,8 +252,77 @@ export function useMcpSectionController(projectPath: string | null) {
     toggleAdapter,
     toggleServer,
     saveSelectedSource,
+    addServer,
     selectSource: (sourceId: McpConfigSourceId) => dispatch({ type: 'source:select', sourceId }),
     updateRawJson: (sourceId: McpConfigSourceId, rawJson: string) =>
       dispatch({ type: 'raw-edit:change', sourceId, rawJson }),
   }
+}
+
+function parseMcpSource(rawJson: string): McpConfigFile {
+  const raw = rawJson.trim().length > 0 ? rawJson : MCP_CONFIG.EMPTY_CONFIG_RAW_JSON
+  const parsed = JSON.parse(raw) as unknown
+  if (!isRecord(parsed)) {
+    throw new Error('Selected source must be a JSON object.')
+  }
+  return parsed as McpConfigFile
+}
+
+function buildConfigWithServer(config: McpConfigFile, input: AddMcpServerInput): McpConfigFile {
+  const name = input.name.trim()
+  if (!name) {
+    throw new Error('Server name is required.')
+  }
+
+  const existingServers = isRecord(config.mcpServers) ? { ...config.mcpServers } : {}
+  if (name in existingServers) {
+    throw new Error(`Server "${name}" already exists in this source.`)
+  }
+
+  existingServers[name] =
+    input.transport === 'http'
+      ? buildHttpServerDefinition(input)
+      : buildStdioServerDefinition(input)
+
+  return {
+    ...config,
+    mcpServers: existingServers,
+  }
+}
+
+function buildHttpServerDefinition(input: AddMcpServerInput): McpConfigObject {
+  const url = input.url?.trim() ?? ''
+  if (!url) {
+    throw new Error('Server URL is required for HTTP transport.')
+  }
+  return { url }
+}
+
+function buildStdioServerDefinition(input: AddMcpServerInput): McpConfigObject {
+  const command = input.command?.trim() ?? ''
+  if (!command) {
+    throw new Error('Command is required for stdio transport.')
+  }
+
+  const args = parseArgumentText(input.args ?? '')
+  return args.length > 0 ? { command, args } : { command }
+}
+
+function parseArgumentText(value: string) {
+  const matches = value.match(/"([^"\\]|\\.)*"|'([^'\\]|\\.)*'|\S+/g) ?? []
+  return matches.map((token) => stripMatchingQuotes(token))
+}
+
+function stripMatchingQuotes(value: string) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1)
+  }
+  return value
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }

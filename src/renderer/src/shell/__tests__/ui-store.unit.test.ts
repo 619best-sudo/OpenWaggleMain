@@ -32,8 +32,8 @@ describe('useUIStore unit', () => {
     })
 
     it('stores the active settings tab projected by the current route', () => {
-      useUIStore.getState().setActiveSettingsTab('waggle')
-      expect(useUIStore.getState().activeSettingsTab).toBe('waggle')
+      useUIStore.getState().setActiveSettingsTab('connections')
+      expect(useUIStore.getState().activeSettingsTab).toBe('connections')
     })
   })
 

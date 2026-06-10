@@ -35,8 +35,9 @@ export interface WaggleFormHook {
   readonly isModified: boolean
   readonly displayedError: string | null
   readonly loadPreset: (preset: WagglePreset) => void
+  readonly startNewDraft: () => void
   readonly handleSaveEdits: () => Promise<void>
-  readonly handleNewCustom: () => Promise<void>
+  readonly handleCreatePreset: () => Promise<void>
   readonly handleDeletePreset: (id: string) => Promise<void>
 }
 
@@ -59,6 +60,12 @@ export function useWaggleForm(): WaggleFormHook {
   function loadPreset(preset: WagglePreset) {
     dispatchPreset({ type: 'select-preset', activePresetId: preset.id })
     dispatchForm({ type: 'load-preset', config: preset.config })
+  }
+
+  function startNewDraft() {
+    dispatchPreset({ type: 'clear-active-preset' })
+    dispatchPreset({ type: 'clear-error' })
+    dispatchForm({ type: 'reset' })
   }
 
   const currentConfig = buildWaggleConfig(formState)
@@ -94,7 +101,7 @@ export function useWaggleForm(): WaggleFormHook {
     }
   }
 
-  async function handleNewCustom() {
+  async function handleCreatePreset() {
     const config = buildWaggleConfig(formState)
     const [agentA, agentB] = formState.agents
     const saveInput = {
@@ -143,8 +150,9 @@ export function useWaggleForm(): WaggleFormHook {
     isModified,
     displayedError,
     loadPreset,
+    startNewDraft,
     handleSaveEdits,
-    handleNewCustom,
+    handleCreatePreset,
     handleDeletePreset,
   }
 }

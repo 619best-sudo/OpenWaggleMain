@@ -126,7 +126,7 @@ export function AssistantMessageBubble({
       <div className="flex flex-col gap-2">
         {!hideAgentLabel ? (
           <div className="flex items-center justify-between gap-2">
-            <AgentLabel assistantModel={assistantModel} waggle={waggle} />
+            <AgentLabel waggle={waggle} />
             {onBranchFromMessage ? (
               <BranchFromMessageButton
                 messageId={message.id}

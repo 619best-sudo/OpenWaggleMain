@@ -24,14 +24,14 @@ export function ToolCallHeader({
   onToggleExpanded,
 }: ToolCallHeaderProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 rounded-md border border-border/25 bg-bg-secondary/20 px-2 py-0.5 transition-colors hover:bg-bg-secondary/40">
       <Button
         variant="unstyled"
         type="button"
         aria-expanded={expanded}
         aria-label={`${view.actionText} — ${expanded ? 'collapse' : 'expand'} details`}
         onClick={onToggleExpanded}
-        className="flex min-w-0 flex-1 items-center gap-2 py-0.5 text-[13px] transition-colors"
+        className="flex min-w-0 flex-1 items-center gap-2 text-[13px]"
       >
         <ToolStatusIcon view={view} result={result} />
         <ToolActionLabel view={view} result={result} />
@@ -162,8 +162,8 @@ function ToolPreview({ text, tone }: { readonly text: string; readonly tone: 'mu
       className={cn(
         'ml-5 mt-1 overflow-hidden rounded-md px-3 py-2 text-[12px] font-mono whitespace-pre-wrap break-words',
         tone === 'error'
-          ? 'max-h-[160px] border border-error/20 bg-error/5 text-error'
-          : 'max-h-[120px] bg-bg-secondary/60 text-text-tertiary',
+          ? 'max-h-[160px] border border-error/15 bg-error/5 text-error'
+          : 'max-h-[120px] border border-border/10 bg-bg-secondary/10 text-text-tertiary',
       )}
     >
       {text}

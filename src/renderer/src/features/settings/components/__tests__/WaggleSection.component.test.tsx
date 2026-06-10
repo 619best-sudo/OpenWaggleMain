@@ -99,6 +99,37 @@ describe('WaggleSection', () => {
     deleteWagglePresetMock.mockResolvedValue(undefined)
   })
 
+  it('keeps the editor closed until a Waggle is selected or created', async () => {
+    const preset = createPreset()
+    listWagglePresetsMock.mockResolvedValueOnce([preset])
+
+    renderWithQueryClient(<WaggleSection />)
+
+    expect(await screen.findByText('Waggles')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.queryByDisplayValue('Reviewer')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /new waggle/i }))
+
+    expect(await screen.findByRole('dialog', { name: /create waggle/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /create waggle/i })).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Agent A')).toBeInTheDocument()
+  })
+
+  it('keeps model names out of the Waggle list items', async () => {
+    const preset = createPreset()
+    listWagglePresetsMock.mockResolvedValueOnce([preset])
+
+    renderWithQueryClient(<WaggleSection />)
+
+    await screen.findByText('Review Pair')
+
+    expect(screen.queryByText('Claude Sonnet 4.5')).not.toBeInTheDocument()
+    expect(screen.queryByText('Claude Opus 4')).not.toBeInTheDocument()
+    expect(screen.getByText(/reviewer/i)).toBeInTheDocument()
+    expect(screen.getByText(/implementer/i)).toBeInTheDocument()
+  })
+
   it('loads a selected preset into the editable form', async () => {
     const preset = createPreset()
     listWagglePresetsMock.mockResolvedValueOnce([preset])
@@ -108,9 +139,24 @@ describe('WaggleSection', () => {
     fireEvent.click((await screen.findByText('Review Pair')).closest('button') ?? document.body)
 
     await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: /edit review pair/i })).toBeInTheDocument()
       expect(screen.getByDisplayValue('Reviewer')).toBeInTheDocument()
       expect(screen.getByDisplayValue('Implementer')).toBeInTheDocument()
       expect(screen.getByDisplayValue('Finds regressions before they land.')).toBeInTheDocument()
+    })
+  })
+
+  it('closes the Waggle modal when cancel is pressed', async () => {
+    const preset = createPreset()
+    listWagglePresetsMock.mockResolvedValueOnce([preset])
+
+    renderWithQueryClient(<WaggleSection />)
+
+    fireEvent.click((await screen.findByText('Review Pair')).closest('button') ?? document.body)
+    fireEvent.click(await screen.findByRole('button', { name: /cancel/i }))
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: /edit review pair/i })).not.toBeInTheDocument()
     })
   })
 
@@ -200,17 +246,18 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
+    fireEvent.click(await screen.findByRole('button', { name: /new waggle/i }))
     fireEvent.change(screen.getByDisplayValue('Agent A'), {
       target: { value: 'Strategist' },
     })
     fireEvent.change(screen.getByDisplayValue('Agent B'), {
       target: { value: 'Skeptic' },
     })
-    fireEvent.change(elementAt(screen.getAllByPlaceholderText(/describe this agent's role/i), 0), {
+    fireEvent.change(elementAt(screen.getAllByPlaceholderText(/describe this agent's/i), 0), {
       target: { value: 'Frames trade-offs before implementation.' },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /new custom preset/i }))
+    fireEvent.click(screen.getByRole('button', { name: /create waggle/i }))
 
     await waitFor(() => {
       expect(saveWagglePresetMock).toHaveBeenCalledWith(

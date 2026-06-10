@@ -41,25 +41,31 @@ function SkillPreviewContent({
 }: Omit<SkillPreviewPaneProps, 'error'>) {
   if (!selectedSkill) {
     return (
-      <div className="rounded-lg border border-border bg-bg-secondary p-4 text-[13px] text-text-tertiary">
-        Select a skill to preview its instructions.
+      <div className="flex h-full flex-col items-center justify-center text-center opacity-40">
+        <p className="text-[13px] font-medium text-text-secondary">No skill selected</p>
+        <p className="mt-1 text-[11px] text-text-tertiary">
+          Select a skill from the list to view its instructions.
+        </p>
       </div>
     )
   }
 
   if (selectedSkill.loadStatus === 'error') {
     return (
-      <div className="rounded-lg border border-error/30 bg-error/10 p-4 text-[13px] text-error">
-        {selectedSkill.loadError ?? 'This skill file is invalid.'}
+      <div className="rounded-xl border border-error/10 bg-error/[0.02] p-5">
+        <h4 className="text-[13px] font-semibold text-error/90">Invalid Skill</h4>
+        <p className="mt-1.5 text-[12px] leading-relaxed text-error/70">
+          {selectedSkill.loadError ?? 'This skill file could not be parsed.'}
+        </p>
       </div>
     )
   }
 
   if (isPreviewLoading) {
     return (
-      <div className="flex items-center gap-2 text-[13px] text-text-tertiary">
+      <div className="flex items-center gap-3 py-4 text-[13px] text-text-tertiary/60">
         <Spinner />
-        Loading preview…
+        <span>Loading preview…</span>
       </div>
     )
   }

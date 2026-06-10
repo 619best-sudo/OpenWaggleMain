@@ -43,6 +43,7 @@ import type {
   AgentsInstructionStatus,
   AgentsResolutionResult,
   SkillCatalogResult,
+  SkillImportResult,
 } from './standards'
 import type { UpdateStatus } from './updater'
 import type { VoiceTranscriptionRequest, VoiceTranscriptionResult } from './voice'
@@ -204,6 +205,7 @@ export interface OpenWaggleApi {
   listSkills(projectPath: string): Promise<SkillCatalogResult>
   setSkillEnabled(projectPath: string, skillId: string, enabled: boolean): Promise<void>
   getSkillPreview(projectPath: string, skillId: string): Promise<{ markdown: string }>
+  importSkillFromUrl(projectPath: string, sourceUrl: string): Promise<SkillImportResult>
 
   // Dialog
   showConfirm(message: string, detail?: string): Promise<boolean>

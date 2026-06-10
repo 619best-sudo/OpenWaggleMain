@@ -11,6 +11,7 @@ import {
   emitAgentEvent,
   emitRunCompleted,
   installUseAgentChatTestLifecycle,
+  runRenderSnapshots,
   SEND_PAYLOAD,
   useAgentChat,
 } from './useAgentChat.test-utils'
@@ -121,5 +122,68 @@ describe('useAgentChat Waggle stop', () => {
     })
 
     expectPartialAssistantVisible(result.current.messages)
+  })
+
+  it('restores partial assistant output after remounting from thread history', async () => {
+    const persistedUserOnlySession = createSessionWithMessages(2, [
+      {
+        id: MessageId('persisted-user-1'),
+        role: 'user',
+        createdAt: 1,
+        parts: [{ type: 'text', text: SEND_PAYLOAD.text }],
+      },
+    ])
+    apiMock.getSessionDetail.mockResolvedValue(persistedUserOnlySession)
+
+    const firstMount = renderHook(
+      ({ session }: { readonly session: SessionDetail }) =>
+        useAgentChat(
+          SessionId('session-1'),
+          session,
+          SupportedModelId('claude-sonnet-4-5'),
+          'medium',
+        ),
+      { initialProps: { session: createSessionWithMessages(1, []) } },
+    )
+
+    let sendPromise: Promise<void> | null = null
+    await act(async () => {
+      sendPromise = firstMount.result.current.sendWaggleMessage(SEND_PAYLOAD, waggleConfig)
+      await Promise.resolve()
+    })
+
+    await act(async () => {
+      emitPartialAssistantOutput()
+    })
+
+    await act(async () => {
+      firstMount.result.current.stop()
+      emitRunCompleted({ sessionId: SessionId('session-1') })
+      await sendPromise
+      firstMount.rerender({ session: persistedUserOnlySession })
+      await Promise.resolve()
+    })
+
+    expect(runRenderSnapshots.get('session-1')?.messages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'aborted-assistant-1',
+          role: 'assistant',
+        }),
+      ]),
+    )
+
+    firstMount.unmount()
+
+    const remount = renderHook(() =>
+      useAgentChat(
+        SessionId('session-1'),
+        persistedUserOnlySession,
+        SupportedModelId('claude-sonnet-4-5'),
+        'medium',
+      ),
+    )
+
+    expectPartialAssistantVisible(remount.result.current.messages)
   })
 })

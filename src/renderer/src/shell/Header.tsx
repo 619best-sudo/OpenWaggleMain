@@ -1,10 +1,12 @@
 import { match } from '@diegogbrisa/ts-match'
+import { useRouterState } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useChat } from '@/features/chat/hooks'
 import { useDiffRouteNavigation } from '@/features/diff-panel/hooks'
 import { CommitDialog } from '@/features/git/components'
 import { useGit } from '@/features/git/hooks'
 import { useProject, useSessions } from '@/features/sessions/hooks'
+import { cn } from '@/shared/lib/cn'
 import { useUIStore } from '@/shell/ui-store'
 import {
   CommitButton,
@@ -19,6 +21,7 @@ export function Header() {
   const { activeSession } = useChat()
   const { activeSessionTree } = useSessions()
   const { projectPath } = useProject()
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
 
   const sidebarOpen = useUIStore((s) => s.sidebarOpen)
   const terminalOpen = useUIStore((s) => s.terminalOpen)
@@ -42,6 +45,11 @@ export function Header() {
   const [commitOpen, setCommitOpen] = useState(false)
   const { diffOpen, isChatRoute, sessionTreeOpen, toggleDiff, toggleSessionTree } =
     useDiffRouteNavigation()
+  const isFramedWorkspaceRoute =
+    isChatRoute ||
+    pathname.startsWith('/mcp') ||
+    pathname.startsWith('/skills') ||
+    pathname.startsWith('/waggle')
 
   function handleRefreshGit() {
     void refreshGitStatus(projectPath)
@@ -78,7 +86,14 @@ export function Header() {
 
   return (
     <>
-      <header className="drag-region flex h-12 shrink-0 items-center justify-between gap-3 border-b border-white/5 bg-[#09090b] px-5">
+      <header
+        className={cn(
+          'drag-region flex h-12 shrink-0 items-center justify-between gap-3 bg-[#09090b] px-5',
+          isFramedWorkspaceRoute
+            ? 'mx-3 mt-3 rounded-t-[16px] border border-[#8ba57b]/16 border-b-white/6'
+            : 'border-b border-white/5',
+        )}
+      >
         <HeaderLeft
           activeBranchName={activeBranchName}
           projectPath={projectPath}

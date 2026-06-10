@@ -145,7 +145,7 @@ export function ToolCallBlock({
   }, [view.isRunning])
 
   return (
-    <div className="group/tool">
+    <div className="group/tool my-3">
       <ToolCallHeader
         expanded={expanded}
         duration={duration}
@@ -172,7 +172,7 @@ function ExpandedToolDetails({
   readonly view: ToolCallViewModel
 }) {
   return (
-    <div className="ml-5 mt-1 rounded-md border border-border bg-bg-secondary/50 overflow-hidden">
+    <div className="ml-5 mt-1 rounded-md border border-border/20 bg-bg-secondary/20 overflow-hidden">
       <ExpandedCopyActions args={args} view={view} />
       <ExpandedDiffSection diff={view.diff} />
       <div className="px-3 py-2">
@@ -193,7 +193,7 @@ function ExpandedCopyActions({
   readonly view: ToolCallViewModel
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
+    <div className="flex flex-wrap items-center gap-2 border-b border-border/15 px-3 py-2">
       <CopyButton label="Copy args" value={args} />
       {view.path && <CopyButton label="Copy path" value={view.path} />}
       {view.command && <CopyButton label="Copy command" value={view.command} />}
@@ -226,7 +226,7 @@ function ExpandedResultSection({
     return null
   }
   return (
-    <div className="border-t border-border px-3 py-2">
+    <div className="border-t border-border/15 px-3 py-2">
       <div className="text-[13px] text-text-tertiary mb-1">Result</div>
       <ToolResult content={result.content} isError={view.isError} name={name} path={view.path} />
     </div>
@@ -246,7 +246,7 @@ function ExpandedErrorSection({
     return null
   }
   return (
-    <div role="alert" className="border-t border-border px-3 py-2">
+    <div role="alert" className="border-t border-border/15 px-3 py-2">
       <div className="text-[13px] text-text-tertiary mb-1">Error</div>
       <ToolResult
         content={view.resultError ?? result.content}

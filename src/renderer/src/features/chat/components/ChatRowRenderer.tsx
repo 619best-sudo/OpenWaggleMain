@@ -2,7 +2,6 @@ import { matchBy } from '@diegogbrisa/ts-match'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import { formatElapsed } from '@/features/chat/hooks/useStreamingPhase'
 import { TurnDivider } from '@/features/waggle/components'
-import { AGENT_BORDER_LEFT } from '@/features/waggle/lib'
 import { cn } from '@/shared/lib/cn'
 import { Spinner } from '@/shared/ui/Spinner'
 import type { ChatRow } from '../lib/types-chat-row'
@@ -52,7 +51,6 @@ export function ChatRowRenderer({
             turnNumber={value.turnDividerProps.turnNumber}
             agentLabel={value.turnDividerProps.agentLabel}
             agentColor={value.turnDividerProps.agentColor}
-            agentModel={value.turnDividerProps.agentModel}
           />
         )}
         <MessageBubble
@@ -69,30 +67,40 @@ export function ChatRowRenderer({
       </div>
     ))
     .with('waggle-turn', (value) => (
-      <section className="flex flex-col gap-3" data-waggle-turn={value.id}>
+      <section
+        className="flex flex-col gap-2 rounded-lg border border-border/15 bg-bg-secondary/15 p-2"
+        data-waggle-turn={value.id}
+      >
         <TurnDivider
           turnNumber={value.turnDividerProps.turnNumber}
           agentLabel={value.turnDividerProps.agentLabel}
           agentColor={value.turnDividerProps.agentColor}
-          agentModel={value.turnDividerProps.agentModel}
         />
-        <div
-          className={cn('flex flex-col gap-5 border-l-2 pl-4', AGENT_BORDER_LEFT[value.agentColor])}
-        >
-          {value.messages.map((messageRow) => (
-            <MessageBubble
+
+        <div className="flex flex-col">
+          {value.messages.map((messageRow, index) => (
+            <div
               key={messageRow.message.id}
-              message={messageRow.message}
-              sessionId={sessionId}
-              waggle={messageRow.waggle}
-              run={{
-                isStreaming: messageRow.isStreaming,
-                isRunActive: messageRow.isRunActive,
-                assistantModel: messageRow.assistantModel,
-              }}
-              presentation={{ hideAgentLabel: true }}
-              actions={{ onBranchFromMessage, onForkFromMessage }}
-            />
+              className={cn(
+                'px-2 py-2',
+                index > 0 && 'border-t border-border/10',
+                index === 0 && 'rounded-md',
+                index === 0 && 'bg-bg-secondary/20',
+              )}
+            >
+              <MessageBubble
+                message={messageRow.message}
+                sessionId={sessionId}
+                waggle={messageRow.waggle}
+                run={{
+                  isStreaming: messageRow.isStreaming,
+                  isRunActive: messageRow.isRunActive,
+                  assistantModel: messageRow.assistantModel,
+                }}
+                presentation={{ hideAgentLabel: true }}
+                actions={{ onBranchFromMessage, onForkFromMessage }}
+              />
+            </div>
           ))}
         </div>
       </section>

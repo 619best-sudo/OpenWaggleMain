@@ -2,20 +2,12 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Button } from '@/shared/ui/Button'
 import { ChatRouteSurface } from '../-chat-route-surface'
+import { McpRouteSurface } from '../-mcp-route-surface'
 import { SettingsRouteSurface } from '../-settings-route-surface'
 import { SkillsRouteSurface } from '../-skills-route-surface'
+import { WaggleRouteSurface } from '../-waggle-route-surface'
 
-type SettingsTab =
-  | 'general'
-  | 'configuration'
-  | 'waggle'
-  | 'mcp'
-  | 'personalization'
-  | 'git'
-  | 'environments'
-  | 'worktrees'
-  | 'archived'
-  | 'connections'
+type SettingsTab = 'general' | 'archived' | 'connections'
 type RightSidebarPanel = 'diff' | 'session-tree'
 interface RouterState {
   readonly location: {
@@ -92,7 +84,19 @@ vi.mock('@/features/settings/components', () => ({
   ),
 }))
 
+vi.mock('@/features/settings/components/sections/McpSection', () => ({
+  McpSection: () => <section>MCP panel</section>,
+}))
+
+vi.mock('@/features/settings/components/sections/WaggleSection', () => ({
+  WaggleSection: () => <section>Waggle panel</section>,
+}))
+
 vi.mock('@/features/skills/components', () => ({
+  SkillsPanel: () => <section>Skills panel</section>,
+}))
+
+vi.mock('@/features/skills/components/SkillsPanel', () => ({
   SkillsPanel: () => <section>Skills panel</section>,
 }))
 
@@ -150,15 +154,27 @@ describe('route surfaces', () => {
   it('falls back to the route-provided settings tab for non-tab paths', () => {
     routeSurfaceMocks.setPathname('/settings/unknown')
 
-    render(<SettingsRouteSurface tab="waggle" />)
+    render(<SettingsRouteSurface tab="archived" />)
 
-    expect(screen.getByText('Settings tab: waggle')).toBeInTheDocument()
+    expect(screen.getByText('Settings tab: archived')).toBeInTheDocument()
   })
 
   it('wraps the skills panel in its route surface', () => {
     render(<SkillsRouteSurface />)
 
     expect(screen.getByText('Skills panel')).toBeInTheDocument()
+  })
+
+  it('wraps the MCP panel in its route surface', () => {
+    render(<McpRouteSurface />)
+
+    expect(screen.getByText('MCP panel')).toBeInTheDocument()
+  })
+
+  it('wraps the Waggle panel in its route surface', () => {
+    render(<WaggleRouteSurface />)
+
+    expect(screen.getByText('Waggle panel')).toBeInTheDocument()
   })
 
   it('renders chat content with the active diff sidebar and closes it through route state', async () => {

@@ -41,6 +41,7 @@ describe('HeaderControls', () => {
     expect(screen.getByText('Working session')).toBeInTheDocument()
     expect(screen.getByText('/ feature/test')).toBeInTheDocument()
     expect(screen.getByText('OpenWaggle')).toBeInTheDocument()
+    expect(screen.queryByText('···')).toBeNull()
     expect(onToggleSidebar).toHaveBeenCalledOnce()
   })
 

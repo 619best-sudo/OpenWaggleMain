@@ -9,13 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WaggleRouteImport } from './routes/waggle'
 import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ChatRouteImport } from './routes/_chat'
 import { Route as ChatIndexRouteImport } from './routes/_chat.index'
 import { Route as SettingsTabRouteImport } from './routes/settings.$tab'
 import { Route as SessionsSessionIdRouteImport } from './routes/sessions.$sessionId'
 
+const WaggleRoute = WaggleRouteImport.update({
+  id: '/waggle',
+  path: '/waggle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SkillsRoute = SkillsRouteImport.update({
   id: '/skills',
   path: '/skills',
@@ -24,6 +31,11 @@ const SkillsRoute = SkillsRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -48,14 +60,18 @@ const SessionsSessionIdRoute = SessionsSessionIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof ChatIndexRoute
+  '/mcp': typeof McpRoute
   '/settings': typeof SettingsRouteWithChildren
   '/skills': typeof SkillsRoute
+  '/waggle': typeof WaggleRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/settings/$tab': typeof SettingsTabRoute
 }
 export interface FileRoutesByTo {
+  '/mcp': typeof McpRoute
   '/settings': typeof SettingsRouteWithChildren
   '/skills': typeof SkillsRoute
+  '/waggle': typeof WaggleRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/settings/$tab': typeof SettingsTabRoute
   '/': typeof ChatIndexRoute
@@ -63,8 +79,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_chat': typeof ChatRouteWithChildren
+  '/mcp': typeof McpRoute
   '/settings': typeof SettingsRouteWithChildren
   '/skills': typeof SkillsRoute
+  '/waggle': typeof WaggleRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/settings/$tab': typeof SettingsTabRoute
   '/_chat/': typeof ChatIndexRoute
@@ -73,17 +91,28 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/mcp'
     | '/settings'
     | '/skills'
+    | '/waggle'
     | '/sessions/$sessionId'
     | '/settings/$tab'
   fileRoutesByTo: FileRoutesByTo
-  to: '/settings' | '/skills' | '/sessions/$sessionId' | '/settings/$tab' | '/'
+  to:
+    | '/mcp'
+    | '/settings'
+    | '/skills'
+    | '/waggle'
+    | '/sessions/$sessionId'
+    | '/settings/$tab'
+    | '/'
   id:
     | '__root__'
     | '/_chat'
+    | '/mcp'
     | '/settings'
     | '/skills'
+    | '/waggle'
     | '/sessions/$sessionId'
     | '/settings/$tab'
     | '/_chat/'
@@ -91,13 +120,22 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   ChatRoute: typeof ChatRouteWithChildren
+  McpRoute: typeof McpRoute
   SettingsRoute: typeof SettingsRouteWithChildren
   SkillsRoute: typeof SkillsRoute
+  WaggleRoute: typeof WaggleRoute
   SessionsSessionIdRoute: typeof SessionsSessionIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/waggle': {
+      id: '/waggle'
+      path: '/waggle'
+      fullPath: '/waggle'
+      preLoaderRoute: typeof WaggleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/skills': {
       id: '/skills'
       path: '/skills'
@@ -110,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_chat': {
@@ -167,8 +212,10 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRouteWithChildren,
+  McpRoute: McpRoute,
   SettingsRoute: SettingsRouteWithChildren,
   SkillsRoute: SkillsRoute,
+  WaggleRoute: WaggleRoute,
   SessionsSessionIdRoute: SessionsSessionIdRoute,
 }
 export const routeTree = rootRouteImport

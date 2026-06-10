@@ -98,13 +98,16 @@ function buildControllerOutput(
     handleOpenProject: actions.project.openProject,
     handleOpenProjectInFinder: actions.project.openInFinder,
     handleOpenMcp() {
-      void state.navigate({ to: '/settings/$tab', params: { tab: 'mcp' } })
+      void state.navigate({ to: '/mcp' as never })
     },
     handleOpenSettings() {
       void state.navigate({ to: '/settings' })
     },
     handleOpenSkills() {
       void state.navigate({ to: '/skills' })
+    },
+    handleOpenWaggle() {
+      void state.navigate({ to: '/waggle' as never })
     },
     handleRemoveProject: actions.project.remove,
     handleRenameBranch: actions.branch.rename,

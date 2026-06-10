@@ -24,6 +24,7 @@ const headerMocks = vi.hoisted(() => {
     behind: 0,
   }
   return {
+    pathname: '/skills',
     projectPath: '/repo/openwaggle',
     gitStatus,
     refreshStatus: vi.fn().mockResolvedValue(undefined),
@@ -33,6 +34,12 @@ const headerMocks = vi.hoisted(() => {
     toggleSessionTree: vi.fn(),
   }
 })
+
+vi.mock('@tanstack/react-router', () => ({
+  useRouterState: <T,>(input: {
+    readonly select: (state: { location: { pathname: string } }) => T
+  }) => input.select({ location: { pathname: headerMocks.pathname } }),
+}))
 
 vi.mock('@/features/chat/hooks', () => ({
   useChat: () => ({ activeSession: { title: 'Fallback title' } }),

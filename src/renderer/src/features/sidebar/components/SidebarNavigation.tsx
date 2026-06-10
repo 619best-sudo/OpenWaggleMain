@@ -100,11 +100,13 @@ export function SidebarPrimaryActions({
   onNewSession,
   onOpenMcp,
   onOpenSkills,
+  onOpenWaggle,
 }: {
   readonly activeView: SidebarView
   readonly onNewSession: () => void
   readonly onOpenMcp: () => void
   readonly onOpenSkills: () => void
+  readonly onOpenWaggle: () => void
 }) {
   return (
     <div className="shrink-0 px-6 mt-12">
@@ -119,8 +121,18 @@ export function SidebarPrimaryActions({
       </Button>
 
       <div className="mt-10 space-y-1">
-        <SidebarShortcut icon={Users} label="Team" />
-        <SidebarShortcut icon={Network} label="MCPs" onClick={onOpenMcp} />
+        <SidebarShortcut
+          active={activeView === 'waggle'}
+          icon={Users}
+          label="Team"
+          onClick={onOpenWaggle}
+        />
+        <SidebarShortcut
+          active={activeView === 'mcp'}
+          icon={Network}
+          label="MCPs"
+          onClick={onOpenMcp}
+        />
         <SidebarShortcut
           active={activeView === 'skills'}
           icon={Sparkles}

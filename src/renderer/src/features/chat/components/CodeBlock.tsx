@@ -40,21 +40,24 @@ export function CodeBlock({ children, language, className }: CodeBlockProps) {
 
   return (
     <div
-      className={cn('group relative rounded-lg border border-border bg-bg-secondary/60', className)}
+      className={cn(
+        'group relative my-3 rounded-lg border border-border/15 bg-bg-secondary/15',
+        className,
+      )}
     >
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border">
-        <span className="text-[12px] text-text-muted font-mono">{language ?? 'text'}</span>
+      <div className="flex items-center justify-between border-b border-border/10 px-3 py-1.5">
+        <span className="font-mono text-[12px] text-text-muted">{language ?? 'text'}</span>
         <Button
           variant="unstyled"
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1 text-[13px] text-text-muted hover:text-text-secondary transition-colors"
+          className="flex items-center gap-1 text-[13px] text-text-muted transition-colors hover:text-text-secondary"
         >
           {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
           {copied ? 'Copied' : 'Copy'}
         </Button>
       </div>
-      <pre className="overflow-x-auto p-3 [&>code]:text-[14px] [&>code]:leading-relaxed [&>code]:font-mono">
+      <pre className="m-0 border-none bg-transparent p-3 overflow-x-auto [&>code]:font-mono [&>code]:text-[14px] [&>code]:leading-relaxed">
         {children}
       </pre>
     </div>

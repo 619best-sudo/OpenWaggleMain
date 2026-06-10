@@ -138,9 +138,8 @@ describe('McpSection', () => {
   it('renders the effective MCP sources with the OpenWaggle project config path', async () => {
     render(<McpSection />)
 
-    expect(await screen.findByText('Project OpenWaggle MCP')).toBeInTheDocument()
-    expect(screen.getByText(`${PROJECT_PATH}/.openwaggle/agent/mcp.json`)).toBeInTheDocument()
-    expect(screen.getByText(/Runtime bridge config:/)).toBeInTheDocument()
+    expect(await screen.findByText('MCP Connection')).toBeInTheDocument()
+    expect(screen.getByText('Connected Servers')).toBeInTheDocument()
   })
 
   it('toggles only the effective source entry for a server', async () => {
@@ -161,8 +160,18 @@ describe('McpSection', () => {
   it('writes raw JSON to the selected edit target', async () => {
     render(<McpSection />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /Project standard MCP/i }))
-    fireEvent.change(screen.getByRole('textbox'), {
+    fireEvent.click(await screen.findByRole('button', { name: 'Advanced' }))
+
+    // Select the project standard source
+    const sourceSelect = screen.getByRole('combobox', { name: /Source/i })
+    fireEvent.change(sourceSelect, { target: { value: 'project-standard' } })
+
+    const textboxes = screen.getAllByRole('textbox')
+    const editor = textboxes[textboxes.length - 1]
+    if (!editor) {
+      throw new Error('Expected MCP JSON editor textarea')
+    }
+    fireEvent.change(editor, {
       target: { value: '{\n  "mcpServers": {}\n}\n' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Save JSON' }))
@@ -181,12 +190,61 @@ describe('McpSection', () => {
     })
   })
 
+  it('quick-adds a stdio server into the selected MCP source', async () => {
+    render(<McpSection />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Add Server' }))
+
+    const sourceSelect = screen.getByRole('combobox', { name: /Save to/i })
+    fireEvent.change(sourceSelect, { target: { value: 'project-standard' } })
+
+    fireEvent.change(screen.getByPlaceholderText('playwright'), {
+      target: { value: 'filesystem' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('npx'), {
+      target: { value: 'npx' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('-y @playwright/mcp@latest'), {
+      target: { value: '-y @modelcontextprotocol/server-filesystem .' },
+    })
+
+    const buttons = screen.getAllByRole('button', { name: 'Add Server' })
+    fireEvent.click(buttons[buttons.length - 1]!)
+
+    await waitFor(() => {
+      expect(writeMcpSourceConfigMock).toHaveBeenCalledWith({
+        projectPath: PROJECT_PATH,
+        sourceId: 'project-standard',
+        rawJson:
+          '{\n' +
+          '  "mcpServers": {\n' +
+          '    "playwright": {\n' +
+          '      "command": "npx"\n' +
+          '    },\n' +
+          '    "filesystem": {\n' +
+          '      "command": "npx",\n' +
+          '      "args": [\n' +
+          '        "-y",\n' +
+          '        "@modelcontextprotocol/server-filesystem",\n' +
+          '        "."\n' +
+          '      ]\n' +
+          '    }\n' +
+          '  }\n' +
+          '}\n',
+      })
+    })
+  })
+
   it('notifies when saving raw JSON fails', async () => {
     writeMcpSourceConfigMock.mockRejectedValueOnce(new Error('Invalid JSON'))
 
     render(<McpSection />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /Project standard MCP/i }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Advanced' }))
+
+    const sourceSelect = screen.getByRole('combobox', { name: /Source/i })
+    fireEvent.change(sourceSelect, { target: { value: 'project-standard' } })
+
     fireEvent.click(screen.getByRole('button', { name: 'Save JSON' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Invalid JSON')
@@ -199,7 +257,7 @@ describe('McpSection', () => {
   it('disables the adapter package source without touching server config from the renderer', async () => {
     render(<McpSection />)
 
-    fireEvent.click(await screen.findByRole('switch', { name: 'Disable Pi MCP extension' }))
+    fireEvent.click(await screen.findByRole('switch', { name: 'Disable MCP Connection' }))
 
     await waitFor(() => {
       expect(setMcpAdapterEnabledMock).toHaveBeenCalledWith(false, PROJECT_PATH)
@@ -225,12 +283,21 @@ describe('McpSection', () => {
 
     render(<McpSection />)
 
-    expect(await screen.findByText('Invalid')).toBeInTheDocument()
+    fireEvent.click(await screen.findByRole('button', { name: 'Advanced' }))
+
     expect(
-      screen.getAllByText('Invalid MCP JSON config at /Users/test/.config/mcp/mcp.json'),
-    ).toHaveLength(2)
+      await screen.findByText('Invalid MCP JSON config at /Users/test/.config/mcp/mcp.json'),
+    ).toBeInTheDocument()
     expect(
       screen.getByText('Invalid Pi settings JSON at /Users/test/.pi/settings.json'),
     ).toBeInTheDocument()
+  })
+
+  it('starts with a minimal MCP UI and keeps advanced panels collapsed', async () => {
+    render(<McpSection />)
+
+    expect(await screen.findByText('MCP Connection')).toBeInTheDocument()
+    expect(screen.getByText('Connected Servers')).toBeInTheDocument()
+    expect(screen.queryByText('Effective servers')).not.toBeInTheDocument()
   })
 })

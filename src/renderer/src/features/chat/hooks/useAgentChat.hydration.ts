@@ -210,12 +210,15 @@ function hydrateIdleSession(
   )
   const existingMessages = getMessagesForSession(context.messagesBySessionIdRef, input.sessionId)
   const reconciledMessages = reconcileSnapshotUserMessages(snapshotMessages, existingMessages)
+  const withCachedAssistantTail = input.cachedRenderMessages
+    ? appendUnpersistedAssistantTail(reconciledMessages, input.cachedRenderMessages)
+    : reconciledMessages
   setMessagesForSession(
     context.messagesBySessionIdRef,
     context.setMessagesBySessionId,
     context.setRunRenderMessages,
     input.sessionId,
-    appendUnpersistedAssistantTail(reconciledMessages, existingMessages),
+    appendUnpersistedAssistantTail(withCachedAssistantTail, existingMessages),
   )
   updateHydrationKeys(input.sessionId, keys, context)
 

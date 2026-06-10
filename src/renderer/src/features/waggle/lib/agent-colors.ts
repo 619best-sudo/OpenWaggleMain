@@ -21,6 +21,20 @@ export const AGENT_BORDER: Record<WaggleAgentColor, string> = {
   violet: 'border-[#a78bfa]/40',
 }
 
+export const AGENT_SURFACE: Record<WaggleAgentColor, string> = {
+  blue: 'bg-[#4c8cf5]/10',
+  amber: 'bg-[#f5a623]/10',
+  emerald: 'bg-[#34d399]/10',
+  violet: 'bg-[#a78bfa]/10',
+}
+
+export const AGENT_RING: Record<WaggleAgentColor, string> = {
+  blue: 'ring-[#4c8cf5]/25',
+  amber: 'ring-[#f5a623]/25',
+  emerald: 'ring-[#34d399]/25',
+  violet: 'ring-[#a78bfa]/25',
+}
+
 export const AGENT_BORDER_LEFT: Record<WaggleAgentColor, string> = {
   blue: 'border-l-[#4c8cf5]',
   amber: 'border-l-[#f5a623]',

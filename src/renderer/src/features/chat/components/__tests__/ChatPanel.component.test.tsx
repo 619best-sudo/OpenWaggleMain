@@ -206,6 +206,7 @@ describe('ChatPanel', () => {
       chatRows: [{ type: 'message', message, isStreaming: false, showTurnDivider: false }],
     })
     expect(screen.queryByText(/open a project/i)).toBeNull()
+    expect(document.querySelector('[data-user-message-id="u1"]')).toHaveClass('px-5')
   })
 
   it('routes custom branch-summary submission through send instead of enqueue while loading', () => {

@@ -1,4 +1,5 @@
 import type { WaggleStopCondition } from '@shared/types/waggle'
+import { Settings2 } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { RangeInput } from '@/shared/ui/RangeInput'
@@ -20,20 +21,29 @@ export function CollaborationSettingsCard({
   onMaxTurnsChange,
 }: CollaborationSettingsCardProps) {
   return (
-    <div className="rounded-lg border border-border bg-[#111418] p-5 space-y-4">
-      <h3 className="text-sm font-medium text-text-secondary">Collaboration</h3>
-
-      <div className="flex items-center justify-between h-[40px]">
-        <span className="text-[13px] text-text-primary">Stop when</span>
-        <StopConditionToggle
-          stopCondition={stopCondition}
-          onStopConditionChange={onStopConditionChange}
-        />
+    <div className="rounded-xl border border-border bg-bg-secondary p-5 shadow-sm">
+      <div className="flex items-center gap-2.5 mb-5">
+        <Settings2 className="size-4 text-text-tertiary" />
+        <h3 className="text-[13px] font-semibold tracking-wide text-text-primary uppercase">
+          Collaboration Rules
+        </h3>
       </div>
 
-      <div className="flex items-center justify-between h-[40px]">
-        <span className="text-[13px] text-text-primary">Max turns</span>
-        <MaxTurnsSlider maxTurns={maxTurns} onMaxTurnsChange={onMaxTurnsChange} />
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between bg-bg rounded-lg border border-border-light p-4 shadow-sm">
+        <div className="flex items-center gap-4">
+          <span className="text-[13px] font-medium text-text-secondary">Stop condition</span>
+          <StopConditionToggle
+            stopCondition={stopCondition}
+            onStopConditionChange={onStopConditionChange}
+          />
+        </div>
+
+        <div className="hidden md:block w-px h-8 bg-border" />
+
+        <div className="flex items-center gap-4">
+          <span className="text-[13px] font-medium text-text-secondary">Maximum turns</span>
+          <MaxTurnsSlider maxTurns={maxTurns} onMaxTurnsChange={onMaxTurnsChange} />
+        </div>
       </div>
     </div>
   )
@@ -46,32 +56,33 @@ interface StopConditionToggleProps {
 
 function StopConditionToggle({ stopCondition, onStopConditionChange }: StopConditionToggleProps) {
   return (
-    <div className="flex rounded-md border border-border overflow-hidden">
+    <div className="flex rounded-md border border-border overflow-hidden bg-bg shadow-sm">
       <Button
         variant="unstyled"
         type="button"
         onClick={() => onStopConditionChange('consensus')}
         className={cn(
-          'px-3 py-1.5 text-[12px] font-medium transition-colors',
+          'px-4 py-1.5 text-[12px] font-medium transition-colors',
           stopCondition === 'consensus'
             ? 'bg-accent/15 text-accent'
-            : 'bg-bg text-text-tertiary hover:text-text-secondary',
+            : 'text-text-tertiary hover:text-text-secondary hover:bg-bg-hover',
         )}
       >
         Consensus
       </Button>
+      <div className="w-px bg-border" />
       <Button
         variant="unstyled"
         type="button"
         onClick={() => onStopConditionChange('user-stop')}
         className={cn(
-          'px-3 py-1.5 text-[12px] font-medium transition-colors border-l border-border',
+          'px-4 py-1.5 text-[12px] font-medium transition-colors',
           stopCondition === 'user-stop'
             ? 'bg-accent/15 text-accent'
-            : 'bg-bg text-text-tertiary hover:text-text-secondary',
+            : 'text-text-tertiary hover:text-text-secondary hover:bg-bg-hover',
         )}
       >
-        Manual
+        Manual stop
       </Button>
     </div>
   )
@@ -92,7 +103,7 @@ function MaxTurnsSlider({ maxTurns, onMaxTurnsChange }: MaxTurnsSliderProps) {
         onChange={(event) => onMaxTurnsChange(Number(event.target.value))}
         className="w-[120px] accent-accent"
       />
-      <span className="text-[13px] text-text-secondary w-6 text-right">{maxTurns}</span>
+      <span className="text-[13px] font-medium text-text-primary w-6 text-right">{maxTurns}</span>
     </div>
   )
 }

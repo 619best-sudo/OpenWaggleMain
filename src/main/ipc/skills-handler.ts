@@ -6,12 +6,14 @@ import {
   loadSkillInstructions,
   toSkillCatalogResult,
 } from '../skills/skill-catalog'
+import { importSkillFromUrl } from '../skills/skill-importer'
 import { loadProjectAgentsInstruction } from '../standards/agents-loader'
 import { resolveAgentsChainForPath, resolveAgentsForRun } from '../standards/agents-resolver'
 import { typedHandle } from './typed-ipc'
 
 const projectPathSchema = Schema.String.pipe(Schema.minLength(1))
 const skillIdSchema = Schema.String.pipe(Schema.minLength(1))
+const sourceUrlSchema = Schema.String.pipe(Schema.minLength(1))
 
 export function registerSkillsHandlers(): void {
   typedHandle('standards:get-status', (_event, rawProjectPath: string) =>
@@ -81,6 +83,15 @@ export function registerSkillsHandlers(): void {
         loadSkillInstructions(projectPath, skillId, toggles),
       )
       return { markdown: skill.instructions }
+    }),
+  )
+
+  typedHandle('skills:import-from-url', (_event, rawProjectPath: string, rawSourceUrl: string) =>
+    Effect.gen(function* () {
+      const projectPath = decodeUnknownOrThrow(projectPathSchema, rawProjectPath)
+      const sourceUrl = decodeUnknownOrThrow(sourceUrlSchema, rawSourceUrl)
+
+      return yield* Effect.promise(() => importSkillFromUrl(projectPath, sourceUrl))
     }),
   )
 }

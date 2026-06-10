@@ -1,3 +1,4 @@
+import { useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { useBackgroundRunMonitor } from '@/features/chat/hooks'
 import { FeedbackModal } from '@/features/feedback/components'
@@ -18,13 +19,15 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
   useBackgroundRunMonitor()
   useAutoUpdater()
   const feedbackModalOpen = useUIStore((s) => s.feedbackModalOpen)
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const showChatHeader = pathname === '/' || pathname.startsWith('/sessions/')
 
   return (
     <div className="flex size-full overflow-hidden bg-bg">
       <Sidebar />
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Header />
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#09090b]">
+        {showChatHeader ? <Header /> : null}
         {children}
         <WorkspaceTerminal />
       </div>

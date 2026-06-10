@@ -40,7 +40,7 @@ export function useCommandPaletteItems({
   const lowerQuery = normalizeCommandQuery(query)
   const configureWaggle = () => {
     closeCommandPalette()
-    void navigate({ to: '/settings/$tab', params: { tab: 'waggle' } })
+    void navigate({ to: '/waggle' })
   }
   const actions: CommandPaletteActionHandlers = {
     closeCommandPalette,

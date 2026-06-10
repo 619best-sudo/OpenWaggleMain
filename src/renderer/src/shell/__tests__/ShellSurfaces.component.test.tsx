@@ -16,6 +16,7 @@ const shellMocks = vi.hoisted(() => {
     backgroundRunMonitor: vi.fn(),
     autoUpdater: vi.fn(),
     getFullscreenHandler: () => fullscreenHandler,
+    pathname: '/',
     projectPath: '/repo',
     unsubscribeFullscreen,
     workspaceLifecycle: vi.fn(),
@@ -65,6 +66,12 @@ vi.mock('@/shared/lib/ipc', () => ({
   },
 }))
 
+vi.mock('@tanstack/react-router', () => ({
+  useRouterState: <T,>(input: {
+    readonly select: (state: { location: { pathname: string } }) => T
+  }) => input.select({ location: { pathname: shellMocks.pathname } }),
+}))
+
 vi.mock('../Header', () => ({ Header: () => <header>Header</header> }))
 vi.mock('../ToastOverlay', () => ({ ToastOverlay: () => <div>Toasts</div> }))
 vi.mock('../useAutoUpdater', () => ({ useAutoUpdater: () => shellMocks.autoUpdater() }))
@@ -74,6 +81,7 @@ vi.mock('../useWorkspaceLifecycle', () => ({
 
 describe('shell surfaces', () => {
   beforeEach(() => {
+    shellMocks.pathname = '/'
     useUIStore.setState({ feedbackModalOpen: false, terminalOpen: false })
     shellMocks.backgroundRunMonitor.mockClear()
     shellMocks.autoUpdater.mockClear()
@@ -108,6 +116,19 @@ describe('shell surfaces', () => {
     expect(shellMocks.workspaceLifecycle).toHaveBeenCalledOnce()
     expect(shellMocks.backgroundRunMonitor).toHaveBeenCalledOnce()
     expect(shellMocks.autoUpdater).toHaveBeenCalledOnce()
+  })
+
+  it('does not render the chat header on non-chat workspace routes', () => {
+    shellMocks.pathname = '/skills'
+
+    render(
+      <WorkspaceShell>
+        <main>Route content</main>
+      </WorkspaceShell>,
+    )
+
+    expect(screen.queryByText('Header')).not.toBeInTheDocument()
+    expect(screen.getByText('Route content')).toBeInTheDocument()
   })
 
   it('closes the workspace terminal through the terminal panel close action', () => {

@@ -1,12 +1,18 @@
-import { SkillsPanel } from '@/features/skills/components'
-import { PanelErrorBoundary } from '@/shared/ui/PanelErrorBoundary'
+import { SkillsPanel } from '@/features/skills/components/SkillsPanel'
+import { WorkspacePanelSurface } from './-workspace-panel-surface'
+
+const SKILLS_HEADER_ACTIONS_ID = 'skills-route-header-actions'
 
 export function SkillsRouteSurface() {
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-      <PanelErrorBoundary name="Skills" className="flex min-w-0 flex-1 overflow-hidden">
-        <SkillsPanel />
-      </PanelErrorBoundary>
-    </div>
+    <WorkspacePanelSurface
+      name="Skills"
+      title="Skills"
+      description="Discover and manage project skills."
+      contentClassName="overflow-hidden p-0"
+      headerActionsId={SKILLS_HEADER_ACTIONS_ID}
+    >
+      <SkillsPanel showHeader={false} headerActionsContainerId={SKILLS_HEADER_ACTIONS_ID} />
+    </WorkspacePanelSurface>
   )
 }

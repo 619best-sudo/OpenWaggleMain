@@ -106,8 +106,11 @@ export function ChatRouteSurface({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-      <PanelErrorBoundary name="Chat" className="flex min-w-0 flex-1 overflow-hidden">
+    <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden px-3 pb-3">
+      <PanelErrorBoundary
+        name="Chat"
+        className="flex min-w-0 flex-1 overflow-hidden rounded-b-[16px] border border-[#8ba57b]/16 border-t-0 bg-[#09090b]"
+      >
         <RightSidebarLayout
           open={diffOpen || sessionTreeOpen}
           sizing={{

@@ -10,13 +10,7 @@ export interface ChatRouteSearch {
   readonly panel?: ChatRightPanel
 }
 
-const SETTINGS_TABS: readonly SettingsTab[] = [
-  'general',
-  'waggle',
-  'mcp',
-  'archived',
-  'connections',
-]
+const SETTINGS_TABS: readonly SettingsTab[] = ['general', 'archived', 'connections']
 
 function parseSearchString(value: unknown) {
   return typeof value === 'string' && value.trim().length > 0 ? value : undefined
