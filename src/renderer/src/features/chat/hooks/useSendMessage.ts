@@ -28,7 +28,11 @@ interface SendMessageDeps {
 interface SendMessageHandlers {
   readonly handleSend: (payload: AgentSendPayload) => Promise<void>
   readonly handleSendText: (content: string) => Promise<void>
-  readonly handleSendWaggle: (payload: AgentSendPayload, config: WaggleConfig) => Promise<void>
+  readonly handleSendWaggle: (
+    payload: AgentSendPayload,
+    config: WaggleConfig,
+    targetSessionId?: SessionId | null,
+  ) => Promise<void>
 }
 
 /** Pure factory — testable without React. */
@@ -59,7 +63,15 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
     await handleSend({ text: content, thinkingLevel, attachments: [] })
   }
 
-  async function handleSendWaggle(payload: AgentSendPayload, config: WaggleConfig) {
+  async function handleSendWaggle(
+    payload: AgentSendPayload,
+    config: WaggleConfig,
+    targetSessionId?: SessionId | null,
+  ) {
+    if (targetSessionId) {
+      void sendMessageToSession(targetSessionId, payload, config)
+      return
+    }
     if (!activeSessionId) {
       if (!projectPath) {
         throw new Error('Select a project before sending.')

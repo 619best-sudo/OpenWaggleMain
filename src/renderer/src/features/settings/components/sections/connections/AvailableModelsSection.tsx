@@ -54,7 +54,7 @@ export function AvailableModelsSection() {
       ) : groups.length === 0 ? (
         <p className="text-[13px] text-text-muted">Pi did not report any providers or models.</p>
       ) : (
-        <div className="rounded-lg border border-border bg-[#111418] overflow-hidden">
+        <div className="rounded-lg border border-border bg-bg-secondary overflow-hidden">
           {groups.map((group, i) => (
             <ModelGroupAccordion
               key={group.key}

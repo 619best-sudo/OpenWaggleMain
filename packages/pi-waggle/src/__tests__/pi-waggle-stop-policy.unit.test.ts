@@ -18,12 +18,40 @@ function config(): WaggleConfig {
         model: 'openai/gpt-5.5',
         roleDescription: 'Designs',
         color: 'blue',
+        outputContract: { requiredSections: ['progress', 'files_changed'] },
       },
       {
         label: 'Reviewer',
         model: 'anthropic/claude-sonnet-4',
         roleDescription: 'Reviews',
         color: 'amber',
+        outputContract: { requiredSections: ['progress', 'files_changed'] },
+      },
+    ],
+    stop: { primary: 'consensus', maxTurnsSafety: MAX_TURNS },
+  }
+}
+
+function qaConfig(): WaggleConfig {
+  return {
+    mode: 'sequential',
+    agents: [
+      {
+        label: 'QA / Runtime Governor',
+        model: 'openai/gpt-5.5',
+        roleDescription: 'Tests the game in the browser.',
+        color: 'amber',
+        outputContract: {
+          requiredSections: [
+            'loop_verdict',
+            'failure_categories',
+            'top_blockers',
+            'evidence_reviewed',
+            'screenshots',
+            'logs',
+            'exact_next_cycle',
+          ],
+        },
       },
     ],
     stop: { primary: 'consensus', maxTurnsSafety: MAX_TURNS },
@@ -150,8 +178,45 @@ describe('pi-waggle stop policy', () => {
       config: config(),
       turnNumber: 0,
       summary: summarizePiWaggleTurnMessages([
-        assistantMessage({ text: 'Writing file', toolCallId: 'tool-1', toolCallName: 'write' }),
+        assistantMessage({
+          text: 'progress: writing file\nfiles_changed: src/main.tsx',
+          toolCallId: 'tool-1',
+          toolCallName: 'write',
+        }),
         toolResultMessage('tool-1'),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'Architect',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(true)
+  })
+
+  it('treats missing output contract sections as a recoverable error turn', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: config(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([assistantMessage({ text: 'progress: working on it' })]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'Architect',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(false)
+    expect(decision.stop).toBeUndefined()
+    expect(decision.state.consecutiveErrorTurns).toBe(1)
+  })
+
+  it('accepts human-friendly contract headings in stop policy evaluation', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: config(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text:
+            'Progress: built the board\nFiles changed: server.js public/game.js\nCommands run: npm install\nArtifacts: none\nBlockers: none\nNext task: implement turn logic',
+        }),
       ]),
       state: createPiWaggleStopPolicyState(),
       agentLabel: 'Architect',
@@ -168,7 +233,8 @@ describe('pi-waggle stop policy', () => {
       turnNumber: 0,
       summary: summarizePiWaggleTurnMessages([
         assistantMessage({
-          text: 'I propose migrating orchestration into the package and keeping runtime state Pi-native.',
+          text:
+            'progress: propose migrating orchestration into the package and keeping runtime state Pi-native.\nfiles_changed: none',
         }),
       ]),
       state: createPiWaggleStopPolicyState(),
@@ -181,7 +247,7 @@ describe('pi-waggle stop policy', () => {
       turnNumber: 1,
       summary: summarizePiWaggleTurnMessages([
         assistantMessage({
-          text: 'I agree, that plan is correct and we are aligned.',
+          text: 'progress: I agree, that plan is correct and we are aligned.\nfiles_changed: none',
         }),
       ]),
       state: first.state,
@@ -191,5 +257,103 @@ describe('pi-waggle stop policy', () => {
     expect(second.continue).toBe(false)
     expect(second.stop?.classification).toBe('complete')
     expect(second.stop?.reason).toContain('Consensus reached')
+  })
+
+  it('treats QA approval without evidence artifacts as a recoverable error turn', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: qaConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text:
+            'loop_verdict: approved\nfailure_categories: none\ntop_blockers: none\nevidence_reviewed: browser checked\nscreenshots: none\nlogs: none\nexact_next_cycle: none',
+        }),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'QA / Runtime Governor',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(false)
+    expect(decision.state.consecutiveErrorTurns).toBe(1)
+  })
+
+  it('treats QA non-approval with failure_categories none as a recoverable error turn', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: qaConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text:
+            'loop_verdict: another cycle required\nfailure_categories: none\ntop_blockers: dice roll broken\nevidence_reviewed: opened the browser and clicked roll dice\nscreenshots: board.png\nlogs: console.log\nexact_next_cycle: repair dice interaction and retest',
+        }),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'QA / Runtime Governor',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(false)
+    expect(decision.state.consecutiveErrorTurns).toBe(1)
+  })
+
+  it('accepts QA approval only when it includes concrete evidence and artifacts', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: qaConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text:
+            'loop_verdict: approved\nfailure_categories: none\ntop_blockers: none\nevidence_reviewed: opened the browser, ran pnpm build, clicked the roll dice button, and checked console output\nscreenshots: ludo-board.png\nlogs: browser-console.txt\nexact_next_cycle: none',
+        }),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'QA / Runtime Governor',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(true)
+    expect(decision.state.consecutiveErrorTurns).toBe(0)
+  })
+
+  it('rejects QA turns that use code-mutation tools instead of routing fixes back to builders', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: qaConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text:
+            'loop_verdict: another cycle required\nfailure_categories: bootstrap\ntop_blockers: missing script.js\nevidence_reviewed: listed public files and confirmed script.js is missing\nscreenshots: none\nlogs: none\nexact_next_cycle: builder should add the missing script and retest',
+          toolCallId: 'tool-1',
+          toolCallName: 'write',
+        }),
+        toolResultMessage('tool-1'),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'QA / Runtime Governor',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(false)
+    expect(decision.state.consecutiveErrorTurns).toBe(1)
+  })
+
+  it('rejects QA turns that describe file creation as QA work', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: qaConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text:
+            "loop_verdict: another cycle required\nfailure_categories: bootstrap\ntop_blockers: missing script.js\nevidence_reviewed: checked public directory and found script.js missing\nscreenshots: none\nlogs: none\nexact_next_cycle: none\nWe need to create public/script.js and implement the button handler.",
+        }),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'QA / Runtime Governor',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(false)
+    expect(decision.state.consecutiveErrorTurns).toBe(1)
   })
 })

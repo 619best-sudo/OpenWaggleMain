@@ -207,8 +207,8 @@ describe('FileConflictTracker', () => {
   // ── Agent label fallback ──────────────────────────────────────────────────
 
   describe('agent label fallback', () => {
-    it('falls back to "Agent 0" when agents tuple does not cover index 0', () => {
-      const sparseAgents = fromAny<readonly [WaggleAgentSlot, WaggleAgentSlot], unknown>([
+    it('falls back to "Agent 0" when agents list does not cover index 0', () => {
+      const sparseAgents = fromAny<readonly WaggleAgentSlot[], unknown>([
         undefined,
         {
           label: 'Reviewer',
@@ -225,8 +225,8 @@ describe('FileConflictTracker', () => {
       expect(warning?.currentAgent).toBe('Reviewer')
     })
 
-    it('falls back to "Agent 1" when agents tuple does not cover index 1', () => {
-      const sparseAgents = fromAny<readonly [WaggleAgentSlot, WaggleAgentSlot], unknown>([
+    it('falls back to "Agent 1" when agents list does not cover index 1', () => {
+      const sparseAgents = fromAny<readonly WaggleAgentSlot[], unknown>([
         {
           label: 'Architect',
           model: SupportedModelId('claude-sonnet-4-5'),

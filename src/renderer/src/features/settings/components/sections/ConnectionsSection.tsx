@@ -48,7 +48,7 @@ function AuthProviderGroup({
           <div className="min-w-0 space-y-1">
             <div className="flex items-center gap-2">
               <h3 className="text-[16px] font-semibold text-text-primary">{title}</h3>
-              <span className="rounded-md border border-input-card-border bg-[#151a22] px-1.5 py-0.5 text-[11px] font-medium text-text-tertiary">
+              <span className="rounded-md border border-input-card-border bg-bg-tertiary px-1.5 py-0.5 text-[11px] font-medium text-text-tertiary">
                 {count}
               </span>
             </div>
@@ -60,7 +60,7 @@ function AuthProviderGroup({
 
       {isOpen &&
         (count > 0 ? (
-          <div className="overflow-hidden rounded-lg border border-border bg-[#111418]">
+          <div className="overflow-hidden rounded-lg border border-border bg-bg-secondary">
             {children}
           </div>
         ) : (

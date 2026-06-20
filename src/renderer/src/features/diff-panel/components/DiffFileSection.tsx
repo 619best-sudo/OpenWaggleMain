@@ -55,7 +55,7 @@ export function DiffFileSection({
 
   return (
     <div className="min-w-full w-max rounded-lg border border-diff-file-border bg-diff-file-bg overflow-hidden shadow-[0_1px_3px_#00000055]">
-      {/* File Header — h34, bg #111418 */}
+      {/* File Header */}
       <Button
         variant="unstyled"
         type="button"
@@ -68,10 +68,10 @@ export function DiffFileSection({
         </div>
         <div className="flex items-center gap-1">
           {additions > 0 && (
-            <span className="text-[11px] font-semibold text-accent">+{additions}</span>
+            <span className="text-[11px] font-semibold text-[#8eab7e]">+{additions}</span>
           )}
           {deletions > 0 && (
-            <span className="text-[11px] font-semibold text-error">-{deletions}</span>
+            <span className="text-[11px] font-semibold text-[#d86868]">-{deletions}</span>
           )}
         </div>
       </Button>

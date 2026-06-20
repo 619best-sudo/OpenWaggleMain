@@ -30,7 +30,7 @@ export function ProviderRow({ providerInfo, isLast, autoEdit, onEditingChange }:
       : providerInfo.auth.apiKeySource === 'environment-or-custom'
         ? 'Configured outside OpenWaggle'
         : 'Not configured'
-  const statusColor = isConfigured ? '#34d399' : '#6b7280'
+  const statusColor = isConfigured ? 'var(--color-success)' : 'var(--color-text-muted)'
 
   return (
     <div className={cn(!isLast && 'border-b border-border')}>
@@ -59,7 +59,7 @@ export function ProviderRow({ providerInfo, isLast, autoEdit, onEditingChange }:
               onEditingChange?.(next)
             }}
             className={cn(
-              'flex items-center justify-center rounded-[5px] border border-input-card-border bg-[#1a1f28] size-7',
+              'flex items-center justify-center rounded-[5px] border border-input-card-border bg-bg-tertiary size-7',
               'text-text-tertiary hover:text-text-secondary hover:bg-bg-hover transition-colors',
             )}
           >

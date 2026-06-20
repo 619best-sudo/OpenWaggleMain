@@ -85,7 +85,7 @@ function FileTreeNode({ node, depth, onFileClick }: FileTreeNodeProps) {
         )}
         style={{ paddingLeft: `${String(paddingLeft + FILE_TREE_NODE_VALUE_4)}px` }}
       >
-        {node.isChanged && <span className="shrink-0 size-[5px] rounded-full bg-accent" />}
+        {node.isChanged && <span className="shrink-0 size-[5px] rounded-full bg-[#8eab7e]" />}
         <span
           className={cn(
             'text-[12px] truncate',
@@ -131,7 +131,7 @@ export function FileTree({ files, onFileClick, onSendReview, reviewCount }: File
   const tree = buildTree(files)
 
   return (
-    <div className="flex flex-col justify-between h-full w-[200px] bg-diff-bg border-l border-border py-3 shrink-0">
+    <div className="flex flex-col justify-between h-full w-[200px] bg-diff-bg border-r border-border py-3 shrink-0">
       {/* Tree */}
       <div className="flex-1 overflow-y-auto">
         {tree.map((node) => (
@@ -147,9 +147,9 @@ export function FileTree({ files, onFileClick, onSendReview, reviewCount }: File
           onClick={onSendReview}
           disabled={reviewCount === 0}
           className={cn(
-            'flex items-center justify-center gap-1 w-full h-6 rounded bg-gradient-to-b from-accent to-accent-dim border border-accent-dim',
-            'text-[11px] font-semibold text-diff-bg',
-            'disabled:opacity-40 transition-opacity',
+            'flex items-center justify-center gap-1 w-full h-6 rounded bg-[#8eab7e] text-black border border-[#7a946b]',
+            'text-[11px] font-semibold',
+            'disabled:opacity-40 transition-opacity hover:bg-[#a3be94]',
           )}
         >
           <Check className="size-[10px]" />

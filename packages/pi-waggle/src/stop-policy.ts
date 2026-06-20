@@ -1,9 +1,29 @@
 import type { AgentEndEvent } from '@mariozechner/pi-coding-agent'
 import type { WaggleConfig, WaggleConsensusCheckResult } from '@openwaggle/waggle-core'
-import { checkConsensus, decideNextWaggleTurn } from '@openwaggle/waggle-core'
+import {
+  checkConsensus,
+  decideNextWaggleTurn,
+  getWaggleTurn,
+  validateWaggleTurnOutput,
+} from '@openwaggle/waggle-core'
 
 const MAX_PREVIEWED_TOOL_NAMES = 3
 const MAX_RECOVERABLE_ERROR_TURNS = 2
+const QA_REQUIRED_SECTIONS = [
+  'loop_verdict',
+  'failure_categories',
+  'top_blockers',
+  'evidence_reviewed',
+  'screenshots',
+  'logs',
+  'exact_next_cycle',
+] as const
+const RUNTIME_EVIDENCE_KEYWORDS =
+  /\b(browser|playwright|devtools|command|build|dev server|console|log|screenshot|page|open|opened|click|clicked|loaded|rendered|pnpm|npm)\b/i
+const CODE_MUTATION_TOOL_NAME_PATTERN =
+  /\b(write|apply[_-]?patch|edit|replace|delete|create[_-]?file|move[_-]?file|rename)\b/i
+const QA_IMPLEMENTATION_INTENT_PATTERN =
+  /\b(?:i|we)\s+(?:need to|will|am going to|must)\s+(?:create|implement|add|write|edit|modify|fix|patch)\b.*(?:\.js|\.ts|\.tsx|\.jsx|\.html|\.css|file|component|server|button)\b|\blet'?s\s+(?:create|implement|add|write|edit|modify|fix|patch)\b.*(?:\.js|\.ts|\.tsx|\.jsx|\.html|\.css|file|component|server|button)\b/i
 
 type PiAssistantMessage = Extract<AgentEndEvent['messages'][number], { readonly role: 'assistant' }>
 type PiToolResultMessage = Extract<
@@ -19,6 +39,7 @@ interface UnresolvedToolCall {
 export interface PiWaggleTurnSummary {
   readonly responseText: string
   readonly hasToolCalls: boolean
+  readonly toolCallNames: readonly string[]
   readonly unresolvedToolCalls: readonly UnresolvedToolCall[]
   readonly aborted: boolean
   readonly terminalError?: string
@@ -69,6 +90,87 @@ function summarizeToolNames(unresolvedToolCalls: readonly UnresolvedToolCall[]) 
     : unresolvedToolNames
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function sectionLabelPattern(section: string) {
+  const words = section
+    .trim()
+    .toLocaleLowerCase()
+    .split(/[\s_-]+/)
+    .filter((word) => word.length > 0)
+
+  if (words.length === 0) {
+    return escapeRegExp(section.trim().toLocaleLowerCase())
+  }
+
+  return words.map((word) => escapeRegExp(word)).join('[\\s_-]+')
+}
+
+function readSectionValue(text: string, section: string) {
+  const pattern = new RegExp(
+    `(?:^|\\n)\\s*(?:[-*]\\s*)?(?:\\*\\*)?${sectionLabelPattern(section)}(?:\\*\\*)?\\s*:\\s*(.*)$`,
+    'im',
+  )
+  const match = pattern.exec(text)
+  return match?.[1]?.trim() ?? null
+}
+
+function isNoneValue(value: string | null) {
+  if (!value) {
+    return true
+  }
+  return /^(?:none|n\/a|na|null)$/i.test(value.trim())
+}
+
+function isQaRuntimeContract(config: WaggleConfig, turnNumber: number) {
+  const requiredSections = getWaggleTurn(config, turnNumber).agent.outputContract?.requiredSections ?? []
+  return QA_REQUIRED_SECTIONS.every((section) => requiredSections.includes(section))
+}
+
+function validateQaRuntimeTurn(
+  responseText: string,
+  toolCallNames: readonly string[],
+): string | null {
+  const loopVerdict = readSectionValue(responseText, 'loop_verdict')
+  const failureCategories = readSectionValue(responseText, 'failure_categories')
+  const evidenceReviewed = readSectionValue(responseText, 'evidence_reviewed')
+  const screenshots = readSectionValue(responseText, 'screenshots')
+  const logs = readSectionValue(responseText, 'logs')
+
+  if (toolCallNames.some((name) => CODE_MUTATION_TOOL_NAME_PATTERN.test(name))) {
+    return 'QA turn must not use code-mutation tools; route implementation fixes back to builders.'
+  }
+
+  if (QA_IMPLEMENTATION_INTENT_PATTERN.test(responseText)) {
+    return 'QA turn must not present file creation or implementation steps as QA work.'
+  }
+
+  if (isNoneValue(evidenceReviewed)) {
+    return 'QA turn must include real evidence_reviewed details instead of "none".'
+  }
+
+  const normalizedVerdict = loopVerdict?.trim().toLocaleLowerCase() ?? ''
+  const approved = normalizedVerdict === 'approved'
+
+  if (!approved && isNoneValue(failureCategories)) {
+    return 'QA turn cannot use failure_categories: none when the loop verdict is not approved.'
+  }
+
+  if (approved) {
+    if (isNoneValue(screenshots) && isNoneValue(logs)) {
+      return 'Approved QA turns must include at least one screenshot or log artifact.'
+    }
+
+    if (!RUNTIME_EVIDENCE_KEYWORDS.test(evidenceReviewed ?? '')) {
+      return 'Approved QA turns must describe concrete runtime evidence such as browser actions, commands, screenshots, or logs.'
+    }
+  }
+
+  return null
+}
+
 function unresolvedToolCalls(messages: readonly AgentEndEvent['messages'][number][]) {
   const unresolvedById = new Map<string, { readonly name: string }>()
 
@@ -92,6 +194,24 @@ function unresolvedToolCalls(messages: readonly AgentEndEvent['messages'][number
   }
 
   return [...unresolvedById.entries()].map(([id, data]) => ({ id, ...data }))
+}
+
+function allToolCallNames(messages: readonly AgentEndEvent['messages'][number][]) {
+  const names: string[] = []
+
+  for (const message of messages) {
+    if (!isAssistantMessage(message)) {
+      continue
+    }
+
+    for (const part of message.content) {
+      if (part.type === 'toolCall') {
+        names.push(part.name)
+      }
+    }
+  }
+
+  return names
 }
 
 function assistantTurnWasAborted(assistantMessages: readonly PiAssistantMessage[]) {
@@ -135,6 +255,7 @@ export function summarizePiWaggleTurnMessages(
   return {
     responseText,
     hasToolCalls,
+    toolCallNames: allToolCallNames(messages),
     unresolvedToolCalls: unresolved,
     aborted: assistantTurnWasAborted(assistantMessages),
     ...(terminalError ? { terminalError } : {}),
@@ -205,6 +326,28 @@ export function evaluatePiWaggleStopPolicy(input: {
 
   if (input.summary.responseText.length === 0 && !input.summary.hasToolCalls) {
     return recoverableErrorDecision(input.state, 'Agent turn produced no useful output.')
+  }
+
+  const outputValidation = validateWaggleTurnOutput({
+    config: input.config,
+    turnNumber: input.turnNumber,
+    responseText: input.summary.responseText,
+  })
+  if (!outputValidation.valid) {
+    return recoverableErrorDecision(
+      input.state,
+      `Agent turn is missing required output contract sections: ${outputValidation.missingSections.join(', ')}.`,
+    )
+  }
+
+  if (isQaRuntimeContract(input.config, input.turnNumber)) {
+    const qaValidationError = validateQaRuntimeTurn(
+      input.summary.responseText,
+      input.summary.toolCallNames,
+    )
+    if (qaValidationError) {
+      return recoverableErrorDecision(input.state, qaValidationError)
+    }
   }
 
   const nextState: PiWaggleStopPolicyState = {

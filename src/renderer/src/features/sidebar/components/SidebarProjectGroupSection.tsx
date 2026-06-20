@@ -36,13 +36,13 @@ function DraftSessionRow({
       aria-current="true"
       aria-label={`Draft session in ${projectLabel}`}
       onClick={onSelect}
-      className="group mx-3 flex h-10 w-[calc(100%-24px)] items-center gap-2 rounded-xl border border-[#90ae82]/15 bg-[#101712] pl-4 pr-3 text-left transition-colors hover:bg-[#141c16]"
+      className="group mx-3 flex h-10 w-[calc(100%-24px)] items-center gap-2 rounded-xl border border-accent/20 bg-accent/5 pl-4 pr-3 text-left transition-colors hover:bg-accent/10"
     >
-      <Edit3 className="size-3.5 shrink-0 text-[#cad6c2]" />
-      <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-[#f1f4ee]">
+      <Edit3 className="size-3.5 shrink-0 text-accent" />
+      <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium text-text-primary">
         New session
       </span>
-      <span className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#95a08f]">
+      <span className="shrink-0 rounded-full border border-border bg-bg-secondary px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-text-tertiary">
         Draft
       </span>
     </Button>
@@ -82,7 +82,7 @@ function ProjectSessionRows({
   const showDraftSession = state.draftSessionProjectPath === group.projectPath
 
   if (group.sessions.length === 0 && !showDraftSession) {
-    return <div className="px-6 py-1.5 text-[12px] text-[#697166]">No sessions</div>
+    return <div className="px-6 py-1.5 text-[12px] text-text-muted">No sessions</div>
   }
 
   return (

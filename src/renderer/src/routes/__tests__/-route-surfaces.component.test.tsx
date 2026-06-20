@@ -7,7 +7,7 @@ import { SettingsRouteSurface } from '../-settings-route-surface'
 import { SkillsRouteSurface } from '../-skills-route-surface'
 import { WaggleRouteSurface } from '../-waggle-route-surface'
 
-type SettingsTab = 'general' | 'archived' | 'connections'
+type SettingsTab = 'profile' | 'general' | 'archived' | 'connections'
 type RightSidebarPanel = 'diff' | 'session-tree'
 interface RouterState {
   readonly location: {
@@ -49,9 +49,22 @@ vi.mock('@/features/chat/hooks', () => ({
 }))
 
 vi.mock('@/features/chat/components', () => ({
-  ChatDiffPane: ({ onClose }: { readonly onClose: () => void }) => (
+  ChatDiffPane: ({
+    isExpanded = false,
+    onClose,
+    onToggleExpanded,
+  }: {
+    readonly isExpanded?: boolean
+    readonly onClose: () => void
+    readonly onToggleExpanded?: () => void
+  }) => (
     <aside>
-      Diff pane
+      Diff pane {isExpanded ? 'expanded' : 'sidebar'}
+      {onToggleExpanded ? (
+        <Button variant="unstyled" type="button" onClick={onToggleExpanded}>
+          Toggle diff size
+        </Button>
+      ) : null}
       <Button variant="unstyled" type="button" onClick={onClose}>
         Close diff
       </Button>
@@ -194,7 +207,7 @@ describe('route surfaces', () => {
     )
 
     expect(screen.getByText('Chat content')).toBeInTheDocument()
-    expect(await screen.findByText('Diff pane')).toBeInTheDocument()
+    expect(await screen.findByText('Diff pane sidebar')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Close right sidebar' }))
 
     expect(routeSurfaceMocks.chatRouteEffects).toHaveBeenCalledWith({
@@ -205,6 +218,31 @@ describe('route surfaces', () => {
     })
     expect(routeSurfaceMocks.setLastRightSidebarPanel).toHaveBeenCalledWith('diff')
     expect(onDiffOpenChange).toHaveBeenCalledWith(false)
+    expect(onSessionTreeOpenChange).not.toHaveBeenCalled()
+  })
+
+  it('expands the diff into the full chat surface', async () => {
+    const onDiffOpenChange = vi.fn()
+    const onSessionTreeOpenChange = vi.fn()
+
+    render(
+      <ChatRouteSurface
+        branchId="branch-1"
+        diffOpen
+        nodeId="node-1"
+        sessionId="session-1"
+        sessionTreeOpen={false}
+        onDiffOpenChange={onDiffOpenChange}
+        onSessionTreeOpenChange={onSessionTreeOpenChange}
+      />,
+    )
+
+    expect(await screen.findByText('Diff pane sidebar')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle diff size' }))
+
+    expect(await screen.findByText('Diff pane expanded')).toBeInTheDocument()
+    expect(screen.queryByText('Chat content')).not.toBeInTheDocument()
+    expect(onDiffOpenChange).not.toHaveBeenCalled()
     expect(onSessionTreeOpenChange).not.toHaveBeenCalled()
   })
 

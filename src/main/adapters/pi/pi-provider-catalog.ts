@@ -226,8 +226,8 @@ export async function createPiRuntimeServices(
             error: String(error.error),
           })),
           commandNames:
-            extensionsResult.runtime.commands instanceof Map
-              ? [...extensionsResult.runtime.commands.keys()]
+            (extensionsResult.runtime as any).commands instanceof Map
+              ? [...(extensionsResult.runtime as any).commands.keys()]
               : [],
           flagNames:
             extensionsResult.runtime.flagValues instanceof Map
@@ -267,10 +267,73 @@ export async function createPiProviderCatalogSnapshot(
   const normalizedProjectPath = projectPath?.trim()
   if (!normalizedProjectPath) {
     const services = await createPiGlobalProviderCatalogServices()
+    // #region debug-point E:provider-catalog-global-snapshot
+    try {
+      const { readFileSync } = await import('node:fs')
+      const envContent = readFileSync('.dbg/openrouter-key-save.env', 'utf8')
+      const debugServerUrl =
+        envContent.match(/DEBUG_SERVER_URL=(.+)/)?.[1]?.trim() ?? 'http://127.0.0.1:7777/event'
+      const sessionId =
+        envContent.match(/DEBUG_SESSION_ID=(.+)/)?.[1]?.trim() ?? 'openrouter-key-save'
+      const openrouterCredential = services.authStorage.get('openrouter')
+      void fetch(debugServerUrl, {
+        method: 'POST',
+        body: JSON.stringify({
+          sessionId,
+          runId: 'pre-fix',
+          hypothesisId: 'D',
+          location: 'pi-provider-catalog.ts:createPiProviderCatalogSnapshot:global',
+          msg: '[DEBUG] Built global provider catalog snapshot',
+          data: {
+            projectPath: null,
+            openrouterCredentialType: openrouterCredential?.type ?? null,
+            openrouterCredentialPresent: openrouterCredential !== undefined,
+            openrouterInOAuthProviders: services.authStorage
+              .getOAuthProviders()
+              .some((provider) => provider.id === 'openrouter'),
+          },
+          ts: Date.now(),
+        }),
+      }).catch(() => {})
+    } catch {}
+    // #endregion
     return createPiProviderCatalogSnapshotFromRuntime(services.modelRegistry, services.authStorage)
   }
 
   const services = await createPiRuntimeServices(normalizedProjectPath, { loadMcpAdapter: false })
+  // #region debug-point F:provider-catalog-project-snapshot
+  try {
+    const { readFileSync } = await import('node:fs')
+    const envContent = readFileSync('.dbg/openrouter-key-save.env', 'utf8')
+    const debugServerUrl =
+      envContent.match(/DEBUG_SERVER_URL=(.+)/)?.[1]?.trim() ?? 'http://127.0.0.1:7777/event'
+    const sessionId =
+      envContent.match(/DEBUG_SESSION_ID=(.+)/)?.[1]?.trim() ?? 'openrouter-key-save'
+    const openrouterCredential = services.authStorage.get('openrouter')
+    void fetch(debugServerUrl, {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId,
+        runId: 'pre-fix',
+        hypothesisId: 'D',
+        location: 'pi-provider-catalog.ts:createPiProviderCatalogSnapshot:project',
+        msg: '[DEBUG] Built project provider catalog snapshot',
+        data: {
+          projectPath: normalizedProjectPath,
+          openrouterCredentialType: openrouterCredential?.type ?? null,
+          openrouterCredentialPresent: openrouterCredential !== undefined,
+          openrouterInOAuthProviders: services.authStorage
+            .getOAuthProviders()
+            .some((provider) => provider.id === 'openrouter'),
+          openrouterModelAvailable: services.modelRegistry
+            .getAvailable()
+            .some((model) => model.provider === 'openrouter'),
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {})
+  } catch {}
+  // #endregion
   return createPiProviderCatalogSnapshotFromRuntime(services.modelRegistry, services.authStorage)
 }
 
@@ -287,6 +350,34 @@ export function setPiProviderApiKey(providerId: string, apiKey: string): void {
   } else {
     authStorage.remove(provider)
   }
+  // #region debug-point G:set-api-key-readback
+  try {
+    const { readFileSync } = require('node:fs') as typeof import('node:fs')
+    const envContent = readFileSync('.dbg/openrouter-key-save.env', 'utf8')
+    const debugServerUrl =
+      envContent.match(/DEBUG_SERVER_URL=(.+)/)?.[1]?.trim() ?? 'http://127.0.0.1:7777/event'
+    const sessionId =
+      envContent.match(/DEBUG_SESSION_ID=(.+)/)?.[1]?.trim() ?? 'openrouter-key-save'
+    const persistedCredential = authStorage.get(provider)
+    void fetch(debugServerUrl, {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId,
+        runId: 'pre-fix',
+        hypothesisId: 'D',
+        location: 'pi-provider-catalog.ts:setPiProviderApiKey',
+        msg: '[DEBUG] Wrote provider API key and read it back immediately',
+        data: {
+          provider,
+          trimmedLength: trimmedKey.length,
+          persistedCredentialType: persistedCredential?.type ?? null,
+          persistedCredentialPresent: persistedCredential !== undefined,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {})
+  } catch {}
+  // #endregion
 }
 
 export function createPiRuntimeAuthStorage(): AuthStorage {

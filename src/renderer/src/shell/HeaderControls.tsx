@@ -1,12 +1,9 @@
 import type { GitStatusSummary } from '@shared/types/git'
 import { Hash, ListTree, PanelLeft, SquareTerminal } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-import { projectName } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/Button'
 
 interface HeaderLeftProps {
-  readonly activeBranchName: string
-  readonly projectPath: string | null
   readonly sidebarOpen: boolean
   readonly title: string
   readonly onToggleSidebar: () => void
@@ -42,8 +39,6 @@ interface DiffToggleButtonProps {
 }
 
 export function HeaderLeft({
-  activeBranchName,
-  projectPath,
   sidebarOpen,
   title,
   onToggleSidebar,
@@ -64,14 +59,10 @@ export function HeaderLeft({
         </Button>
       )}
 
-      <Hash className="no-drag size-3.5 shrink-0 text-[#52525b]" />
-      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-        <span className="no-drag min-w-0 shrink truncate text-[14px] font-medium text-[#f1f4ee]">
+      <Hash className="no-drag size-3.5 shrink-0 text-text-muted" />
+      <div className="flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap">
+        <span className="no-drag block min-w-0 flex-1 truncate text-[14px] font-medium text-text-primary">
           {title}
-        </span>
-        <span className="no-drag shrink-0 text-[12px] text-[#a1a1aa]">/ {activeBranchName}</span>
-        <span className="no-drag inline-flex min-w-0 max-w-[30vw] shrink items-center rounded-md border border-white/10 bg-white/5 px-2 text-[12px] text-[#a1a1aa]">
-          <span className="truncate">{projectName(projectPath)}</span>
         </span>
       </div>
     </div>
@@ -96,15 +87,15 @@ export function TerminalButton({ open, projectPath, onToggle }: TerminalButtonPr
       aria-expanded={open}
       onClick={onToggle}
       className={cn(
-        'no-drag h-7 border border-white/10 bg-transparent px-2.5 hover:bg-white/5',
+        'no-drag h-7 border border-border bg-transparent px-2.5 hover:bg-bg-hover',
         !projectPath && 'pointer-events-none opacity-30',
       )}
       disabled={!projectPath}
       title={terminalTitle(projectPath, open)}
     >
-      <SquareTerminal className="size-3.5 text-[#a1a1aa]" />
-      <span className="text-[13px] font-medium text-[#f1f4ee]">{open ? 'Hide' : 'Open'}</span>
-      <span className="text-[9px] text-[#52525b]">&#x2228;</span>
+      <SquareTerminal className="size-3.5 text-text-tertiary" />
+      <span className="text-[13px] font-medium text-text-primary">{open ? 'Hide' : 'Open'}</span>
+      <span className="text-[9px] text-text-muted">&#x2228;</span>
     </Button>
   )
 }
@@ -120,7 +111,7 @@ export function CommitButton({ isCommitting, projectPath, onOpen }: CommitButton
       aria-label="Open commit dialog"
       onClick={onOpen}
       className={cn(
-        'no-drag inline-flex h-7 items-center justify-center gap-1.5 rounded-md bg-[#8ba57b] px-2.5 text-[#09110a] transition-colors hover:bg-[#9cb88c]',
+        'no-drag inline-flex h-7 items-center justify-center gap-1.5 rounded-md bg-accent px-2.5 text-accent-foreground transition-colors hover:bg-accent-dim',
         disabled && 'pointer-events-none opacity-40',
       )}
       disabled={disabled}
@@ -150,13 +141,13 @@ export function SessionTreeButton({
       onClick={onToggle}
       disabled={disabled}
       className={cn(
-        'no-drag h-7 border border-white/10 px-2 hover:bg-white/5',
-        open ? 'bg-white/10' : 'bg-transparent',
+        'no-drag h-7 border border-border px-2 hover:bg-bg-hover',
+        open ? 'bg-bg-active' : 'bg-transparent',
         disabled && 'pointer-events-none opacity-30',
       )}
       title={hasSessionTree ? 'Toggle Session Tree' : 'No session tree available'}
     >
-      <ListTree className="size-3.5 text-[#a1a1aa]" />
+      <ListTree className="size-3.5 text-text-tertiary" />
     </Button>
   )
 }
@@ -178,7 +169,7 @@ export function DiffToggleButton({
   status,
   onToggle,
 }: DiffToggleButtonProps) {
-  const disabled = !projectPath || !isChatRoute
+  const disabled = !projectPath || !isChatRoute || Boolean(error && !isLoading && !status)
 
   return (
     <Button

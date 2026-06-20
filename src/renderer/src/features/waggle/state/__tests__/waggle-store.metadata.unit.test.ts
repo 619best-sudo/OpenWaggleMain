@@ -73,6 +73,7 @@ describe('waggle-store metadata and reset behavior', () => {
     expect(state.completedTurnMeta).toEqual([])
     expect(state.liveMessageMetadata).toEqual({})
     expect(state.fileConflicts).toEqual([])
+    expect(state.artifacts).toEqual([])
     expect(state.lastConsensusResult).toBeNull()
     expect(state.completionReason).toBeNull()
   })

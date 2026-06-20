@@ -20,7 +20,7 @@ export interface ToastData {
   action?: { label: string; url?: string; onClick?: () => void }
 }
 
-export type SettingsTab = 'general' | 'archived' | 'connections'
+export type SettingsTab = 'profile' | 'general' | 'archived' | 'connections'
 
 interface UIState {
   sidebarOpen: boolean

@@ -1,6 +1,7 @@
 import { WAGGLE_INHERIT_MODEL, type WaggleConfig } from '@shared/types/waggle'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { runPiWaggle } from '../waggle-run'
+import { resolveWaggleRuntimeConfig } from '../waggle-model-resolution'
 import {
   createFakePi,
   createFakeSession,
@@ -103,5 +104,26 @@ describe('Pi Waggle runtime model resolution', () => {
     expect(turnEvents).toContainEqual(
       expect.objectContaining({ type: 'turn-end', turnNumber: 1, agentModel: PRIMARY_MODEL }),
     )
+  })
+
+  it('filters prompt-gated slots before selecting runtime turn order', () => {
+    const config = waggleConfig()
+    const resolved = resolveWaggleRuntimeConfig({
+      config: {
+        ...config,
+        agents: [
+          {
+            ...config.agents[0],
+            runCondition: { type: 'prompt-match', anyOf: ['animation'] },
+          },
+          config.agents[1],
+          { ...config.agents[0], label: 'Mediator', model: SECONDARY_MODEL },
+        ],
+      },
+      inheritedModel: PRIMARY_MODEL,
+      userPrompt: 'Review the implementation',
+    })
+
+    expect(resolved.agents.map((agent) => agent.label)).toEqual(['Reviewer', 'Mediator'])
   })
 })

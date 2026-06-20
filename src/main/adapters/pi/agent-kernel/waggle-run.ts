@@ -20,12 +20,24 @@ import { logger } from './constants'
 import { createPiRunSessionRuntime, runSubscribedPiOperation } from './run-lifecycle'
 import { createSessionListener } from './session-listener'
 import { resolveSessionProjectPath } from './session-manager'
+import { createWaggleArtifactRegistry } from './waggle-artifact-registry'
 import { resolveWaggleRuntimeConfig } from './waggle-model-resolution'
 import {
   buildWaggleTurnCustomMessage,
   buildWaggleTurnMetadata,
   sendInitialWaggleMessages,
 } from './waggle-run-messages'
+import {
+  appendLoopDirective,
+  collectToolExecutionHandoff,
+  collectResponseDirectiveHandoff,
+  createWaggleTurnHandoffDraft,
+  finalizeWaggleTurnHandoff,
+  readKeepOrRevertDecision,
+  type WaggleTurnHandoff,
+  type WaggleTurnHandoffDraft,
+} from './waggle-turn-handoff'
+import { createWaggleTurnRollbackTracker } from './waggle-turn-rollback'
 
 type PiWaggleKernelRunInput = AgentKernelRunInput & {
   readonly waggle: AgentKernelWaggleRunOptions
@@ -46,6 +58,12 @@ function withTransportEventModel(
   meta: WaggleStreamMetadata,
 ): AgentTransportEvent {
   return { ...event, model: meta.agentModel }
+}
+
+function extractFilePath(input: unknown) {
+  if (input == null || typeof input !== 'object') return ''
+  const path = 'path' in input ? input.path : 'filePath' in input ? input.filePath : ''
+  return typeof path === 'string' ? path : ''
 }
 
 function emitWaggleTurnStart(input: PiWaggleKernelRunInput, meta: WaggleStreamMetadata) {
@@ -85,6 +103,7 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
   const runtimeConfig = resolveWaggleRuntimeConfig({
     config: input.waggle.config,
     inheritedModel: input.waggle.inheritedModel,
+    userPrompt: input.payload.text,
   })
   const initialRuntimeModel = SupportedModelId(runtimeConfig.agents[0].model)
   let policyState = createPiWaggleStopPolicyState()
@@ -93,13 +112,39 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
     turnNumber: 0,
     waggleSessionId,
   })
+  const artifactRegistry = createWaggleArtifactRegistry(waggleSessionId)
+  const rollbackTracker = createWaggleTurnRollbackTracker(projectPath)
+  let nextTurnHandoff: WaggleTurnHandoff | null = null
+  let activeTurnHandoff: WaggleTurnHandoffDraft = createWaggleTurnHandoffDraft()
 
   const waggleExtension = createPiWaggleExtension<WaggleStreamMetadata>({
     config: runtimeConfig,
     createTurnMetadata: ({ turnNumber }) =>
       buildWaggleTurnMetadata({ config: runtimeConfig, turnNumber, waggleSessionId }),
-    onTurnComplete: ({ meta, messages, turn }) => {
+    onTurnComplete: async ({ meta, messages, turn }) => {
       const summary = summarizePiWaggleTurnMessages(messages)
+      const keepOrRevertDecision = readKeepOrRevertDecision(summary.responseText)
+      let restoredPaths: string[] = []
+
+      if (keepOrRevertDecision === 'revert' && rollbackTracker.hasPendingRollback()) {
+        restoredPaths = await rollbackTracker.rollbackPendingFix()
+      } else if (keepOrRevertDecision === 'keep') {
+        rollbackTracker.clearPendingRollback()
+      }
+
+      collectResponseDirectiveHandoff(activeTurnHandoff, {
+        responseText: summary.responseText,
+        includeRollbackDirective: restoredPaths.length === 0,
+      })
+      if (restoredPaths.length > 0) {
+        appendLoopDirective(
+          activeTurnHandoff,
+          `Rollback completed for failed fix files before the next loop: ${restoredPaths.join(', ')}`,
+        )
+      }
+      const completedTurnHandoff = finalizeWaggleTurnHandoff(activeTurnHandoff)
+      activeTurnHandoff = createWaggleTurnHandoffDraft()
+      rollbackTracker.promoteCurrentTurnEdits()
       const evaluation = evaluatePiWaggleStopPolicy({
         config: runtimeConfig,
         turnNumber: turn.turnNumber,
@@ -110,7 +155,10 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
       policyState = evaluation.state
 
       if (evaluation.turnSucceeded) {
+        nextTurnHandoff = completedTurnHandoff
         emitWaggleTurnEnd(input, meta)
+      } else {
+        nextTurnHandoff = null
       }
 
       if (evaluation.consensus) {
@@ -141,7 +189,11 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
     onActiveTurnChange: (meta) => {
       currentMeta = meta
     },
-    onTurnStart: (meta) => emitWaggleTurnStart(input, meta),
+    onTurnStart: (meta) => {
+      activeTurnHandoff = createWaggleTurnHandoffDraft()
+      rollbackTracker.resetCurrentTurn()
+      emitWaggleTurnStart(input, meta)
+    },
     canStartNextTurn: () => !input.signal.aborted,
     buildTurnMessage: ({ model: turnModel, meta }) =>
       buildWaggleTurnCustomMessage({
@@ -150,6 +202,7 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
         config: runtimeConfig,
         meta,
         runId: input.runId,
+        handoff: nextTurnHandoff,
       }),
   })
 
@@ -167,8 +220,35 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
       {
         ...input,
         model: initialRuntimeModel,
-        onEvent: (event) =>
-          input.waggle.onWaggleEvent(withTransportEventModel(event, currentMeta), currentMeta),
+        onEvent: (event) => {
+          const transportEvent = withTransportEventModel(event, currentMeta)
+          if (
+            transportEvent.type === 'tool_execution_start' &&
+            (transportEvent.toolName === 'write' || transportEvent.toolName === 'edit')
+          ) {
+            const filePath = extractFilePath(transportEvent.args)
+            rollbackTracker.capturePreEditSnapshot(filePath)
+          }
+          if (transportEvent.type === 'tool_execution_end') {
+            if (
+              !transportEvent.isError &&
+              (transportEvent.toolName === 'write' || transportEvent.toolName === 'edit')
+            ) {
+              const filePath = extractFilePath(transportEvent.args)
+              rollbackTracker.recordSuccessfulEdit(filePath)
+            }
+            const artifacts = collectToolExecutionHandoff(
+              activeTurnHandoff,
+              artifactRegistry,
+              transportEvent,
+              currentMeta,
+            )
+            for (const artifact of artifacts) {
+              input.waggle.onTurnEvent({ type: 'artifact-registered', artifact })
+            }
+          }
+          input.waggle.onWaggleEvent(transportEvent, currentMeta)
+        },
       },
       input.runId,
     ),

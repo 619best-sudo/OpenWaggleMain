@@ -61,6 +61,10 @@ function samplePreset(): WagglePreset {
       ],
       stop: { primary: 'consensus', maxTurnsSafety: 8 },
     },
+    app: {
+      requiredMcps: ['playwright'],
+      requiredSkills: ['ui-critic'],
+    },
     isBuiltIn: false,
     createdAt: 1000,
     updatedAt: 1000,

@@ -35,6 +35,7 @@ describe('useChatRouteEffects', () => {
       draftSession: null,
       missingSessionIds: new Set(),
       sessionById: new Map(),
+      refreshSession: vi.fn().mockResolvedValue(undefined),
       setActiveSession: vi.fn(),
     })
     useSessionStore.setState({
@@ -92,6 +93,7 @@ describe('useChatRouteEffects', () => {
     const routeBranchId = SessionBranchId('branch-1')
     const routeNodeId = SessionNodeId('node-1')
     const setActiveSession = vi.fn()
+    const refreshSession = vi.fn().mockResolvedValue(undefined)
     const refreshSessionWorkspace = vi.fn().mockResolvedValue(undefined)
     const clearDraftBranchForSession = vi.fn()
     const setProjectPath = vi.fn().mockResolvedValue(undefined)
@@ -101,6 +103,7 @@ describe('useChatRouteEffects', () => {
     useChatStore.setState({
       activeSessionId: SessionId('previous-session'),
       sessionById: new Map([[routeSessionId, sessionDetail('route-session', '/route-project')]]),
+      refreshSession,
       setActiveSession,
     })
     useSessionStore.setState({
@@ -121,6 +124,7 @@ describe('useChatRouteEffects', () => {
     )
 
     await waitFor(() => expect(setActiveSession).toHaveBeenCalledWith(routeSessionId))
+    expect(refreshSession).toHaveBeenCalledWith(routeSessionId)
     expect(useSessionStatusStore.getState().lastVisitedAt.has(routeSessionId)).toBe(true)
     expect(clearDraftBranchForSession).toHaveBeenCalledWith(routeSessionId)
     expect(refreshSessionWorkspace).toHaveBeenCalledWith(routeSessionId, {
@@ -130,5 +134,55 @@ describe('useChatRouteEffects', () => {
     expect(setProjectPath).toHaveBeenCalledWith('/route-project')
     expect(refreshStatus).toHaveBeenCalledWith('/route-project')
     expect(refreshBranches).toHaveBeenCalledWith('/route-project')
+  })
+
+  it('re-activates the route session when the active id matches but the detail is not hydrated yet', async () => {
+    const routeSessionId = SessionId('route-session')
+    const setActiveSession = vi.fn()
+    const refreshSession = vi.fn().mockResolvedValue(undefined)
+
+    useChatStore.setState({
+      activeSessionId: routeSessionId,
+      activeSession: null,
+      refreshSession,
+      sessionById: new Map(),
+      setActiveSession,
+    })
+
+    renderHook(() =>
+      useChatRouteEffects({
+        branchId: null,
+        diffOpen: false,
+        nodeId: null,
+        sessionId: String(routeSessionId),
+      }),
+    )
+
+    await waitFor(() => expect(setActiveSession).toHaveBeenCalledWith(routeSessionId))
+    expect(refreshSession).toHaveBeenCalledWith(routeSessionId)
+  })
+
+  it('refreshes the routed session even when a cached detail already exists', async () => {
+    const routeSessionId = SessionId('route-session')
+    const refreshSession = vi.fn().mockResolvedValue(undefined)
+
+    useChatStore.setState({
+      activeSessionId: routeSessionId,
+      activeSession: sessionDetail('route-session', '/route-project'),
+      refreshSession,
+      sessionById: new Map([[routeSessionId, sessionDetail('route-session', '/route-project')]]),
+      setActiveSession: vi.fn(),
+    })
+
+    renderHook(() =>
+      useChatRouteEffects({
+        branchId: null,
+        diffOpen: false,
+        nodeId: null,
+        sessionId: String(routeSessionId),
+      }),
+    )
+
+    await waitFor(() => expect(refreshSession).toHaveBeenCalledWith(routeSessionId))
   })
 })

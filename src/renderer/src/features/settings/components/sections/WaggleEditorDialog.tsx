@@ -20,6 +20,8 @@ interface WaggleEditorDialogProps {
     readonly agents: readonly Parameters<typeof WaggleAgentSlotCard>[0]['agent'][]
     readonly stopCondition: Parameters<typeof CollaborationSettingsCard>[0]['stopCondition']
     readonly maxTurns: number
+    readonly requiredMcpsText: string
+    readonly requiredSkillsText: string
   }
   readonly dispatchForm: (action: WaggleFormAction) => void
   readonly onClose: () => void
@@ -40,8 +42,6 @@ export function WaggleEditorDialog({
   onClose,
   onSubmit,
 }: WaggleEditorDialogProps) {
-  const [agentA, agentB] = formState.agents
-
   useEscapeHotkey(onClose)
 
   return (
@@ -94,40 +94,63 @@ export function WaggleEditorDialog({
             </p>
           ) : null}
 
-          <div className="relative flex flex-col gap-6 md:flex-row md:items-stretch">
-            <div className="flex-1">
-              {agentA ? (
-                <WaggleAgentSlotCard
-                  index={0}
-                  agent={agentA}
-                  dispatchForm={dispatchForm}
-                  dotLabel="A"
-                  settings={settings}
-                  providerModels={providerModels}
-                />
-              ) : null}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border-light bg-bg-secondary/35 px-4 py-3">
+              <div className="text-[12px] leading-5 text-text-tertiary">
+                Configure each participant in the collaboration loop. Waggle now rotates through
+                every active agent in order, and individual slots can opt into prompt-keyword
+                gating when they should only join certain requests.
+              </div>
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => dispatchForm({ type: 'add-agent' })}
+                leftIcon={<Plus className="size-4" />}
+                className="shrink-0"
+              >
+                Add Agent
+              </Button>
             </div>
 
-            {/* Visual VS divider */}
-            <div className="absolute left-1/2 top-1/2 z-10 hidden size-8 -translate-x-1/2 -translate-y-1/2 select-none items-center justify-center rounded-full border border-border bg-bg-secondary text-[11px] font-bold text-text-tertiary shadow-sm md:flex">
-              VS
-            </div>
-
-            <div className="flex-1">
-              {agentB ? (
+            <div className="grid gap-6 xl:grid-cols-2">
+              {formState.agents.map((agent, index) => (
                 <WaggleAgentSlotCard
-                  index={1}
-                  agent={agentB}
+                  key={`agent-${String(index)}`}
+                  index={index}
+                  agent={agent}
                   dispatchForm={dispatchForm}
-                  dotLabel="B"
+                  dotLabel={String(index + 1)}
                   settings={settings}
                   providerModels={providerModels}
+                  canRemove={formState.agents.length > 2}
                 />
-              ) : null}
+              ))}
             </div>
           </div>
 
           <div className="mt-6">
+            <div className="mb-3 rounded-xl border border-border-light bg-bg-secondary/50 px-4 py-3 text-[12px] leading-5 text-text-tertiary">
+              Waggle apps bundle agent roles with the MCPs and skills they depend on. Later turns
+              receive a concise generation handoff, and image-capable models can additionally
+              inspect discovered image outputs directly. When using MCPs, always map artifact
+              starter payload values into the tool schema exactly.
+            </div>
+            <div className="mb-6 grid gap-4 md:grid-cols-2">
+              <DependencyEditor
+                label="Required MCPs"
+                description="One MCP id per line. These become the installable MCP dependencies for this Waggle app."
+                placeholder={'playwright\npostgres\nffmpeg'}
+                value={formState.requiredMcpsText}
+                onChange={(value) => dispatchForm({ type: 'set-required-mcps-text', value })}
+              />
+              <DependencyEditor
+                label="Required Skills"
+                description="One skill id per line. These become the installable skill dependencies for this Waggle app."
+                placeholder={'ui-critic\nbackend-auditor\nmedia-director'}
+                value={formState.requiredSkillsText}
+                onChange={(value) => dispatchForm({ type: 'set-required-skills-text', value })}
+              />
+            </div>
             <CollaborationSettingsCard
               stopCondition={formState.stopCondition}
               maxTurns={formState.maxTurns}
@@ -156,5 +179,29 @@ export function WaggleEditorDialog({
         </div>
       </div>
     </div>
+  )
+}
+
+function DependencyEditor(input: {
+  readonly label: string
+  readonly description: string
+  readonly placeholder: string
+  readonly value: string
+  readonly onChange: (value: string) => void
+}) {
+  return (
+    <label className="rounded-xl border border-border-light bg-bg-secondary/35 p-4">
+      <div className="text-[12px] font-medium uppercase tracking-wide text-text-secondary">
+        {input.label}
+      </div>
+      <div className="mt-1 text-[12px] leading-5 text-text-tertiary">{input.description}</div>
+      <textarea
+        className="mt-3 min-h-[120px] w-full resize-y rounded-lg border border-border bg-bg px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50"
+        value={input.value}
+        onChange={(event) => input.onChange(event.target.value)}
+        placeholder={input.placeholder}
+        spellCheck={false}
+      />
+    </label>
   )
 }

@@ -1,5 +1,11 @@
+import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
+import { useChat } from '@/features/chat/hooks/useChat'
 import { usePreferences, useProviders } from '@/features/settings/hooks/useSettings'
+import { usePreferencesStore } from '@/features/settings/state/preferences-store'
+import { useWaggleLaunchPromptStore, useWaggleStore } from '@/features/waggle/state'
+import { useInstallWaggleAppDependenciesMutation } from '@/queries/waggle-apps'
+import { useUIStore } from '@/shell/ui-store'
 import { useWaggleForm } from '../../hooks/useWaggleForm'
 import { WaggleEditorDialog } from './WaggleEditorDialog'
 import { WagglePresetsPanel } from './WagglePresetsPanel'
@@ -7,8 +13,14 @@ import { WagglePresetsPanel } from './WagglePresetsPanel'
 type WaggleEditorMode = 'closed' | 'create' | 'edit'
 
 export function WaggleSection({ showHeading = true }: { readonly showHeading?: boolean }) {
+  const navigate = useNavigate()
   const { settings } = usePreferences()
   const { providerModels } = useProviders()
+  const projectPath = usePreferencesStore((state) => state.settings.projectPath)
+  const showToast = useUIStore((state) => state.showToast)
+  const { activeSession, activeSessionId, createSession } = useChat()
+  const setWaggleConfig = useWaggleStore((state) => state.setConfig)
+  const queueLaunchPrompt = useWaggleLaunchPromptStore((state) => state.queuePrompt)
   const {
     formState,
     dispatchForm,
@@ -22,6 +34,7 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
     handleCreatePreset,
     handleDeletePreset,
   } = useWaggleForm()
+  const installDependenciesMutation = useInstallWaggleAppDependenciesMutation(projectPath)
   const [editorMode, setEditorMode] = useState<WaggleEditorMode>('closed')
 
   const activePreset = useMemo(
@@ -52,6 +65,66 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
     setEditorMode('closed')
   }
 
+  async function handleInstallDependencies(preset: (typeof presets)[number]) {
+    if (!projectPath) {
+      showToast('Select a project before installing Waggle app dependencies.', 'error')
+      return
+    }
+
+    try {
+      const result = await installDependenciesMutation.mutateAsync(preset)
+      const changedCount = result.installedDependencyIds.length + result.enabledDependencyIds.length
+      if (result.unsupportedDependencyIds.length > 0) {
+        showToast(
+          `Installed what we could for "${preset.name}". ${result.unsupportedDependencyIds.length} dependency ids still need recipes.`,
+          'neutral',
+        )
+        return
+      }
+      showToast(
+        changedCount > 0
+          ? `Installed Waggle app dependencies for "${preset.name}".`
+          : `"${preset.name}" is already ready to run.`,
+        'success',
+      )
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      showToast(`Failed to install Waggle app dependencies: ${message}`, 'error')
+    }
+  }
+
+  async function handleLaunchPreset(preset: (typeof presets)[number], prompt?: string) {
+    if (!projectPath) {
+      showToast('Select a project before launching a Waggle app.', 'error')
+      return
+    }
+
+    try {
+      const targetSessionId =
+        activeSessionId && activeSession?.projectPath === projectPath
+          ? activeSessionId
+          : await createSession(projectPath)
+
+      setWaggleConfig(preset.config, targetSessionId)
+      if (prompt) {
+        queueLaunchPrompt(targetSessionId, String(preset.id), prompt)
+      }
+      void navigate({
+        to: '/sessions/$sessionId',
+        params: { sessionId: String(targetSessionId) },
+      })
+      showToast(
+        prompt
+          ? `"${preset.name}" is ready with a starter prompt in the composer.`
+          : `"${preset.name}" is ready. Send the first prompt in chat to start this Waggle app.`,
+        'success',
+      )
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      showToast(`Failed to launch Waggle app: ${message}`, 'error')
+    }
+  }
+
   const editorTitle =
     editorMode === 'create'
       ? 'Create Waggle'
@@ -60,8 +133,8 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
         : 'Edit Waggle'
   const editorDescription =
     editorMode === 'create'
-      ? 'Define the two agent roles and stop rules, then save this setup when it is ready.'
-      : 'Adjust the selected setup here after reviewing it from the list.'
+      ? 'Define the agent roles, app dependencies, and stop rules, then save this Waggle app when it is ready.'
+      : 'Adjust the selected Waggle app here after reviewing it from the list.'
   const primaryActionLabel = editorMode === 'create' ? 'Create Waggle' : 'Save Changes'
   const isDialogOpen = editorMode !== 'closed'
 
@@ -79,12 +152,20 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
         </p>
       )}
       <WagglePresetsPanel
+        projectPath={projectPath}
         presets={presets}
         activePresetId={activePresetId}
         isModified={isModified}
         onLoadPreset={handleSelectPreset}
         onDeletePreset={handleDeletePreset}
         onStartCreate={handleStartCreate}
+        onInstallDependencies={handleInstallDependencies}
+        onLaunchPreset={handleLaunchPreset}
+        installingPresetId={
+          installDependenciesMutation.isPending
+            ? (installDependenciesMutation.variables?.id ?? null)
+            : null
+        }
       />
       {isDialogOpen ? (
         <WaggleEditorDialog

@@ -6,6 +6,8 @@ export type { SupportedModelId } from './brand'
 
 export type ProviderAuthSource = 'none' | 'api-key' | 'oauth' | 'environment-or-custom'
 export type ProviderApiKeyAuthSource = 'none' | 'api-key' | 'environment-or-custom'
+export type ModelInputCapability = 'text' | 'image'
+export type ToolGenerationCapability = 'image' | 'audio' | 'video'
 
 export interface ProviderAuthInfo {
   /** Provider-level active auth source as Pi will resolve it for model availability. */
@@ -32,6 +34,8 @@ export interface ModelDisplayInfo {
   readonly available: boolean
   /** Thinking levels available for this concrete provider/model selection. */
   readonly availableThinkingLevels: readonly ThinkingLevel[]
+  /** Input modalities reported by Pi for this concrete provider/model selection. */
+  readonly input: readonly ModelInputCapability[]
   /** Context window size in tokens (e.g., 200000, 1000000). Populated from provider metadata. */
   readonly contextWindow?: number
 }
@@ -96,4 +100,26 @@ export function generateDisplayName(modelId: string): string {
 
   // Join with spaces, then collapse version-like patterns: "4 5" → "4.5"
   return mapped.join(' ').replace(/(\d) (\d)/g, '$1.$2')
+}
+
+export function modelSupportsImageInput(model: Pick<ModelDisplayInfo, 'input'>): boolean {
+  return model.input.includes('image')
+}
+
+const DEFAULT_TOOL_GENERATION_CAPABILITIES = [
+  'image',
+  'audio',
+  'video',
+] as const satisfies readonly ToolGenerationCapability[]
+
+/**
+ * Tool-generation is a Waggle workflow capability rather than native Pi model metadata.
+ * If the runtime exposes compatible tools, any normal text-capable model can orchestrate
+ * image/audio/video generation through those tools even when it cannot consume those
+ * modalities natively on the next turn.
+ */
+export function getToolGenerationCapabilities(
+  model: Pick<ModelDisplayInfo, 'input'>,
+): readonly ToolGenerationCapability[] {
+  return model.input.includes('text') ? DEFAULT_TOOL_GENERATION_CAPABILITIES : []
 }

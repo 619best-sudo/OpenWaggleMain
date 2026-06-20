@@ -102,9 +102,10 @@ describe('ComposerToolbar', () => {
     })
   })
 
-  it('renders thinking level label', () => {
+  it('renders a combined model and thinking control', () => {
     renderToolbar()
-    expect(screen.getByTitle('Select thinking level')).toBeInTheDocument()
+    expect(screen.getByTitle(/Model and thinking settings/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /thinking medium/i })).toBeInTheDocument()
   })
 
   it('renders the branch picker beside the thinking control when a project is selected', () => {
@@ -126,12 +127,12 @@ describe('ComposerToolbar', () => {
     expect(screen.queryByTitle('Manage branches')).toBeNull()
   })
 
-  it('opens thinking menu on click', () => {
+  it('opens the combined model and thinking menu on click', () => {
     renderToolbar()
-    fireEvent.click(screen.getByTitle('Select thinking level'))
-    expect(useComposerStore.getState().thinkingMenuOpen).toBe(true)
+    fireEvent.click(screen.getByTitle(/Model and thinking settings/i))
     expect(screen.getByText('Low')).toBeInTheDocument()
     expect(screen.getByText('High')).toBeInTheDocument()
+    expect(screen.getAllByText('GPT 5').length).toBeGreaterThan(0)
   })
 
   it('shows the selected model effective thinking level instead of unsupported xhigh', () => {
@@ -144,10 +145,10 @@ describe('ComposerToolbar', () => {
 
     renderToolbar()
 
-    expect(screen.getByRole('button', { name: /high/i })).toBeInTheDocument()
-    fireEvent.click(screen.getByTitle('Extra High is not available for this model; using High'))
+    expect(screen.getByRole('button', { name: /thinking high/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByTitle(/using High/i))
     expect(screen.queryByText('Extra High')).not.toBeInTheDocument()
-    expect(screen.getAllByText('High')).toHaveLength(2)
+    expect(screen.getAllByText('High')).toHaveLength(1)
   })
 
   it('maps non-reasoning selected models to off in the toolbar', () => {
@@ -171,9 +172,9 @@ describe('ComposerToolbar', () => {
 
     renderToolbar()
 
-    expect(screen.getByRole('button', { name: /off/i })).toBeInTheDocument()
-    fireEvent.click(screen.getByTitle('Selected model does not support thinking'))
-    expect(screen.getAllByText('Off')).toHaveLength(2)
+    expect(screen.getByRole('button', { name: /thinking off/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByTitle(/does not support thinking/i))
+    expect(screen.getAllByText('Off')).toHaveLength(1)
     expect(screen.queryByText('Medium')).not.toBeInTheDocument()
   })
 

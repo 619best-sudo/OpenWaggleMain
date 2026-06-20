@@ -1,4 +1,6 @@
+import { isLightThemeMode } from '@shared/types/settings'
 import type { McpConfigSourceId, McpConfigSourceSummary } from '@shared/types/mcp'
+import { usePreferences } from '@/features/settings/hooks'
 import { Button } from '@/shared/ui/Button'
 import { Select } from '@/shared/ui/Select'
 import { Textarea } from '@/shared/ui/Textarea'
@@ -24,23 +26,25 @@ export function McpSourceEditor({
   onSave,
   onRawJsonChange,
 }: McpSourceEditorProps) {
+  const { settings } = usePreferences()
+
   return (
     <div className="flex flex-col h-full">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="max-w-[500px] text-[13px] leading-5 text-text-tertiary mb-6">
+          <p className="mb-5 max-w-[560px] text-[13px] leading-5 text-text-tertiary">
             Advanced config is preserved as JSON so every `pi-mcp-adapter` server and settings field
             remains available.
           </p>
 
           {sources.length > 0 && onSelectSource && (
-            <label className="flex items-center gap-2 mb-4">
+            <label className="mb-4 flex items-center gap-2">
               <span className="text-[12px] font-medium text-text-secondary">Source:</span>
               <Select
                 value={selectedSource?.id ?? ''}
                 disabled={busy}
                 onChange={(e) => onSelectSource(e.target.value as McpConfigSourceId)}
-                className="w-full max-w-[300px] text-[12px] py-1.5 pl-3 pr-8 h-8 rounded-lg border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"
+                className="h-8 w-full max-w-[320px] pr-8 text-[12px]"
               >
                 <option value="" disabled>
                   Select source to edit...
@@ -65,7 +69,7 @@ export function McpSourceEditor({
         </div>
       </div>
 
-      <div className="flex-1 rounded-xl border border-white/6 bg-black/20 p-4">
+      <div className="flex-1 rounded-xl border border-border-light bg-bg-secondary/35 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
         <Textarea
           value={rawJson}
           rows={RAW_EDITOR_ROWS}
@@ -74,21 +78,17 @@ export function McpSourceEditor({
           resize="vertical"
           wrap="off"
           highlightLanguage="json"
+          highlightTheme={isLightThemeMode(settings.themeMode) ? 'github-light' : 'github-dark'}
           onChange={(event) => {
             if (!selectedSource) return
             onRawJsonChange(selectedSource.id, event.target.value)
           }}
-          className="bg-transparent border-transparent focus:border-transparent p-0 text-[13px] w-full h-full min-h-[300px]"
+          className="h-full min-h-[320px] w-full border-transparent bg-code-card p-3 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] focus:border-accent/20"
         />
       </div>
 
-      <div className="mt-8 flex items-center justify-end gap-4 pt-4 border-t border-white/6">
-        <Button
-          variant="accent"
-          disabled={!selectedSource || busy}
-          onClick={onSave}
-          className="px-6 bg-accent/10 text-accent hover:bg-accent/20 border border-accent/20 font-medium"
-        >
+      <div className="mt-6 flex items-center justify-end gap-4 border-t border-border pt-4">
+        <Button variant="accent" disabled={!selectedSource || busy} onClick={onSave} className="px-6">
           Save JSON
         </Button>
       </div>

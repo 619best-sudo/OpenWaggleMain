@@ -37,6 +37,24 @@ describe('waggle-store collaboration lifecycle behavior', () => {
     expect(useWaggleStore.getState().activeConfig).toBeNull()
   })
 
+  it('re-arms a newly selected config as an idle Waggle after a completed run', () => {
+    const sessionId = SessionId('session-waggle-rearm')
+    useWaggleStore.getState().startCollaboration(sessionId, makeConfig())
+    useWaggleStore.getState().handleTurnEvent({
+      type: 'collaboration-complete',
+      reason: 'Routing complete',
+      totalTurns: 2,
+    })
+
+    useWaggleStore.getState().setConfig(makeConfig(), sessionId)
+
+    const state = useWaggleStore.getState()
+    expect(state.status).toBe('idle')
+    expect(state.activeCollaborationId).toBeNull()
+    expect(state.configSessionId).toBe(sessionId)
+    expect(state.completionReason).toBeNull()
+  })
+
   it('initializes collaboration state and first-turn metadata from config', () => {
     const sessionId = SessionId('session-waggle-1')
     const config = makeConfig()

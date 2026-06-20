@@ -2,6 +2,7 @@ import { matchBy } from '@diegogbrisa/ts-match'
 import type { SessionId } from '@shared/types/brand'
 import {
   isInheritedWaggleModelBinding,
+  type WaggleArtifact,
   type WaggleCollaborationStatus,
   type WaggleConfig,
   type WaggleConsensusCheckResult,
@@ -36,6 +37,7 @@ interface WaggleState {
 
   // Events
   fileConflicts: WaggleFileConflictWarning[]
+  artifacts: WaggleArtifact[]
   lastConsensusResult: WaggleConsensusCheckResult | null
   completionReason: string | null
 
@@ -61,11 +63,27 @@ export const useWaggleStore = create<WaggleState>((set) => ({
   completedTurnMeta: [],
   liveMessageMetadata: {},
   fileConflicts: [],
+  artifacts: [],
   lastConsensusResult: null,
   completionReason: null,
 
   setConfig(config, sessionId) {
-    set({ activeConfig: config, configSessionId: sessionId })
+    set({
+      activeCollaborationId: null,
+      configSessionId: sessionId,
+      activeConfig: config,
+      status: 'idle',
+      currentTurn: 0,
+      currentAgentIndex: 0,
+      currentAgentLabel: '',
+      initialTurnMeta: null,
+      completedTurnMeta: [],
+      liveMessageMetadata: {},
+      fileConflicts: [],
+      artifacts: [],
+      lastConsensusResult: null,
+      completionReason: null,
+    })
   },
 
   clearConfig() {
@@ -94,6 +112,7 @@ export const useWaggleStore = create<WaggleState>((set) => ({
       completedTurnMeta: [],
       liveMessageMetadata: {},
       fileConflicts: [],
+      artifacts: [],
       lastConsensusResult: null,
       completionReason: null,
     })
@@ -110,6 +129,9 @@ export const useWaggleStore = create<WaggleState>((set) => ({
       })
       .with('consensus-reached', (value) => {
         set({ lastConsensusResult: value.result })
+      })
+      .with('artifact-registered', (value) => {
+        set((s) => ({ artifacts: [...s.artifacts, value.artifact] }))
       })
       .with('file-conflict', (value) => {
         set((s) => ({ fileConflicts: [...s.fileConflicts, value.warning] }))
@@ -166,6 +188,7 @@ export const useWaggleStore = create<WaggleState>((set) => ({
       completedTurnMeta: [],
       liveMessageMetadata: {},
       fileConflicts: [],
+      artifacts: [],
       lastConsensusResult: null,
       completionReason: null,
     })

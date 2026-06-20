@@ -12,8 +12,6 @@ import { getSafeChildEnv } from '../env'
 import { broadcastToWindows } from '../utils/broadcast'
 import { typedHandle, typedOn } from './typed-ipc'
 
-const MIN_ARG_1 = 10
-const MIN_ARG_1_VALUE_5 = 5
 // node-pty is a native module loaded via dynamic import at first use
 let ptyModule: typeof NodePtyModule | undefined
 
@@ -36,12 +34,12 @@ const terminalPathSchema = Schema.String.pipe(Schema.minLength(1))
 const terminalResizeSchema = Schema.Struct({
   cols: Schema.Number.pipe(
     Schema.int(),
-    Schema.greaterThanOrEqualTo(MIN_ARG_1),
+    Schema.greaterThanOrEqualTo(TERMINAL.MIN_COLS),
     Schema.lessThanOrEqualTo(TERMINAL.MAX_COLS),
   ),
   rows: Schema.Number.pipe(
     Schema.int(),
-    Schema.greaterThanOrEqualTo(MIN_ARG_1_VALUE_5),
+    Schema.greaterThanOrEqualTo(TERMINAL.MIN_ROWS),
     Schema.lessThanOrEqualTo(TERMINAL.MAX_ROWS),
   ),
 })
@@ -103,11 +101,14 @@ export function registerTerminalHandlers(): void {
   )
 
   typedHandle('terminal:resize', (_event, terminalId: string, cols: number, rows: number) =>
-    Effect.try(() => {
-      const parsed = decodeUnknownOrThrow(terminalResizeSchema, { cols, rows })
+    Effect.sync(() => {
+      const parsed = safeDecodeUnknown(terminalResizeSchema, { cols, rows })
+      if (!parsed.success) {
+        return
+      }
       const terminal = terminals.get(terminalId)
       if (terminal) {
-        terminal.process.resize(parsed.cols, parsed.rows)
+        terminal.process.resize(parsed.data.cols, parsed.data.rows)
       }
     }),
   )

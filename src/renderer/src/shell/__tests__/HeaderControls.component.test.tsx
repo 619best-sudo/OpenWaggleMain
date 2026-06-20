@@ -103,6 +103,7 @@ describe('HeaderControls', () => {
     )
 
     expect(screen.getByText('Loading diff…')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle diff panel' })).not.toBeDisabled()
 
     rerender(
       <DiffToggleButton
@@ -117,5 +118,6 @@ describe('HeaderControls', () => {
     )
 
     expect(screen.getByText('Git unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle diff panel' })).toBeDisabled()
   })
 })

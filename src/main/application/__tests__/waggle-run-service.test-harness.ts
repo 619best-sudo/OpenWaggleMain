@@ -6,9 +6,12 @@ import type { WaggleConfig } from '@shared/types/waggle'
 import { Layer } from 'effect'
 import * as Effect from 'effect/Effect'
 import { type Mock, vi } from 'vitest'
+import { BUILT_IN_WAGGLE_PRESETS } from '../../adapters/settings-waggle-presets-built-ins'
+import { McpConfigService } from '../../ports/mcp-config-service'
 import { type AgentKernelRunInput, AgentKernelService } from '../../ports/agent-kernel-service'
 import { SessionProjectionRepository } from '../../ports/session-projection-repository'
 import { type PersistSessionSnapshotInput, SessionRepository } from '../../ports/session-repository'
+import { WagglePresetsRepository } from '../../ports/waggle-presets-repository'
 import { SettingsService } from '../../services/settings-service'
 
 export const runMock: Mock = vi.fn()
@@ -16,6 +19,7 @@ export const persistSnapshotMock: Mock = vi.fn()
 export const recordActiveRunMock: Mock = vi.fn()
 export const clearActiveRunMock: Mock = vi.fn()
 export const clearInterruptedRunsMock: Mock = vi.fn()
+export const kernelRunResultMock: Mock = vi.fn()
 
 export const sessionId = SessionId('session-1')
 export const projectPath = '/tmp/openwaggle-project'
@@ -59,6 +63,48 @@ const assistantMessage: Message = {
   createdAt: 10,
 }
 
+function defaultKernelRunResult() {
+  return {
+    newMessages: [
+      {
+        id: MessageId('user-message-1'),
+        role: 'user',
+        parts: [{ type: 'text', text: 'Review the implementation' }],
+        createdAt: 9,
+      },
+      assistantMessage,
+    ],
+    piSessionId: 'pi-session-1',
+    piSessionFile: '/tmp/pi-session-1.jsonl',
+    sessionSnapshot: {
+      activeNodeId: 'assistant-node-1',
+      nodes: [
+        {
+          id: 'assistant-node-1',
+          parentId: null,
+          piEntryType: 'message',
+          kind: 'assistant_message',
+          role: 'assistant',
+          timestampMs: 10,
+          contentJson: '{}',
+          metadataJson: JSON.stringify({
+            waggle: {
+              agentIndex: 0,
+              agentLabel: 'Architect',
+              agentColor: 'blue',
+              agentModel: 'openai/gpt-5.4',
+              turnNumber: 0,
+              sessionId: 'waggle-session-1',
+            },
+          }),
+          pathDepth: 0,
+          createdOrder: 0,
+        },
+      ],
+    },
+  }
+}
+
 const TestSessionProjectionLayer = Layer.succeed(SessionProjectionRepository, {
   get: () => Effect.succeed(session),
   getOptional: () => Effect.succeed(session),
@@ -86,6 +132,47 @@ const TestSettingsLayer = Layer.succeed(SettingsService, {
   update: () => Effect.void,
   initialize: () => Effect.void,
   flushForTests: () => Effect.void,
+})
+
+const testMcpView = {
+  adapter: {
+    enabled: true,
+    packageSource: 'extensions/pi-mcp-adapter',
+    runtimeConfigPath: null,
+  },
+  sources: [],
+  effective: {
+    mcpServers: {},
+    disabledMcpServers: {},
+    settings: {},
+    imports: [],
+  },
+  servers: [
+    {
+      name: 'playwright',
+      enabled: true,
+      sourceId: 'project-openwaggle',
+      sourceLabel: 'Project OpenWaggle',
+      sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+      command: 'npx',
+      transport: 'stdio',
+      directTools: 'inherited',
+    },
+  ],
+  runtimeConfigPath: null,
+} as const
+
+const TestMcpConfigLayer = Layer.succeed(McpConfigService, {
+  getView: () => Effect.succeed(testMcpView),
+  setAdapterEnabled: () => Effect.succeed(testMcpView),
+  setServerEnabled: () => Effect.succeed(testMcpView),
+  writeSourceConfig: () => Effect.succeed(testMcpView),
+})
+
+const TestWagglePresetsRepositoryLayer = Layer.succeed(WagglePresetsRepository, {
+  list: () => Effect.succeed(BUILT_IN_WAGGLE_PRESETS),
+  save: (preset) => Effect.succeed(preset),
+  delete: () => Effect.void,
 })
 
 const TestSessionLayer = Layer.succeed(SessionRepository, {
@@ -167,45 +254,7 @@ const TestAgentKernelLayer = Layer.succeed(AgentKernelService, {
         reason: 'Reached maximum turns (1)',
         totalTurns: 1,
       })
-      return {
-        newMessages: [
-          {
-            id: MessageId('user-message-1'),
-            role: 'user',
-            parts: [{ type: 'text', text: 'Review the implementation' }],
-            createdAt: 9,
-          },
-          assistantMessage,
-        ],
-        piSessionId: 'pi-session-1',
-        piSessionFile: '/tmp/pi-session-1.jsonl',
-        sessionSnapshot: {
-          activeNodeId: 'assistant-node-1',
-          nodes: [
-            {
-              id: 'assistant-node-1',
-              parentId: null,
-              piEntryType: 'message',
-              kind: 'assistant_message',
-              role: 'assistant',
-              timestampMs: 10,
-              contentJson: '{}',
-              metadataJson: JSON.stringify({
-                waggle: {
-                  agentIndex: 0,
-                  agentLabel: 'Architect',
-                  agentColor: 'blue',
-                  agentModel: 'openai/gpt-5.4',
-                  turnNumber: 0,
-                  sessionId: meta.sessionId,
-                },
-              }),
-              pathDepth: 0,
-              createdOrder: 0,
-            },
-          ],
-        },
-      }
+      return kernelRunResultMock()
     }),
   getContextUsage: () => Effect.fail(new Error('context usage is not used')),
   compact: () => Effect.fail(new Error('compaction is not used')),
@@ -217,6 +266,8 @@ const TestAgentKernelLayer = Layer.succeed(AgentKernelService, {
 export const TestLayer = Layer.mergeAll(
   TestSessionProjectionLayer,
   TestSettingsLayer,
+  TestMcpConfigLayer,
+  TestWagglePresetsRepositoryLayer,
   TestSessionLayer,
   TestAgentKernelLayer,
 )
@@ -227,4 +278,6 @@ export function resetWaggleRunServiceMocks() {
   recordActiveRunMock.mockReset()
   clearActiveRunMock.mockReset()
   clearInterruptedRunsMock.mockReset()
+  kernelRunResultMock.mockReset()
+  kernelRunResultMock.mockImplementation(() => defaultKernelRunResult())
 }

@@ -86,7 +86,7 @@ export function StreamingText({ text, isStreaming = false, className }: Streamin
   const rehypePlugins = getRehypePlugins(highlighter)
 
   return (
-    <div className={cn('prose', className)}>
+    <div className={cn('prose min-w-0 max-w-full break-words [overflow-wrap:anywhere]', className)}>
       <IncrementalMarkdown
         text={text}
         isStreaming={isStreaming}

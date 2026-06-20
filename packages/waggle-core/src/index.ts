@@ -1,6 +1,7 @@
 export * from './config'
 export * from './consensus'
 export * from './events'
+export * from './output-contract'
 export * from './presets'
 export * from './prompts'
 export * from './state'

@@ -19,7 +19,7 @@ export function SkillPreviewPane({
   previewMarkdown,
 }: SkillPreviewPaneProps) {
   return (
-    <div className="min-h-0 overflow-y-auto px-5 py-4">
+    <div className="diff-scroll min-h-0 overflow-y-auto px-5 py-4">
       {error && (
         <div className="mb-3 rounded-md border border-error/30 bg-error/10 px-3 py-2 text-[12px] text-error">
           {error}

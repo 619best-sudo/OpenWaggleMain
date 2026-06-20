@@ -14,7 +14,7 @@ export class FileConflictTracker {
   recordModification(
     filePath: string,
     agentIndex: number,
-    agents: readonly [WaggleAgentSlot, WaggleAgentSlot],
+    agents: readonly WaggleAgentSlot[],
     turnNumber: number,
   ) {
     const existing = this.modifications.get(filePath)

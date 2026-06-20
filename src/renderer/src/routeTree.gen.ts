@@ -14,6 +14,7 @@ import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ChatRouteImport } from './routes/_chat'
+import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as ChatIndexRouteImport } from './routes/_chat.index'
 import { Route as SettingsTabRouteImport } from './routes/settings.$tab'
 import { Route as SessionsSessionIdRouteImport } from './routes/sessions.$sessionId'
@@ -42,6 +43,11 @@ const ChatRoute = ChatRouteImport.update({
   id: '/_chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -66,15 +72,16 @@ export interface FileRoutesByFullPath {
   '/waggle': typeof WaggleRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/settings/$tab': typeof SettingsTabRoute
+  '/settings/': typeof SettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
-  '/settings': typeof SettingsRouteWithChildren
   '/skills': typeof SkillsRoute
   '/waggle': typeof WaggleRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/settings/$tab': typeof SettingsTabRoute
   '/': typeof ChatIndexRoute
+  '/settings': typeof SettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +93,7 @@ export interface FileRoutesById {
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/settings/$tab': typeof SettingsTabRoute
   '/_chat/': typeof ChatIndexRoute
+  '/settings/': typeof SettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,15 +105,16 @@ export interface FileRouteTypes {
     | '/waggle'
     | '/sessions/$sessionId'
     | '/settings/$tab'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/mcp'
-    | '/settings'
     | '/skills'
     | '/waggle'
     | '/sessions/$sessionId'
     | '/settings/$tab'
     | '/'
+    | '/settings'
   id:
     | '__root__'
     | '/_chat'
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/sessions/$sessionId'
     | '/settings/$tab'
     | '/_chat/'
+    | '/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -164,6 +174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/': {
+      id: '/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof SettingsRoute
+    }
     '/_chat/': {
       id: '/_chat/'
       path: '/'
@@ -200,10 +217,12 @@ const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
 
 interface SettingsRouteChildren {
   SettingsTabRoute: typeof SettingsTabRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
 }
 
 const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsTabRoute: SettingsTabRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
 }
 
 const SettingsRouteWithChildren = SettingsRoute._addFileChildren(

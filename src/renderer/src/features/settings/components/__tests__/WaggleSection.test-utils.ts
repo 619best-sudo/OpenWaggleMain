@@ -25,6 +25,7 @@ export const PROVIDER_MODELS: ProviderInfo[] = [
         provider: 'anthropic',
         available: true,
         availableThinkingLevels: ['off', 'minimal', 'low', 'medium', 'high'],
+        input: ['text', 'image'],
       },
       {
         id: SupportedModelId('anthropic/claude-opus-4'),
@@ -33,6 +34,7 @@ export const PROVIDER_MODELS: ProviderInfo[] = [
         provider: 'anthropic',
         available: true,
         availableThinkingLevels: ['off', 'minimal', 'low', 'medium', 'high'],
+        input: ['text'],
       },
     ],
   },
@@ -60,6 +62,10 @@ export function createPreset(overrides?: Partial<WagglePreset>) {
         },
       ],
       stop: { primary: 'consensus', maxTurnsSafety: 8 },
+    },
+    app: {
+      requiredMcps: ['playwright', 'postgres'],
+      requiredSkills: ['ui-critic'],
     },
     isBuiltIn: false,
     createdAt: 1,

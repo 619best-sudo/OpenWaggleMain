@@ -13,6 +13,7 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   readonly variant?: TextareaVariant
   readonly resize?: TextareaResize
   readonly highlightLanguage?: string
+  readonly highlightTheme?: 'github-light' | 'github-dark'
 }
 
 interface HighlightedLine {
@@ -101,6 +102,7 @@ export function Textarea({
   variant = 'default',
   resize = 'vertical',
   highlightLanguage,
+  highlightTheme = DEFAULT_THEME as 'github-dark',
   className,
   value,
   onScroll,
@@ -141,7 +143,7 @@ export function Textarea({
       highlightedLines = getHighlightedLines(
         highlighter.codeToTokensBase(textValue, {
           lang: resolvedLanguage,
-          theme: DEFAULT_THEME,
+          theme: highlightTheme,
         }),
       )
     } catch (highlightError) {

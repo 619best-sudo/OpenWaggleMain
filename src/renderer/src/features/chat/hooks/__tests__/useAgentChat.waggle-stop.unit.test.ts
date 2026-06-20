@@ -186,4 +186,49 @@ describe('useAgentChat Waggle stop', () => {
 
     expectPartialAssistantVisible(remount.result.current.messages)
   })
+
+  it('restores a cached first-send snapshot when a stopped waggle remounts before persistence catches up', async () => {
+    const emptyPersistedSession = createSessionWithMessages(1, [])
+    runRenderSnapshots.set('session-1', {
+      updatedAt: 1,
+      messages: [
+        {
+          id: 'optimistic-user-1',
+          role: 'user',
+          parts: [{ type: 'text', content: SEND_PAYLOAD.text }],
+          createdAt: new Date(1),
+        },
+        {
+          id: 'aborted-assistant-1',
+          role: 'assistant',
+          parts: [{ type: 'text', content: 'Partial consensus text' }],
+          createdAt: new Date(2),
+        },
+      ],
+    })
+
+    const { result } = renderHook(() =>
+      useAgentChat(
+        SessionId('session-1'),
+        emptyPersistedSession,
+        SupportedModelId('claude-sonnet-4-5'),
+        'medium',
+      ),
+    )
+
+    expect(result.current.messages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'optimistic-user-1',
+          role: 'user',
+          parts: [{ type: 'text', content: SEND_PAYLOAD.text }],
+        }),
+        expect.objectContaining({
+          id: 'aborted-assistant-1',
+          role: 'assistant',
+          parts: [{ type: 'text', content: 'Partial consensus text' }],
+        }),
+      ]),
+    )
+  })
 })

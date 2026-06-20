@@ -61,17 +61,19 @@ export function ToggleSwitch({
       disabled={disabled}
       onClick={toggleFromClick}
       className={cn(
-        'inline-flex shrink-0 items-center rounded-full transition-colors',
+        'inline-flex shrink-0 items-center rounded-full border transition-[background-color,border-color,box-shadow]',
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
-        checked ? 'bg-accent' : 'bg-bg-hover',
+        checked
+          ? 'border-info/45 bg-info shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-info)_22%,transparent),0_0_12px_color-mix(in_srgb,var(--color-info)_18%,transparent)]'
+          : 'border-border bg-bg-hover',
         TRACK_CLASS[size],
         className,
       )}
     >
       <span
         className={cn(
-          'block rounded-full transition-transform',
-          checked ? 'bg-white' : 'bg-text-tertiary',
+          'block rounded-full transition-[transform,background-color]',
+          checked ? 'bg-bg' : 'bg-text-tertiary',
           THUMB_CLASS[size],
           checked ? THUMB_OFFSET_CLASS[size].on : THUMB_OFFSET_CLASS[size].off,
         )}

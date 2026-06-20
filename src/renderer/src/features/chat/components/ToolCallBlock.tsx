@@ -50,6 +50,7 @@ export interface ToolCallViewModel {
   readonly path: string | null
   readonly resultError: string | null
   readonly resultText: string
+  readonly toolName: string
 }
 
 function isToolRunning(
@@ -117,6 +118,7 @@ function buildToolCallViewModel({
     path: getStringArg(parsedArgs, 'path'),
     resultError,
     resultText,
+    toolName: name,
     liveOutputPreview: previewText(isRunning, resultText),
   }
 }
@@ -172,11 +174,11 @@ function ExpandedToolDetails({
   readonly view: ToolCallViewModel
 }) {
   return (
-    <div className="ml-5 mt-1 rounded-md border border-border/20 bg-bg-secondary/20 overflow-hidden">
+    <div className="mt-1 overflow-hidden rounded-md border border-border/20 bg-code-card">
       <ExpandedCopyActions args={args} view={view} />
       <ExpandedDiffSection diff={view.diff} />
       <div className="px-3 py-2">
-        <div className="text-[13px] text-text-tertiary mb-1">Arguments</div>
+        <div className="mb-1 text-[13px] text-text-secondary">Arguments</div>
         <ToolArgs name={name} args={view.parsedArgs} rawArgs={args} path={view.path} />
       </div>
       <ExpandedResultSection name={name} result={result} view={view} />
@@ -227,7 +229,7 @@ function ExpandedResultSection({
   }
   return (
     <div className="border-t border-border/15 px-3 py-2">
-      <div className="text-[13px] text-text-tertiary mb-1">Result</div>
+      <div className="mb-1 text-[13px] text-text-secondary">Result</div>
       <ToolResult content={result.content} isError={view.isError} name={name} path={view.path} />
     </div>
   )
@@ -247,7 +249,7 @@ function ExpandedErrorSection({
   }
   return (
     <div role="alert" className="border-t border-border/15 px-3 py-2">
-      <div className="text-[13px] text-text-tertiary mb-1">Error</div>
+      <div className="mb-1 text-[13px] text-text-secondary">Error</div>
       <ToolResult
         content={view.resultError ?? result.content}
         isError

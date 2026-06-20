@@ -4,7 +4,6 @@ import type { SessionDetail } from '@shared/types/session'
 import { api } from '@/shared/lib/ipc'
 import {
   appendMissingOptimisticUserMessages,
-  appendUnpersistedAssistantTail,
   buildPartialAssistantMessage,
   mergeBackgroundReconnectMessages,
   reconcileSnapshotUserMessages,
@@ -210,15 +209,16 @@ function hydrateIdleSession(
   )
   const existingMessages = getMessagesForSession(context.messagesBySessionIdRef, input.sessionId)
   const reconciledMessages = reconcileSnapshotUserMessages(snapshotMessages, existingMessages)
-  const withCachedAssistantTail = input.cachedRenderMessages
-    ? appendUnpersistedAssistantTail(reconciledMessages, input.cachedRenderMessages)
+  const withCachedRenderMessages = input.cachedRenderMessages
+    ? mergeBackgroundReconnectMessages(reconciledMessages, [...input.cachedRenderMessages])
     : reconciledMessages
+  const finalMessages = mergeBackgroundReconnectMessages(withCachedRenderMessages, existingMessages)
   setMessagesForSession(
     context.messagesBySessionIdRef,
     context.setMessagesBySessionId,
     context.setRunRenderMessages,
     input.sessionId,
-    appendUnpersistedAssistantTail(withCachedAssistantTail, existingMessages),
+    finalMessages,
   )
   updateHydrationKeys(input.sessionId, keys, context)
 

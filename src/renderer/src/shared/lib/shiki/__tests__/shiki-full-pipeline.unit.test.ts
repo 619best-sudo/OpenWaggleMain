@@ -38,7 +38,7 @@ function collectStyles(node: Root | Element | StyleNode) {
 describe('full pipeline: Shiki + rehypeSanitize preserves style attributes', () => {
   it('color: style values survive rehypeSanitize', async () => {
     const highlighter = await createHighlighter({
-      themes: ['github-dark'],
+      themes: ['github-dark', 'github-light'],
       langs: ['typescript'],
       engine: createJavaScriptRegexEngine(),
     })

@@ -10,8 +10,8 @@ function configWithThirdAgentJson() {
   })
 }
 
-describe('pi-waggle two-agent invariant', () => {
-  it('rejects a third agent entered through advanced active config JSON', async () => {
+describe('pi-waggle multi-agent config', () => {
+  it('accepts a third agent entered through advanced active config JSON', async () => {
     const harness = createHarness({
       selectResponses: ['Advanced JSON…'],
       editorResponses: [configWithThirdAgentJson()],
@@ -19,10 +19,10 @@ describe('pi-waggle two-agent invariant', () => {
 
     await harness.waggleCommand.handler('config', harness.ctx)
 
-    expect(harness.appendedEntries).toEqual([])
+    expect(harness.appendedEntries).toHaveLength(1)
     expect(harness.ctx.ui.notify).toHaveBeenCalledWith(
-      'agents must contain exactly 2 agent slots.',
-      'error',
+      'Updated Waggle configuration for the current branch.',
+      'info',
     )
   })
 })

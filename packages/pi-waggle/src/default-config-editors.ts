@@ -7,9 +7,11 @@ import {
   MAX_WAGGLE_MAX_TURNS_SAFETY,
   MIN_WAGGLE_MAX_TURNS_SAFETY,
   parseWaggleConfig,
+  WAGGLE_AGENT_COLORS,
   WAGGLE_INHERIT_MODEL,
   WAGGLE_STOP_CONDITIONS,
   type WaggleConfig,
+  type WaggleAgentSlot,
   type WaggleStopCondition,
 } from '@openwaggle/waggle-core'
 import { agentMenuLabel, editAgentSlot, promptAgentSlot } from './default-agent-editor'
@@ -32,6 +34,7 @@ const DEFAULT_SECOND_AGENT_ROLE =
 const DEFAULT_STOP_CONDITION = 'consensus'
 const DEFAULT_MAX_TURNS_SAFETY = 8
 const ADVANCED_JSON_LABEL = 'Advanced JSON…'
+const ADD_AGENT_LABEL = 'Add agent…'
 const DONE_LABEL = 'Done'
 
 function notify(ctx: ExtensionContext, message: string, type: 'info' | 'warning' | 'error') {
@@ -75,6 +78,15 @@ export function blankConfig(): WaggleConfig {
       },
     ],
     stop: { primary: DEFAULT_STOP_CONDITION, maxTurnsSafety: DEFAULT_MAX_TURNS_SAFETY },
+  }
+}
+
+function createDefaultAgent(index: number): WaggleAgentSlot {
+  return {
+    label: `Agent ${String(index + 1)}`,
+    model: WAGGLE_INHERIT_MODEL,
+    roleDescription: '',
+    color: WAGGLE_AGENT_COLORS[index % WAGGLE_AGENT_COLORS.length] ?? WAGGLE_AGENT_COLORS[0],
   }
 }
 
@@ -131,12 +143,12 @@ export async function promptFullWaggleConfig(input: {
   readonly ctx: ExtensionCommandContext
   readonly initialConfig: WaggleConfig
 }) {
-  const [firstAgent, secondAgent] = input.initialConfig.agents
-  const nextFirstAgent = await promptAgentSlot({ ctx: input.ctx, agent: firstAgent })
-  if (!nextFirstAgent) return null
-
-  const nextSecondAgent = await promptAgentSlot({ ctx: input.ctx, agent: secondAgent })
-  if (!nextSecondAgent) return null
+  const nextAgents: WaggleAgentSlot[] = []
+  for (const agent of input.initialConfig.agents) {
+    const nextAgent = await promptAgentSlot({ ctx: input.ctx, agent })
+    if (!nextAgent) return null
+    nextAgents.push(nextAgent)
+  }
 
   const stopCondition = await promptStopCondition(input.ctx, input.initialConfig.stop.primary)
   if (!stopCondition) return null
@@ -151,7 +163,7 @@ export async function promptFullWaggleConfig(input: {
   const maxTurnsSafety = parseMaxTurns(rawMaxTurns)
   return {
     ...input.initialConfig,
-    agents: [nextFirstAgent, nextSecondAgent],
+    agents: nextAgents,
     stop: { primary: stopCondition, maxTurnsSafety },
   } satisfies WaggleConfig
 }
@@ -167,10 +179,14 @@ type GuidedConfigEditResult =
     }
 
 function guidedConfigOptions(ctx: ExtensionCommandContext, config: WaggleConfig) {
-  const [firstAgent, secondAgent] = config.agents
   return [
-    `Edit ${agentMenuLabel(ctx, firstAgent)}`,
-    `Edit ${agentMenuLabel(ctx, secondAgent)}`,
+    ...config.agents.map(
+      (agent, index) => `Edit agent ${String(index + 1)} — ${agentMenuLabel(ctx, agent)}`,
+    ),
+    ...(config.agents.length > 2
+      ? config.agents.map((agent, index) => `Remove agent ${String(index + 1)} — ${agent.label}`)
+      : []),
+    ADD_AGENT_LABEL,
     `Set stop condition — ${config.stop.primary}`,
     `Set max turns — ${String(config.stop.maxTurnsSafety)}`,
     ADVANCED_JSON_LABEL,
@@ -187,15 +203,45 @@ async function editSelectedConfigField(input: {
     return { action: 'done', config: input.config }
   }
 
-  const [firstAgent, secondAgent] = input.config.agents
-  if (input.selected.startsWith(`Edit ${firstAgent.label}`)) {
-    const nextAgent = await editAgentSlot({ ctx: input.ctx, agent: firstAgent })
-    return { action: 'continue', config: { ...input.config, agents: [nextAgent, secondAgent] } }
+  for (const [index, agent] of input.config.agents.entries()) {
+    const editLabel = `Edit agent ${String(index + 1)} — ${agentMenuLabel(input.ctx, agent)}`
+    if (input.selected === editLabel) {
+      const nextAgent = await editAgentSlot({ ctx: input.ctx, agent })
+      return {
+        action: 'continue',
+        config: {
+          ...input.config,
+          agents: input.config.agents.map((currentAgent, currentIndex) =>
+            currentIndex === index ? nextAgent : currentAgent,
+          ),
+        },
+      }
+    }
+
+    const removeLabel = `Remove agent ${String(index + 1)} — ${agent.label}`
+    if (input.selected === removeLabel) {
+      return {
+        action: 'continue',
+        config: {
+          ...input.config,
+          agents: input.config.agents.filter((_, currentIndex) => currentIndex !== index),
+        },
+      }
+    }
   }
 
-  if (input.selected.startsWith(`Edit ${secondAgent.label}`)) {
-    const nextAgent = await editAgentSlot({ ctx: input.ctx, agent: secondAgent })
-    return { action: 'continue', config: { ...input.config, agents: [firstAgent, nextAgent] } }
+  if (input.selected === ADD_AGENT_LABEL) {
+    const nextAgent = await promptAgentSlot({
+      ctx: input.ctx,
+      agent: createDefaultAgent(input.config.agents.length),
+    })
+    if (!nextAgent) {
+      return { action: 'continue', config: input.config }
+    }
+    return {
+      action: 'continue',
+      config: { ...input.config, agents: [...input.config.agents, nextAgent] },
+    }
   }
 
   if (input.selected.startsWith('Set stop condition')) {

@@ -25,6 +25,10 @@ export const COMPOSER = {
 
 /** Terminal limits */
 export const TERMINAL = {
+  /** Minimum terminal columns */
+  MIN_COLS: 10,
+  /** Minimum terminal rows */
+  MIN_ROWS: 5,
   /** Default terminal columns */
   DEFAULT_COLS: 80,
   /** Default terminal rows */

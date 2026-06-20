@@ -1,7 +1,7 @@
 import { matchBy } from '@diegogbrisa/ts-match'
 import type { GitFileDiff } from '@shared/types/git'
 import type { ReviewComment } from '@shared/types/review'
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import type { ReviewCommentLocation } from '@/features/diff-panel/state/review-store'
 import { useReviewStore } from '@/features/diff-panel/state/review-store'
 import { api } from '@/shared/lib/ipc'
@@ -43,6 +43,7 @@ function diffPanelReducer(state: DiffPanelState, action: DiffPanelAction) {
 interface DiffPanelContentProps {
   readonly fileDiffs: readonly RenderableDiffFile[]
   readonly isLoading: boolean
+  readonly isTreeExpanded: boolean
   readonly review: {
     readonly comments: readonly ReviewComment[]
     readonly activeCommentLocation: ReviewCommentLocation | null
@@ -61,10 +62,25 @@ interface DiffPanelContentProps {
   }
 }
 
-function DiffPanelContent({ fileDiffs, isLoading, review, actions }: DiffPanelContentProps) {
+function DiffPanelContent({
+  fileDiffs,
+  isLoading,
+  isTreeExpanded,
+  review,
+  actions,
+}: DiffPanelContentProps) {
   return (
     <div className="flex flex-1 overflow-hidden">
-      <div className="diff-scroll flex-1 overflow-auto p-2.5">
+      {isTreeExpanded && (
+        <FileTree
+          files={fileDiffs}
+          onFileClick={actions.onFileClick}
+          onSendReview={actions.onSendReview}
+          reviewCount={review.comments.length}
+        />
+      )}
+
+      <div className="diff-scroll flex-1 overflow-auto p-2.5 relative">
         <div className="flex min-w-full w-max flex-col gap-2.5">
           {isLoading && (
             <div className="flex items-center justify-center h-20 text-text-tertiary">
@@ -92,13 +108,6 @@ function DiffPanelContent({ fileDiffs, isLoading, review, actions }: DiffPanelCo
           ))}
         </div>
       </div>
-
-      <FileTree
-        files={fileDiffs}
-        onFileClick={actions.onFileClick}
-        onSendReview={actions.onSendReview}
-        reviewCount={review.comments.length}
-      />
     </div>
   )
 }
@@ -192,11 +201,14 @@ export function DiffPanel({ projectPath, onSendMessage }: DiffPanelProps) {
     // Future: implement git add -A via IPC
   }
 
+  const [isTreeExpanded, setIsTreeExpanded] = useState(true)
+
   return (
     <div className="flex flex-col size-full bg-diff-bg">
       <DiffPanelContent
         fileDiffs={fileDiffs}
         isLoading={isLoading}
+        isTreeExpanded={isTreeExpanded}
         review={{ comments, activeCommentLocation }}
         actions={{
           onSetActiveComment: setActiveCommentLocation,
@@ -210,6 +222,8 @@ export function DiffPanel({ projectPath, onSendMessage }: DiffPanelProps) {
         onRevertAll={handleRevertAll}
         onStageAll={handleStageAll}
         hasChanges={fileDiffs.length > 0}
+        isTreeExpanded={isTreeExpanded}
+        onToggleTree={() => setIsTreeExpanded(!isTreeExpanded)}
       />
     </div>
   )

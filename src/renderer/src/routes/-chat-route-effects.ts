@@ -29,6 +29,7 @@ export function useChatRouteEffects({
   const activeSession = useChatStore((state) => state.activeSession)
   const draftSession = useChatStore((state) => state.draftSession)
   const setActiveSession = useChatStore((state) => state.setActiveSession)
+  const refreshSession = useChatStore((state) => state.refreshSession)
   const routeSessionDetail = useChatStore((state) =>
     routeSessionId === null ? null : (state.sessionById.get(routeSessionId) ?? null),
   )
@@ -67,7 +68,7 @@ export function useChatRouteEffects({
       return
     }
 
-    if (activeSessionId !== routeSessionId) {
+    if (activeSessionId !== routeSessionId || activeSession === null) {
       setActiveSession(routeSessionId)
     }
     useSessionStatusStore.getState().markVisited(routeSessionId)
@@ -95,6 +96,13 @@ export function useChatRouteEffects({
       clearDraftBranchForSession(draftBranch.sessionId)
     }
   }, [clearDraftBranchForSession, draftBranch, routeBranchId, routeSessionTreeId])
+
+  useEffect(() => {
+    if (routeSessionId === null || routeSessionMissing || draftSession !== null) {
+      return
+    }
+    void refreshSession(routeSessionId)
+  }, [draftSession, refreshSession, routeSessionId, routeSessionMissing])
 
   useEffect(() => {
     void refreshSessionWorkspace(routeSessionTreeId, {

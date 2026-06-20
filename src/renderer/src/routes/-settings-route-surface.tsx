@@ -3,7 +3,7 @@ import { AppSettingsView } from '@/features/settings/components'
 import type { SettingsTab } from '@/shell'
 
 const SETTINGS_PATH_PREFIX = '/settings/'
-const SETTINGS_TABS: readonly SettingsTab[] = ['general', 'archived', 'connections']
+const SETTINGS_TABS: readonly SettingsTab[] = ['profile', 'general', 'archived', 'connections']
 
 interface SettingsRouteSurfaceProps {
   readonly tab: SettingsTab

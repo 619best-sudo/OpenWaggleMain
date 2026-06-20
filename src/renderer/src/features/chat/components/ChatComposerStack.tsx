@@ -9,6 +9,7 @@ import {
   QueuedMessages,
 } from '@/features/composer/components'
 import { useScopedComposerDrafts } from '@/features/composer/hooks'
+import { useApplyPendingWaggleLaunchPrompt } from '@/features/waggle/hooks'
 import { WaggleCollaborationStatus as WaggleCollaborationStatusBanner } from '@/features/waggle/components'
 import type { ChatComposerSectionState } from '../model'
 import { SessionForkSelector } from './SessionForkSelector'
@@ -24,6 +25,7 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
   const {
     activeSessionId,
     waggleStatus,
+    followUpSuggestion,
     commandPaletteOpen,
     slashSkills,
     forkSelectorOpen,
@@ -38,6 +40,7 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
     onSteer,
     onCancel,
     onToast,
+    onUseFollowUpPrompt,
     onSkipBranchSummary,
     onSummarizeBranch,
     onStartCustomBranchSummary,
@@ -49,6 +52,7 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
   } = section
 
   useScopedComposerDrafts(activeSessionId)
+  useApplyPendingWaggleLaunchPrompt(activeSessionId)
 
   const enqueue = useMessageQueueStore((s) => s.enqueue)
   const branchSummaryMode = useBranchSummaryStore((s) => s.prompt?.mode ?? null)
@@ -62,6 +66,8 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
       <WaggleCollaborationStatusBanner
         currentSessionId={activeSessionId}
         onStop={waggleStatus !== 'idle' ? onStopCollaboration : noOp}
+        followUpSuggestion={followUpSuggestion}
+        onUseFollowUpPrompt={onUseFollowUpPrompt}
       />
 
       {commandPaletteOpen && (

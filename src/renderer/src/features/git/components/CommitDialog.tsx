@@ -1,8 +1,9 @@
 import { match } from '@diegogbrisa/ts-match'
 import type { GitCommitResult, GitStatusSummary } from '@shared/types/git'
-import { X } from 'lucide-react'
+import { RefreshCw, X } from 'lucide-react'
 import { useState } from 'react'
 import { useEscapeHotkey } from '@/shared/hooks/useEscapeHotkey'
+import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { CommitDialogBody, CommitDialogFooter } from './CommitDialogContent'
 
@@ -82,33 +83,63 @@ export function CommitDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label="Commit changes"
     >
-      <div className="w-full max-w-[620px] rounded-xl border border-border-light bg-bg-secondary shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <h2 className="text-sm font-semibold text-text-primary">Commit changes</h2>
-          <Button
-            variant="unstyled"
-            type="button"
-            onClick={onClose}
-            className="rounded p-1 text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-secondary"
-            title="Close"
-          >
-            <X className="size-4" />
-          </Button>
+      <div className="w-full max-w-[620px] overflow-hidden rounded-2xl border border-border-light bg-bg shadow-2xl">
+        <div className="flex items-center justify-between gap-4 border-b border-border bg-bg-secondary/50 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-semibold text-text-primary">Commit changes</h2>
+            <div className="flex items-center gap-3 border-l border-border pl-3 text-[13px] text-text-secondary">
+              {status ? (
+                <div className="flex items-center">
+                  <span className="font-medium text-text-primary">
+                    {selectedPaths.size}/{status.filesChanged}
+                  </span>
+                  <span className="ml-1">files selected</span>
+                  <span className="mx-1.5 opacity-50">•</span>
+                  <span className="font-medium text-diff-add-text">+{status.additions}</span>
+                  <span className="mx-1 opacity-50">/</span>
+                  <span className="font-medium text-diff-remove-text">-{status.deletions}</span>
+                </div>
+              ) : (
+                <span>Git status unavailable</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="unstyled"
+              type="button"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-secondary"
+              onClick={onRefresh}
+              title="Refresh status"
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
+              Refresh
+            </Button>
+            <Button
+              variant="unstyled"
+              type="button"
+              onClick={onClose}
+              className="rounded-md p-1 text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-secondary"
+              title="Close"
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
         </div>
 
         <CommitDialogBody
           status={status}
           statusError={statusError}
           error={error}
-          isRefreshing={isRefreshing}
           form={{ message, amend, selectedPaths }}
           actions={{
-            onRefresh,
             onMessageChange: setMessage,
             onAmendChange: setAmend,
             onTogglePath: togglePath,

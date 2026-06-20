@@ -1,3 +1,4 @@
+import { TERMINAL } from '@shared/constants/resource-limits'
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
 import { useEffect, useRef, useState } from 'react'
@@ -6,10 +7,10 @@ import { api } from '@/shared/lib/ipc'
 const FONT_SIZE = 14
 
 const TERMINAL_THEME = {
-  background: '#0a0a0a',
-  foreground: '#e5e5e5',
-  cursor: '#f59e0b',
-  selectionBackground: 'rgba(245, 158, 11, 0.3)',
+  background: 'transparent',
+  foreground: 'var(--color-text-primary)',
+  cursor: 'var(--color-accent)',
+  selectionBackground: 'color-mix(in srgb, var(--color-accent) 30%, transparent)',
   black: '#0a0a0a',
   red: '#ef4444',
   green: '#22c55e',
@@ -38,6 +39,22 @@ function createTerminal() {
   })
 }
 
+export function clampTerminalDimensions(cols: number, rows: number) {
+  return {
+    cols: Math.min(Math.max(Math.floor(cols), TERMINAL.MIN_COLS), TERMINAL.MAX_COLS),
+    rows: Math.min(Math.max(Math.floor(rows), TERMINAL.MIN_ROWS), TERMINAL.MAX_ROWS),
+  }
+}
+
+function resizeTerminalInstance(terminalId: string | null, term: Terminal, fitAddon: FitAddon) {
+  if (!terminalId) {
+    return
+  }
+  fitAddon.fit()
+  const size = clampTerminalDimensions(term.cols, term.rows)
+  void api.resizeTerminal(terminalId, size.cols, size.rows).catch(() => {})
+}
+
 function setTerminalReady(
   terminalIdRef: React.MutableRefObject<string | null>,
   id: string,
@@ -49,7 +66,8 @@ function setTerminalReady(
 ) {
   terminalIdRef.current = id
   setTerminalStatus({ isReady: true, errorMessage: null })
-  api.resizeTerminal(id, term.cols, term.rows)
+  const size = clampTerminalDimensions(term.cols, term.rows)
+  void api.resizeTerminal(id, size.cols, size.rows).catch(() => {})
 }
 
 function setTerminalError(
@@ -68,6 +86,8 @@ function setTerminalError(
 export function useTerminalSession(projectPath: string | null) {
   const containerRef = useRef<HTMLDivElement>(null)
   const terminalIdRef = useRef<string | null>(null)
+  const terminalRef = useRef<Terminal | null>(null)
+  const fitAddonRef = useRef<FitAddon | null>(null)
   const [terminalStatus, setTerminalStatus] = useState<{
     readonly isReady: boolean
     readonly errorMessage: string | null
@@ -82,6 +102,8 @@ export function useTerminalSession(projectPath: string | null) {
 
     const term = createTerminal()
     const fitAddon = new FitAddon()
+    terminalRef.current = term
+    fitAddonRef.current = fitAddon
     term.loadAddon(fitAddon)
     term.open(containerRef.current)
     requestAnimationFrame(() => fitAddon.fit())
@@ -103,10 +125,7 @@ export function useTerminalSession(projectPath: string | null) {
       if (payload.terminalId === terminalIdRef.current) term.write(payload.data)
     })
     const resizeObserver = new ResizeObserver(() => {
-      fitAddon.fit()
-      if (terminalIdRef.current) {
-        api.resizeTerminal(terminalIdRef.current, term.cols, term.rows)
-      }
+      resizeTerminalInstance(terminalIdRef.current, term, fitAddon)
     })
     resizeObserver.observe(containerRef.current)
 
@@ -116,9 +135,29 @@ export function useTerminalSession(projectPath: string | null) {
       unsubscribe()
       resizeObserver.disconnect()
       if (terminalIdRef.current) api.closeTerminal(terminalIdRef.current)
+      terminalRef.current = null
+      fitAddonRef.current = null
       term.dispose()
     }
   }, [projectPath])
 
-  return { containerRef, terminalStatus }
+  return { containerRef, terminalStatus, terminalIdRef, terminalRef, fitAddonRef }
+}
+
+export function useTerminalSessionActivation(
+  active: boolean,
+  terminalIdRef: React.RefObject<string | null>,
+  terminalRef: React.RefObject<Terminal | null>,
+  fitAddonRef: React.RefObject<FitAddon | null>,
+) {
+  useEffect(() => {
+    if (!active || !terminalRef.current || !fitAddonRef.current) {
+      return
+    }
+    const frame = requestAnimationFrame(() => {
+      resizeTerminalInstance(terminalIdRef.current, terminalRef.current!, fitAddonRef.current!)
+      terminalRef.current?.focus()
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [active, terminalIdRef, terminalRef, fitAddonRef])
 }

@@ -65,6 +65,7 @@ export function usePreferences() {
   const setEnabledModels = usePreferencesStore((s) => s.setEnabledModels)
   const setProjectPath = usePreferencesStore((s) => s.setProjectPath)
   const setThinkingLevel = usePreferencesStore((s) => s.setThinkingLevel)
+  const setThemeMode = usePreferencesStore((s) => s.setThemeMode)
   const pushRecentProject = usePreferencesStore((s) => s.pushRecentProject)
   const retryLoad = usePreferencesStore((s) => s.retryLoad)
 
@@ -77,6 +78,7 @@ export function usePreferences() {
     setEnabledModels,
     setProjectPath,
     setThinkingLevel,
+    setThemeMode,
     pushRecentProject,
     retryLoad,
   }

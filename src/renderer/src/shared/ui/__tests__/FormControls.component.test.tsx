@@ -4,6 +4,7 @@ import { Checkbox } from '../Checkbox'
 import { RangeInput } from '../RangeInput'
 import { Select } from '../Select'
 import { TextInput } from '../TextInput'
+import { ToggleSwitch } from '../ToggleSwitch'
 
 describe('shared form controls', () => {
   it('renders text inputs with shared focus and typography classes', () => {
@@ -45,5 +46,12 @@ describe('shared form controls', () => {
     )
 
     expect(screen.getByRole('slider', { name: 'Max turns' })).toHaveClass('accent-accent')
+  })
+
+  it('renders toggle switches with a colored enabled state', () => {
+    render(<ToggleSwitch label="Enable MCP" checked onCheckedChange={() => undefined} />)
+
+    const toggle = screen.getByRole('switch', { name: 'Enable MCP' })
+    expect(toggle).toHaveClass('bg-info', 'border-info/45')
   })
 })

@@ -26,10 +26,13 @@ const headerMocks = vi.hoisted(() => {
   return {
     pathname: '/skills',
     projectPath: '/repo/openwaggle',
+    gitError: null as string | null,
     gitStatus,
+    diffOpen: false,
     refreshStatus: vi.fn().mockResolvedValue(undefined),
     refreshBranches: vi.fn().mockResolvedValue(undefined),
     commit: vi.fn().mockResolvedValue({ ok: true, commitHash: 'abc123', summary: 'abc123' }),
+    closeDiff: vi.fn(),
     toggleDiff: vi.fn(),
     toggleSessionTree: vi.fn(),
   }
@@ -47,9 +50,10 @@ vi.mock('@/features/chat/hooks', () => ({
 
 vi.mock('@/features/diff-panel/hooks', () => ({
   useDiffRouteNavigation: () => ({
-    diffOpen: false,
+    diffOpen: headerMocks.diffOpen,
     isChatRoute: true,
     sessionTreeOpen: false,
+    closeDiff: headerMocks.closeDiff,
     toggleDiff: headerMocks.toggleDiff,
     toggleSessionTree: headerMocks.toggleSessionTree,
   }),
@@ -79,7 +83,7 @@ vi.mock('@/features/git/components', () => ({
 vi.mock('@/features/git/hooks', () => ({
   useGit: () => ({
     status: headerMocks.gitStatus,
-    error: null,
+    error: headerMocks.gitError,
     isLoading: false,
     isCommitting: false,
     refreshStatus: headerMocks.refreshStatus,
@@ -121,6 +125,8 @@ vi.mock('@/features/sessions/hooks', () => ({
 
 describe('Header', () => {
   beforeEach(() => {
+    headerMocks.gitError = null
+    headerMocks.diffOpen = false
     useUIStore.setState({
       diffRefreshKey: 0,
       feedbackModalOpen: false,
@@ -132,6 +138,7 @@ describe('Header', () => {
     headerMocks.refreshStatus.mockClear()
     headerMocks.refreshBranches.mockClear()
     headerMocks.commit.mockClear()
+    headerMocks.closeDiff.mockClear()
     headerMocks.toggleDiff.mockClear()
     headerMocks.toggleSessionTree.mockClear()
   })
@@ -169,5 +176,14 @@ describe('Header', () => {
     )
     expect(useUIStore.getState().diffRefreshKey).toBe(2)
     expect(useUIStore.getState().toastData?.message).toBe('Commit created: abc123')
+  })
+
+  it('closes the diff panel when Git becomes unavailable', async () => {
+    headerMocks.diffOpen = true
+    headerMocks.gitError = 'not a git repo'
+
+    render(<Header />)
+
+    await waitFor(() => expect(headerMocks.closeDiff).toHaveBeenCalledOnce())
   })
 })

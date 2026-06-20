@@ -3,7 +3,6 @@ import {
   Calendar,
   Check,
   Clock,
-  Command,
   Edit3,
   FolderPlus,
   LayoutList,
@@ -12,6 +11,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react'
+import appLogo from '../../../../../assets/logo.png'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { Popover } from '@/shared/ui/Popover'
@@ -34,11 +34,15 @@ export function SidebarBrandArea({ isFullscreen }: { readonly isFullscreen: bool
       />
       <div className="drag-region shrink-0 px-6 pt-6">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-md bg-[#8ba57b] text-[#09110a]">
-            <Command className="size-5" />
+          <div className="overflow-hidden rounded-2xl border border-border/70 bg-white shadow-sm">
+            <img
+              src={appLogo}
+              alt="TuringMachine logo"
+              className="size-11 object-cover"
+            />
           </div>
           <div className="min-w-0">
-            <p className="no-drag truncate text-[14px] font-bold tracking-tight text-[#f1f4ee]">
+            <p className="no-drag truncate text-[14px] font-bold tracking-tight text-text-primary">
               TuringMachine
             </p>
           </div>
@@ -77,15 +81,17 @@ function SidebarShortcut({
       onClick={onClick}
       className={cn(
         'flex h-8 w-full items-center gap-3 rounded-md px-2.5 text-left transition-colors',
-        active ? 'bg-white/10 text-white' : 'text-[#a1a1aa] hover:bg-white/5 hover:text-white',
+        active
+          ? 'bg-bg-active text-text-primary'
+          : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
       )}
       title={`Open ${label}`}
     >
-      <Icon className={cn('size-4 shrink-0', active ? 'text-[#dce5d6]' : 'text-[#a0a0a0]')} />
+      <Icon className={cn('size-4 shrink-0', active ? 'text-accent' : 'text-text-tertiary')} />
       <span
         className={cn(
           'text-[12px]',
-          active ? 'font-medium' : 'font-medium',
+          active ? 'font-bold' : 'font-bold',
           italic ? 'italic' : '',
         )}
       >
@@ -114,7 +120,7 @@ export function SidebarPrimaryActions({
         variant="unstyled"
         aria-label="New thread"
         onClick={onNewSession}
-        className="no-drag flex h-11 w-full items-center gap-3 rounded-md bg-[#8ba57b] px-4 text-left text-[#09110a] transition-colors hover:bg-[#9cb88c]"
+        className="no-drag flex h-11 w-full items-center gap-3 rounded-md bg-accent px-4 text-left text-accent-foreground transition-colors hover:bg-accent-dim"
       >
         <Edit3 className="size-4.5 shrink-0" />
         <span className="text-[12px] font-bold tracking-[-0.01em]">New thread</span>
@@ -159,13 +165,13 @@ export function SidebarProjectsHeader({
 }) {
   return (
     <div className="no-drag flex shrink-0 items-center justify-between px-6 pb-4 pt-10">
-      <span className="text-[10px] font-bold tracking-[0.25em] text-[#71717a]">THREADS</span>
+      <span className="text-[10px] font-bold tracking-[0.25em] text-text-muted">THREADS</span>
       <div className="flex items-center gap-2">
         <Button
           variant="unstyled"
           aria-label="Open project folder"
           onClick={onOpenProject}
-          className="flex size-7 items-center justify-center rounded-md text-[#71717a] transition-colors hover:bg-white/5 hover:text-white"
+          className="flex size-7 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary"
           title="Open project folder"
         >
           <FolderPlus className="size-4" />
@@ -181,8 +187,8 @@ export function SidebarProjectsHeader({
               aria-label="Sort sessions"
               onClick={() => onSetSortMenuOpen(!sortMenuOpen)}
               className={cn(
-                'flex size-7 items-center justify-center rounded-md text-[#71717a] transition-colors hover:bg-white/5 hover:text-white',
-                sortMenuOpen && 'bg-white/5 text-white',
+                'flex size-7 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary',
+                sortMenuOpen && 'bg-bg-hover text-text-primary',
               )}
               title="Sort sessions"
             >
@@ -220,10 +226,10 @@ export function SidebarSettingsButton({ onOpenSettings }: { readonly onOpenSetti
         variant="unstyled"
         aria-label="Settings"
         onClick={onOpenSettings}
-        className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-[#a1a1aa] transition-colors hover:bg-white/5 hover:text-white"
+        className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
       >
-        <Settings className="size-4.5 shrink-0 text-[#a1a1aa]" />
-        <span className="text-[12px] font-medium">Settings</span>
+        <Settings className="size-4.5 shrink-0 text-text-tertiary" />
+        <span className="text-[12px] font-bold">Settings</span>
       </Button>
     </div>
   )

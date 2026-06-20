@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, type Settings } from '@shared/types/settings'
+import { DEFAULT_SETTINGS, isThemeMode, type Settings } from '@shared/types/settings'
 import {
   SETTINGS_KEY_DEFAULT_MODEL,
   SETTINGS_KEY_ENABLED_MODELS,
@@ -8,6 +8,7 @@ import {
   SETTINGS_KEY_RECENT_PROJECTS,
   SETTINGS_KEY_SKILL_TOGGLES_BY_PROJECT,
   SETTINGS_KEY_THINKING_LEVEL,
+  SETTINGS_KEY_THEME_MODE,
 } from './keys'
 import {
   isValidThinkingLevel,
@@ -59,6 +60,7 @@ export function buildSettingsSnapshot(storedSettings: Readonly<Record<string, un
     getStoredValue(storedSettings, SETTINGS_KEY_PROJECT_DISPLAY_NAMES) ??
       DEFAULT_SETTINGS.projectDisplayNames,
   )
+  const themeModeRaw = getStoredValue(storedSettings, SETTINGS_KEY_THEME_MODE)
 
   return {
     settings: {
@@ -67,6 +69,7 @@ export function buildSettingsSnapshot(storedSettings: Readonly<Record<string, un
       enabledModels,
       projectPath: resolveProjectPath(getStoredValue(storedSettings, SETTINGS_KEY_PROJECT_PATH)),
       thinkingLevel,
+      themeMode: isThemeMode(themeModeRaw) ? themeModeRaw : DEFAULT_SETTINGS.themeMode,
       recentProjects,
       skillTogglesByProject,
       projectDisplayNames,
@@ -104,6 +107,9 @@ export function buildNextSettingsSnapshot(current: Settings, partial: Partial<Se
     partial.projectDisplayNames !== undefined
       ? sanitizeProjectDisplayNames(partial.projectDisplayNames)
       : current.projectDisplayNames
+  const themeMode = partial.themeMode !== undefined && isThemeMode(partial.themeMode)
+    ? partial.themeMode
+    : current.themeMode
 
   return {
     ...current,
@@ -112,6 +118,7 @@ export function buildNextSettingsSnapshot(current: Settings, partial: Partial<Se
     enabledModels,
     projectPath,
     thinkingLevel,
+    themeMode,
     recentProjects,
     skillTogglesByProject,
     projectDisplayNames,

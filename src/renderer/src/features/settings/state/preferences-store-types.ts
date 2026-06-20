@@ -1,5 +1,5 @@
 import type { SupportedModelId } from '@shared/types/brand'
-import type { Settings, ThinkingLevel } from '@shared/types/settings'
+import type { Settings, ThemeMode, ThinkingLevel } from '@shared/types/settings'
 
 export interface PreferencesState {
   settings: Settings
@@ -14,6 +14,7 @@ export interface PreferencesState {
   pushRecentProject: (path: string) => Promise<void>
   removeRecentProject: (path: string) => Promise<void>
   setThinkingLevel: (preset: ThinkingLevel) => Promise<void>
+  setThemeMode: (mode: ThemeMode) => Promise<void>
   setEnabledModels: (models: string[]) => Promise<void>
   setProjectDisplayName: (path: string, name: string) => Promise<void>
   clearProjectDisplayName: (path: string) => Promise<void>

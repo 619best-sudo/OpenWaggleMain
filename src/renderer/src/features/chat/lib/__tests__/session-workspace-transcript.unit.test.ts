@@ -191,4 +191,23 @@ describe('resolveTranscriptMessages', () => {
       'completed-assistant',
     ])
   })
+
+  it('preserves an unsaved tail even when the workspace path and cached messages have no overlap yet', () => {
+    const persistedUser = sessionNode('persisted-user', null, 'user', 'Persisted user', 0)
+
+    const resolved = resolveTranscriptMessages({
+      activeSessionId: SESSION_DETAIL_ID,
+      activeWorkspace: workspaceWithPath([persistedUser], persistedUser.id, persistedUser.id),
+      messages: [
+        uiMessage('snapshot-user', 'user', 'Snapshot-only user'),
+        uiMessage('snapshot-assistant', 'assistant', 'Snapshot-only assistant'),
+      ],
+    })
+
+    expect(resolved.map((message) => message.id)).toEqual([
+      'persisted-user',
+      'snapshot-user',
+      'snapshot-assistant',
+    ])
+  })
 })

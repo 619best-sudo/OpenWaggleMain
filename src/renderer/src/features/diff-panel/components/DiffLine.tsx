@@ -24,21 +24,21 @@ function getDiffLineViewModel(type: LineType): DiffLineViewModel {
   return match(type)
     .with('add', () => ({
       mark: ' +',
-      buttonClassName: 'bg-diff-add-bg hover:bg-[#133d24]',
+      buttonClassName: 'bg-diff-add-bg hover:bg-[#1a2b1d]',
       lineNumberClassName: 'text-diff-add-num',
       markClassName: 'text-diff-add-mark',
       contentClassName: 'text-diff-add-text',
     }))
     .with('remove', () => ({
       mark: ' -',
-      buttonClassName: 'bg-diff-remove-bg hover:bg-[#3d1a1e]',
+      buttonClassName: 'bg-diff-remove-bg hover:bg-[#33181b]',
       lineNumberClassName: 'text-diff-remove-num',
       markClassName: 'text-diff-remove-text',
       contentClassName: 'text-diff-remove-text',
     }))
     .with('context', () => ({
       mark: '  ',
-      buttonClassName: 'bg-diff-bg hover:bg-[#151820]',
+      buttonClassName: 'bg-diff-bg hover:bg-[#0f0f12]',
       lineNumberClassName: 'text-text-tertiary',
       markClassName: 'text-text-tertiary',
       contentClassName: 'text-diff-context-text',
@@ -57,7 +57,7 @@ export function DiffLine({ type, lineNumber, content, onClick, isSelected }: Dif
       className={cn(
         'flex h-6 min-w-full w-max items-center text-left transition-[background-color] duration-75',
         view.buttonClassName,
-        isSelected && 'ring-1 ring-inset ring-accent/40',
+        isSelected && 'ring-1 ring-inset ring-[#8eab7e]/40',
       )}
     >
       {/* Line number */}

@@ -2,8 +2,9 @@ import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
+import { APP_MIGRATIONS } from '../../src/main/services/database-migrations'
+import { DATABASE_FILE_NAME } from '../../src/main/services/database-constants'
 
-const DATABASE_FILE_NAME = 'openwaggle.db'
 const DB_WAIT_RETRY_DELAY_MS = 100
 const DB_WAIT_TIMEOUT_MS = 10_000
 const MAIN_BRANCH_NAME = 'main'
@@ -49,31 +50,70 @@ function openDatabase(userDataDir: string): DatabaseSync {
 }
 
 /**
- * Wait for the database file to exist and for the Pi session projection schema to be ready.
+ * Ensure the database exists and the Pi session projection schema is ready.
  */
 async function waitForDatabase(userDataDir: string): Promise<void> {
   const dbPath = getDatabasePath(userDataDir)
   const startedAt = Date.now()
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true })
 
   while (Date.now() - startedAt < DB_WAIT_TIMEOUT_MS) {
-    if (fs.existsSync(dbPath)) {
+    try {
+      const db = new DatabaseSync(dbPath)
       try {
-        const db = new DatabaseSync(dbPath)
-        try {
-          db.prepare('SELECT 1 FROM sessions LIMIT 1').all()
-          db.prepare('SELECT 1 FROM session_nodes LIMIT 1').all()
-          return
-        } finally {
-          db.close()
-        }
-      } catch {
-        // Schema not ready yet — retry.
+        db.exec('PRAGMA foreign_keys = ON')
+        db.exec('PRAGMA busy_timeout = 5000')
+        applyMigrations(db)
+        db.prepare('SELECT 1 FROM sessions LIMIT 1').all()
+        db.prepare('SELECT 1 FROM session_nodes LIMIT 1').all()
+        return
+      } finally {
+        db.close()
       }
+    } catch {
+      // Schema not ready yet or database is still busy — retry.
     }
     await new Promise((resolve) => setTimeout(resolve, DB_WAIT_RETRY_DELAY_MS))
   }
 
   throw new Error('Database file did not become ready within timeout')
+}
+
+function applyMigrations(database: DatabaseSync): void {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS _migrations (
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      applied_at TEXT NOT NULL
+    )
+  `)
+
+  for (const migration of APP_MIGRATIONS) {
+    const existing = database
+      .prepare('SELECT id FROM _migrations WHERE id = ? LIMIT 1')
+      .get(migration.id)
+
+    if (existing) {
+      continue
+    }
+
+    database.exec('BEGIN')
+
+    try {
+      for (const statement of migration.statements) {
+        database.exec(statement)
+      }
+
+      database
+        .prepare('INSERT INTO _migrations (id, name, applied_at) VALUES (?, ?, ?)')
+        .run(migration.id, migration.name, new Date().toISOString())
+
+      database.exec('COMMIT')
+    } catch (error) {
+      database.exec('ROLLBACK')
+      throw error
+    }
+  }
 }
 
 function mainBranchId(sessionId: string): string {

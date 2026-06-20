@@ -23,6 +23,7 @@ export function registerProvidersHandlers(): void {
           provider: provider.id,
           available: model.available,
           availableThinkingLevels: model.availableThinkingLevels,
+          input: [...model.input],
           contextWindow: model.contextWindow,
         })),
       }))

@@ -11,6 +11,11 @@ import type { WaggleConfig, WaggleStreamMetadata } from '@shared/types/waggle'
 import type { PiModel } from '../pi-provider-catalog'
 import { buildPiPromptInput, type PiPromptInput } from '../pi-runtime-input'
 import type { PiCustomContent } from './message-parts'
+import {
+  appendTurnHandoffToPrompt,
+  mergeTurnHandoffImages,
+  type WaggleTurnHandoff,
+} from './waggle-turn-handoff'
 
 function piPromptInputToCustomContent(input: PiPromptInput): PiCustomContent {
   if (input.images.length === 0) {
@@ -25,15 +30,19 @@ function buildWaggleTurnPayload(
   input: {
     readonly config: WaggleConfig
     readonly turnNumber: number
+    readonly handoff: WaggleTurnHandoff | null
   },
 ): HydratedAgentSendPayload {
   return {
     ...payload,
-    text: buildWaggleTurnPrompt({
-      config: input.config,
-      turnNumber: input.turnNumber,
-      userPrompt: payload.text,
-    }),
+    text: appendTurnHandoffToPrompt(
+      buildWaggleTurnPrompt({
+        config: input.config,
+        turnNumber: input.turnNumber,
+        userPrompt: payload.text,
+      }),
+      input.handoff,
+    ),
   }
 }
 
@@ -95,6 +104,7 @@ export async function sendInitialWaggleMessages(input: {
           buildWaggleTurnPayload(input.payload, {
             config: input.runtimeConfig,
             turnNumber: 0,
+            handoff: null,
           }),
         ),
       ),
@@ -111,15 +121,25 @@ export function buildWaggleTurnCustomMessage(input: {
   readonly config: WaggleConfig
   readonly meta: WaggleStreamMetadata
   readonly runId: string
+  readonly handoff: WaggleTurnHandoff | null
 }) {
   const turnPayload = buildWaggleTurnPayload(input.payload, {
     config: input.config,
     turnNumber: input.meta.turnNumber,
+    handoff: input.handoff,
   })
+  const promptInput = buildPiPromptInput(input.model, turnPayload)
 
   return {
     customType: PI_WAGGLE_TURN_CUSTOM_TYPE,
-    content: piPromptInputToCustomContent(buildPiPromptInput(input.model, turnPayload)),
+    content: piPromptInputToCustomContent({
+      ...promptInput,
+      images: mergeTurnHandoffImages(
+        promptInput.images,
+        input.handoff,
+        input.model.input.includes('image'),
+      ),
+    }),
     display: false,
     details: {
       ...buildTurnDetails({ meta: input.meta, fallbackRunId: input.runId }),

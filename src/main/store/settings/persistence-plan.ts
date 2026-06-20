@@ -8,6 +8,7 @@ import {
   SETTINGS_KEY_RECENT_PROJECTS,
   SETTINGS_KEY_SKILL_TOGGLES_BY_PROJECT,
   SETTINGS_KEY_THINKING_LEVEL,
+  SETTINGS_KEY_THEME_MODE,
 } from './keys'
 import { isValidThinkingLevel } from './sanitizers'
 
@@ -64,6 +65,12 @@ export function collectSettingsPatchWrites(partial: Partial<Settings>, next: Set
     next.projectPath,
   )
   appendThinkingLevelWrite(writes, partial, next)
+  appendChangedSetting(
+    writes,
+    partial.themeMode !== undefined,
+    SETTINGS_KEY_THEME_MODE,
+    next.themeMode,
+  )
   appendChangedSetting(
     writes,
     partial.recentProjects !== undefined,

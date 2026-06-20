@@ -31,7 +31,7 @@ interface BranchMenuController {
 
 function DraftBranchRow({ sourceNodeId }: { readonly sourceNodeId: string }) {
   return (
-    <div className="mx-4 flex h-9 items-center gap-2 rounded-md border border-dashed border-white/[0.08] pl-8 pr-4 text-left text-[#7c8479]">
+    <div className="mx-4 flex h-9 items-center gap-2 rounded-md border border-dashed border-border/40 pl-8 pr-4 text-left text-text-tertiary">
       <span className="min-w-0 flex-1 truncate text-[12px]">Draft branch from {sourceNodeId}</span>
     </div>
   )
@@ -70,7 +70,7 @@ function BranchRenameInput({
       }}
       variant="transparent"
       inputSize="sm"
-      className="min-w-0 flex-1 px-0 text-[11px] text-[#eef2ea]"
+      className="min-w-0 flex-1 px-0 text-[11px] text-text-primary"
     />
   )
 }
@@ -104,7 +104,7 @@ function BranchActionsPopover({
             event.stopPropagation()
             toggle()
           }}
-          className="flex size-6 shrink-0 items-center justify-center rounded-lg text-[#7b8379] opacity-0 transition-colors hover:bg-white/[0.04] hover:text-[#e6ebe2] group-hover:opacity-100 focus:opacity-100"
+          className="flex size-6 shrink-0 items-center justify-center rounded-lg text-text-tertiary opacity-0 transition-colors hover:bg-bg-hover hover:text-text-primary group-hover:opacity-100 focus:opacity-100"
         >
           <MoreHorizontal className="size-3.5" />
         </Button>
@@ -154,9 +154,7 @@ function SidebarBranchItem({
     <div
       className={cn(
         'group mx-4 flex h-9 items-center gap-2 rounded-md pl-8 pr-3 text-left transition-colors',
-        row.isActive
-          ? 'bg-[#8ba57b]/15 text-[#8ba57b]'
-          : 'text-[#a1a1aa] hover:bg-white/5 hover:text-white',
+        row.isActive ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
       )}
     >
       {isRenaming ? (

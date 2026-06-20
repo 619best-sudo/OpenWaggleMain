@@ -216,7 +216,11 @@ describe('chat orchestration hooks', () => {
 
     expect(params.branchSummary.materializeDraftBranchForSend).toHaveBeenCalledWith(null)
     expect(params.startWaggleCollaboration).toHaveBeenCalledWith(SESSION_ID, config)
-    expect(params.handleSendWaggle).toHaveBeenCalledWith(payload('Review the refactor'), config)
+    expect(params.handleSendWaggle).toHaveBeenCalledWith(
+      payload('Review the refactor'),
+      config,
+      SESSION_ID,
+    )
     expect(params.clearDraftBranchForSession).toHaveBeenCalledWith(SESSION_ID)
   })
 
@@ -230,8 +234,30 @@ describe('chat orchestration hooks', () => {
     expect(params.handleSendWaggle).toHaveBeenCalledWith(
       payload('Run the same prompt again'),
       config,
+      null,
     )
     expect(params.startWaggleCollaboration).not.toHaveBeenCalled()
+    expect(params.handleSend).not.toHaveBeenCalled()
+  })
+
+  it('uses the staged Waggle session when a launched preset races ahead of activeSessionId', async () => {
+    const config = waggleConfig()
+    const stagedSessionId = SessionId('session-staged')
+    const params = sendWorkflowParams({
+      activeSessionId: null,
+      waggleConfig: config,
+      waggleOwningId: stagedSessionId,
+    })
+    const { result } = renderHook(() => useChatSendWorkflow(params))
+
+    await act(() => result.current.sendWithWaggle(payload('Profile Satya Nadella professionally')))
+
+    expect(params.startWaggleCollaboration).toHaveBeenCalledWith(stagedSessionId, config)
+    expect(params.handleSendWaggle).toHaveBeenCalledWith(
+      payload('Profile Satya Nadella professionally'),
+      config,
+      stagedSessionId,
+    )
     expect(params.handleSend).not.toHaveBeenCalled()
   })
 
@@ -257,6 +283,7 @@ describe('chat orchestration hooks', () => {
         compactionStatus: null,
         activeSessionId: SESSION_ID,
         waggleStatus: 'idle',
+        followUpSuggestion: null,
         commandPaletteOpen: false,
         slashSkills: [],
         forkSelectorOpen: false,
@@ -266,6 +293,7 @@ describe('chat orchestration hooks', () => {
         showToast: vi.fn(),
         handleSteer: vi.fn().mockResolvedValue(undefined),
         handleSendWithWaggle: vi.fn().mockResolvedValue(undefined),
+        handleUseFollowUpPrompt: vi.fn(),
         handleStartWaggle: startWaggle,
         handleStopCollaboration: vi.fn(),
         handleSkipBranchSummary: vi.fn(),

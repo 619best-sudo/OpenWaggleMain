@@ -33,10 +33,10 @@ function effectiveAgentModelLabel(ctx: ExtensionContext, model: string) {
 }
 
 function modelSummary(ctx: ExtensionContext, config: WaggleConfig) {
-  const [firstAgent, secondAgent] = config.agents
-  const firstModel = effectiveAgentModelLabel(ctx, firstAgent.model)
-  const secondModel = effectiveAgentModelLabel(ctx, secondAgent.model)
-  return firstModel === secondModel ? firstModel : 'mixed models'
+  const models = config.agents.map((agent) => effectiveAgentModelLabel(ctx, agent.model))
+  const [firstModel] = models
+  if (!firstModel) return 'no agents'
+  return models.every((model) => model === firstModel) ? firstModel : 'mixed models'
 }
 
 function configRowSummary(ctx: ExtensionContext, config: WaggleConfig) {
@@ -44,13 +44,13 @@ function configRowSummary(ctx: ExtensionContext, config: WaggleConfig) {
 }
 
 function configDetails(ctx: ExtensionContext, config: WaggleConfig, description?: string) {
-  const [firstAgent, secondAgent] = config.agents
   return [
     ...(description ? [description] : []),
     `Stop: ${config.stop.primary} · max ${String(config.stop.maxTurnsSafety)} turns`,
-    `Agents: ${firstAgent.label} (${effectiveAgentModelLabel(ctx, firstAgent.model)}) ↔ ${secondAgent.label} (${effectiveAgentModelLabel(ctx, secondAgent.model)})`,
-    `${firstAgent.label} prompt: ${promptPreview(firstAgent.roleDescription)}`,
-    `${secondAgent.label} prompt: ${promptPreview(secondAgent.roleDescription)}`,
+    `Agents: ${config.agents.map((agent) => `${agent.label} (${effectiveAgentModelLabel(ctx, agent.model)})`).join(' -> ')}`,
+    ...config.agents.map(
+      (agent) => `${agent.label} prompt: ${promptPreview(agent.roleDescription)}`,
+    ),
   ]
 }
 

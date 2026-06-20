@@ -40,7 +40,7 @@ function SummaryButton({
       onClick={onClick}
       className={cn(
         'h-6 rounded-md px-2 text-[11px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-        variant === 'primary' && 'bg-accent text-bg hover:bg-accent-dim',
+        variant === 'primary' && 'bg-accent text-accent-foreground hover:bg-accent-dim',
         variant === 'secondary' && 'border border-border text-text-secondary hover:bg-bg-hover',
         variant === 'ghost' && 'text-text-tertiary hover:bg-bg-hover hover:text-text-secondary',
       )}

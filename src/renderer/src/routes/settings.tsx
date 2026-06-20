@@ -1,10 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { SettingsRouteSurface } from './-settings-route-surface'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/settings')({
-  component: SettingsRouteView,
+  component: SettingsRouteLayout,
 })
 
-function SettingsRouteView() {
-  return <SettingsRouteSurface tab="general" />
+function SettingsRouteLayout() {
+  return <Outlet />
 }

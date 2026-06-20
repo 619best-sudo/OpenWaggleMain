@@ -1,8 +1,5 @@
 import type { WaggleAgentSlot, WaggleConfig } from './config'
 
-const FIRST_AGENT_INDEX = 0
-const SECOND_AGENT_INDEX = 1
-const WAGGLE_AGENT_COUNT = 2
 const NEXT_TURN_INCREMENT = 1
 
 export interface WaggleTurn {
@@ -25,15 +22,16 @@ export interface WaggleTurnDecision {
   readonly nextTurn?: WaggleTurn
 }
 
-export function getWaggleTurnAgentIndex(turnNumber: number) {
-  return turnNumber % WAGGLE_AGENT_COUNT === FIRST_AGENT_INDEX
-    ? FIRST_AGENT_INDEX
-    : SECOND_AGENT_INDEX
+export function getWaggleTurnAgentIndex(config: Pick<WaggleConfig, 'agents'>, turnNumber: number) {
+  return turnNumber % config.agents.length
 }
 
 export function getWaggleTurn(config: WaggleConfig, turnNumber: number): WaggleTurn {
-  const agentIndex = getWaggleTurnAgentIndex(turnNumber)
+  const agentIndex = getWaggleTurnAgentIndex(config, turnNumber)
   const agent = config.agents[agentIndex]
+  if (!agent) {
+    throw new Error(`Missing Waggle agent at index ${String(agentIndex)}`)
+  }
   return { turnNumber, agentIndex, agent }
 }
 

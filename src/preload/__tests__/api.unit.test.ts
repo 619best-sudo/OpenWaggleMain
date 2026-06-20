@@ -123,6 +123,8 @@ describe('preload api surface contract', () => {
     'listWagglePresets',
     'saveWagglePreset',
     'deleteWagglePreset',
+    'getWaggleAppInstallStatus',
+    'installWaggleAppDependencies',
     // Feedback
     'checkGhCli',
     'collectDiagnostics',

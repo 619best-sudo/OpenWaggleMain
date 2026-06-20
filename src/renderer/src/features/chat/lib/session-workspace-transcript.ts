@@ -119,7 +119,7 @@ function appendLiveTailWhenViewingHeadOrDraftSource(
   }
 
   const lastWorkspaceMessageIndex = findLastWorkspaceMessageIndex(messages, workspaceMessages)
-  if (lastWorkspaceMessageIndex < 0 || lastWorkspaceMessageIndex === messages.length - 1) {
+  if (lastWorkspaceMessageIndex === messages.length - 1) {
     return workspaceMessages
   }
 

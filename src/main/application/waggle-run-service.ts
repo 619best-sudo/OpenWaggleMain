@@ -10,6 +10,7 @@
 import { safeDecodeUnknown } from '@shared/schema'
 import { waggleConfigSchema } from '@shared/schemas/waggle'
 import type { AgentSendPayload, HydratedAgentSendPayload } from '@shared/types/agent'
+import { resolveWaggleConfigForPrompt } from '@openwaggle/waggle-core'
 import { SessionBranchId, SessionId, SupportedModelId } from '@shared/types/brand'
 import type { SessionDetail, SessionTree } from '@shared/types/session'
 import type { AgentTransportEvent } from '@shared/types/stream'
@@ -23,12 +24,15 @@ import { formatErrorMessage } from '@shared/utils/node-error'
 import * as Effect from 'effect/Effect'
 import { makeErrorInfo } from '../agent/error-classifier'
 import { FileConflictTracker } from '../agent/file-conflict-tracker'
+import { McpConfigService } from '../ports/mcp-config-service'
 import { createLogger } from '../logger'
 import type { AgentKernelRunResult } from '../ports/agent-kernel-service'
 import { AgentKernelService } from '../ports/agent-kernel-service'
 import { SessionProjectionRepository } from '../ports/session-projection-repository'
 import { SessionRepository } from '../ports/session-repository'
+import { WagglePresetsRepository } from '../ports/waggle-presets-repository'
 import { SettingsService } from '../services/settings-service'
+import { getWaggleAppInstallStatus } from '../waggle/waggle-app-dependency-installer'
 import { assignSessionTitleFromUserText, hydratePayloadAttachments } from './run-handler-utils'
 import { extractFilePath } from './waggle-run/metadata'
 import { persistWaggleSnapshot } from './waggle-run/persistence'
@@ -100,6 +104,63 @@ function mainBranchFallbackId(sessionId: SessionId) {
   return SessionBranchId(`${sessionId}:${MAIN_BRANCH_NAME}`)
 }
 
+function isTuringRoutingConfig(config: WaggleConfig) {
+  return (
+    config.agents.length === 2 &&
+    config.agents[0]?.label === 'Context Reader' &&
+    config.agents[1]?.label === 'Installed Waggle Selector'
+  )
+}
+
+async function buildTuringInstallReadinessSnapshot(input: {
+  readonly projectPath: string
+  readonly settingsService: typeof SettingsService.Service
+  readonly mcpConfigService: typeof McpConfigService.Service
+  readonly wagglePresetsRepository: typeof WagglePresetsRepository.Service
+}) {
+  const presets = await Effect.runPromise(input.wagglePresetsRepository.list(input.projectPath))
+  const appPresets = presets.filter((preset) => preset.id !== 'turing')
+  const statuses = await Promise.all(
+    appPresets.map(async (preset) => ({
+      preset,
+      status: await getWaggleAppInstallStatus({
+        projectPath: input.projectPath,
+        app: preset.app,
+        settingsService: input.settingsService,
+        mcpConfigService: input.mcpConfigService,
+      }),
+    })),
+  )
+
+  const lines = statuses.map(({ preset, status }) => {
+    const requiredMissing = status.dependencies
+      .filter((dependency) => dependency.required && dependency.state !== 'installed')
+      .map((dependency) => dependency.id)
+    const optionalMissing = status.dependencies
+      .filter((dependency) => !dependency.required && dependency.state !== 'installed')
+      .map((dependency) => dependency.id)
+
+    const detailParts = [
+      status.ready ? 'required status: ready' : `required status: blocked by ${requiredMissing.join(', ')}`,
+      optionalMissing.length > 0
+        ? `optional tools still missing: ${optionalMissing.join(', ')}`
+        : 'optional tools status: ready or not needed',
+    ]
+
+    return `- ${preset.name} (${preset.id}): ${detailParts.join('; ')}`
+  })
+
+  return [
+    'Installed Waggle readiness snapshot:',
+    ...lines,
+    'Use this snapshot as the source of truth for what is installed and launch-ready right now.',
+  ].join('\n')
+}
+
+function appendRoutingSnapshotToPrompt(text: string, snapshot: string) {
+  return `${text}\n\n${snapshot}`
+}
+
 function resolveInitialWaggleRuntimeModel(input: {
   readonly config: WaggleConfig
   readonly selectedModel: SupportedModelId
@@ -150,20 +211,39 @@ function prepareWaggleRun(input: WaggleRunInput) {
     if (!safeDecodeUnknown(waggleConfigSchema, input.config).success) {
       return { ok: false as const, outcome: validationErrorOutcome() }
     }
-    if (configRequiresInheritedModel(input.config) && !input.model.trim()) {
+    const activeConfig = resolveWaggleConfigForPrompt(input.config, input.payload.text) as WaggleConfig
+    if (configRequiresInheritedModel(activeConfig) && !input.model.trim()) {
       return { ok: false as const, outcome: noInheritedModelOutcome() }
     }
 
     const settingsService = yield* SettingsService
     const settings = yield* settingsService.get()
+    const mcpConfigService = yield* McpConfigService
+    const wagglePresetsRepository = yield* WagglePresetsRepository
     const sessionProjectionRepo = yield* SessionProjectionRepository
     const session = yield* sessionProjectionRepo.getOptional(input.sessionId)
     if (!session) return { ok: false as const, outcome: notFoundOutcome() }
     if (!session.projectPath) return { ok: false as const, outcome: noProjectOutcome() }
+    const projectPath = session.projectPath
 
     const assignedTitle = yield* assignPreparedTitle(input, session)
+    const payloadText = isTuringRoutingConfig(activeConfig)
+      ? appendRoutingSnapshotToPrompt(
+          input.payload.text,
+          yield* Effect.promise(() =>
+            buildTuringInstallReadinessSnapshot({
+              projectPath,
+              settingsService,
+              mcpConfigService,
+              wagglePresetsRepository,
+            }),
+          ),
+        )
+      : input.payload.text
+
     const hydratedPayload: HydratedAgentSendPayload = {
       ...input.payload,
+      text: payloadText,
       attachments: yield* Effect.promise(() =>
         hydratePayloadAttachments(input.payload.attachments),
       ),
@@ -176,11 +256,11 @@ function prepareWaggleRun(input: WaggleRunInput) {
         hydratedPayload,
         inheritedModel: input.model,
         runtimeModel: resolveInitialWaggleRuntimeModel({
-          config: input.config,
+          config: activeConfig,
           selectedModel: input.model,
         }),
         session,
-        skillToggles: settings.skillTogglesByProject[session.projectPath],
+        skillToggles: settings.skillTogglesByProject[projectPath],
       },
     }
   })
@@ -273,6 +353,12 @@ function runPreparedWaggle(
     })
 
     if (result.aborted || input.signal.aborted) {
+      yield* persistWaggleSnapshot({
+        sessionId: input.sessionId,
+        result,
+        snapshot: result.sessionSnapshot,
+        waggleConfig: input.config,
+      })
       input.onTurnEvent({ type: 'collaboration-stopped', reason: 'User cancelled' })
       return {
         outcome: 'aborted' as const,

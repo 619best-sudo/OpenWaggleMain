@@ -37,7 +37,7 @@ function getCodeElement(tree: Root): Element {
 
 async function loadHighlighter() {
   return createHighlighter({
-    themes: ['github-dark'],
+    themes: ['github-dark', 'github-light'],
     langs: ['typescript', 'javascript'],
     engine: createJavaScriptRegexEngine(),
   })

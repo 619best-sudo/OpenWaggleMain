@@ -1,4 +1,3 @@
-import { ScrollToBottomButton } from '@/features/chat/components'
 import type { SessionTreePanelContent as SessionTreePanelContentModel } from '../model'
 import { SessionTreeRows } from './SessionTreeRows'
 
@@ -16,13 +15,11 @@ function EmptySessionTreeMessage({ searchActive }: { readonly searchActive: bool
 
 export function SessionTreePanelContent({ content }: SessionTreePanelContentProps) {
   const {
-    onScrollToTreeBottom,
     onTreeScroll,
     rowActions,
     rowRefs: rowElements,
     scrollContainerRef: scrollContainer,
     searchActive,
-    showTreeScrollToBottom,
     tree,
     treeRowsRef: treeRows,
     view,
@@ -30,7 +27,11 @@ export function SessionTreePanelContent({ content }: SessionTreePanelContentProp
 
   return (
     <div className="relative min-h-0 flex-1">
-      <div ref={scrollContainer} className="h-full overflow-y-auto p-2" onScroll={onTreeScroll}>
+      <div
+        ref={scrollContainer}
+        className="thread-scroll h-full overflow-y-auto p-2"
+        onScroll={onTreeScroll}
+      >
         {!tree ? (
           <div className="px-2 py-6 text-center text-[12px] text-text-tertiary">
             No session tree yet.
@@ -43,7 +44,6 @@ export function SessionTreePanelContent({ content }: SessionTreePanelContentProp
           </div>
         ) : null}
       </div>
-      <ScrollToBottomButton visible={showTreeScrollToBottom} onClick={onScrollToTreeBottom} />
     </div>
   )
 }

@@ -10,6 +10,7 @@ import { SettingsNav } from './SettingsNav'
 import { ArchivedSection } from './sections/ArchivedSection'
 import { ConnectionsSection } from './sections/ConnectionsSection'
 import { GeneralSection } from './sections/GeneralSection'
+import { ProfileSection } from './sections/ProfileSection'
 
 interface SettingsPageProps {
   readonly activeTab: SettingsTab
@@ -68,8 +69,9 @@ export function SettingsPage({ activeTab }: SettingsPageProps) {
 
 function SettingsTabContent({ tab }: { tab: SettingsTab }) {
   return match(tab)
+    .with('profile', () => <ProfileSection />)
     .with('general', () => <GeneralSection />)
     .with('connections', () => <ConnectionsSection />)
     .with('archived', () => <ArchivedSection />)
-    .otherwise(() => <GeneralSection />)
+    .otherwise(() => <ProfileSection />)
 }

@@ -51,7 +51,7 @@ export function SessionTreeNodeDot({
       className={cn(
         'session-tree-node-dot absolute top-1/2 z-10 flex -translate-y-1/2 items-center justify-center rounded-full border transition-[background-color,border-color,color,transform,box-shadow] duration-150 ease-out hover:scale-110 focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent',
         highlighted
-          ? 'session-tree-active-dot border-accent bg-accent text-bg'
+          ? 'session-tree-active-dot border-accent bg-accent text-accent-foreground'
           : 'border-border-light bg-diff-bg text-text-muted hover:border-accent/60 hover:bg-bg-hover hover:text-text-secondary',
       )}
       style={style}

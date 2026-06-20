@@ -51,7 +51,7 @@ function SourceButton({
       className={cn(
         'w-full rounded-xl border p-3.5 text-left transition-all',
         selected
-          ? 'border-accent/30 bg-accent/[0.06] text-text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+          ? 'border-info/35 bg-info/10 text-text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_0_1px_color-mix(in_srgb,var(--color-info)_12%,transparent)]'
           : 'border-white/6 bg-white/[0.02] text-text-secondary hover:border-white/10 hover:bg-white/[0.03]',
       )}
     >
@@ -77,10 +77,20 @@ function SourceButton({
         <div className="mt-2 line-clamp-2 text-[11px] text-error">{source.parseError}</div>
       ) : (
         <div className="mt-3 flex gap-2 text-[11px] text-text-tertiary">
-          <span className="rounded-full bg-white/[0.04] px-2 py-0.5">
+          <span
+            className={cn(
+              'rounded-full px-2 py-0.5',
+              selected ? 'bg-info/12 text-info' : 'bg-white/[0.04]',
+            )}
+          >
             {source.serverCount} active
           </span>
-          <span className="rounded-full bg-white/[0.04] px-2 py-0.5">
+          <span
+            className={cn(
+              'rounded-full px-2 py-0.5',
+              selected ? 'bg-info/10 text-text-secondary' : 'bg-white/[0.04]',
+            )}
+          >
             {source.disabledServerCount} disabled
           </span>
         </div>
@@ -91,45 +101,47 @@ function SourceButton({
 
 function ServerRow({
   server,
+  index,
   busy,
   onToggle,
 }: {
   readonly server: McpServerSummary
+  readonly index: number
   readonly busy: boolean
   readonly onToggle: () => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-white/6 px-4 py-3.5 last:border-b-0 hover:bg-white/[0.02] transition-colors">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-medium text-text-primary">{server.name}</span>
-          <span
-            className={cn(
-              'rounded-full border px-2 py-0.5 text-[10px] font-medium',
-              server.enabled
-                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
-                : 'border-white/8 bg-white/[0.04] text-text-muted',
-            )}
-          >
-            {server.enabled ? 'Enabled' : 'Disabled'}
-          </span>
-          <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[10px] text-text-tertiary">
-            {formatDirectTools(server.directTools)}
-          </span>
-        </div>
-        <div className="mt-1 truncate text-[12px] text-text-tertiary">
+    <div
+      className={cn(
+        'flex items-center justify-between gap-4 border-b border-border/50 px-4 py-2.5 transition-colors last:border-b-0',
+        index % 2 === 0 ? 'bg-bg-secondary/55' : 'bg-bg-tertiary/35',
+        'hover:bg-bg-hover/60',
+      )}
+    >
+      <div className="min-w-0 flex-1 flex items-center gap-3">
+        <span className="text-[13px] font-medium text-text-primary min-w-[140px] truncate">
+          {server.name}
+        </span>
+        <span className="truncate text-[11px] text-text-tertiary">
           {formatServerDetail(server)}
-        </div>
-        <div className="mt-1 truncate text-[11px] text-text-muted">
-          Source: {server.sourceLabel}
-        </div>
+        </span>
       </div>
-      <ToggleSwitch
-        checked={server.enabled}
-        disabled={busy}
-        label={`${server.enabled ? 'Disable' : 'Enable'} ${server.name}`}
-        onCheckedChange={onToggle}
-      />
+      <div className="flex items-center gap-3 shrink-0">
+        <span
+          className={cn(
+            'text-[11px] font-medium',
+            server.enabled ? 'text-emerald-400' : 'text-text-muted',
+          )}
+        >
+          {server.enabled ? 'Enabled' : 'Disabled'}
+        </span>
+        <ToggleSwitch
+          checked={server.enabled}
+          disabled={busy}
+          label={`${server.enabled ? 'Disable' : 'Enable'} ${server.name}`}
+          onCheckedChange={onToggle}
+        />
+      </div>
     </div>
   )
 }
@@ -185,24 +197,19 @@ export function McpAdapterCard({
 }) {
   const adapterEnabled = view?.adapter.enabled ?? false
   return (
-    <div className="rounded-2xl border border-white/6 bg-[linear-gradient(180deg,#111418,#0d1014)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 space-y-1">
-          <div className="flex items-center gap-2">
-            <Network className="size-4 text-accent" />
-            <h3 className="text-[16px] font-semibold text-text-primary">MCP Connection</h3>
-            <McpAdapterStatus enabled={adapterEnabled} />
-          </div>
-          <p className="text-[12px] text-text-tertiary">
-            Manages the bridge between your assistant and configured MCP servers.
-          </p>
+    <div className="overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Network className="size-4 text-accent" />
+          <h3 className="text-[13px] font-medium text-text-primary">MCP Connection</h3>
+          <McpAdapterStatus enabled={adapterEnabled} />
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button disabled={busy} onClick={onRefresh} leftIcon={<RotateCw className="size-3" />}>
+          <Button variant="secondary" size="sm" disabled={busy} onClick={onRefresh} leftIcon={<RotateCw className="size-3" />} className="h-7 text-[11px] px-2.5">
             Refresh
           </Button>
-          <div className="flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-3 py-1.5">
-            <span className="text-[12px] font-medium text-text-secondary">
+          <div className="flex items-center gap-2 rounded-full border border-border bg-bg-tertiary px-2.5 py-1">
+            <span className="text-[11px] font-medium text-text-secondary">
               {adapterEnabled ? 'On' : 'Off'}
             </span>
             <ToggleSwitch
@@ -373,7 +380,7 @@ export function McpQuickInstallPanel({
             <TextInput
               value={name}
               disabled={busy}
-              placeholder="my-server"
+              placeholder="playwright"
               onChange={(event) => setName(event.target.value)}
               className="w-full text-[12px] h-9 bg-white/[0.02] border-transparent hover:bg-white/[0.04] focus:border-white/10 placeholder:text-text-muted"
             />
@@ -400,7 +407,7 @@ export function McpQuickInstallPanel({
               <TextInput
                 value={args}
                 disabled={busy}
-                placeholder="-y @modelcontextprotocol/server-example"
+                placeholder="-y @playwright/mcp@latest"
                 onChange={(event) => setArgs(event.target.value)}
                 className="w-full text-[12px] h-9 bg-white/[0.02] border-transparent hover:bg-white/[0.04] focus:border-white/10 placeholder:text-text-muted"
               />
@@ -491,27 +498,20 @@ export function McpServersPanel({
   readonly onToggleServer: (server: McpServerSummary) => void
 }) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-[16px] font-semibold text-text-primary">Connected Servers</h3>
-        <span className="rounded-full border border-white/6 bg-white/[0.02] px-2 py-0.5 text-[10px] text-text-muted">
-          {servers.length} total
-        </span>
-      </div>
-      <div className="overflow-hidden rounded-xl border border-white/6 bg-black/20">
-        {servers.length > 0 ? (
-          servers.map((server) => (
-            <ServerRow
-              key={`${server.sourceId}:${server.name}`}
-              server={server}
-              busy={busy}
-              onToggle={() => onToggleServer(server)}
-            />
-          ))
-        ) : (
-          <p className="px-4 py-6 text-[13px] text-text-muted">No MCP servers configured.</p>
-        )}
-      </div>
+    <div className="flex flex-col bg-bg-primary">
+      {servers.length > 0 ? (
+        servers.map((server, index) => (
+          <ServerRow
+            key={`${server.sourceId}:${server.name}`}
+            server={server}
+            index={index}
+            busy={busy}
+            onToggle={() => onToggleServer(server)}
+          />
+        ))
+      ) : (
+        <p className="px-4 py-6 text-[13px] text-text-muted text-center">No MCP servers configured.</p>
+      )}
     </div>
   )
 }

@@ -83,6 +83,7 @@ function dedupeProviderModels(
       provider,
       available: model.available,
       availableThinkingLevels: model.availableThinkingLevels,
+      input: model.input,
       contextWindow: model.contextWindow,
     })
   }
@@ -160,8 +161,49 @@ export const useProviderStore = create<ProviderState>((set) => ({
 
   async updateApiKey(provider: Provider, apiKey: string) {
     const normalizedApiKey = apiKey.trim()
+    // #region debug-point B:provider-store-before-ipc
+    fetch('http://localhost:7777/event', {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId: 'openrouter-key-save',
+        runId: 'pre-fix',
+        hypothesisId: 'B',
+        location: 'provider-store.ts:updateApiKey:before',
+        msg: '[DEBUG] Provider store dispatching API key save',
+        data: {
+          provider,
+          normalizedLength: normalizedApiKey.length,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {})
+    // #endregion
     await api.setProviderApiKey(provider, normalizedApiKey)
     await useProviderStore.getState().loadProviderModels()
+    const refreshedProvider = useProviderStore
+      .getState()
+      .providerModels.find((entry) => entry.provider === provider)
+    // #region debug-point C:provider-store-after-refresh
+    fetch('http://localhost:7777/event', {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId: 'openrouter-key-save',
+        runId: 'pre-fix',
+        hypothesisId: 'C',
+        location: 'provider-store.ts:updateApiKey:after',
+        msg: '[DEBUG] Provider store refreshed provider models after API key save',
+        data: {
+          provider,
+          foundProvider: refreshedProvider !== undefined,
+          apiKeyConfigured: refreshedProvider?.auth.apiKeyConfigured ?? null,
+          apiKeySource: refreshedProvider?.auth.apiKeySource ?? null,
+          configured: refreshedProvider?.auth.configured ?? null,
+          authSource: refreshedProvider?.auth.source ?? null,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {})
+    // #endregion
   },
 
   async testApiKey(provider: Provider, apiKey: string) {

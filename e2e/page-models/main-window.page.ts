@@ -2,13 +2,30 @@ import { expect, type Locator, type Page } from '@playwright/test'
 
 const THREAD_VISIBILITY_TIMEOUT_MS = 12_000
 const NEW_THREAD_LABEL = 'New session'
+const READY_TIMEOUT_MS = 8_000
 const SCROLL_BOTTOM_TOLERANCE_PX = 40
 
 export class MainWindowPage {
   constructor(readonly page: Page) {}
 
   async waitUntilReady(): Promise<void> {
-    await expect(this.page.getByRole('button', { name: NEW_THREAD_LABEL }).first()).toBeVisible()
+    await Promise.any([
+      this.page.getByTitle('Open project picker').waitFor({ state: 'visible', timeout: READY_TIMEOUT_MS }),
+      this.page
+        .getByRole('button', { name: /New session/i })
+        .first()
+        .waitFor({ state: 'visible', timeout: READY_TIMEOUT_MS }),
+      this.page
+        .getByRole('button', { name: /Draft session in /i })
+        .first()
+        .waitFor({ state: 'visible', timeout: READY_TIMEOUT_MS }),
+      this.page
+        .getByRole('textbox', { name: 'Message input' })
+        .waitFor({ state: 'visible', timeout: READY_TIMEOUT_MS }),
+    ]).catch(async () => {
+      const title = await this.page.title().catch(() => '')
+      throw new Error(`Main window never reached a ready UI state. Current page title: ${title}`)
+    })
   }
 
   newThreadButton(): Locator {

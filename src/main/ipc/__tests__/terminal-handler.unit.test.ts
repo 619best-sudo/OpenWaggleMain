@@ -211,32 +211,36 @@ describe('registerTerminalHandlers', () => {
       expect(resizeMock).toHaveBeenCalledWith(120, 40)
     })
 
-    it('rejects cols exceeding maximum (500)', async () => {
+    it('silently ignores cols exceeding maximum (500)', async () => {
       registerTerminalHandlers()
       const resizeHandler = getInvokeHandler('terminal:resize')
 
-      await expect(resizeHandler?.({}, 'missing', 501, 40)).rejects.toThrow()
+      await expect(resizeHandler?.({}, 'missing', 501, 40)).resolves.not.toThrow()
+      expect(resizeMock).not.toHaveBeenCalled()
     })
 
-    it('rejects rows exceeding maximum (200)', async () => {
+    it('silently ignores rows exceeding maximum (200)', async () => {
       registerTerminalHandlers()
       const resizeHandler = getInvokeHandler('terminal:resize')
 
-      await expect(resizeHandler?.({}, 'missing', 80, 201)).rejects.toThrow()
+      await expect(resizeHandler?.({}, 'missing', 80, 201)).resolves.not.toThrow()
+      expect(resizeMock).not.toHaveBeenCalled()
     })
 
-    it('rejects cols below minimum (10)', async () => {
+    it('silently ignores cols below minimum (10)', async () => {
       registerTerminalHandlers()
       const resizeHandler = getInvokeHandler('terminal:resize')
 
-      await expect(resizeHandler?.({}, 'missing', 5, 40)).rejects.toThrow()
+      await expect(resizeHandler?.({}, 'missing', 5, 40)).resolves.not.toThrow()
+      expect(resizeMock).not.toHaveBeenCalled()
     })
 
-    it('rejects rows below minimum (5)', async () => {
+    it('silently ignores rows below minimum (5)', async () => {
       registerTerminalHandlers()
       const resizeHandler = getInvokeHandler('terminal:resize')
 
-      await expect(resizeHandler?.({}, 'missing', 80, 3)).rejects.toThrow()
+      await expect(resizeHandler?.({}, 'missing', 80, 3)).resolves.not.toThrow()
+      expect(resizeMock).not.toHaveBeenCalled()
     })
 
     it('accepts boundary values', async () => {

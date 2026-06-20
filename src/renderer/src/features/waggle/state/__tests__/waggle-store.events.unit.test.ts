@@ -58,6 +58,38 @@ describe('waggle-store turn event behavior', () => {
     expect(useWaggleStore.getState().lastConsensusResult).toBe(result)
   })
 
+  it('tracks Waggle-only registered artifacts', () => {
+    useWaggleStore.getState().handleTurnEvent({
+      type: 'artifact-registered',
+      artifact: {
+        id: 'waggle-artifact-001',
+        kind: 'video',
+        path: '/tmp/hero.mp4',
+        uri: 'file:///tmp/hero.mp4',
+        mimeType: 'video/mp4',
+        sourceTool: 'generate-video',
+        createdByAgentIndex: 0,
+        createdByAgentLabel: 'Architect',
+        turnNumber: 1,
+        transport: {
+          fileName: 'hero.mp4',
+          sizeBytes: 2_400_000,
+          preferredFieldNames: ['path', 'filePath', 'inputPath'],
+          fallbackFieldNames: ['uri', 'fileUri', 'url'],
+          base64Mode: 'avoid',
+        },
+      },
+    })
+
+    expect(useWaggleStore.getState().artifacts).toEqual([
+      expect.objectContaining({
+        id: 'waggle-artifact-001',
+        kind: 'video',
+        path: '/tmp/hero.mp4',
+      }),
+    ])
+  })
+
   it('accumulates file conflicts', () => {
     useWaggleStore
       .getState()

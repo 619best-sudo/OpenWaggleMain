@@ -210,9 +210,9 @@ function parseWaggleConfig(raw: string | null): WaggleConfig | undefined {
 
   return {
     ...parsed.data,
-    agents: [
-      { ...parsed.data.agents[0], model: createWaggleModelBinding(parsed.data.agents[0].model) },
-      { ...parsed.data.agents[1], model: createWaggleModelBinding(parsed.data.agents[1].model) },
-    ],
+    agents: parsed.data.agents.map((agent) => ({
+      ...agent,
+      model: createWaggleModelBinding(agent.model),
+    })),
   }
 }

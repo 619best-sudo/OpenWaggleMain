@@ -1,8 +1,6 @@
-const FIRST_AGENT_INDEX = 0
-const SECOND_AGENT_INDEX = 1
 export const MIN_WAGGLE_MAX_TURNS_SAFETY = 1
 export const MAX_WAGGLE_MAX_TURNS_SAFETY = 100
-const WAGGLE_AGENT_COUNT = 2
+export const MIN_WAGGLE_AGENT_COUNT = 2
 const MIN_TIMESTAMP = 0
 const FIRST_PROVIDER_CHARACTER_INDEX = 0
 const MODEL_ID_START_OFFSET = 1
@@ -10,18 +8,41 @@ const MODEL_ID_START_OFFSET = 1
 export const WAGGLE_INHERIT_MODEL = '$inherit'
 export const WAGGLE_COLLABORATION_MODES = ['sequential'] as const
 export type WaggleCollaborationMode = (typeof WAGGLE_COLLABORATION_MODES)[number]
+export const WAGGLE_PLACEHOLDER_POLICIES = ['none', 'prefer-placeholders-over-blocking'] as const
+export type WagglePlaceholderPolicy = (typeof WAGGLE_PLACEHOLDER_POLICIES)[number]
 
 export const WAGGLE_AGENT_COLORS = ['blue', 'amber', 'emerald', 'violet'] as const
 export type WaggleAgentColor = (typeof WAGGLE_AGENT_COLORS)[number]
 
 export const WAGGLE_STOP_CONDITIONS = ['consensus', 'user-stop'] as const
 export type WaggleStopCondition = (typeof WAGGLE_STOP_CONDITIONS)[number]
+export const WAGGLE_AGENT_RUN_CONDITION_TYPES = ['prompt-match'] as const
+export type WaggleAgentRunConditionType = (typeof WAGGLE_AGENT_RUN_CONDITION_TYPES)[number]
+
+export interface WagglePromptMatchRunCondition {
+  readonly type: 'prompt-match'
+  readonly anyOf: readonly string[]
+}
+
+export type WaggleAgentRunCondition = WagglePromptMatchRunCondition
+
+export interface WaggleAgentOutputContract {
+  readonly requiredSections: readonly string[]
+}
+
+export interface WaggleLoopContract {
+  readonly firstQaGate?: readonly string[]
+  readonly failureCategories?: readonly string[]
+  readonly placeholderPolicy?: WagglePlaceholderPolicy
+}
 
 export interface WaggleAgentSlot {
   readonly label: string
   readonly model: string
   readonly roleDescription: string
   readonly color: WaggleAgentColor
+  readonly runCondition?: WaggleAgentRunCondition
+  readonly outputContract?: WaggleAgentOutputContract
 }
 
 export interface WaggleStopConfig {
@@ -31,8 +52,9 @@ export interface WaggleStopConfig {
 
 export interface WaggleConfig {
   readonly mode: WaggleCollaborationMode
-  readonly agents: readonly [WaggleAgentSlot, WaggleAgentSlot]
+  readonly agents: readonly WaggleAgentSlot[]
   readonly stop: WaggleStopConfig
+  readonly loopContract?: WaggleLoopContract
 }
 
 export interface WagglePreset {
@@ -99,6 +121,14 @@ function collectIssues(results: readonly WaggleValidationResult<unknown>[]) {
   return results.flatMap((result) => (result.success ? [] : result.issues))
 }
 
+function normalizePromptMatchTerms(terms: readonly string[]) {
+  return terms.map((term) => term.trim().toLocaleLowerCase()).filter((term) => term.length > 0)
+}
+
+function normalizeContractTerms(terms: readonly string[]) {
+  return terms.map((term) => term.trim().toLocaleLowerCase()).filter((term) => term.length > 0)
+}
+
 export function isWaggleInheritedModel(model: string) {
   return model === WAGGLE_INHERIT_MODEL
 }
@@ -135,13 +165,17 @@ function parseAgentSlot(value: unknown, path: string): WaggleValidationResult<Wa
   const model = modelValue(value.model, `${path}.model`)
   const roleDescription = stringValue(value.roleDescription, `${path}.roleDescription`)
   const color = literalValue(value.color, WAGGLE_AGENT_COLORS, `${path}.color`)
-  const issues = collectIssues([label, model, roleDescription, color])
+  const runCondition = parseAgentRunCondition(value.runCondition, `${path}.runCondition`)
+  const outputContract = parseAgentOutputContract(value.outputContract, `${path}.outputContract`)
+  const issues = collectIssues([label, model, roleDescription, color, runCondition, outputContract])
   if (
     issues.length > 0 ||
     !label.success ||
     !model.success ||
     !roleDescription.success ||
-    !color.success
+    !color.success ||
+    !runCondition.success ||
+    !outputContract.success
   ) {
     return { success: false, issues }
   }
@@ -153,7 +187,112 @@ function parseAgentSlot(value: unknown, path: string): WaggleValidationResult<Wa
       model: model.value,
       roleDescription: roleDescription.value,
       color: color.value,
+      ...(runCondition.value ? { runCondition: runCondition.value } : {}),
+      ...(outputContract.value ? { outputContract: outputContract.value } : {}),
     },
+  }
+}
+
+function parseStringArray(
+  value: unknown,
+  path: string,
+): WaggleValidationResult<readonly string[]> {
+  if (!Array.isArray(value)) {
+    return { success: false, issues: [`${path} must be an array of strings.`] }
+  }
+
+  const items = value.map((item, index) => stringValue(item, `${path}[${String(index)}]`))
+  const issues = collectIssues(items)
+  if (issues.length > 0 || items.some((item) => !item.success)) {
+    return { success: false, issues }
+  }
+
+  return {
+    success: true,
+    value: items.map((item) => {
+      if (!item.success) {
+        throw new Error('Expected validated string array item')
+      }
+      return item.value
+    }),
+  }
+}
+
+function parsePromptMatchRunCondition(
+  value: unknown,
+  path: string,
+): WaggleValidationResult<WagglePromptMatchRunCondition> {
+  if (!isRecord(value)) {
+    return { success: false, issues: [`${path} must be an object.`] }
+  }
+
+  const type = literalValue(
+    value.type,
+    WAGGLE_AGENT_RUN_CONDITION_TYPES,
+    `${path}.type`,
+  )
+  const anyOf = parseStringArray(value.anyOf, `${path}.anyOf`)
+  const issues = collectIssues([type, anyOf])
+  if (issues.length > 0 || !type.success || !anyOf.success) {
+    return { success: false, issues }
+  }
+
+  const normalizedTerms = normalizePromptMatchTerms(anyOf.value)
+  if (normalizedTerms.length === 0) {
+    return {
+      success: false,
+      issues: [`${path}.anyOf must contain at least one non-empty string.`],
+    }
+  }
+
+  return {
+    success: true,
+    value: {
+      type: type.value,
+      anyOf: normalizedTerms,
+    },
+  }
+}
+
+function parseAgentRunCondition(
+  value: unknown,
+  path: string,
+): WaggleValidationResult<WaggleAgentRunCondition | undefined> {
+  if (value === undefined) {
+    return { success: true, value: undefined }
+  }
+
+  return parsePromptMatchRunCondition(value, path)
+}
+
+function parseAgentOutputContract(
+  value: unknown,
+  path: string,
+): WaggleValidationResult<WaggleAgentOutputContract | undefined> {
+  if (value === undefined) {
+    return { success: true, value: undefined }
+  }
+
+  if (!isRecord(value)) {
+    return { success: false, issues: [`${path} must be an object.`] }
+  }
+
+  const requiredSections = parseStringArray(value.requiredSections, `${path}.requiredSections`)
+  if (!requiredSections.success) {
+    return requiredSections
+  }
+
+  const normalizedSections = normalizeContractTerms(requiredSections.value)
+  if (normalizedSections.length === 0) {
+    return {
+      success: false,
+      issues: [`${path}.requiredSections must contain at least one non-empty string.`],
+    }
+  }
+
+  return {
+    success: true,
+    value: { requiredSections: normalizedSections },
   }
 }
 
@@ -196,24 +335,84 @@ function parseStopConfig(value: unknown): WaggleValidationResult<WaggleStopConfi
   }
 }
 
-function parseAgentTuple(
-  value: unknown,
-): WaggleValidationResult<readonly [WaggleAgentSlot, WaggleAgentSlot]> {
-  if (!Array.isArray(value) || value.length !== WAGGLE_AGENT_COUNT) {
-    return {
-      success: false,
-      issues: [`agents must contain exactly ${String(WAGGLE_AGENT_COUNT)} agent slots.`],
-    }
+function parseLoopContract(value: unknown): WaggleValidationResult<WaggleLoopContract | undefined> {
+  if (value === undefined) {
+    return { success: true, value: undefined }
   }
 
-  const first = parseAgentSlot(value[FIRST_AGENT_INDEX], 'agents[0]')
-  const second = parseAgentSlot(value[SECOND_AGENT_INDEX], 'agents[1]')
-  const issues = collectIssues([first, second])
-  if (issues.length > 0 || !first.success || !second.success) {
+  if (!isRecord(value)) {
+    return { success: false, issues: ['loopContract must be an object.'] }
+  }
+
+  const firstQaGate = value.firstQaGate
+    ? parseStringArray(value.firstQaGate, 'loopContract.firstQaGate')
+    : ({ success: true, value: undefined } as const)
+  const failureCategories = value.failureCategories
+    ? parseStringArray(value.failureCategories, 'loopContract.failureCategories')
+    : ({ success: true, value: undefined } as const)
+  const placeholderPolicy =
+    value.placeholderPolicy === undefined
+      ? ({ success: true, value: undefined } as const)
+      : literalValue(
+          value.placeholderPolicy,
+          WAGGLE_PLACEHOLDER_POLICIES,
+          'loopContract.placeholderPolicy',
+        )
+
+  const issues = collectIssues([firstQaGate, failureCategories, placeholderPolicy])
+  if (
+    issues.length > 0 ||
+    !firstQaGate.success ||
+    !failureCategories.success ||
+    !placeholderPolicy.success
+  ) {
     return { success: false, issues }
   }
 
-  return { success: true, value: [first.value, second.value] }
+  const normalizedFirstQaGate = firstQaGate.value
+    ?.map((rule) => rule.trim())
+    .filter((rule) => rule.length > 0)
+  const normalizedFailureCategories = failureCategories.value
+    ? normalizeContractTerms(failureCategories.value)
+    : undefined
+
+  return {
+    success: true,
+    value: {
+      ...(normalizedFirstQaGate && normalizedFirstQaGate.length > 0
+        ? { firstQaGate: normalizedFirstQaGate }
+        : {}),
+      ...(normalizedFailureCategories && normalizedFailureCategories.length > 0
+        ? { failureCategories: normalizedFailureCategories }
+        : {}),
+      ...(placeholderPolicy.value ? { placeholderPolicy: placeholderPolicy.value } : {}),
+    },
+  }
+}
+
+function parseAgentList(value: unknown): WaggleValidationResult<readonly WaggleAgentSlot[]> {
+  if (!Array.isArray(value) || value.length < MIN_WAGGLE_AGENT_COUNT) {
+    return {
+      success: false,
+      issues: [`agents must contain at least ${String(MIN_WAGGLE_AGENT_COUNT)} agent slots.`],
+    }
+  }
+
+  const parsedAgents = value.map((agent, index) => parseAgentSlot(agent, `agents[${String(index)}]`))
+  const issues = collectIssues(parsedAgents)
+  if (issues.length > 0 || parsedAgents.some((agent) => !agent.success)) {
+    return { success: false, issues }
+  }
+
+  return {
+    success: true,
+    value: parsedAgents.map((agent) => {
+      if (!agent.success) {
+        throw new Error('Expected validated Waggle agent slot')
+      }
+      return agent.value
+    }),
+  }
 }
 
 export function parseWaggleConfig(value: unknown): WaggleValidationResult<WaggleConfig> {
@@ -222,10 +421,11 @@ export function parseWaggleConfig(value: unknown): WaggleValidationResult<Waggle
   }
 
   const mode = literalValue(value.mode, WAGGLE_COLLABORATION_MODES, 'mode')
-  const agents = parseAgentTuple(value.agents)
+  const agents = parseAgentList(value.agents)
   const stop = parseStopConfig(value.stop)
-  const issues = collectIssues([mode, agents, stop])
-  if (issues.length > 0 || !mode.success || !agents.success || !stop.success) {
+  const loopContract = parseLoopContract(value.loopContract)
+  const issues = collectIssues([mode, agents, stop, loopContract])
+  if (issues.length > 0 || !mode.success || !agents.success || !stop.success || !loopContract.success) {
     return { success: false, issues }
   }
 
@@ -235,7 +435,41 @@ export function parseWaggleConfig(value: unknown): WaggleValidationResult<Waggle
       mode: mode.value,
       agents: agents.value,
       stop: stop.value,
+      ...(loopContract.value ? { loopContract: loopContract.value } : {}),
     },
+  }
+}
+
+export function shouldRunWaggleAgent(
+  agent: Pick<WaggleAgentSlot, 'runCondition'>,
+  userPrompt: string,
+) {
+  if (!agent.runCondition) {
+    return true
+  }
+
+  const normalizedPrompt = userPrompt.trim().toLocaleLowerCase()
+  if (!normalizedPrompt) {
+    return false
+  }
+
+  return normalizePromptMatchTerms(agent.runCondition.anyOf).some((term) =>
+    normalizedPrompt.includes(term),
+  )
+}
+
+export function resolveWaggleConfigForPrompt(
+  config: WaggleConfig,
+  userPrompt: string,
+): WaggleConfig {
+  const activeAgents = config.agents.filter((agent) => shouldRunWaggleAgent(agent, userPrompt))
+  if (activeAgents.length < MIN_WAGGLE_AGENT_COUNT || activeAgents.length === config.agents.length) {
+    return config
+  }
+
+  return {
+    ...config,
+    agents: activeAgents,
   }
 }
 

@@ -1,6 +1,10 @@
 import {
   type WaggleAgentColor as CoreWaggleAgentColor,
+  type WaggleAgentOutputContract as CoreWaggleAgentOutputContract,
+  type WaggleAgentRunCondition as CoreWaggleAgentRunCondition,
   type WaggleCollaborationMode as CoreWaggleCollaborationMode,
+  type WaggleLoopContract as CoreWaggleLoopContract,
+  type WagglePlaceholderPolicy as CoreWagglePlaceholderPolicy,
   type WaggleStopCondition as CoreWaggleStopCondition,
   WAGGLE_AGENT_COLORS,
   WAGGLE_INHERIT_MODEL,
@@ -12,6 +16,10 @@ export { WAGGLE_AGENT_COLORS, WAGGLE_INHERIT_MODEL }
 
 export type WaggleCollaborationMode = CoreWaggleCollaborationMode
 export type WaggleAgentColor = CoreWaggleAgentColor
+export type WaggleAgentRunCondition = CoreWaggleAgentRunCondition
+export type WaggleAgentOutputContract = CoreWaggleAgentOutputContract
+export type WaggleLoopContract = CoreWaggleLoopContract
+export type WagglePlaceholderPolicy = CoreWagglePlaceholderPolicy
 export type WaggleStopCondition = CoreWaggleStopCondition
 export type WaggleModelBinding = typeof WAGGLE_INHERIT_MODEL | SupportedModelIdType
 
@@ -30,6 +38,8 @@ export interface WaggleAgentSlot {
   readonly model: WaggleModelBinding
   readonly roleDescription: string
   readonly color: WaggleAgentColor
+  readonly runCondition?: WaggleAgentRunCondition
+  readonly outputContract?: WaggleAgentOutputContract
 }
 
 export interface WaggleStopConfig {
@@ -39,8 +49,51 @@ export interface WaggleStopConfig {
 
 export interface WaggleConfig {
   readonly mode: WaggleCollaborationMode
-  readonly agents: readonly [WaggleAgentSlot, WaggleAgentSlot]
+  readonly agents: readonly WaggleAgentSlot[]
   readonly stop: WaggleStopConfig
+  readonly loopContract?: WaggleLoopContract
+}
+
+export interface WaggleAppManifest {
+  readonly requiredMcps: readonly string[]
+  readonly requiredSkills: readonly string[]
+  readonly optionalMcps?: readonly string[]
+  readonly optionalSkills?: readonly string[]
+}
+
+export type WaggleAppDependencyKind = 'mcp' | 'skill'
+export type WaggleAppDependencyState = 'installed' | 'missing' | 'unsupported'
+
+export interface WaggleAppDependencyStatus {
+  readonly kind: WaggleAppDependencyKind
+  readonly id: string
+  readonly label: string
+  readonly required: boolean
+  readonly state: WaggleAppDependencyState
+  readonly description?: string
+  readonly detail?: string
+  readonly setupSteps?: readonly string[]
+}
+
+export interface WaggleAppInstallStatus {
+  readonly ready: boolean
+  readonly requiredDependencyCount: number
+  readonly optionalDependencyCount: number
+  readonly installedCount: number
+  readonly missingCount: number
+  readonly unsupportedCount: number
+  readonly optionalInstalledCount: number
+  readonly optionalMissingCount: number
+  readonly optionalUnsupportedCount: number
+  readonly dependencies: readonly WaggleAppDependencyStatus[]
+}
+
+export interface WaggleAppInstallResult {
+  readonly status: WaggleAppInstallStatus
+  readonly installedDependencyIds: readonly string[]
+  readonly enabledDependencyIds: readonly string[]
+  readonly skippedDependencyIds: readonly string[]
+  readonly unsupportedDependencyIds: readonly string[]
 }
 
 export interface WagglePreset {
@@ -48,6 +101,7 @@ export interface WagglePreset {
   readonly name: string
   readonly description: string
   readonly config: WaggleConfig
+  readonly app: WaggleAppManifest
   readonly isBuiltIn: boolean
   readonly createdAt: number
   readonly updatedAt: number
@@ -89,6 +143,31 @@ export interface WaggleConsensusCheckResult {
   readonly signals: readonly WaggleConsensusSignal[]
 }
 
+export type WaggleArtifactKind = 'image' | 'audio' | 'video'
+export type WaggleArtifactBase64Mode = 'reasonable-if-required' | 'avoid'
+
+export interface WaggleArtifactTransport {
+  readonly fileName: string
+  readonly sizeBytes?: number
+  readonly preferredFieldNames: readonly string[]
+  readonly fallbackFieldNames: readonly string[]
+  readonly base64Mode: WaggleArtifactBase64Mode
+}
+
+export interface WaggleArtifact {
+  readonly id: string
+  readonly kind: WaggleArtifactKind
+  readonly path: string
+  readonly uri: string
+  readonly mimeType?: string
+  readonly sourceTool: string
+  readonly createdByAgentIndex: number
+  readonly createdByAgentLabel: string
+  readonly turnNumber: number
+  readonly transport: WaggleArtifactTransport
+  readonly promptSummary?: string
+}
+
 export interface WaggleStreamMetadata {
   readonly agentIndex: number
   readonly agentLabel: string
@@ -115,6 +194,10 @@ export type WaggleTurnEvent =
       readonly turnNumber: number
       readonly agentIndex: number
       readonly agentLabel: string
+    }
+  | {
+      readonly type: 'artifact-registered'
+      readonly artifact: WaggleArtifact
     }
   | {
       readonly type: 'turn-end'

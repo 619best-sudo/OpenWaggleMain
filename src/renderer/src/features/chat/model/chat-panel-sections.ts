@@ -6,6 +6,7 @@ import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/wagg
 import type { AgentChatStatus, AgentCompactionStatus } from '../hooks/useAgentChat'
 import type { SessionForkTarget } from '../lib/session-fork-targets'
 import type { ChatRow } from '../lib/types-chat-row'
+import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 
 export interface ChatTranscriptSectionState {
   readonly messages: UIMessage[]
@@ -35,6 +36,7 @@ export interface ChatTranscriptSectionState {
 export interface ChatComposerSectionState {
   readonly activeSessionId: SessionId | null
   readonly waggleStatus: WaggleCollaborationStatus
+  readonly followUpSuggestion: TuringFollowUpSuggestion | null
   readonly commandPaletteOpen: boolean
   readonly slashSkills: readonly SkillDiscoveryItem[]
   readonly isLoading: boolean
@@ -49,6 +51,7 @@ export interface ChatComposerSectionState {
   onSteer: (messageId: string) => Promise<void>
   onCancel: () => void
   onToast: (message: string) => void
+  onUseFollowUpPrompt: (suggestion: TuringFollowUpSuggestion) => void
   onSkipBranchSummary: () => void
   onSummarizeBranch: () => void
   onStartCustomBranchSummary: () => void

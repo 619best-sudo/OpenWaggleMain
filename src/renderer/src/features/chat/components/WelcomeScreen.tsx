@@ -35,7 +35,7 @@ function ProjectPickerTrigger({
       variant="unstyled"
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-lg bg-[#8ba57b] px-4 py-2 text-[16px] font-semibold text-[#09110a] transition-colors hover:bg-[#9cb88c]"
+      className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-[16px] font-semibold text-accent-foreground transition-colors hover:bg-accent-dim"
       title="Open project picker"
     >
       <FolderOpen className="size-4.5" strokeWidth={ICON_STROKE_WIDTH} />
@@ -59,7 +59,7 @@ function StarterPromptButton({
       variant="unstyled"
       type="button"
       onClick={() => onClick?.(prompt.label)}
-      className="flex min-h-11 w-full items-center justify-center gap-3 rounded-md border border-white/5 bg-transparent px-4 py-3 text-center text-[14px] text-[#a1a1aa] transition-all hover:border-white/10 hover:bg-white/5 hover:text-white"
+      className="flex min-h-11 w-full items-center justify-center gap-3 rounded-md border border-border bg-bg-secondary px-4 py-3 text-center text-[14px] text-text-secondary transition-all hover:border-border-light hover:bg-bg-hover hover:text-text-primary"
     >
       <prompt.icon
         className="size-4 shrink-0"
@@ -91,10 +91,10 @@ export function WelcomeScreen({
         <div className="flex w-full max-w-[760px] flex-col items-center justify-center">
           <div className="flex w-full flex-col items-center">
             <div className="max-w-[620px] space-y-3">
-              <h1 className="text-[40px] font-bold tracking-tight text-white">
+              <h1 className="text-[40px] font-bold tracking-tight text-text-primary">
                 What are we building?
               </h1>
-              <p className="text-[16px] text-[#a1a1aa]">
+              <p className="text-[16px] text-text-secondary">
                 Start typing to build, refactor, or debug.
               </p>
             </div>
@@ -156,7 +156,7 @@ export function WelcomeScreen({
                   onClick={() => {
                     onOpenProject?.()
                   }}
-                  className="inline-flex items-center gap-2 rounded-md border border-white/10 px-4 py-2 text-[14px] text-[#a1a1aa] transition-colors hover:border-white/20 hover:text-white"
+                  className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-[14px] text-text-secondary transition-colors hover:border-border-light hover:text-text-primary"
                   title="Open project picker"
                 >
                   <FolderOpen className="size-4 shrink-0" />

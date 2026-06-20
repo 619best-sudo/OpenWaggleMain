@@ -32,7 +32,12 @@ import type {
 } from './standards'
 import type { UpdateStatus } from './updater'
 import type { VoiceTranscriptionRequest, VoiceTranscriptionResult } from './voice'
-import type { WaggleConfig, WagglePreset } from './waggle'
+import type {
+  WaggleAppInstallResult,
+  WaggleAppInstallStatus,
+  WaggleConfig,
+  WagglePreset,
+} from './waggle'
 
 // ─── IPC Channel Map ─────────────────────────────────────────
 // Single source of truth for every IPC channel.
@@ -194,6 +199,14 @@ export interface IpcIntegrationInvokeChannelMap {
   'waggle-presets:delete': {
     args: [id: WagglePresetId, projectPath?: string | null]
     return: undefined
+  }
+  'waggle-apps:get-install-status': {
+    args: [preset: WagglePreset, projectPath?: string | null]
+    return: WaggleAppInstallStatus
+  }
+  'waggle-apps:install-dependencies': {
+    args: [preset: WagglePreset, projectPath?: string | null]
+    return: WaggleAppInstallResult
   }
   // Feedback
   'feedback:check-gh': {

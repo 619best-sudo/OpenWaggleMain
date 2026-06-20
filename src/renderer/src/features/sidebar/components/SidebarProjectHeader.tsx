@@ -93,7 +93,7 @@ function ProjectActionsMenu({
             event.stopPropagation()
             toggle()
           }}
-          className="flex size-6 items-center justify-center rounded-lg text-[#727b71] transition-colors hover:bg-white/[0.04] hover:text-[#e9ede7]"
+          className="flex size-6 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary"
         >
           <MoreHorizontal className="size-3.5" />
         </Button>
@@ -156,7 +156,7 @@ function ProjectRenameInput({
       }}
       variant="transparent"
       inputSize="sm"
-      className="min-w-0 flex-1 px-0 font-medium text-[12px] text-[#eef2ea]"
+      className="min-w-0 flex-1 px-0 font-medium text-[12px] text-text-primary"
     />
   )
 }
@@ -183,8 +183,8 @@ function ProjectTitleArea({
   if (state.renaming) {
     return (
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
-        <state.DisclosureIcon className="size-3 shrink-0 text-[#6f776d]" />
-        <Folder className="size-3.5 shrink-0 text-[#889184]" />
+        <state.DisclosureIcon className="size-3 shrink-0 text-text-tertiary" />
+        <Folder className="size-3.5 shrink-0 text-text-secondary" />
         <ProjectRenameInput
           value={state.renameValue}
           inputRef={state.renameInputRef}
@@ -205,8 +205,8 @@ function ProjectTitleArea({
       onClick={actions.toggle}
       className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
     >
-      <Folder className="size-3.5 shrink-0 text-[#a1a1aa]" />
-      <span className="min-w-0 flex-1 truncate text-[12px] font-medium tracking-[-0.01em] text-[#a1a1aa]">
+      <Folder className="size-3.5 shrink-0 text-text-tertiary" />
+      <span className="min-w-0 flex-1 truncate text-[12px] font-medium tracking-[-0.01em] text-text-secondary">
         {state.projectLabel}
       </span>
     </Button>
@@ -241,7 +241,7 @@ export function SidebarProjectHeader({
   return (
     <div
       className={cn(
-        'group mx-4 flex h-9 items-center gap-1.5 px-3 rounded-md transition-colors hover:bg-white/5',
+        'group mx-4 flex h-9 items-center gap-1.5 rounded-md px-3 transition-colors hover:bg-bg-hover',
       )}
       title={group.projectPath}
     >
@@ -272,7 +272,7 @@ export function SidebarProjectHeader({
           type="button"
           aria-label={`New session in ${projectLabel}`}
           onClick={() => actions.newSession(group.projectPath)}
-          className="flex size-6 items-center justify-center rounded-lg text-[#727b71] transition-colors hover:bg-white/[0.04] hover:text-[#e9ede7]"
+          className="flex size-6 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary"
         >
           <Edit3 className="size-3.5" />
         </Button>

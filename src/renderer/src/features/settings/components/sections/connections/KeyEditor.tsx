@@ -30,6 +30,24 @@ export function KeyEditor({
   const hasStoredKey = providerInfo.auth.apiKeySource === 'api-key'
 
   async function handleSave() {
+    // #region debug-point A:key-editor-save
+    fetch('http://localhost:7777/event', {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId: 'openrouter-key-save',
+        runId: 'pre-fix',
+        hypothesisId: 'A',
+        location: 'KeyEditor.tsx:handleSave',
+        msg: '[DEBUG] Key editor save clicked',
+        data: {
+          provider: providerInfo.provider,
+          draftLength: draftValue.length,
+          hasStoredKey,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {})
+    // #endregion
     await onSave(draftValue)
     setValue('')
     onClose()
@@ -190,7 +208,7 @@ function KeyEditorButtons({
         className={cn(
           'rounded-md px-3 py-2 text-[12px] font-medium transition-colors',
           state.draftValue
-            ? 'bg-accent text-black hover:bg-accent/90'
+            ? 'bg-accent text-accent-foreground hover:bg-accent/90'
             : 'bg-bg-tertiary text-text-muted cursor-not-allowed border border-input-card-border',
         )}
       >

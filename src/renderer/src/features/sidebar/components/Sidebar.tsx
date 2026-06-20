@@ -59,7 +59,7 @@ export function Sidebar() {
     >
       <nav
         aria-label="Sidebar"
-        className={`flex h-full ${SIDEBAR_LAYOUT.WIDTH_CLASS} shrink-0 flex-col justify-between bg-[#09090b] text-[#f1f4ee]`}
+        className={`flex h-full ${SIDEBAR_LAYOUT.WIDTH_CLASS} shrink-0 flex-col justify-between rounded-[16px] border border-border/70 bg-bg text-text-primary shadow-sm`}
       >
         <div className="flex flex-1 flex-col overflow-hidden">
           <SidebarBrandArea isFullscreen={controller.isFullscreen} />
@@ -79,7 +79,7 @@ export function Sidebar() {
             onSetSortMenuOpen={controller.setSortMenuOpen}
             onSetSortMode={controller.setSortMode}
           />
-          <div className="no-drag flex-1 overflow-y-auto pb-4">
+          <div className="no-drag sidebar-scroll flex-1 overflow-y-auto pb-4">
             <SidebarProjectList
               sessionGroups={controller.sessionGroups}
               renderState={renderState}

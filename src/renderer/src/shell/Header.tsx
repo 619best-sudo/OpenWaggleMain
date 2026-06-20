@@ -1,6 +1,6 @@
 import { match } from '@diegogbrisa/ts-match'
 import { useRouterState } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useChat } from '@/features/chat/hooks'
 import { useDiffRouteNavigation } from '@/features/diff-panel/hooks'
 import { CommitDialog } from '@/features/git/components'
@@ -15,7 +15,6 @@ import {
   SessionTreeButton,
   TerminalButton,
 } from './HeaderControls'
-import { FeedbackButton } from './HeaderFeedbackButton'
 
 export function Header() {
   const { activeSession } = useChat()
@@ -30,7 +29,6 @@ export function Header() {
   const toggleTerminal = useUIStore((s) => s.toggleTerminal)
   const bumpDiffRefreshKey = useUIStore((s) => s.bumpDiffRefreshKey)
   const showToast = useUIStore((s) => s.showToast)
-  const openFeedbackModal = useUIStore((s) => s.openFeedbackModal)
 
   const {
     status: gitStatus,
@@ -43,7 +41,7 @@ export function Header() {
   } = useGit()
 
   const [commitOpen, setCommitOpen] = useState(false)
-  const { diffOpen, isChatRoute, sessionTreeOpen, toggleDiff, toggleSessionTree } =
+  const { closeDiff, diffOpen, isChatRoute, sessionTreeOpen, toggleDiff, toggleSessionTree } =
     useDiffRouteNavigation()
   const isFramedWorkspaceRoute =
     isChatRoute ||
@@ -76,27 +74,22 @@ export function Header() {
       .exhaustive()
   }
 
-  const activeBranchName =
-    activeSessionTree?.branches.find(
-      (branch) => branch.id === activeSessionTree.session.lastActiveBranchId,
-    )?.name ??
-    activeSessionTree?.branches[0]?.name ??
-    'main'
   const title = activeSessionTree?.session.title ?? activeSession?.title ?? 'New session'
+
+  useEffect(() => {
+    if (diffOpen && gitError) {
+      closeDiff()
+    }
+  }, [closeDiff, diffOpen, gitError])
 
   return (
     <>
       <header
         className={cn(
-          'drag-region flex h-12 shrink-0 items-center justify-between gap-3 bg-[#09090b] px-5',
-          isFramedWorkspaceRoute
-            ? 'mx-3 mt-3 rounded-t-[16px] border border-[#8ba57b]/16 border-b-white/6'
-            : 'border-b border-white/5',
+          'drag-region flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border/70 bg-bg px-5',
         )}
       >
         <HeaderLeft
-          activeBranchName={activeBranchName}
-          projectPath={projectPath}
           sidebarOpen={sidebarOpen}
           title={title}
           onToggleSidebar={toggleSidebar}
@@ -109,8 +102,7 @@ export function Header() {
             projectPath={projectPath}
             onOpen={() => setCommitOpen(true)}
           />
-          <FeedbackButton onOpen={openFeedbackModal} />
-          <div className="w-px h-5 bg-white/10" />
+          <div className="w-px h-5 bg-border/40" />
           <SessionTreeButton
             hasSessionTree={Boolean(activeSessionTree)}
             isChatRoute={isChatRoute}

@@ -153,6 +153,11 @@ export function createPreferencesActions(
       set({ settings: { ...settings, thinkingLevel: preset } })
       persistProjectPreference(settings.projectPath, { thinkingLevel: preset })
     },
+    setThemeMode: async (mode) => {
+      const { settings } = get()
+      await api.updateSettings({ themeMode: mode })
+      set({ settings: { ...settings, themeMode: mode } })
+    },
     setEnabledModels: (models) => setEnabledModels(models, set, get),
     setProjectDisplayName: async (path, name) => {
       const { settings } = get()

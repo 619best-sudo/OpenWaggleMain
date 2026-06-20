@@ -1,4 +1,18 @@
-import { Check, ChevronRight, GitBranch, Loader2, X } from 'lucide-react'
+import {
+  Check,
+  ChevronRight,
+  FileText,
+  FolderOpen,
+  GitBranch,
+  Loader2,
+  PencilLine,
+  Search,
+  Sparkles,
+  SquareTerminal,
+  Trash2,
+  Wrench,
+  X,
+} from 'lucide-react'
 import type { ToolCallResultPayload } from '@/features/chat/lib/tool-call-block'
 import { cn } from '@/shared/lib/cn'
 import { formatDuration } from '@/shared/lib/format'
@@ -24,7 +38,7 @@ export function ToolCallHeader({
   onToggleExpanded,
 }: ToolCallHeaderProps) {
   return (
-    <div className="flex items-center gap-2 rounded-md border border-border/25 bg-bg-secondary/20 px-2 py-0.5 transition-colors hover:bg-bg-secondary/40">
+    <div className="flex items-center gap-2 rounded-md border border-border/25 bg-code-card px-2 py-0.5 transition-colors hover:bg-code-card-hover">
       <Button
         variant="unstyled"
         type="button"
@@ -34,14 +48,15 @@ export function ToolCallHeader({
         className="flex min-w-0 flex-1 items-center gap-2 text-[13px]"
       >
         <ToolStatusIcon view={view} result={result} />
+        <ToolGlyph view={view} />
         <ToolActionLabel view={view} result={result} />
         <ToolDiffSummary view={view} />
         {duration > 0 && !view.isRunning && (
-          <span className="text-[12px] text-text-muted shrink-0">{formatDuration(duration)}</span>
+          <span className="shrink-0 text-[12px] text-text-tertiary">{formatDuration(duration)}</span>
         )}
         <ChevronRight
           className={cn(
-            'ml-auto size-3 text-text-muted shrink-0 transition-transform',
+            'ml-auto size-3 shrink-0 text-text-tertiary transition-transform',
             'invisible group-hover/tool:visible',
             expanded && 'visible rotate-90',
           )}
@@ -50,6 +65,44 @@ export function ToolCallHeader({
       <BranchFromToolButton view={view} onBranchFromMessage={onBranchFromMessage} />
     </div>
   )
+}
+
+function ToolGlyph({ view }: { readonly view: ToolCallViewModel }) {
+  const Icon = resolveToolIcon(view.toolName)
+
+  return (
+    <span className="flex size-5 shrink-0 items-center justify-center rounded bg-bg-secondary/70 text-text-secondary">
+      <Icon className="size-3.5" />
+    </span>
+  )
+}
+
+function resolveToolIcon(name: string) {
+  switch (name) {
+    case 'bash':
+    case 'RunCommand':
+      return SquareTerminal
+    case 'read':
+    case 'WebFetch':
+      return FileText
+    case 'write':
+    case 'edit':
+    case 'apply_patch':
+      return PencilLine
+    case 'glob':
+    case 'LS':
+      return FolderOpen
+    case 'grep':
+    case 'SearchCodebase':
+    case 'WebSearch':
+      return Search
+    case 'DeleteFile':
+      return Trash2
+    case 'Skill':
+      return Sparkles
+    default:
+      return Wrench
+  }
 }
 
 function ToolStatusIcon({
@@ -64,12 +117,12 @@ function ToolStatusIcon({
       <Loader2
         role="status"
         aria-label="Running"
-        className="size-3.5 text-text-tertiary animate-spin shrink-0"
+        className="size-3.5 shrink-0 animate-spin text-text-secondary"
       />
     )
   }
   if (view.hasConcreteResult && result && !view.isError) {
-    return <Check className="size-3.5 text-text-muted shrink-0" />
+    return <Check className="size-3.5 shrink-0 text-text-secondary" />
   }
   if (result && view.isError) {
     return <X className="size-3.5 text-error/80 shrink-0" />
@@ -88,8 +141,8 @@ function ToolActionLabel({
     <span
       className={cn(
         'truncate',
-        view.isRunning && 'text-text-tertiary',
-        view.hasConcreteResult && result && !view.isError && 'text-text-muted',
+        view.isRunning && 'text-text-secondary',
+        view.hasConcreteResult && result && !view.isError && 'text-text-secondary',
         result && view.isError && 'text-error/80',
       )}
     >
@@ -126,7 +179,7 @@ function BranchFromToolButton({
       type="button"
       title="Branch from tool result"
       onClick={() => onBranchFromMessage(view.branchSourceMessageId ?? '')}
-      className="opacity-0 text-text-muted transition-opacity hover:text-text-secondary group-hover/tool:opacity-100 focus:opacity-100"
+      className="opacity-0 text-text-tertiary transition-opacity hover:text-text-primary group-hover/tool:opacity-100 focus:opacity-100"
     >
       <GitBranch className="size-3.5" />
     </Button>
@@ -146,7 +199,7 @@ export function CollapsedToolPreview({
   return (
     <>
       {view.inlineDiffVisible && view.diff && (
-        <div className="ml-5 mt-1">
+        <div className="mt-1">
           <UnifiedDiffView diff={view.diff} compact />
         </div>
       )}
@@ -160,10 +213,10 @@ function ToolPreview({ text, tone }: { readonly text: string; readonly tone: 'mu
   return (
     <pre
       className={cn(
-        'ml-5 mt-1 overflow-hidden rounded-md px-3 py-2 text-[12px] font-mono whitespace-pre-wrap break-words',
+        'mt-1 overflow-hidden rounded-md px-3 py-2 text-[12px] font-mono whitespace-pre-wrap break-words',
         tone === 'error'
           ? 'max-h-[160px] border border-error/15 bg-error/5 text-error'
-          : 'max-h-[120px] border border-border/10 bg-bg-secondary/10 text-text-tertiary',
+          : 'max-h-[120px] border border-border/10 bg-code-card text-text-secondary',
       )}
     >
       {text}

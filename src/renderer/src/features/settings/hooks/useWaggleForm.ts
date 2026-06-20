@@ -9,8 +9,9 @@ import {
   wagglePresetsQueryOptions,
 } from '@/queries/waggle-presets'
 import {
+  buildWaggleAppManifest,
   buildWaggleConfig,
-  configMatchesPreset,
+  formMatchesPreset,
   INITIAL_WAGGLE_FORM_STATE,
   INITIAL_WAGGLE_PRESET_STATE,
   type WaggleFormAction,
@@ -22,9 +23,24 @@ import {
 export type { WaggleFormAction } from './waggle-form-state'
 
 const SLICE_ARG_2 = 60
+const PRESET_NAME_PREVIEW_COUNT = 3
 
 function describeWaggleError(error: unknown, fallback: string) {
   return error instanceof Error && error.message.trim() ? error.message : fallback
+}
+
+function buildPresetName(formState: WaggleFormState) {
+  const labels = formState.agents
+    .map((agent) => agent.label.trim())
+    .filter((label) => label.length > 0)
+  if (labels.length === 0) return 'Custom Waggle'
+  if (labels.length <= PRESET_NAME_PREVIEW_COUNT) return labels.join(' + ')
+  return `${labels.slice(0, PRESET_NAME_PREVIEW_COUNT).join(' + ')} + ${String(labels.length - PRESET_NAME_PREVIEW_COUNT)} more`
+}
+
+function buildPresetDescription(formState: WaggleFormState) {
+  const firstRole = formState.agents.find((agent) => agent.roleDescription.trim())?.roleDescription.trim()
+  return `Custom: ${(firstRole ?? 'Multi-agent collaboration').slice(0, SLICE_ARG_2)}`
 }
 
 export interface WaggleFormHook {
@@ -59,7 +75,7 @@ export function useWaggleForm(): WaggleFormHook {
 
   function loadPreset(preset: WagglePreset) {
     dispatchPreset({ type: 'select-preset', activePresetId: preset.id })
-    dispatchForm({ type: 'load-preset', config: preset.config })
+    dispatchForm({ type: 'load-preset', preset })
   }
 
   function startNewDraft() {
@@ -68,9 +84,9 @@ export function useWaggleForm(): WaggleFormHook {
     dispatchForm({ type: 'reset' })
   }
 
-  const currentConfig = buildWaggleConfig(formState)
   const activePreset = presets.find((p) => p.id === activePresetId)
-  const isModified = activePreset ? !configMatchesPreset(currentConfig, activePreset) : false
+  const currentApp = buildWaggleAppManifest(formState)
+  const isModified = activePreset ? !formMatchesPreset(formState, activePreset) : false
   const queryError = wagglePresetsQuery.error
     ? describeWaggleError(wagglePresetsQuery.error, 'Failed to load Waggle presets.')
     : null
@@ -79,14 +95,14 @@ export function useWaggleForm(): WaggleFormHook {
   async function handleSaveEdits() {
     if (!activePreset) return
     const config = buildWaggleConfig(formState)
-    const [agentA, agentB] = formState.agents
     const saveInput = {
       ...activePreset,
-      name: activePreset.isBuiltIn ? activePreset.name : `${agentA.label} + ${agentB.label}`,
+      name: activePreset.isBuiltIn ? activePreset.name : buildPresetName(formState),
       description: activePreset.isBuiltIn
         ? activePreset.description
-        : `Custom: ${agentA.roleDescription.slice(0, SLICE_ARG_2)}`,
+        : buildPresetDescription(formState),
       config,
+      app: currentApp,
     }
     dispatchPreset({ type: 'clear-error' })
 
@@ -103,12 +119,12 @@ export function useWaggleForm(): WaggleFormHook {
 
   async function handleCreatePreset() {
     const config = buildWaggleConfig(formState)
-    const [agentA, agentB] = formState.agents
     const saveInput = {
       id: WagglePresetId(''),
-      name: `${agentA.label} + ${agentB.label}`,
-      description: `Custom: ${agentA.roleDescription.slice(0, SLICE_ARG_2)}`,
+      name: buildPresetName(formState),
+      description: buildPresetDescription(formState),
       config,
+      app: currentApp,
       isBuiltIn: false,
       createdAt: 0,
       updatedAt: 0,

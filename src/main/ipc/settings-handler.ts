@@ -2,7 +2,7 @@ import { isMatching, P } from '@diegogbrisa/ts-match'
 import { Schema, safeDecodeUnknown } from '@shared/schema'
 import { SupportedModelId } from '@shared/types/brand'
 import type { SessionTreeFilterMode } from '@shared/types/session'
-import { THINKING_LEVELS } from '@shared/types/settings'
+import { THEME_MODES, THINKING_LEVELS } from '@shared/types/settings'
 import * as Effect from 'effect/Effect'
 import { testCredentials } from '../application/provider-test-service'
 import { createLogger } from '../logger'
@@ -65,6 +65,7 @@ const settingsUpdateSchema = Schema.Struct({
   enabledModels: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   projectPath: Schema.optional(Schema.NullOr(Schema.String)),
   thinkingLevel: Schema.optional(Schema.Literal(...THINKING_LEVELS)),
+  themeMode: Schema.optional(Schema.Literal(...THEME_MODES)),
   recentProjects: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   skillTogglesByProject: Schema.optional(
     Schema.mutable(

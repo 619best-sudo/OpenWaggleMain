@@ -22,7 +22,7 @@ const PRELOADED_LANGUAGES = [
   'go',
 ] as const satisfies readonly BundledLanguage[]
 
-const PRELOADED_THEMES = ['github-dark'] as const
+const PRELOADED_THEMES = ['github-dark', 'github-light'] as const
 export type PreloadedLanguage = (typeof PRELOADED_LANGUAGES)[number]
 
 let highlighterPromise: Promise<Highlighter> | undefined
@@ -71,5 +71,5 @@ export function resolveLanguage(lang: string): PreloadedLanguage | undefined {
   return LANGUAGE_ALIASES.get(lang)
 }
 
-/** Default theme used for highlighting. */
-export const DEFAULT_THEME = PRELOADED_THEMES[0]
+/** Default theme used for highlighting (fallback if dual-theme not used). */
+export const DEFAULT_THEME = 'github-dark'

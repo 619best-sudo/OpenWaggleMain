@@ -56,6 +56,10 @@ function createPreset(input: {
       ],
       stop: { primary: 'consensus', maxTurnsSafety: 8 },
     },
+    app: {
+      requiredMcps: ['playwright'],
+      requiredSkills: ['ui-critic'],
+    },
     isBuiltIn: false,
     createdAt: 100,
     updatedAt: input.updatedAt ?? 100,
@@ -93,7 +97,536 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     const presets = await runWithRepository((repository) => repository.list(projectPath))
 
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('code-review'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('product-planning'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('turing'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('product-ui'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('backend-systems'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('backend-engineer'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('qa-debug'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('launch-readiness'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('development-qa'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('quality-assurance-engineer'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('security-audit'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('performance-inspector'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('frontend-ui-audit'))
+    expect(presets.map((preset) => preset.id)).toContain(
+      WagglePresetId('reference-image-replication'),
+    )
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('design-system-compliance'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('responsive-qa'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('game-factory'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('person-360'))
+    expect(presets.map((preset) => preset.id)).toContain(
+      WagglePresetId('person-profile-optional-career-pass'),
+    )
     expect(presets.map((preset) => preset.name)).toContain('Code Review')
+    expect(presets.find((preset) => preset.id === WagglePresetId('code-review'))).toMatchObject({
+      name: 'Code Review',
+      description: expect.stringContaining('blast radius'),
+      app: {
+        requiredMcps: [],
+        requiredSkills: [],
+      },
+      config: {
+        agents: [
+          {
+            label: 'Architect',
+            outputContract: {
+              requiredSections: [
+                'primary findings',
+                'ripple effects to inspect',
+                'edge cases at risk',
+                'test and coverage gaps',
+                'recommended fixes',
+              ],
+            },
+          },
+          {
+            label: 'Reviewer',
+            outputContract: {
+              requiredSections: [
+                'validated findings',
+                'new ripple-effect findings',
+                'edge cases verified',
+                'residual risks',
+                'merge recommendation',
+              ],
+            },
+          },
+        ],
+      },
+    })
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('product-planning')),
+    ).toMatchObject({
+      name: 'Product Planning',
+      app: {
+        requiredMcps: [],
+        requiredSkills: [],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('turing'))).toMatchObject({
+      name: 'Turing',
+      app: {
+        requiredMcps: [],
+        requiredSkills: [],
+      },
+      config: {
+        agents: [{ label: 'Context Reader' }, { label: 'Installed Waggle Selector' }],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('product-ui'))).toMatchObject({
+      name: 'Product UI',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer', 'ui-screenshot-auditor'],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('web-engineer'))).toMatchObject({
+      name: 'Web Engineer',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: [],
+        optionalMcps: [
+          'figma',
+          'gsap',
+          'remotion',
+          'animejs',
+          'multimodal-media',
+          'ffmpeg',
+          'blender',
+          '3d-asset-processing',
+          'gltf-mcp',
+        ],
+        optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor', 'media-director'],
+      },
+      config: {
+        agents: [
+          { label: 'Web Planner' },
+          { label: 'Web Builder' },
+          { label: 'Web Animation Expert' },
+          { label: 'Web Verifier' },
+        ],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('mobile-engineer'))).toMatchObject(
+      {
+        name: 'Mobile Engineer',
+        app: {
+          requiredMcps: ['mobile-mcp'],
+          requiredSkills: [],
+          optionalMcps: [
+            'mobile-device',
+            'figma',
+            'gsap',
+            'remotion',
+            'animejs',
+            'multimodal-media',
+            'ffmpeg',
+            'blender',
+            '3d-asset-processing',
+            'gltf-mcp',
+          ],
+          optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor', 'media-director'],
+        },
+        config: {
+          agents: [
+            { label: 'Mobile Planner' },
+            { label: 'Mobile Builder' },
+            { label: 'Mobile Animation Expert' },
+            { label: 'Mobile Verifier' },
+          ],
+        },
+      },
+    )
+    expect(presets.find((preset) => preset.id === WagglePresetId('backend-systems'))).toMatchObject(
+      {
+        name: 'Backend Systems',
+        app: {
+          requiredMcps: [],
+          requiredSkills: ['backend-auditor'],
+        },
+      },
+    )
+    expect(presets.find((preset) => preset.id === WagglePresetId('backend-engineer'))).toMatchObject(
+      {
+        name: 'Backend Engineer',
+        app: {
+          requiredMcps: [],
+          requiredSkills: [],
+          optionalMcps: ['postman', 'database'],
+          optionalSkills: ['backend-auditor'],
+        },
+        config: {
+          agents: [
+            { label: 'Backend Planner' },
+            { label: 'Backend Builder' },
+            { label: 'Backend Verifier' },
+          ],
+        },
+      },
+    )
+    expect(presets.find((preset) => preset.id === WagglePresetId('qa-debug'))).toMatchObject({
+      name: 'Debugger And Fix',
+      app: {
+        requiredMcps: [],
+        requiredSkills: [],
+        optionalMcps: ['playwright', 'mobile-mcp', 'mobile-device', 'postman', 'database'],
+        optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor', 'backend-auditor'],
+      },
+      config: {
+        agents: [
+          { label: 'Debug Planner' },
+          { label: 'Runtime Investigator' },
+          { label: 'Fixer' },
+          { label: 'Verifier' },
+        ],
+      },
+    })
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('launch-readiness')),
+    ).toMatchObject({
+      name: 'Launch Readiness',
+      app: {
+        requiredMcps: [],
+        requiredSkills: ['release-checker'],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('development-qa'))).toMatchObject({
+      name: 'Development QA',
+      app: {
+        requiredMcps: ['playwright', 'mobile-mcp', 'postman', 'database'],
+        requiredSkills: ['ui-screenshot-auditor', 'backend-auditor'],
+      },
+    })
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('quality-assurance-engineer')),
+    ).toMatchObject({
+      name: 'Quality Assurance Engineer',
+      app: {
+        requiredMcps: [],
+        requiredSkills: [],
+        optionalMcps: ['playwright', 'mobile-mcp', 'postman', 'database'],
+        optionalSkills: ['ui-screenshot-auditor', 'backend-auditor'],
+      },
+      config: {
+        agents: [{ label: 'QA Planner' }, { label: 'QA Executor' }, { label: 'QA Lead' }],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('security-audit'))).toMatchObject({
+      name: 'Security Audit',
+      app: {
+        requiredMcps: [],
+        requiredSkills: ['security-auditor'],
+      },
+    })
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('performance-inspector')),
+    ).toMatchObject({
+      name: 'Performance Inspector',
+      app: {
+        requiredMcps: ['chrome-devtools', 'mobile-mcp', 'postman', 'sql'],
+        requiredSkills: ['performance-auditor'],
+      },
+    })
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('frontend-ui-audit')),
+    ).toMatchObject({
+      name: 'Frontend UI Audit',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer', 'ui-screenshot-auditor'],
+      },
+    })
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('reference-image-replication')),
+    ).toMatchObject({
+      name: 'Reference Image Replication',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer', 'ui-screenshot-auditor'],
+      },
+    })
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('design-system-compliance')),
+    ).toMatchObject({
+      name: 'Design System Compliance',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer', 'ui-critic'],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('responsive-qa'))).toMatchObject({
+      name: 'Responsive QA',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer', 'ui-screenshot-auditor'],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('game-factory'))).toMatchObject({
+      name: 'Game Factory',
+      config: {
+        agents: [
+          {
+            label: 'Planner / Narrative Director',
+            outputContract: {
+              requiredSections: [
+                'progress',
+                'files_changed',
+                'commands_run',
+                'artifacts',
+                'blockers',
+                'next_task',
+              ],
+            },
+          },
+          {
+            label: 'Skeleton / Prototype Builder',
+            outputContract: {
+              requiredSections: [
+                'progress',
+                'files_changed',
+                'commands_run',
+                'artifacts',
+                'blockers',
+                'next_task',
+              ],
+            },
+          },
+          {
+            label: 'World / Environment Builder',
+            outputContract: {
+              requiredSections: [
+                'progress',
+                'files_changed',
+                'commands_run',
+                'artifacts',
+                'blockers',
+                'next_task',
+              ],
+            },
+          },
+          {
+            label: 'Character / Actor Builder',
+            outputContract: {
+              requiredSections: [
+                'progress',
+                'files_changed',
+                'commands_run',
+                'artifacts',
+                'blockers',
+                'next_task',
+              ],
+            },
+          },
+          {
+            label: 'QA / Runtime Governor',
+            outputContract: {
+              requiredSections: [
+                'loop_verdict',
+                'failure_categories',
+                'top_blockers',
+                'evidence_reviewed',
+                'screenshots',
+                'logs',
+                'exact_next_cycle',
+              ],
+            },
+          },
+        ],
+        stop: { primary: 'consensus', maxTurnsSafety: 25 },
+        loopContract: {
+          placeholderPolicy: 'prefer-placeholders-over-blocking',
+          failureCategories: [
+            'bootstrap',
+            'environment-presentation',
+            'character-actor',
+            'asset-pipeline',
+            'performance',
+            'qa-evidence',
+          ],
+        },
+      },
+      app: {
+        requiredMcps: [
+          'playwright',
+          'chrome-devtools',
+          'blender',
+          '3d-asset-processing',
+          'gltf-mcp',
+          'multimodal-media',
+          'ffmpeg',
+        ],
+        requiredSkills: [
+          'game-planner-director',
+          'game-skeleton-prototype-builder',
+          'game-world-presentation-builder',
+          'game-character-actor-builder',
+          'game-qa-runtime-governor',
+          'game-loop-contract-governor',
+        ],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('person-360'))).toMatchObject({
+      name: 'Person 360',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: [],
+      },
+    })
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('person-profile-optional-career-pass')),
+    ).toMatchObject({
+      name: 'Person Profile With Optional Career Pass',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: [],
+      },
+    })
+  })
+
+  it('preserves prompt contracts for Code Review, Turing, Web Engineer, Mobile Engineer, Backend Engineer, Quality Assurance Engineer, and Debugger And Fix', async () => {
+    const presets = await runWithRepository((repository) => repository.list(projectPath))
+
+    const codeReview = presets.find((preset) => preset.id === WagglePresetId('code-review'))
+    const turing = presets.find((preset) => preset.id === WagglePresetId('turing'))
+    const webEngineer = presets.find((preset) => preset.id === WagglePresetId('web-engineer'))
+    const mobileEngineer = presets.find((preset) => preset.id === WagglePresetId('mobile-engineer'))
+    const backendEngineer = presets.find((preset) => preset.id === WagglePresetId('backend-engineer'))
+    const qaEngineer = presets.find(
+      (preset) => preset.id === WagglePresetId('quality-assurance-engineer'),
+    )
+    const debuggerAndFix = presets.find((preset) => preset.id === WagglePresetId('qa-debug'))
+
+    expect(codeReview?.config.agents.map((agent) => agent.label)).toEqual(['Architect', 'Reviewer'])
+    expect(codeReview?.config.agents[0]?.roleDescription).toContain(
+      'Your highest priority is ripple-effect analysis',
+    )
+    expect(codeReview?.config.agents[0]?.roleDescription).toContain('High-priority ripple paths:')
+    expect(codeReview?.config.agents[1]?.roleDescription).toContain(
+      'Your highest priority is to verify or refute ripple effects',
+    )
+    expect(codeReview?.config.agents[1]?.roleDescription).toContain(
+      'explicitly look for:',
+    )
+
+    expect(turing?.config.agents.map((agent) => agent.label)).toEqual([
+      'Context Reader',
+      'Installed Waggle Selector',
+    ])
+    expect(turing?.config.agents[0]?.roleDescription).toContain('example next prompt')
+    expect(turing?.config.agents[1]?.roleDescription).toContain('Only recommend a next Waggle')
+    expect(turing?.config.agents[1]?.outputContract?.requiredSections).toEqual([
+      'selected next Waggle',
+      'why it is installed and ready',
+      'agent 1 mission',
+      'agent 2 mission',
+      'example next prompt',
+      'fallback Waggle if needed',
+    ])
+
+    expect(webEngineer?.config.agents.map((agent) => agent.label)).toEqual([
+      'Web Planner',
+      'Web Builder',
+      'Web Animation Expert',
+      'Web Verifier',
+    ])
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain('asset requests:')
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain('repoAssetPath:')
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain('generationPrompt:')
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain('videoDeliveryMode:')
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain('Persist every generated asset inside the repository')
+    expect(webEngineer?.config.agents[0]?.roleDescription).toContain('Figma')
+    expect(webEngineer?.config.agents[0]?.roleDescription).toContain(
+      'microinteractions and small animation polish as something that can apply anywhere',
+    )
+    expect(webEngineer?.config.agents[0]?.roleDescription).toContain(
+      'homepage, landing page, hero, campaign, marketing',
+    )
+    expect(webEngineer?.config.agents[0]?.roleDescription).toContain('motion and media decision')
+    expect(webEngineer?.config.agents[2]?.roleDescription).toContain('asset outputs created:')
+    expect(webEngineer?.config.agents[2]?.roleDescription).toContain('all-frames')
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain('Playwright')
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain('Figma')
+
+    expect(mobileEngineer?.config.agents.map((agent) => agent.label)).toEqual([
+      'Mobile Planner',
+      'Mobile Builder',
+      'Mobile Animation Expert',
+      'Mobile Verifier',
+    ])
+    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('asset requests:')
+    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('repoAssetPath:')
+    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('generationPrompt:')
+    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('videoDeliveryMode:')
+    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('Persist every generated asset inside the repository')
+    expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain('Figma')
+    expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain(
+      'microinteractions and small animation polish as something that can apply anywhere',
+    )
+    expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain(
+      'generated images or video as opt-in, not default',
+    )
+    expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain('motion and media decision')
+    expect(mobileEngineer?.config.agents[2]?.roleDescription).toContain('asset outputs created:')
+    expect(mobileEngineer?.config.agents[2]?.roleDescription).toContain('all-frames')
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain('mobile runtime evidence')
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain('Figma')
+
+    expect(backendEngineer?.config.agents.map((agent) => agent.label)).toEqual([
+      'Backend Planner',
+      'Backend Builder',
+      'Backend Verifier',
+    ])
+    expect(backendEngineer?.config.agents[0]?.roleDescription).toContain('likely files to change')
+    expect(backendEngineer?.config.agents[2]?.roleDescription).toContain(
+      'API verification evidence',
+    )
+    expect(backendEngineer?.config.agents[2]?.roleDescription).toContain(
+      'database verification evidence',
+    )
+
+    expect(qaEngineer?.config.agents.map((agent) => agent.label)).toEqual([
+      'QA Planner',
+      'QA Executor',
+      'QA Lead',
+    ])
+    expect(qaEngineer?.config.agents[0]?.roleDescription).toContain('plan the full QA test suite')
+    expect(qaEngineer?.config.agents[0]?.roleDescription).toContain('Playwright')
+    expect(qaEngineer?.config.agents[0]?.roleDescription).toContain('SQL MCP')
+    expect(qaEngineer?.config.agents[1]?.roleDescription).toContain('execute all planned test cases')
+    expect(qaEngineer?.config.agents[1]?.roleDescription).toContain('Postman MCP')
+    expect(qaEngineer?.config.agents[1]?.roleDescription).toContain('SQL evidence')
+    expect(qaEngineer?.config.agents[2]?.roleDescription).toContain(
+      'final QA judgment',
+    )
+    expect(qaEngineer?.config.agents[2]?.roleDescription).toContain('ship recommendation')
+
+    expect(debuggerAndFix?.config.agents.map((agent) => agent.label)).toEqual([
+      'Debug Planner',
+      'Runtime Investigator',
+      'Fixer',
+      'Verifier',
+    ])
+    expect(debuggerAndFix?.config.agents[0]?.roleDescription).toContain(
+      'issue classification: UI / backend / logic / mixed',
+    )
+    expect(debuggerAndFix?.config.agents[0]?.roleDescription).toContain(
+      'Every attempted fix must be reversible',
+    )
+    expect(debuggerAndFix?.config.agents[1]?.roleDescription).toContain(
+      'width, height, x, y, bounding box',
+    )
+    expect(debuggerAndFix?.config.agents[1]?.roleDescription).toContain('reverse engineer')
+    expect(debuggerAndFix?.config.agents[2]?.roleDescription).toContain(
+      'rollback instructions if verification fails',
+    )
+    expect(debuggerAndFix?.config.agents[3]?.roleDescription).toContain(
+      'keep or revert current fix',
+    )
+    expect(debuggerAndFix?.config.agents[3]?.roleDescription).toContain(
+      'failed-attempt learning for next planner pass',
+    )
   })
 
   it('suppresses hidden built-in presets from Pi-compatible user state', async () => {

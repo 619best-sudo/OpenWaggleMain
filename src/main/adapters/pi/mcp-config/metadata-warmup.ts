@@ -1,4 +1,4 @@
-import { loadMcpConfig } from 'pi-mcp-adapter/config.ts'
+import { loadMcpConfig } from 'pi-mcp-adapter/config'
 import {
   computeServerHash,
   isServerCacheValid,
@@ -6,8 +6,8 @@ import {
   saveMetadataCache,
   serializeResources,
   serializeTools,
-} from 'pi-mcp-adapter/metadata-cache.ts'
-import { McpServerManager } from 'pi-mcp-adapter/server-manager.ts'
+} from 'pi-mcp-adapter/metadata-cache'
+import { McpServerManager } from 'pi-mcp-adapter/server-manager'
 import { logger } from './constants'
 
 function formatErrorMessage(error: unknown) {

@@ -11,9 +11,9 @@ interface ChatPanelContentProps {
 
 export function ChatPanelContent({ sections, onOpenSessionTree }: ChatPanelContentProps) {
   return (
-    <div className="flex size-full overflow-hidden bg-[#09090b]">
+    <div className="flex size-full overflow-hidden bg-bg">
       <div
-        className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#09090b]"
+        className="flex min-w-0 flex-1 flex-col overflow-hidden bg-bg"
         data-chat-panel-main="true"
       >
         <PanelErrorBoundary name="Chat transcript" className="flex flex-1 flex-col overflow-hidden">

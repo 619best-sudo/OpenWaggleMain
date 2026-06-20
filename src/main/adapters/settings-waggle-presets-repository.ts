@@ -37,18 +37,18 @@ function hydratePreset(raw: unknown): WagglePreset | null {
   return {
     ...preset,
     id: WagglePresetId(preset.id),
+    app: {
+      requiredMcps: preset.app?.requiredMcps ?? [],
+      requiredSkills: preset.app?.requiredSkills ?? [],
+      optionalMcps: preset.app?.optionalMcps ?? [],
+      optionalSkills: preset.app?.optionalSkills ?? [],
+    },
     config: {
       ...preset.config,
-      agents: [
-        {
-          ...preset.config.agents[0],
-          model: createWaggleModelBinding(preset.config.agents[0].model),
-        },
-        {
-          ...preset.config.agents[1],
-          model: createWaggleModelBinding(preset.config.agents[1].model),
-        },
-      ],
+      agents: preset.config.agents.map((agent) => ({
+        ...agent,
+        model: createWaggleModelBinding(agent.model),
+      })),
     },
   }
 }

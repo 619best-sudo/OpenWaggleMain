@@ -68,6 +68,77 @@ describe('registerSettingsHandlers', () => {
       )
     })
 
+    it('accepts the cocoa theme mode', async () => {
+      registerSettingsHandlers()
+
+      const handler = getTypedEffectInvokeHandler('settings:update')
+      expect(handler).toBeDefined()
+
+      const result = await handler?.({}, { themeMode: 'cocoa' })
+      expect(result).toEqual({ ok: true })
+      expect(updateSettingsMock).toHaveBeenCalledWith(expect.objectContaining({ themeMode: 'cocoa' }))
+    })
+
+    it('accepts the metallic gold and cream theme modes', async () => {
+      registerSettingsHandlers()
+
+      const handler = getTypedEffectInvokeHandler('settings:update')
+      expect(handler).toBeDefined()
+
+      const metallicGoldResult = await handler?.({}, { themeMode: 'metallic-gold' })
+      expect(metallicGoldResult).toEqual({ ok: true })
+
+      const creamResult = await handler?.({}, { themeMode: 'cream' })
+      expect(creamResult).toEqual({ ok: true })
+      expect(updateSettingsMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ themeMode: 'metallic-gold' }),
+      )
+      expect(updateSettingsMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ themeMode: 'cream' }),
+      )
+    })
+
+    it('accepts the velvet obsidian theme mode', async () => {
+      registerSettingsHandlers()
+
+      const handler = getTypedEffectInvokeHandler('settings:update')
+      expect(handler).toBeDefined()
+
+      const result = await handler?.({}, { themeMode: 'velvet-obsidian' })
+      expect(result).toEqual({ ok: true })
+      expect(updateSettingsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ themeMode: 'velvet-obsidian' }),
+      )
+    })
+
+    it('accepts the platinum theme mode', async () => {
+      registerSettingsHandlers()
+
+      const handler = getTypedEffectInvokeHandler('settings:update')
+      expect(handler).toBeDefined()
+
+      const result = await handler?.({}, { themeMode: 'platinum' })
+      expect(result).toEqual({ ok: true })
+      expect(updateSettingsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ themeMode: 'platinum' }),
+      )
+    })
+
+    it('accepts the bulgarian rose theme mode', async () => {
+      registerSettingsHandlers()
+
+      const handler = getTypedEffectInvokeHandler('settings:update')
+      expect(handler).toBeDefined()
+
+      const result = await handler?.({}, { themeMode: 'bulgarian-rose' })
+      expect(result).toEqual({ ok: true })
+      expect(updateSettingsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ themeMode: 'bulgarian-rose' }),
+      )
+    })
+
     it('rejects an invalid settings payload and returns error', async () => {
       registerSettingsHandlers()
 

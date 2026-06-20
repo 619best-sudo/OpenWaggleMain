@@ -41,7 +41,7 @@ export function CodeBlock({ children, language, className }: CodeBlockProps) {
   return (
     <div
       className={cn(
-        'group relative my-3 rounded-lg border border-border/15 bg-bg-secondary/15',
+        'group relative my-3 rounded-lg border border-border/15 bg-code-card',
         className,
       )}
     >

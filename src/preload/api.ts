@@ -177,6 +177,8 @@ export const api: OpenWaggleApi = {
   listWagglePresets: invoke('waggle-presets:list'),
   saveWagglePreset: invoke('waggle-presets:save'),
   deleteWagglePreset: invoke('waggle-presets:delete'),
+  getWaggleAppInstallStatus: invoke('waggle-apps:get-install-status'),
+  installWaggleAppDependencies: invoke('waggle-apps:install-dependencies'),
 
   // Feedback
   checkGhCli: invoke('feedback:check-gh'),

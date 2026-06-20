@@ -5,7 +5,6 @@ import { ComposerModelPicker } from './ComposerModelPicker'
 import { ComposerSendControls } from './ComposerSendControls'
 import { ComposerVoiceButton } from './ComposerVoiceButton'
 import { ContextMeter } from './ContextMeter'
-import { ThinkingLevelMenu } from './ThinkingLevelMenu'
 
 interface ComposerToolbarProps {
   readonly onSend: () => void
@@ -31,14 +30,13 @@ export function ComposerToolbar({
   onToast,
 }: ComposerToolbarProps) {
   return (
-    <div className="flex h-11 items-center justify-between px-4">
-      <div className="flex items-center gap-1.5">
+    <div className="flex h-11 min-w-0 items-center justify-between gap-2 px-4">
+      <div className="flex min-w-0 items-center gap-1.5">
         <ComposerAttachButton fileInputRef={fileInputRef} />
         <ComposerModelPicker />
-        <ThinkingLevelMenu />
         <BranchPicker onToast={onToast} />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <ContextMeter />
         <ComposerVoiceButton mode={voiceMode} onToggleVoice={onToggleVoice} />
         <ComposerSendControls

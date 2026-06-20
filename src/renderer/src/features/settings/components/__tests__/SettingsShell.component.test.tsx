@@ -24,6 +24,7 @@ vi.mock('@/shell/useFullscreen', () => ({
 }))
 
 vi.mock('../sections/GeneralSection', () => ({ GeneralSection: () => <div>General settings</div> }))
+vi.mock('../sections/ProfileSection', () => ({ ProfileSection: () => <div>Profile settings</div> }))
 vi.mock('../sections/ConnectionsSection', () => ({
   ConnectionsSection: () => <div>Connections settings</div>,
 }))
@@ -39,8 +40,9 @@ describe('settings shell components', () => {
   })
 
   it('navigates between the remaining settings tabs and omits removed placeholders', () => {
-    render(<SettingsNav activeTab="general" />)
+    render(<SettingsNav activeTab="profile" />)
 
+    fireEvent.click(screen.getByRole('button', { name: /Profile/ }))
     fireEvent.click(screen.getByRole('button', { name: /Connections/ }))
     fireEvent.click(screen.getByRole('button', { name: /General/ }))
 
@@ -51,9 +53,16 @@ describe('settings shell components', () => {
     expect(screen.queryByRole('button', { name: /Personalization/ })).not.toBeInTheDocument()
     expect(navigateMock).toHaveBeenNthCalledWith(1, {
       to: '/settings/$tab',
+      params: { tab: 'profile' },
+    })
+    expect(navigateMock).toHaveBeenNthCalledWith(2, {
+      to: '/settings/$tab',
       params: { tab: 'connections' },
     })
-    expect(navigateMock).toHaveBeenNthCalledWith(2, { to: '/settings' })
+    expect(navigateMock).toHaveBeenNthCalledWith(3, {
+      to: '/settings/$tab',
+      params: { tab: 'general' },
+    })
   })
 
   it('routes back to the active session from the settings page header', () => {
@@ -74,5 +83,11 @@ describe('settings shell components', () => {
 
     expect(screen.getByText('Connections settings')).toBeInTheDocument()
     expect(screen.getByText('Settings')).toBeInTheDocument()
+  })
+
+  it('renders the profile section when the profile tab is active', () => {
+    render(<SettingsPage activeTab="profile" />)
+
+    expect(screen.getByText('Profile settings')).toBeInTheDocument()
   })
 })

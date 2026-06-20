@@ -47,7 +47,12 @@ import type {
 } from './standards'
 import type { UpdateStatus } from './updater'
 import type { VoiceTranscriptionRequest, VoiceTranscriptionResult } from './voice'
-import type { WaggleConfig, WagglePreset } from './waggle'
+import type {
+  WaggleAppInstallResult,
+  WaggleAppInstallStatus,
+  WaggleConfig,
+  WagglePreset,
+} from './waggle'
 
 // This is what the preload exposes to the renderer via contextBridge.
 
@@ -240,6 +245,14 @@ export interface OpenWaggleApi {
   listWagglePresets(projectPath?: string | null): Promise<WagglePreset[]>
   saveWagglePreset(preset: WagglePreset, projectPath?: string | null): Promise<WagglePreset>
   deleteWagglePreset(id: WagglePresetId, projectPath?: string | null): Promise<void>
+  getWaggleAppInstallStatus(
+    preset: WagglePreset,
+    projectPath?: string | null,
+  ): Promise<WaggleAppInstallStatus>
+  installWaggleAppDependencies(
+    preset: WagglePreset,
+    projectPath?: string | null,
+  ): Promise<WaggleAppInstallResult>
 
   // Feedback
   checkGhCli(): Promise<GhCliStatus>

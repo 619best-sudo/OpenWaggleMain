@@ -43,10 +43,37 @@ describe('session-store waggleConfigSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  it('rejects persisted branch configs with more than two agents', () => {
+  it('accepts persisted branch configs with more than two agents', () => {
     const result = safeDecodeUnknown(waggleConfigSchema, {
       ...config,
       agents: [...config.agents, { ...config.agents[0], label: 'Mediator' }],
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts persisted prompt-gated agent slots', () => {
+    const result = safeDecodeUnknown(waggleConfigSchema, {
+      ...config,
+      agents: [
+        config.agents[0],
+        {
+          ...config.agents[1],
+          runCondition: {
+            type: 'prompt-match',
+            anyOf: ['animation', 'motion'],
+          },
+        },
+      ],
+    })
+
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects persisted branch configs with fewer than two agents', () => {
+    const result = safeDecodeUnknown(waggleConfigSchema, {
+      ...config,
+      agents: [config.agents[0]],
     })
 
     expect(result.success).toBe(false)

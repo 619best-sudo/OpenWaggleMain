@@ -51,7 +51,7 @@ function SessionTitleButton({
       <span
         className={cn(
           'truncate text-[12px]',
-          isActive ? 'font-medium text-[#8ba57b]' : 'text-[#a1a1aa]',
+          isActive ? 'font-bold text-accent' : 'font-bold text-text-secondary',
         )}
       >
         {truncate(session.title, TITLE_TRUNCATE_LENGTH)}
@@ -76,7 +76,7 @@ function SessionActionsTrigger({
       <span
         className={cn(
           'text-[10px] whitespace-nowrap',
-          isActive ? 'text-[#a1a1aa]' : 'text-[#52525b]',
+          isActive ? 'text-text-secondary' : 'text-text-muted',
         )}
       >
         {formatRelativeTime(session.updatedAt)}
@@ -87,7 +87,7 @@ function SessionActionsTrigger({
         aria-label={`Open session actions for ${session.title}`}
         onClick={onClick}
         className={cn(
-          'absolute -right-1 z-10 flex size-6 items-center justify-center rounded-lg text-[#7d857b] opacity-0 transition-[background-color,color,opacity] hover:bg-white/[0.04] hover:text-[#e7ece2] group-hover:opacity-100 focus:opacity-100',
+          'absolute -right-1 z-10 flex size-6 items-center justify-center rounded-lg text-text-tertiary opacity-0 transition-[background-color,color,opacity] hover:bg-bg-hover hover:text-text-primary group-hover:opacity-100 focus:opacity-100',
           menuOpen ? 'opacity-100' : null,
         )}
       >
@@ -121,7 +121,7 @@ export function SessionListItem({ session, isActive, actions }: SessionListItemP
       aria-current={isActive ? 'true' : undefined}
       className={cn(
         'group mx-4 flex h-9 items-center rounded-md transition-colors pl-8 pr-3',
-        isActive ? 'bg-[#8ba57b]/15' : 'hover:bg-white/5',
+        isActive ? 'bg-accent/10' : 'hover:bg-bg-hover',
       )}
       onContextMenu={handleContextMenu}
     >

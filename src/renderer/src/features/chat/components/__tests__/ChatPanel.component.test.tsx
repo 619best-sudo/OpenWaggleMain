@@ -1,15 +1,18 @@
 import { SessionId, SessionNodeId, SupportedModelId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import { DEFAULT_SETTINGS } from '@shared/types/settings'
+import { WAGGLE_INHERIT_MODEL } from '@shared/types/waggle'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { fromPartial } from '@total-typescript/shoehorn'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useMessageQueueStore } from '@/features/chat/state'
 import { useBranchSummaryStore } from '@/features/chat/state/branch-summary-store'
+import { replaceComposerText } from '@/features/composer/lib/set-composer-text'
 import { useComposerStore } from '@/features/composer/state'
 import { useProviderStore } from '@/features/providers/state'
 import { usePreferencesStore } from '@/features/settings/state'
+import { useWaggleStore } from '@/features/waggle/state'
 import type { ChatPanelSections } from '../../model'
 import { ChatPanel } from '../ChatPanel'
 
@@ -75,6 +78,7 @@ function createSections(
     composer: {
       activeSessionId: transcript.activeSessionId,
       waggleStatus: 'idle',
+      followUpSuggestion: null,
       commandPaletteOpen: false,
       slashSkills: [],
       forkSelectorOpen: false,
@@ -89,6 +93,7 @@ function createSections(
       onSteer: vi.fn().mockResolvedValue(undefined),
       onCancel: vi.fn(),
       onToast: vi.fn(),
+      onUseFollowUpPrompt: vi.fn(),
       onSkipBranchSummary: vi.fn(),
       onSummarizeBranch: vi.fn(),
       onStartCustomBranchSummary: vi.fn(),
@@ -142,6 +147,7 @@ describe('ChatPanel', () => {
       ...useProviderStore.getInitialState(),
       providerModels: [],
     })
+    useWaggleStore.getState().reset()
   })
 
   it('shows welcome screen when no messages', () => {
@@ -241,6 +247,54 @@ describe('ChatPanel', () => {
   it('renders the composer input area', () => {
     renderPanel()
     expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+
+  it('copies the Turing example prompt into the composer when the CTA is clicked', () => {
+    useWaggleStore.getState().startCollaboration(SessionId('session-1'), {
+      mode: 'sequential',
+      agents: [
+        {
+          label: 'Context Reader',
+          model: WAGGLE_INHERIT_MODEL,
+          roleDescription: 'Reads the request',
+          color: 'blue',
+        },
+        {
+          label: 'Installed Waggle Selector',
+          model: WAGGLE_INHERIT_MODEL,
+          roleDescription: 'Selects the next waggle',
+          color: 'amber',
+        },
+      ],
+      stop: { primary: 'consensus', maxTurnsSafety: 4 },
+    })
+    useWaggleStore.getState().handleTurnEvent({
+      type: 'collaboration-complete',
+      reason: 'Routing complete',
+      totalTurns: 2,
+    })
+
+    renderPanel(
+      {},
+      {
+        waggleStatus: 'completed',
+        followUpSuggestion: {
+          nextWaggle: 'product-planning',
+          examplePrompt:
+            'Review the auth files, define the MVP scope, and produce acceptance criteria.',
+          fallbackWaggle: 'code-review',
+        },
+        onUseFollowUpPrompt: (suggestion) => {
+          replaceComposerText(suggestion.examplePrompt)
+        },
+      },
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use Example Prompt' }))
+
+    expect(useComposerStore.getState().input).toBe(
+      'Review the auth files, define the MVP scope, and produce acceptance criteria.',
+    )
   })
 
   it('uses the darker sidenav-matched background for the chat panel shell', () => {

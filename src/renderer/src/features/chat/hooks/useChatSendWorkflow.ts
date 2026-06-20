@@ -15,7 +15,11 @@ interface ChatSendWorkflowParams {
     ReturnType<typeof useBranchSummaryWorkflow>['materializeDraftBranchForSend']
   >[0]
   readonly handleSend: (payload: AgentSendPayload) => Promise<void>
-  readonly handleSendWaggle: (payload: AgentSendPayload, config: WaggleConfig) => Promise<void>
+  readonly handleSendWaggle: (
+    payload: AgentSendPayload,
+    config: WaggleConfig,
+    targetSessionId?: SessionId | null,
+  ) => Promise<void>
   readonly model: SupportedModelId
   readonly phase: { readonly reset: () => void }
   readonly refreshSession: (sessionId: SessionId) => Promise<void>
@@ -77,17 +81,24 @@ async function handleSendCommand(params: ChatSendWorkflowParams, text: string) {
 function activeWaggleConfigForSend(params: ChatSendWorkflowParams): WaggleConfig | null {
   if (!params.waggleConfig) return null
   if (params.waggleStatus !== 'idle') return null
-  if (params.waggleOwningId && params.waggleOwningId !== params.activeSessionId) return null
+  if (
+    params.waggleOwningId &&
+    params.activeSessionId &&
+    params.waggleOwningId !== params.activeSessionId
+  ) {
+    return null
+  }
   return params.waggleConfig
 }
 
 async function sendThroughActiveMode(params: ChatSendWorkflowParams, payload: AgentSendPayload) {
   const waggleConfig = activeWaggleConfigForSend(params)
   if (waggleConfig) {
-    if (params.activeSessionId) {
-      params.startWaggleCollaboration(params.activeSessionId, waggleConfig)
+    const targetSessionId = params.activeSessionId ?? params.waggleOwningId
+    if (targetSessionId) {
+      params.startWaggleCollaboration(targetSessionId, waggleConfig)
     }
-    await params.handleSendWaggle(payload, waggleConfig)
+    await params.handleSendWaggle(payload, waggleConfig, targetSessionId)
     return
   }
   await params.handleSend(payload)

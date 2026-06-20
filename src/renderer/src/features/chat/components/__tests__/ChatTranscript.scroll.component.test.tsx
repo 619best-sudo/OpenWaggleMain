@@ -1,5 +1,5 @@
 import type { UIMessage } from '@shared/types/chat-ui'
-import { act, render } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ChatTranscriptSectionState } from '../../model'
 
@@ -237,6 +237,42 @@ describe('ChatTranscript t3-style scroll behavior', () => {
     const { container } = render(<ChatTranscript section={createSection()} />)
     const scroller = container.querySelector('[role="log"]')
     expect(scroller?.className).toContain('[overflow-anchor:none]')
+  })
+
+  it('shows the scroll-to-bottom button after the user scrolls up', async () => {
+    const userMessage = createTextMessage('msg-1', 'user', 'hello')
+    const assistantMessage = createTextMessage('msg-2', 'assistant', 'world')
+    const { container } = render(
+      <ChatTranscript
+        section={createSection({
+          messages: [userMessage, assistantMessage],
+          chatRows: [createMessageChatRow(userMessage), createMessageChatRow(assistantMessage)],
+          lastUserMessageId: 'msg-1',
+        })}
+      />,
+    )
+
+    const scroller = container.querySelector('[role="log"]')
+    if (!(scroller instanceof HTMLElement)) {
+      throw new Error('Chat scroller not found')
+    }
+    const layout = configureScrollableElement(scroller)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(REQUEST_ANIMATION_FRAME_DELAY_MS)
+    })
+
+    const scrollToBottomButton = screen.getByRole('button', { name: 'Scroll to bottom' })
+    expect(scrollToBottomButton).toBeInTheDocument()
+    expect(scrollToBottomButton.parentElement).toHaveClass('opacity-0')
+
+    act(() => {
+      scroller.scrollTop = 200
+      fireEvent.scroll(scroller)
+    })
+
+    expect(layout.getScrollTop()).toBe(200)
+    expect(scrollToBottomButton.parentElement).toHaveClass('opacity-100')
   })
 
   it('does not scroll when lastUserMessageId is null', async () => {

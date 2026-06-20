@@ -155,7 +155,13 @@ function highlightCode(
   language: PreloadedLanguage,
 ): Element | undefined {
   try {
-    const root = highlighter.codeToHast(code, { lang: language, theme: DEFAULT_THEME })
+    const root = highlighter.codeToHast(code, {
+      lang: language,
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark',
+      },
+    })
 
     // Shiki output: root > pre.shiki > code > span.line*
     const preEl = root.children.find((c): c is Element => isElement(c) && c.tagName === 'pre')

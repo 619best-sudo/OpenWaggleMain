@@ -49,6 +49,10 @@ export class OpenWaggleApp {
 
   static async launch(prefix = 'openwaggle-e2e-'): Promise<OpenWaggleApp> {
     const userDataDir = await fs.mkdtemp(path.join(os.tmpdir(), prefix))
+    return OpenWaggleApp.launchWithUserDataDir(userDataDir)
+  }
+
+  static async launchWithUserDataDir(userDataDir: string): Promise<OpenWaggleApp> {
     const app = await electron.launch({
       args: ['.'],
       env: buildElectronEnv(userDataDir),

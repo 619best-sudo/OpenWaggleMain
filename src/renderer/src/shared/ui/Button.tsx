@@ -32,7 +32,7 @@ const BUTTON_BASE_CLASS =
 const BUTTON_UNSTYLED_BASE_CLASS = 'disabled:cursor-not-allowed disabled:opacity-50'
 
 const BUTTON_VARIANT_CLASS = {
-  primary: 'bg-gradient-to-b from-accent to-accent-dim text-bg hover:brightness-110',
+  primary: 'bg-gradient-to-b from-accent to-accent-dim text-accent-foreground hover:brightness-110',
   secondary:
     'border border-border bg-bg text-text-secondary hover:bg-bg-hover hover:text-text-primary',
   accent: 'border border-accent/30 bg-accent/5 text-accent hover:bg-accent/10',

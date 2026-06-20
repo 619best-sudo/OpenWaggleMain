@@ -2,8 +2,9 @@ import { SupportedModelId, WagglePresetId } from '@shared/types/brand'
 import { WAGGLE_INHERIT_MODEL, type WagglePreset } from '@shared/types/waggle'
 import { describe, expect, it } from 'vitest'
 import {
+  buildWaggleAppManifest,
   buildWaggleConfig,
-  configMatchesPreset,
+  formMatchesPreset,
   INITIAL_WAGGLE_FORM_STATE,
   INITIAL_WAGGLE_PRESET_STATE,
   waggleFormReducer,
@@ -36,6 +37,10 @@ function makePreset(): WagglePreset {
       ],
       stop: { primary: 'consensus', maxTurnsSafety: 8 },
     },
+    app: {
+      requiredMcps: ['playwright'],
+      requiredSkills: ['ui-critic'],
+    },
   }
 }
 
@@ -47,21 +52,63 @@ describe('waggle form state reducers', () => {
       mode: 'sequential',
       stop: { primary: 'consensus', maxTurnsSafety: 8 },
     })
-    expect(config.agents.map((agent) => agent.label)).toEqual(['Agent A', 'Agent B'])
+    expect(config.agents.map((agent) => agent.label)).toEqual(['Agent 1', 'Agent 2'])
     expect(config.agents.map((agent) => agent.model)).toEqual([
       WAGGLE_INHERIT_MODEL,
       WAGGLE_INHERIT_MODEL,
     ])
   })
 
-  it('detects whether a form config still matches a preset exactly', () => {
+  it('builds prompt-gated agent slots from keyword input', () => {
+    const updated = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, {
+      type: 'set-agent-run-condition-terms',
+      index: 1,
+      value: 'animation\nmotion\nanimation',
+    })
+
+    expect(updated.agents[1]).toMatchObject({
+      runCondition: {
+        type: 'prompt-match',
+        anyOf: ['animation', 'motion'],
+      },
+    })
+    expect(buildWaggleConfig(updated).agents[1]).toMatchObject({
+      runCondition: {
+        type: 'prompt-match',
+        anyOf: ['animation', 'motion'],
+      },
+    })
+  })
+
+  it('builds an app manifest from dependency inputs', () => {
+    const app = buildWaggleAppManifest({
+      ...INITIAL_WAGGLE_FORM_STATE,
+      requiredMcpsText: 'playwright\npostgres\nplaywright\n',
+      requiredSkillsText: 'ui-critic\nbackend-auditor\n',
+    })
+
+    expect(app).toEqual({
+      requiredMcps: ['playwright', 'postgres'],
+      requiredSkills: ['ui-critic', 'backend-auditor'],
+    })
+  })
+
+  it('detects whether a form config and app manifest still match a preset exactly', () => {
     const preset = makePreset()
-    expect(configMatchesPreset(preset.config, preset)).toBe(true)
+    const matchingState = {
+      agents: preset.config.agents,
+      mode: preset.config.mode,
+      stopCondition: preset.config.stop.primary,
+      maxTurns: preset.config.stop.maxTurnsSafety,
+      requiredMcpsText: 'playwright',
+      requiredSkillsText: 'ui-critic',
+    }
+    expect(formMatchesPreset(matchingState, preset)).toBe(true)
 
     expect(
-      configMatchesPreset(
+      formMatchesPreset(
         {
-          ...preset.config,
+          ...matchingState,
           agents: [{ ...preset.config.agents[0], label: 'Changed' }, preset.config.agents[1]],
         },
         preset,
@@ -72,13 +119,13 @@ describe('waggle form state reducers', () => {
   it('loads a preset config into form state', () => {
     const preset = makePreset()
 
-    expect(
-      waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, { type: 'load-preset', config: preset.config }),
-    ).toEqual({
+    expect(waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, { type: 'load-preset', preset })).toEqual({
       agents: preset.config.agents,
       mode: preset.config.mode,
       stopCondition: preset.config.stop.primary,
       maxTurns: preset.config.stop.maxTurnsSafety,
+      requiredMcpsText: 'playwright',
+      requiredSkillsText: 'ui-critic',
     })
   })
 
@@ -103,6 +150,26 @@ describe('waggle form state reducers', () => {
     expect(withTurns.stopCondition).toBe('user-stop')
     expect(withTurns.maxTurns).toBe(12)
     expect(withTurns.agents).toBe(INITIAL_WAGGLE_FORM_STATE.agents)
+  })
+
+  it('adds and removes agents while preserving the minimum pair', () => {
+    const withThirdAgent = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, { type: 'add-agent' })
+
+    expect(withThirdAgent.agents).toHaveLength(3)
+    expect(withThirdAgent.agents[2]).toMatchObject({
+      label: 'Agent 3',
+      model: WAGGLE_INHERIT_MODEL,
+      color: 'emerald',
+    })
+
+    const removed = waggleFormReducer(withThirdAgent, { type: 'remove-agent', index: 1 })
+    expect(removed.agents.map((agent) => agent.label)).toEqual(['Agent 1', 'Agent 3'])
+
+    const stillTwoAgents = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, {
+      type: 'remove-agent',
+      index: 0,
+    })
+    expect(stillTwoAgents.agents).toHaveLength(2)
   })
 
   it('tracks selected preset and clears errors after successful save', () => {

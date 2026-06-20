@@ -1,13 +1,15 @@
-import type { ProviderInfo } from '@shared/types/llm'
-import type { Settings } from '@shared/types/settings'
 import {
-  isInheritedWaggleModelBinding,
-  type WaggleAgentSlot,
-} from '@shared/types/waggle'
-import { Bot } from 'lucide-react'
+  getToolGenerationCapabilities,
+  modelSupportsImageInput,
+  type ProviderInfo,
+} from '@shared/types/llm'
+import type { Settings } from '@shared/types/settings'
+import { isInheritedWaggleModelBinding, type WaggleAgentSlot } from '@shared/types/waggle'
+import { Bot, Trash2 } from 'lucide-react'
 import { ModelSelector } from '@/features/providers/components'
 import { AGENT_BG, AGENT_BORDER } from '@/features/waggle/lib'
 import { cn } from '@/shared/lib/cn'
+import { Button } from '@/shared/ui/Button'
 import { Textarea } from '@/shared/ui/Textarea'
 import { TextInput } from '@/shared/ui/TextInput'
 import type { WaggleFormAction } from '../../hooks/useWaggleForm'
@@ -15,12 +17,13 @@ import type { WaggleFormAction } from '../../hooks/useWaggleForm'
 const ROWS = 4
 
 interface WaggleAgentSlotCardProps {
-  index: 0 | 1
+  index: number
   agent: WaggleAgentSlot
   dispatchForm: (action: WaggleFormAction) => void
   dotLabel: string
   settings: Settings
   providerModels: ProviderInfo[]
+  canRemove: boolean
 }
 
 export function WaggleAgentSlotCard({
@@ -30,10 +33,18 @@ export function WaggleAgentSlotCard({
   dotLabel,
   settings,
   providerModels,
+  canRemove,
 }: WaggleAgentSlotCardProps) {
   const selectedAgentModel = isInheritedWaggleModelBinding(agent.model)
     ? settings.selectedModel
     : agent.model
+  const selectedModelInfo =
+    providerModels
+      .flatMap((provider) => provider.models)
+      .find((model) => model.id === selectedAgentModel) ?? null
+  const supportsImageInput = selectedModelInfo ? modelSupportsImageInput(selectedModelInfo) : false
+  const toolGeneration = selectedModelInfo ? getToolGenerationCapabilities(selectedModelInfo) : []
+  const promptMatchTerms = agent.runCondition?.type === 'prompt-match' ? agent.runCondition.anyOf : []
 
   return (
     <div
@@ -62,6 +73,17 @@ export function WaggleAgentSlotCard({
               Agent {dotLabel}
             </h3>
           </div>
+          {canRemove ? (
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => dispatchForm({ type: 'remove-agent', index })}
+              className="h-8 px-2.5 text-xs"
+              leftIcon={<Trash2 className="size-3.5" />}
+            >
+              Remove
+            </Button>
+          ) : null}
         </div>
 
         <div className="space-y-5 flex-1 flex flex-col">
@@ -70,7 +92,9 @@ export function WaggleAgentSlotCard({
             <TextInput
               type="text"
               value={agent.label}
-              onChange={(e) => dispatchForm({ type: 'set-agent-label', index, label: e.target.value })}
+              onChange={(e) =>
+                dispatchForm({ type: 'set-agent-label', index, label: e.target.value })
+              }
               inputSize="sm"
               placeholder={`e.g. ${dotLabel === 'A' ? 'Strategist' : 'Critic'}`}
               className="w-full bg-bg border-border-light focus:border-accent/50 shadow-sm"
@@ -85,6 +109,21 @@ export function WaggleAgentSlotCard({
               settings={settings}
               providerModels={providerModels}
             />
+            <div className="flex flex-wrap gap-2 pt-1">
+              <span className="rounded-full border border-border-light bg-bg px-2.5 py-1 text-[10px] font-medium tracking-wide text-text-secondary uppercase">
+                {supportsImageInput ? 'Native image input' : 'Text handoff only'}
+              </span>
+              {toolGeneration.length > 0 ? (
+                <span className="rounded-full border border-border-light bg-bg px-2.5 py-1 text-[10px] font-medium tracking-wide text-text-secondary uppercase">
+                  Tool generation: {toolGeneration.join(' / ')}
+                </span>
+              ) : null}
+            </div>
+            <p className="text-[11px] leading-5 text-text-tertiary">
+              {supportsImageInput
+                ? 'Can request tool-based image, audio, or video generation. Earlier image outputs can also be re-attached for direct critique.'
+                : 'Can still drive tool-based image, audio, or video generation, but later turns receive concise prompt and file handoff notes instead of direct media input.'}
+            </p>
           </label>
 
           <label className="block space-y-1.5 flex-1 flex flex-col">
@@ -99,6 +138,30 @@ export function WaggleAgentSlotCard({
               resize="none"
               className="w-full flex-1 rounded-md border border-border-light bg-bg p-2.5 text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-accent/50 focus:outline-none shadow-sm leading-relaxed"
             />
+          </label>
+
+          <label className="block space-y-1.5">
+            <span className="text-[12px] font-medium text-text-secondary">
+              Run Only When Prompt Mentions
+            </span>
+            <Textarea
+              value={promptMatchTerms.join('\n')}
+              onChange={(event) =>
+                dispatchForm({
+                  type: 'set-agent-run-condition-terms',
+                  index,
+                  value: event.target.value,
+                })
+              }
+              rows={2}
+              placeholder={'Optional keywords, one per line\nanimation\nmotion'}
+              resize="none"
+              className="w-full rounded-md border border-border-light bg-bg p-2.5 text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-accent/50 focus:outline-none shadow-sm leading-relaxed"
+            />
+            <p className="text-[11px] leading-5 text-text-tertiary">
+              Leave blank to always include this agent. If filled, this slot stays in the run only
+              when the user request mentions any listed keyword.
+            </p>
           </label>
         </div>
       </div>

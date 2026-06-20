@@ -1,6 +1,5 @@
 import { matchBy } from '@diegogbrisa/ts-match'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
-import { cn } from '@/shared/lib/cn'
 import { useChatScrollBehaviour } from '../hooks/useChatScrollBehaviour'
 import type { ChatRow } from '../lib/types-chat-row'
 import type { ChatTranscriptSectionState } from '../model'
@@ -144,7 +143,6 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
   const {
     scrollerRef,
     contentRef,
-    showScrollbar,
     showScrollToBottom,
     scrollToBottom,
     handleScroll,
@@ -195,10 +193,7 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
         role="log"
         aria-label="Chat messages"
         aria-busy={isLoading}
-        className={cn(
-          'flex flex-1 flex-col overflow-y-auto chat-scroll [overflow-anchor:none]',
-          showScrollbar && 'is-scrolling',
-        )}
+        className="flex flex-1 flex-col overflow-y-auto chat-scroll [overflow-anchor:none]"
         onScroll={handleScroll}
         onWheel={handleWheel}
         onPointerDown={handlePointerDown}
@@ -222,7 +217,6 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
           />
         </div>
       </div>
-
       <ScrollToBottomButton visible={showScrollToBottom} onClick={scrollToBottom} />
     </div>
   )

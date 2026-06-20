@@ -61,8 +61,9 @@ Load `.agents/skills/electron-runtime/SKILL.md` for details.
 
 - Pi-native sidebar navigation is Projects-only. Do not add a global projectless Chats section.
 - Waggle mode must run inside Pi as extension/runtime behavior, not as an OpenWaggle application loop that calls Pi once per agent turn.
-- Waggle currently supports exactly two agents. Third-agent JSON edits must be rejected at core, Pi extension, shared schema, store schema, and application-service boundaries until N-agent turn policy, prompts, consensus, and UI are implemented first-class.
+- Waggle supports N-agent sequential rotation first-class in core config, prompt building, and editor flows; built-in presets can now rely on more than two named agents when the Pi runtime path uses the current Waggle contracts.
 - Waggle and standard mode share session, branch, draft, archive, transcript, active-run, composer, settings, diff, and git semantics unless Pi imposes a narrow technical constraint.
+- The `game-factory` preset depends on a config-level loop contract plus role prompts: builders declare required handoff sections through agent output contracts, QA declares verdict/failure sections, Waggle core injects those labels into prompts, and Pi stop policy treats missing contract sections as a failed turn.
 - Composer branch/config changes are branch-scoped; child branches inherit parent config by default.
 - Manual compaction mirrors Pi TUI slash-command UX: `/compact` and `/compact <custom instructions>`, not context-meter-triggered compaction.
 - Provider auth UI is method-based. Keep provider-level availability separate from API-key configured state and OAuth connected state.

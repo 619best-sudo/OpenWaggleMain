@@ -6,3 +6,5 @@ export {
   AGENT_SURFACE,
   AGENT_TEXT,
 } from './agent-colors'
+export { getPresetStarterPrompts } from './preset-starter-prompts'
+export type { WaggleStarterPrompt } from './preset-starter-prompts'

@@ -7,10 +7,17 @@ import { useSendMessage } from '@/features/chat/hooks/useSendMessage'
 import { useStreamingPhase } from '@/features/chat/hooks/useStreamingPhase'
 import { createBranchDraftSelection } from '@/features/chat/lib/branch-from-message'
 import { maybeOpenBranchSummaryPrompt } from '@/features/chat/lib/branch-summary-prompt-controller'
+import { replaceComposerText } from '@/features/composer/lib/set-composer-text'
 import { useComposerStore } from '@/features/composer/state'
 import { useSkills } from '@/features/skills/hooks'
 import { useWaggleChat } from '@/features/waggle/hooks'
-import { useWaggleStore } from '@/features/waggle/state'
+import {
+  findWagglePresetForTuringSuggestion,
+  getTuringFollowUpSuggestion,
+  type TuringFollowUpSuggestion,
+} from '@/features/waggle/lib/turing-follow-up'
+import { useWaggleLaunchPromptStore, useWaggleStore } from '@/features/waggle/state'
+import { api } from '@/shared/lib/ipc'
 import { createRendererLogger } from '@/shared/lib/logger'
 import { reportAutoSendQueueFailure } from '../lib/queue-failure-feedback'
 import type { ChatPanelSections } from '../model'
@@ -106,6 +113,7 @@ export function useChatPanelSections(): ChatPanelSections {
   const setWaggleConfig = useWaggleStore((s) => s.setConfig)
   const startWaggleCollaboration = useWaggleStore((s) => s.startCollaboration)
   const stopWaggleCollaboration = useWaggleStore((s) => s.stopCollaboration)
+  const queueWaggleLaunchPrompt = useWaggleLaunchPromptStore((s) => s.queuePrompt)
 
   // Scope waggle status to the active session — other sessions see 'idle'
   const waggleOwningId = waggleActiveCollaborationId ?? waggleConfigSessionId
@@ -256,6 +264,39 @@ export function useChatPanelSections(): ChatPanelSections {
     streamSignalVersion,
   })
 
+  const followUpSuggestion = getTuringFollowUpSuggestion({
+    messages: transcript.messages,
+    waggleStatus,
+    config: waggleConfig,
+  })
+
+  async function handleUseFollowUpPrompt(suggestion: TuringFollowUpSuggestion) {
+    replaceComposerText(suggestion.examplePrompt)
+
+    if (!projectPath || !activeSessionId) {
+      showToast('Example prompt added to composer.')
+      return
+    }
+
+    try {
+      const presets = await api.listWagglePresets(projectPath)
+      const matchedPreset = findWagglePresetForTuringSuggestion(presets, suggestion)
+
+      if (!matchedPreset) {
+        showToast('Example prompt added to composer. Start the recommended Waggle before sending.')
+        return
+      }
+
+      setWaggleConfig(matchedPreset.config, activeSessionId)
+      queueWaggleLaunchPrompt(activeSessionId, String(matchedPreset.id), suggestion.examplePrompt)
+      showToast(`"${matchedPreset.name}" is ready with the suggested prompt.`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error('Failed to arm suggested Waggle follow-up', { error: message })
+      showToast(`Example prompt added, but the suggested Waggle was not armed: ${message}`)
+    }
+  }
+
   const composer = useComposerSection({
     isLoading,
     isSteering,
@@ -265,6 +306,7 @@ export function useChatPanelSections(): ChatPanelSections {
     forkTargets: sessionCopy.forkTargets,
     activeSessionId,
     waggleStatus,
+    followUpSuggestion,
     commandPaletteOpen,
     slashSkills: catalog?.skills ?? [],
     phase,
@@ -272,6 +314,7 @@ export function useChatPanelSections(): ChatPanelSections {
     showToast,
     handleSteer,
     handleSendWithWaggle: sendWorkflow.sendWithWaggle,
+    handleUseFollowUpPrompt,
     handleStartWaggle: sendWorkflow.startWaggle,
     handleStopCollaboration: sendWorkflow.stopCollaboration,
     handleSkipBranchSummary: branchSummary.skipBranchSummary,

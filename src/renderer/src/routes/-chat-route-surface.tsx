@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { ChatPanelContent } from '@/features/chat/components'
 import { useChatPanelSections } from '@/features/chat/hooks'
 import { PanelErrorBoundary } from '@/shared/ui/PanelErrorBoundary'
@@ -87,6 +87,7 @@ export function ChatRouteSurface({
   const sections = useChatPanelSections()
   const lastRightSidebarPanel = useUIStore((state) => state.lastRightSidebarPanel)
   const setLastRightSidebarPanel = useUIStore((state) => state.setLastRightSidebarPanel)
+  const [isDiffExpanded, setIsDiffExpanded] = useState(false)
   const renderedRightSidebarPanel = resolveRightSidebarPanel({
     diffOpen,
     lastPanel: lastRightSidebarPanel,
@@ -97,56 +98,73 @@ export function ChatRouteSurface({
 
   function handleDiffOpenChange(open: boolean) {
     setLastRightSidebarPanel('diff')
+    if (!open) setIsDiffExpanded(false)
     onDiffOpenChange(open)
   }
 
   function handleSessionTreeOpenChange(open: boolean) {
     setLastRightSidebarPanel('session-tree')
+    if (open) setIsDiffExpanded(false)
     onSessionTreeOpenChange(open)
   }
 
+  const shouldRenderExpandedDiff =
+    diffOpen && renderedRightSidebarPanel === 'diff' && isDiffExpanded
+
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden px-3 pb-3">
+    <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
       <PanelErrorBoundary
         name="Chat"
-        className="flex min-w-0 flex-1 overflow-hidden rounded-b-[16px] border border-[#8ba57b]/16 border-t-0 bg-[#09090b]"
+        className="flex min-w-0 flex-1 overflow-hidden bg-bg"
       >
-        <RightSidebarLayout
-          open={diffOpen || sessionTreeOpen}
-          sizing={{
-            defaultWidth: DIFF_PANEL_DEFAULT_WIDTH,
-            mainMinWidth: CHAT_MIN_WIDTH,
-            maxWidth: DIFF_PANEL_MAX,
-            minWidth: DIFF_PANEL_MIN,
-            sheetBreakpointPx: DIFF_PANEL_SHEET_BREAKPOINT_PX,
-            storageKey: DIFF_PANEL_STORAGE_KEY,
-          }}
-          onOpenChange={(open) => {
-            if (renderedRightSidebarPanel === 'diff') {
-              handleDiffOpenChange(open)
-              return
+        {shouldRenderExpandedDiff ? (
+          <Suspense fallback={<DiffSidebarFallback />}>
+            <LazyChatDiffPane
+              section={sections.diff}
+              isExpanded
+              onClose={() => handleDiffOpenChange(false)}
+              onToggleExpanded={() => setIsDiffExpanded(false)}
+            />
+          </Suspense>
+        ) : (
+          <RightSidebarLayout
+            open={diffOpen || sessionTreeOpen}
+            sizing={{
+              defaultWidth: DIFF_PANEL_DEFAULT_WIDTH,
+              mainMinWidth: CHAT_MIN_WIDTH,
+              maxWidth: DIFF_PANEL_MAX,
+              minWidth: DIFF_PANEL_MIN,
+              sheetBreakpointPx: DIFF_PANEL_SHEET_BREAKPOINT_PX,
+              storageKey: DIFF_PANEL_STORAGE_KEY,
+            }}
+            onOpenChange={(open) => {
+              if (renderedRightSidebarPanel === 'diff') {
+                handleDiffOpenChange(open)
+                return
+              }
+              handleSessionTreeOpenChange(open)
+            }}
+            shouldAcceptWidth={shouldAcceptDiffWidth}
+            sidebar={
+              <Suspense fallback={<DiffSidebarFallback />}>
+                {renderedRightSidebarPanel === 'session-tree' ? (
+                  <LazySessionTreePanel onClose={() => handleSessionTreeOpenChange(false)} />
+                ) : (
+                  <LazyChatDiffPane
+                    section={sections.diff}
+                    onClose={() => handleDiffOpenChange(false)}
+                    onToggleExpanded={() => setIsDiffExpanded(true)}
+                  />
+                )}
+              </Suspense>
             }
-            handleSessionTreeOpenChange(open)
-          }}
-          shouldAcceptWidth={shouldAcceptDiffWidth}
-          sidebar={
-            <Suspense fallback={<DiffSidebarFallback />}>
-              {renderedRightSidebarPanel === 'session-tree' ? (
-                <LazySessionTreePanel onClose={() => handleSessionTreeOpenChange(false)} />
-              ) : (
-                <LazyChatDiffPane
-                  section={sections.diff}
-                  onClose={() => handleDiffOpenChange(false)}
-                />
-              )}
-            </Suspense>
-          }
-        >
-          <ChatPanelContent
-            sections={sections}
-            onOpenSessionTree={() => handleSessionTreeOpenChange(true)}
-          />
-        </RightSidebarLayout>
+          >
+            <ChatPanelContent
+              sections={sections}
+              onOpenSessionTree={() => handleSessionTreeOpenChange(true)}
+            />
+          </RightSidebarLayout>
+        )}
       </PanelErrorBoundary>
     </div>
   )

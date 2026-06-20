@@ -1,4 +1,4 @@
-import { RefreshCw, X } from 'lucide-react'
+import { Maximize2, Minimize2, RefreshCw, X } from 'lucide-react'
 import { DiffPanel } from '@/features/diff-panel/components'
 import { Button } from '@/shared/ui/Button'
 import { PanelErrorBoundary } from '@/shared/ui/PanelErrorBoundary'
@@ -7,12 +7,20 @@ import type { ChatDiffSectionState } from '../model'
 
 interface ChatDiffPaneProps {
   readonly section: ChatDiffSectionState
+  readonly isExpanded?: boolean
   readonly onClose: () => void
+  readonly onToggleExpanded?: () => void
 }
 
-export function ChatDiffPane({ section, onClose }: ChatDiffPaneProps) {
+export function ChatDiffPane({
+  section,
+  isExpanded = false,
+  onClose,
+  onToggleExpanded,
+}: ChatDiffPaneProps) {
   const diffRefreshKey = useUIStore((s) => s.diffRefreshKey)
   const bumpDiffRefreshKey = useUIStore((s) => s.bumpDiffRefreshKey)
+  const ExpandIcon = isExpanded ? Minimize2 : Maximize2
 
   return (
     <div className="flex size-full min-w-0 flex-col overflow-hidden bg-diff-bg">
@@ -22,6 +30,18 @@ export function ChatDiffPane({ section, onClose }: ChatDiffPaneProps) {
           <span className="no-drag text-[11px] text-text-tertiary">Working tree diff</span>
         </div>
         <div className="no-drag flex items-center gap-1">
+          {onToggleExpanded ? (
+            <Button
+              variant="unstyled"
+              type="button"
+              aria-label={isExpanded ? 'Exit full diff view' : 'Expand diff to full chat'}
+              onClick={onToggleExpanded}
+              className="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-secondary"
+              title={isExpanded ? 'Exit full diff view' : 'Expand diff to full chat'}
+            >
+              <ExpandIcon className="size-3.5" />
+            </Button>
+          ) : null}
           <Button
             variant="unstyled"
             type="button"

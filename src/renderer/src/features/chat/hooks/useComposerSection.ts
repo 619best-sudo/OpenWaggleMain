@@ -6,9 +6,11 @@ import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical'
 import type { AgentChatStatus, AgentCompactionStatus } from '@/features/chat/hooks/useAgentChat'
 import type { useStreamingPhase } from '@/features/chat/hooks/useStreamingPhase'
 import { $createSkillMentionNode } from '@/features/composer/components'
+import { replaceComposerText } from '@/features/composer/lib/set-composer-text'
 import { useComposerStore } from '@/features/composer/state'
 import type { SessionForkTarget } from '../lib/session-fork-targets'
 import type { ChatComposerSectionState } from '../model'
+import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 
 export interface ComposerSectionParams {
   readonly isLoading: boolean
@@ -17,6 +19,7 @@ export interface ComposerSectionParams {
   readonly compactionStatus: AgentCompactionStatus | null
   readonly activeSessionId: SessionId | null
   readonly waggleStatus: WaggleCollaborationStatus
+  readonly followUpSuggestion: TuringFollowUpSuggestion | null
   readonly commandPaletteOpen: boolean
   readonly slashSkills: readonly SkillDiscoveryItem[]
   readonly forkSelectorOpen: boolean
@@ -26,6 +29,7 @@ export interface ComposerSectionParams {
   readonly showToast: (message: string) => void
   readonly handleSteer: (messageId: string) => Promise<void>
   readonly handleSendWithWaggle: (payload: AgentSendPayload) => Promise<void>
+  readonly handleUseFollowUpPrompt: (suggestion: TuringFollowUpSuggestion) => void
   readonly handleStartWaggle: (config: WaggleConfig) => void
   readonly handleStopCollaboration: () => void
   readonly handleSkipBranchSummary: () => void
@@ -46,6 +50,7 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     compactionStatus,
     activeSessionId,
     waggleStatus,
+    followUpSuggestion,
     commandPaletteOpen,
     slashSkills,
     forkSelectorOpen,
@@ -55,6 +60,7 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     showToast,
     handleSteer,
     handleSendWithWaggle,
+    handleUseFollowUpPrompt,
     handleStartWaggle,
     handleStopCollaboration,
     handleSkipBranchSummary,
@@ -92,9 +98,15 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     }
   }
 
+  function onUseFollowUpPrompt(suggestion: TuringFollowUpSuggestion) {
+    replaceComposerText(suggestion.examplePrompt)
+    handleUseFollowUpPrompt(suggestion)
+  }
+
   return {
     activeSessionId,
     waggleStatus,
+    followUpSuggestion,
     commandPaletteOpen,
     slashSkills,
     forkSelectorOpen,
@@ -109,6 +121,7 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     onSteer: handleSteer,
     onCancel: stop,
     onToast: showToast,
+    onUseFollowUpPrompt,
     onSkipBranchSummary: handleSkipBranchSummary,
     onSummarizeBranch: handleSummarizeBranch,
     onStartCustomBranchSummary: handleStartCustomBranchSummary,

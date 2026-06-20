@@ -15,6 +15,7 @@ import { registerSkillsHandlers } from './skills-handler'
 import { registerTerminalHandlers } from './terminal-handler'
 import { registerUpdaterHandlers } from './updater-handler'
 import { registerVoiceHandlers } from './voice-handler'
+import { registerWaggleAppsHandlers } from './waggle-apps-handler'
 import { registerWaggleHandlers } from './waggle-handler'
 import { registerWagglePresetsHandlers } from './waggle-presets-handler'
 
@@ -37,6 +38,7 @@ export function registerAllIpcHandlers(): void {
   registerShellHandlers()
   registerWaggleHandlers()
   registerWagglePresetsHandlers()
+  registerWaggleAppsHandlers()
   registerFeedbackHandlers()
   registerUpdaterHandlers()
   registerComposerHandlers()
