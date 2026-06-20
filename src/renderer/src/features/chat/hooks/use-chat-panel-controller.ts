@@ -271,10 +271,10 @@ export function useChatPanelSections(): ChatPanelSections {
   })
 
   async function handleUseFollowUpPrompt(suggestion: TuringFollowUpSuggestion) {
-    replaceComposerText(suggestion.examplePrompt)
+    replaceComposerText(suggestion.userPrompt)
 
     if (!projectPath || !activeSessionId) {
-      showToast('Example prompt added to composer.')
+      showToast('Prompt added to composer.')
       return
     }
 
@@ -283,17 +283,17 @@ export function useChatPanelSections(): ChatPanelSections {
       const matchedPreset = findWagglePresetForTuringSuggestion(presets, suggestion)
 
       if (!matchedPreset) {
-        showToast('Example prompt added to composer. Start the recommended Waggle before sending.')
+        showToast('Prompt added to composer. Start the recommended Waggle before sending.')
         return
       }
 
       setWaggleConfig(matchedPreset.config, activeSessionId)
-      queueWaggleLaunchPrompt(activeSessionId, String(matchedPreset.id), suggestion.examplePrompt)
-      showToast(`"${matchedPreset.name}" is ready with the suggested prompt.`)
+      queueWaggleLaunchPrompt(activeSessionId, String(matchedPreset.id), suggestion.userPrompt)
+      showToast(`"${matchedPreset.name}" is ready with the suggested user prompt.`)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       logger.error('Failed to arm suggested Waggle follow-up', { error: message })
-      showToast(`Example prompt added, but the suggested Waggle was not armed: ${message}`)
+      showToast(`Prompt added, but the suggested Waggle was not armed: ${message}`)
     }
   }
 

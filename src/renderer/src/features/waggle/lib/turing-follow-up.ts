@@ -3,7 +3,7 @@ import type { WaggleConfig, WaggleCollaborationStatus, WagglePreset } from '@sha
 
 export interface TuringFollowUpSuggestion {
   readonly nextWaggle: string
-  readonly examplePrompt: string
+  readonly userPrompt: string
   readonly fallbackWaggle: string | null
 }
 
@@ -49,22 +49,23 @@ export function isTuringConfig(config: WaggleConfig | null) {
 export function parseTuringFollowUpSuggestion(text: string): TuringFollowUpSuggestion | null {
   const lines = text.split(/\r?\n/)
   let nextWaggle: string | null = null
-  let examplePrompt: string | null = null
+  let userPrompt: string | null = null
   let fallbackWaggle: string | null = null
 
   for (const line of lines) {
     nextWaggle ||= matchesField(line, 'selected next waggle')
-    examplePrompt ||= matchesField(line, 'example next prompt')
+    userPrompt ||= matchesField(line, 'user prompt(?: for next waggle)?')
+    userPrompt ||= matchesField(line, 'example next prompt')
     fallbackWaggle ||= matchesField(line, 'fallback waggle(?: if needed)?')
   }
 
-  if (!nextWaggle || !examplePrompt) {
+  if (!nextWaggle || !userPrompt) {
     return null
   }
 
   return {
     nextWaggle,
-    examplePrompt,
+    userPrompt,
     fallbackWaggle,
   }
 }

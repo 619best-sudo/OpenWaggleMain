@@ -249,7 +249,7 @@ describe('ChatPanel', () => {
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
-  it('copies the Turing example prompt into the composer when the CTA is clicked', () => {
+  it('copies the Turing user prompt into the composer when the CTA is clicked', () => {
     useWaggleStore.getState().startCollaboration(SessionId('session-1'), {
       mode: 'sequential',
       agents: [
@@ -280,17 +280,17 @@ describe('ChatPanel', () => {
         waggleStatus: 'completed',
         followUpSuggestion: {
           nextWaggle: 'product-planning',
-          examplePrompt:
+          userPrompt:
             'Review the auth files, define the MVP scope, and produce acceptance criteria.',
           fallbackWaggle: 'code-review',
         },
         onUseFollowUpPrompt: (suggestion) => {
-          replaceComposerText(suggestion.examplePrompt)
+          replaceComposerText(suggestion.userPrompt)
         },
       },
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Use Example Prompt' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Use Prompt' }))
 
     expect(useComposerStore.getState().input).toBe(
       'Review the auth files, define the MVP scope, and produce acceptance criteria.',

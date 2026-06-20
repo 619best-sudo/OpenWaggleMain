@@ -144,7 +144,7 @@ describe('WaggleCollaborationStatus', () => {
         onUseFollowUpPrompt={onUseFollowUpPrompt}
         followUpSuggestion={{
           nextWaggle: 'product-planning',
-          examplePrompt: 'Inspect auth-related files and write an MVP plan.',
+          userPrompt: 'Inspect auth-related files and write an MVP plan.',
           fallbackWaggle: 'code-review',
         }}
       />,
@@ -154,11 +154,13 @@ describe('WaggleCollaborationStatus', () => {
     expect(screen.getByText('product-planning')).toBeInTheDocument()
     expect(screen.getByText('code-review')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Use Example Prompt' }))
+    expect(screen.getByText('User Prompt')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use Prompt' }))
 
     expect(onUseFollowUpPrompt).toHaveBeenCalledWith({
       nextWaggle: 'product-planning',
-      examplePrompt: 'Inspect auth-related files and write an MVP plan.',
+      userPrompt: 'Inspect auth-related files and write an MVP plan.',
       fallbackWaggle: 'code-review',
     })
   })

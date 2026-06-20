@@ -63,19 +63,19 @@ describe('turing-follow-up', () => {
     ).toBe(false)
   })
 
-  it('parses the selected next waggle and example prompt fields', () => {
+  it('parses the selected next waggle and user prompt fields', () => {
     expect(
       parseTuringFollowUpSuggestion(`
 - selected next Waggle: product-planning
 - why it is installed and ready: no missing dependencies
 - agent 1 mission: scope the work
 - agent 2 mission: challenge the scope
-- example next prompt: Review the auth files and write the MVP plan.
+- user prompt for next Waggle: Review the auth files and write the MVP plan.
 - fallback Waggle if needed: code-review
       `),
     ).toEqual({
       nextWaggle: 'product-planning',
-      examplePrompt: 'Review the auth files and write the MVP plan.',
+      userPrompt: 'Review the auth files and write the MVP plan.',
       fallbackWaggle: 'code-review',
     })
   })
@@ -98,7 +98,7 @@ describe('turing-follow-up', () => {
               {
                 type: 'text',
                 content:
-                  '- selected next Waggle: product-planning\n- example next prompt: Review auth and define the MVP scope.\n- fallback Waggle if needed: code-review',
+                  '- selected next Waggle: product-planning\n- user prompt for next Waggle: Review auth and define the MVP scope.\n- fallback Waggle if needed: code-review',
               },
             ],
           },
@@ -106,8 +106,21 @@ describe('turing-follow-up', () => {
       }),
     ).toEqual({
       nextWaggle: 'product-planning',
-      examplePrompt: 'Review auth and define the MVP scope.',
+      userPrompt: 'Review auth and define the MVP scope.',
       fallbackWaggle: 'code-review',
+    })
+  })
+
+  it('still accepts the old prompt label wording for backward compatibility', () => {
+    expect(
+      parseTuringFollowUpSuggestion(`
+- selected next Waggle: product-planning
+- example next prompt: Review the auth files and write the MVP plan.
+      `),
+    ).toEqual({
+      nextWaggle: 'product-planning',
+      userPrompt: 'Review the auth files and write the MVP plan.',
+      fallbackWaggle: null,
     })
   })
 
@@ -115,7 +128,7 @@ describe('turing-follow-up', () => {
     expect(
       findWagglePresetForTuringSuggestion(presets, {
         nextWaggle: 'web-engineer',
-        examplePrompt: 'Ship the homepage refresh.',
+        userPrompt: 'Ship the homepage refresh.',
         fallbackWaggle: null,
       }),
     ).toEqual(presets[1])
@@ -123,7 +136,7 @@ describe('turing-follow-up', () => {
     expect(
       findWagglePresetForTuringSuggestion(presets, {
         nextWaggle: '`Product UI`',
-        examplePrompt: 'Refresh the product hero.',
+        userPrompt: 'Refresh the product hero.',
         fallbackWaggle: null,
       }),
     ).toEqual(presets[0])
@@ -134,7 +147,7 @@ describe('turing-follow-up', () => {
       findWagglePresetForTuringSuggestion(presets, {
         nextWaggle:
           '`Product UI` · fallback `Web Engineer` (requires verifying ReactDOM/Webpack availability in node_modules)',
-        examplePrompt: 'Design a hero section.',
+        userPrompt: 'Design a hero section.',
         fallbackWaggle: 'Web Engineer',
       }),
     ).toEqual(presets[0])

@@ -514,14 +514,14 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       'Context Reader',
       'Installed Waggle Selector',
     ])
-    expect(turing?.config.agents[0]?.roleDescription).toContain('example next prompt')
+    expect(turing?.config.agents[0]?.roleDescription).toContain('user prompt for next Waggle')
     expect(turing?.config.agents[1]?.roleDescription).toContain('Only recommend a next Waggle')
     expect(turing?.config.agents[1]?.outputContract?.requiredSections).toEqual([
       'selected next Waggle',
       'why it is installed and ready',
       'agent 1 mission',
       'agent 2 mission',
-      'example next prompt',
+      'user prompt for next Waggle',
       'fallback Waggle if needed',
     ])
 
@@ -544,6 +544,12 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       'homepage, landing page, hero, campaign, marketing',
     )
     expect(webEngineer?.config.agents[0]?.roleDescription).toContain('motion and media decision')
+    expect(webEngineer?.config.agents[0]?.roleDescription).toContain(
+      'verify it with at least two alternate checks',
+    )
+    expect(webEngineer?.config.agents[0]?.roleDescription).toContain(
+      'Do not mark the task blocked just because one direct file read failed',
+    )
     expect(webEngineer?.config.agents[2]?.roleDescription).toContain('asset outputs created:')
     expect(webEngineer?.config.agents[2]?.roleDescription).toContain('all-frames')
     expect(webEngineer?.config.agents[3]?.roleDescription).toContain('Playwright')
@@ -568,6 +574,12 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       'generated images or video as opt-in, not default',
     )
     expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain('motion and media decision')
+    expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain(
+      'verify it with at least two alternate checks',
+    )
+    expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain(
+      'Do not mark the task blocked just because one direct file read failed',
+    )
     expect(mobileEngineer?.config.agents[2]?.roleDescription).toContain('asset outputs created:')
     expect(mobileEngineer?.config.agents[2]?.roleDescription).toContain('all-frames')
     expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain('mobile runtime evidence')
@@ -579,6 +591,12 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       'Backend Verifier',
     ])
     expect(backendEngineer?.config.agents[0]?.roleDescription).toContain('likely files to change')
+    expect(backendEngineer?.config.agents[0]?.roleDescription).toContain(
+      'verify it with at least two alternate checks',
+    )
+    expect(backendEngineer?.config.agents[0]?.roleDescription).toContain(
+      'Do not mark the task blocked just because one direct file read failed',
+    )
     expect(backendEngineer?.config.agents[2]?.roleDescription).toContain(
       'API verification evidence',
     )
@@ -594,13 +612,25 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(qaEngineer?.config.agents[0]?.roleDescription).toContain('plan the full QA test suite')
     expect(qaEngineer?.config.agents[0]?.roleDescription).toContain('Playwright')
     expect(qaEngineer?.config.agents[0]?.roleDescription).toContain('SQL MCP')
+    expect(qaEngineer?.config.agents[0]?.roleDescription).toContain(
+      'keep the rest of the suite moving',
+    )
+    expect(qaEngineer?.config.agents[0]?.roleDescription).toContain(
+      'Do not collapse the full QA plan into blocked status',
+    )
     expect(qaEngineer?.config.agents[1]?.roleDescription).toContain('execute all planned test cases')
     expect(qaEngineer?.config.agents[1]?.roleDescription).toContain('Postman MCP')
     expect(qaEngineer?.config.agents[1]?.roleDescription).toContain('SQL evidence')
+    expect(qaEngineer?.config.agents[1]?.roleDescription).toContain(
+      'Do not derail the full QA run',
+    )
     expect(qaEngineer?.config.agents[2]?.roleDescription).toContain(
       'final QA judgment',
     )
     expect(qaEngineer?.config.agents[2]?.roleDescription).toContain('ship recommendation')
+    expect(qaEngineer?.config.agents[2]?.roleDescription).toContain(
+      'Convert blocked areas into a targeted next QA cycle',
+    )
 
     expect(debuggerAndFix?.config.agents.map((agent) => agent.label)).toEqual([
       'Debug Planner',
@@ -614,10 +644,16 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(debuggerAndFix?.config.agents[0]?.roleDescription).toContain(
       'Every attempted fix must be reversible',
     )
+    expect(debuggerAndFix?.config.agents[0]?.roleDescription).toContain(
+      'Do not let the Waggle derail on one failed reproduction guess',
+    )
     expect(debuggerAndFix?.config.agents[1]?.roleDescription).toContain(
       'width, height, x, y, bounding box',
     )
     expect(debuggerAndFix?.config.agents[1]?.roleDescription).toContain('reverse engineer')
+    expect(debuggerAndFix?.config.agents[1]?.roleDescription).toContain(
+      'Do not derail the investigation because one tool path',
+    )
     expect(debuggerAndFix?.config.agents[2]?.roleDescription).toContain(
       'rollback instructions if verification fails',
     )
@@ -626,6 +662,9 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     )
     expect(debuggerAndFix?.config.agents[3]?.roleDescription).toContain(
       'failed-attempt learning for next planner pass',
+    )
+    expect(debuggerAndFix?.config.agents[3]?.roleDescription).toContain(
+      'Do not let the loop derail just because one verification tool',
     )
   })
 

@@ -99,7 +99,7 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
   }
 
   function onUseFollowUpPrompt(suggestion: TuringFollowUpSuggestion) {
-    replaceComposerText(suggestion.examplePrompt)
+    replaceComposerText(suggestion.userPrompt)
     handleUseFollowUpPrompt(suggestion)
   }
 

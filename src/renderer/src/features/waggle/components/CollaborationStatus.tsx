@@ -134,46 +134,49 @@ export function WaggleCollaborationStatus({
       </div>
 
       {status === 'completed' && followUpSuggestion ? (
-        <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-4 shadow-sm">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-1.5 text-accent">
-              <Sparkles className="size-3.5" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider">
-                Suggested Next Waggle
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 text-[12px]">
-              <span className="inline-flex items-center rounded-md border border-border bg-bg px-2 py-1 font-medium text-text-primary shadow-sm">
-                {followUpSuggestion.nextWaggle}
-              </span>
-              {followUpSuggestion.fallbackWaggle && (
-                <span className="text-text-tertiary">
-                  fallback <span className="font-medium text-text-secondary">{followUpSuggestion.fallbackWaggle}</span>
-                </span>
-              )}
-            </div>
-
-            <div className="group relative mt-1 rounded-lg border border-border/50 bg-bg p-3 shadow-sm transition-colors hover:border-accent/30">
-              <div className="text-[12px] leading-relaxed text-text-secondary">
-                {followUpSuggestion.examplePrompt}
-              </div>
-              <div className="mt-3 flex items-center justify-between border-t border-border-light pt-3">
-                <div className="text-[10px] font-medium tracking-wide text-text-tertiary">
-                  EXAMPLE PROMPT
+        <div className="rounded-lg border border-accent/20 bg-accent/[0.03] px-3 py-2.5 shadow-sm">
+          <div className="flex flex-wrap items-start gap-2.5">
+            <div className="flex min-w-0 flex-1 gap-2.5">
+              <Sparkles className="mt-0.5 size-3.5 shrink-0 text-accent" />
+              <div className="min-w-0 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+                    Suggested Next Waggle
+                  </span>
+                  <span className="inline-flex items-center rounded-md border border-border/70 bg-bg px-2 py-1 text-[12px] font-medium text-text-primary">
+                    {followUpSuggestion.nextWaggle}
+                  </span>
+                  {followUpSuggestion.fallbackWaggle ? (
+                    <span className="text-[11px] text-text-tertiary">
+                      fallback{' '}
+                      <span className="font-medium text-text-secondary">
+                        {followUpSuggestion.fallbackWaggle}
+                      </span>
+                    </span>
+                  ) : null}
                 </div>
-                <Button
-                  variant="accent"
-                  size="xs"
-                  className="shadow-sm"
-                  onClick={() => {
-                    onUseFollowUpPrompt?.(followUpSuggestion)
-                  }}
-                >
-                  Use Example Prompt
-                </Button>
+
+                <div className="rounded-md border border-border/50 bg-bg/80 px-2.5 py-2">
+                  <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
+                    User Prompt
+                  </div>
+                  <div className="text-[11px] leading-5 text-text-secondary">
+                    {followUpSuggestion.userPrompt}
+                  </div>
+                </div>
               </div>
             </div>
+
+            <Button
+              variant="accent"
+              size="xs"
+              className="shrink-0 self-start shadow-sm"
+              onClick={() => {
+                onUseFollowUpPrompt?.(followUpSuggestion)
+              }}
+            >
+              Use Prompt
+            </Button>
           </div>
         </div>
       ) : null}
