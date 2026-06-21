@@ -2,10 +2,6 @@ import type { SessionId, SessionNodeId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { SessionWorkspace } from '@shared/types/session'
 import { messagePartToUIParts } from '@/features/chat/lib/useAgentChat.utils'
-import {
-  appendMissingOptimisticUserMessages,
-  appendUnpersistedAssistantTail,
-} from './useAgentChat.utils'
 
 interface ResolveTranscriptMessagesInput {
   readonly activeSessionId: SessionId | null
@@ -110,12 +106,6 @@ function unsavedLiveTail(
     .filter((message) => !persistedMessageIds.has(message.id))
 }
 
-function liveUserTail(messages: UIMessage[], lastWorkspaceMessageIndex: number) {
-  return messages
-    .slice(lastWorkspaceMessageIndex + 1)
-    .filter((message) => message.role === 'user')
-}
-
 function appendLiveTailWhenViewingHeadOrDraftSource(
   workspace: SessionWorkspace,
   workspaceMessages: UIMessage[],
@@ -129,14 +119,6 @@ function appendLiveTailWhenViewingHeadOrDraftSource(
   }
 
   const lastWorkspaceMessageIndex = findLastWorkspaceMessageIndex(messages, workspaceMessages)
-  if (lastWorkspaceMessageIndex >= 0) {
-    const withUserTail = appendMissingOptimisticUserMessages(
-      workspaceMessages,
-      liveUserTail(messages, lastWorkspaceMessageIndex),
-    )
-    return appendUnpersistedAssistantTail(withUserTail, messages)
-  }
-
   if (lastWorkspaceMessageIndex === messages.length - 1) {
     return workspaceMessages
   }

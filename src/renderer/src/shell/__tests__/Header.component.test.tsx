@@ -8,12 +8,7 @@ import { useUIStore } from '../ui-store'
 
 interface CommitDialogProps {
   readonly onClose: () => void
-  readonly onCommit: (
-    message: string,
-    amend: boolean,
-    paths: string[],
-    push: boolean,
-  ) => Promise<GitCommitResult>
+  readonly onCommit: (message: string, amend: boolean, paths: string[]) => Promise<GitCommitResult>
   readonly onRefresh: () => void
 }
 
@@ -36,13 +31,7 @@ const headerMocks = vi.hoisted(() => {
     diffOpen: false,
     refreshStatus: vi.fn().mockResolvedValue(undefined),
     refreshBranches: vi.fn().mockResolvedValue(undefined),
-    commit: vi.fn().mockResolvedValue({
-      ok: true,
-      commitHash: 'abc123',
-      summary: 'abc123',
-      pushed: false,
-      pushError: null,
-    }),
+    commit: vi.fn().mockResolvedValue({ ok: true, commitHash: 'abc123', summary: 'abc123' }),
     closeDiff: vi.fn(),
     toggleDiff: vi.fn(),
     toggleSessionTree: vi.fn(),
@@ -80,16 +69,9 @@ vi.mock('@/features/git/components', () => ({
       <Button
         variant="unstyled"
         type="button"
-        onClick={() => void onCommit('Ship it', false, ['src/app.ts'], false)}
+        onClick={() => void onCommit('Ship it', false, ['src/app.ts'])}
       >
         Confirm commit
-      </Button>
-      <Button
-        variant="unstyled"
-        type="button"
-        onClick={() => void onCommit('Ship it', false, ['src/app.ts'], true)}
-      >
-        Confirm commit and push
       </Button>
       <Button variant="unstyled" type="button" onClick={onClose}>
         Close commit
@@ -161,16 +143,20 @@ describe('Header', () => {
     headerMocks.toggleSessionTree.mockClear()
   })
 
-  it('renders the active session context and wires app-level controls', async () => {
+  it('renders session/project context and wires app-level controls', async () => {
     render(<Header />)
 
     expect(screen.getByText('Session title')).toBeInTheDocument()
+    expect(screen.getByText('/ feature/test-branch')).toBeInTheDocument()
+    expect(screen.getByText('openwaggle')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Open terminal' }))
     fireEvent.click(screen.getByRole('button', { name: 'Toggle Session Tree' }))
     fireEvent.click(screen.getByRole('button', { name: 'Toggle diff panel' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Report a bug' }))
 
     expect(useUIStore.getState().terminalOpen).toBe(true)
+    expect(useUIStore.getState().feedbackModalOpen).toBe(true)
     expect(headerMocks.toggleSessionTree).toHaveBeenCalledOnce()
     expect(headerMocks.toggleDiff).toHaveBeenCalledOnce()
 
@@ -186,7 +172,6 @@ describe('Header', () => {
         message: 'Ship it',
         amend: false,
         paths: ['src/app.ts'],
-        push: false,
       }),
     )
     expect(useUIStore.getState().diffRefreshKey).toBe(2)
@@ -200,38 +185,5 @@ describe('Header', () => {
     render(<Header />)
 
     await waitFor(() => expect(headerMocks.closeDiff).toHaveBeenCalledOnce())
-  })
-
-  it('shows a persistent error toast when push fails after a successful commit', async () => {
-    headerMocks.commit.mockResolvedValueOnce({
-      ok: true,
-      commitHash: 'abc123',
-      summary: 'abc123',
-      pushed: false,
-      pushError: {
-        code: 'no-upstream',
-        message: 'This branch has no upstream remote. Set an upstream branch before pushing.',
-      },
-    })
-
-    render(<Header />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'Open commit dialog' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm commit and push' }))
-
-    await waitFor(() =>
-      expect(headerMocks.commit).toHaveBeenCalledWith('/repo/openwaggle', {
-        message: 'Ship it',
-        amend: false,
-        paths: ['src/app.ts'],
-        push: true,
-      }),
-    )
-    expect(useUIStore.getState().toastData).toMatchObject({
-      message:
-        'Commit created, but push failed: This branch has no upstream remote. Set an upstream branch before pushing.',
-      variant: 'error',
-      persistent: true,
-    })
   })
 })

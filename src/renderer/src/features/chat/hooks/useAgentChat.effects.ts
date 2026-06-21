@@ -119,7 +119,7 @@ export function useSessionHydrationEffects(params: UseSessionHydrationEffectsPar
     }
 
     const activeRun = hasActiveRun(sessionId)
-    const cachedRenderSnapshot = activeRun ? getRunRenderSnapshot(sessionId) : null
+    const cachedRenderSnapshot = getRunRenderSnapshot(sessionId)
     hydrateSessionMessages(
       {
         sessionId,

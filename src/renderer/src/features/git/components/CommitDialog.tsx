@@ -14,12 +14,7 @@ interface CommitDialogProps {
   isRefreshing: boolean
   isCommitting: boolean
   onRefresh: () => void
-  onCommit: (
-    message: string,
-    amend: boolean,
-    paths: string[],
-    push: boolean,
-  ) => Promise<GitCommitResult>
+  onCommit: (message: string, amend: boolean, paths: string[]) => Promise<GitCommitResult>
   onClose: () => void
 }
 
@@ -31,9 +26,6 @@ function humanCommitError(result: GitCommitResult) {
     .with('nothing-to-commit', () => 'No changes are available to commit.')
     .with('merge-in-progress', () => 'A merge is in progress. Resolve it before committing.')
     .with('not-git-repo', () => 'Selected folder is not a Git repository.')
-    .with('no-upstream', () => 'This branch has no upstream remote. Set one before pushing.')
-    .with('push-rejected', () => 'Push was rejected by the remote. Pull or sync, then try again.')
-    .with('remote-auth', () => 'Remote authentication failed. Check your Git credentials.')
     .otherwise(() => result.message)
 }
 
@@ -50,7 +42,6 @@ export function CommitDialog({
   const [message, setMessage] = useState('')
   const [amend, setAmend] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [loadingAction, setLoadingAction] = useState<'commit' | 'push' | null>(null)
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(
     () => new Set((status?.changedFiles ?? []).map((file) => file.path)),
   )
@@ -78,17 +69,13 @@ export function CommitDialog({
     )
   }
 
-  async function handleCommit(push: boolean) {
+  async function handleCommit() {
     if (!projectPath || !message.trim() || selectedPaths.size === 0) return
     setError(null)
-    setLoadingAction(push ? 'push' : 'commit')
     await match
-      .promise(onCommit(message.trim(), amend, [...selectedPaths], push))
+      .promise(onCommit(message.trim(), amend, [...selectedPaths]))
       .with({ ok: true }, () => onClose())
-      .with({ ok: false }, (result) => {
-        setLoadingAction(null)
-        setError(humanCommitError(result))
-      })
+      .with({ ok: false }, (result) => setError(humanCommitError(result)))
       .exhaustive()
   }
 
@@ -162,10 +149,8 @@ export function CommitDialog({
         <CommitDialogFooter
           canSubmit={canSubmit}
           isCommitting={isCommitting}
-          loadingAction={loadingAction}
           onClose={onClose}
-          onCommit={() => void handleCommit(false)}
-          onCommitAndPush={() => void handleCommit(true)}
+          onCommit={() => void handleCommit()}
         />
       </div>
     </div>

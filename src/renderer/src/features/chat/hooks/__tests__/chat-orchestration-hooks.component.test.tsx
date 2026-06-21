@@ -168,7 +168,7 @@ describe('chat orchestration hooks', () => {
     useComposerStore.setState({ input: '', cursorIndex: 0, lexicalEditor: null })
   })
 
-  it('tracks background run lifecycle events and clears snapshots after completion refresh', async () => {
+  it('tracks background run lifecycle events and preserves snapshots after completion refresh', async () => {
     const refreshSession = vi.fn().mockResolvedValue(undefined)
     useChatStore.setState({ refreshSession })
     apiMock.listActiveRuns.mockResolvedValue([{ sessionId: SESSION_ID }])
@@ -187,7 +187,7 @@ describe('chat orchestration hooks', () => {
 
     requireRunCompletedHandler()({ sessionId: SESSION_ID })
     await waitFor(() => expect(refreshSession).toHaveBeenCalledWith(SESSION_ID))
-    expect(useBackgroundRunStore.getState().getRunRenderSnapshot(SESSION_ID)).toBeNull()
+    expect(useBackgroundRunStore.getState().getRunRenderSnapshot(SESSION_ID)).not.toBeNull()
 
     unmount()
     expect(apiMock.agentEventUnsubscribe).toHaveBeenCalledOnce()

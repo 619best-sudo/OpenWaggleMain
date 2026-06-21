@@ -1,4 +1,5 @@
 import { match } from '@diegogbrisa/ts-match'
+import { useRouterState } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useChat } from '@/features/chat/hooks'
 import { useDiffRouteNavigation } from '@/features/diff-panel/hooks'
@@ -19,6 +20,7 @@ export function Header() {
   const { activeSession } = useChat()
   const { activeSessionTree } = useSessions()
   const { projectPath } = useProject()
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
 
   const sidebarOpen = useUIStore((s) => s.sidebarOpen)
   const terminalOpen = useUIStore((s) => s.terminalOpen)
@@ -27,7 +29,6 @@ export function Header() {
   const toggleTerminal = useUIStore((s) => s.toggleTerminal)
   const bumpDiffRefreshKey = useUIStore((s) => s.bumpDiffRefreshKey)
   const showToast = useUIStore((s) => s.showToast)
-  const showPersistentToast = useUIStore((s) => s.showPersistentToast)
 
   const {
     status: gitStatus,
@@ -42,6 +43,11 @@ export function Header() {
   const [commitOpen, setCommitOpen] = useState(false)
   const { closeDiff, diffOpen, isChatRoute, sessionTreeOpen, toggleDiff, toggleSessionTree } =
     useDiffRouteNavigation()
+  const isFramedWorkspaceRoute =
+    isChatRoute ||
+    pathname.startsWith('/mcp') ||
+    pathname.startsWith('/skills') ||
+    pathname.startsWith('/waggle')
 
   function handleRefreshGit() {
     void refreshGitStatus(projectPath)
@@ -49,7 +55,7 @@ export function Header() {
     bumpDiffRefreshKey()
   }
 
-  async function handleCommitGit(message: string, amend: boolean, paths: string[], push: boolean) {
+  async function handleCommitGit(message: string, amend: boolean, paths: string[]) {
     if (!projectPath) {
       return {
         ok: false as const,
@@ -58,18 +64,10 @@ export function Header() {
       }
     }
     return match
-      .promise(commitGit(projectPath, { message, amend, paths, push }))
+      .promise(commitGit(projectPath, { message, amend, paths }))
       .with({ ok: true }, (result) => {
         bumpDiffRefreshKey()
-        if (result.pushError) {
-          showPersistentToast({
-            message: `Commit created, but push failed: ${result.pushError.message}`,
-            variant: 'error',
-            persistent: true,
-          })
-        } else {
-          showToast(result.pushed ? `Commit pushed: ${result.summary}` : `Commit created: ${result.summary}`)
-        }
+        showToast(`Commit created: ${result.summary}`)
         return result
       })
       .with({ ok: false }, (result) => result)
@@ -122,6 +120,7 @@ export function Header() {
           />
         </div>
       </header>
+
       {commitOpen && (
         <CommitDialog
           projectPath={projectPath}

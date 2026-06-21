@@ -16,7 +16,6 @@ import { api } from '@/shared/lib/ipc'
 export function useBackgroundRunMonitor(): void {
   const addActiveRun = useBackgroundRunStore((s) => s.addActiveRun)
   const applyRunRenderEvent = useBackgroundRunStore((s) => s.applyRunRenderEvent)
-  const clearRunRenderSnapshot = useBackgroundRunStore((s) => s.clearRunRenderSnapshot)
   const removeActiveRun = useBackgroundRunStore((s) => s.removeActiveRun)
   const initialize = useBackgroundRunStore((s) => s.initialize)
   const refreshSession = useChatStore((s) => s.refreshSession)
@@ -39,7 +38,6 @@ export function useBackgroundRunMonitor(): void {
 
     const unsubCompleted = api.onRunCompleted((payload) => {
       removeActiveRun(payload.sessionId)
-      clearRunRenderSnapshot(payload.sessionId)
       void refreshSession(payload.sessionId)
     })
 
@@ -47,5 +45,5 @@ export function useBackgroundRunMonitor(): void {
       unsubEvent()
       unsubCompleted()
     }
-  }, [addActiveRun, applyRunRenderEvent, clearRunRenderSnapshot, refreshSession, removeActiveRun])
+  }, [addActiveRun, applyRunRenderEvent, refreshSession, removeActiveRun])
 }

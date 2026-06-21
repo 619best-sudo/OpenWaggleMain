@@ -39,13 +39,7 @@ describe('CommitDialog', () => {
   it('commits the selected files with a trimmed message and closes on success', async () => {
     const onCommit = vi
       .fn()
-      .mockResolvedValue({
-        ok: true,
-        commitHash: 'abc123',
-        summary: 'abc123',
-        pushed: false,
-        pushError: null,
-      })
+      .mockResolvedValue({ ok: true, commitHash: 'abc123', summary: 'abc123' })
     const onClose = vi.fn()
 
     render(
@@ -69,46 +63,9 @@ describe('CommitDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Commit' }))
 
     await waitFor(() =>
-      expect(onCommit).toHaveBeenCalledWith('Refactor shell', true, ['src/app.ts'], false),
+      expect(onCommit).toHaveBeenCalledWith('Refactor shell', true, ['src/app.ts']),
     )
     expect(onClose).toHaveBeenCalledOnce()
-  })
-
-  it('supports committing and pushing from the dialog footer', async () => {
-    const onCommit = vi.fn().mockResolvedValue({
-      ok: true,
-      commitHash: 'abc123',
-      summary: 'abc123',
-      pushed: true,
-      pushError: null,
-    })
-
-    render(
-      <CommitDialog
-        projectPath="/repo"
-        status={status()}
-        statusError={null}
-        isRefreshing={false}
-        isCommitting={false}
-        onRefresh={vi.fn()}
-        onCommit={onCommit}
-        onClose={vi.fn()}
-      />,
-    )
-
-    fireEvent.change(screen.getByPlaceholderText('Describe your changes'), {
-      target: { value: 'Ship shell polish' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Commit & push' }))
-
-    await waitFor(() =>
-      expect(onCommit).toHaveBeenCalledWith(
-        'Ship shell polish',
-        false,
-        ['src/app.ts', 'src/new.ts'],
-        true,
-      ),
-    )
   })
 
   it('shows human commit failures without closing the dialog', async () => {

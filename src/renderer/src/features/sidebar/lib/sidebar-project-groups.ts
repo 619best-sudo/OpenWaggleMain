@@ -65,26 +65,6 @@ function addUniqueProjectPath(paths: string[], path: string | null) {
   return true
 }
 
-function compareProjectRecency(
-  left: string,
-  right: string,
-  sessionsByProject: ReadonlyMap<string, readonly SessionSummary[]>,
-) {
-  const leftSessions = sessionsByProject.get(left) ?? []
-  const rightSessions = sessionsByProject.get(right) ?? []
-  const latestUpdatedDifference = latestUpdatedAt(rightSessions) - latestUpdatedAt(leftSessions)
-  if (latestUpdatedDifference !== 0) {
-    return latestUpdatedDifference
-  }
-
-  const firstCreatedDifference = firstSessionCreatedAt(rightSessions) - firstSessionCreatedAt(leftSessions)
-  if (firstCreatedDifference !== 0) {
-    return firstCreatedDifference
-  }
-
-  return left.localeCompare(right)
-}
-
 export function buildSidebarProjectGroups({
   sessions,
   currentProjectPath,
@@ -104,15 +84,10 @@ export function buildSidebarProjectGroups({
     sessionsByProject.set(projectPath, projectSessions)
   }
 
-  const normalizedCurrentProjectPath = normalizedProjectPath(currentProjectPath)
   const sessionProjectPaths = [...sessionsByProject.keys()].sort((left, right) => {
-    if (left === normalizedCurrentProjectPath) {
-      return -1
-    }
-    if (right === normalizedCurrentProjectPath) {
-      return 1
-    }
-    return compareProjectRecency(left, right, sessionsByProject)
+    const leftCreatedAt = firstSessionCreatedAt(sessionsByProject.get(left) ?? [])
+    const rightCreatedAt = firstSessionCreatedAt(sessionsByProject.get(right) ?? [])
+    return rightCreatedAt - leftCreatedAt
   })
 
   const sessionlessProjectPaths: string[] = []
@@ -121,18 +96,12 @@ export function buildSidebarProjectGroups({
       addUniqueProjectPath(sessionlessProjectPaths, projectPath)
     }
   }
+  const normalizedCurrentProjectPath = normalizedProjectPath(currentProjectPath)
   if (normalizedCurrentProjectPath && !sessionsByProject.has(normalizedCurrentProjectPath)) {
     addUniqueProjectPath(sessionlessProjectPaths, normalizedCurrentProjectPath)
   }
 
-  const projectPaths =
-    normalizedCurrentProjectPath && sessionlessProjectPaths.includes(normalizedCurrentProjectPath)
-      ? [
-          normalizedCurrentProjectPath,
-          ...sessionProjectPaths,
-          ...sessionlessProjectPaths.filter((path) => path !== normalizedCurrentProjectPath),
-        ]
-      : [...sessionProjectPaths, ...sessionlessProjectPaths]
+  const projectPaths = [...sessionProjectPaths, ...sessionlessProjectPaths]
 
   return {
     projects: projectPaths.map((projectPath) => {

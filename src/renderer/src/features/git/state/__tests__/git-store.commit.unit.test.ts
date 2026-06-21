@@ -29,8 +29,6 @@ describe('useGitStore commit behavior', () => {
       ok: true,
       commitHash: 'abc123',
       summary: '1 file changed',
-      pushed: false,
-      pushError: null,
     })
     apiMock.getGitStatus.mockResolvedValue(makeGitStatus({ ahead: 1 }))
 
@@ -38,16 +36,9 @@ describe('useGitStore commit behavior', () => {
       message: 'test commit',
       amend: false,
       paths: ['file.ts'],
-      push: false,
     })
 
-    expect(result).toEqual({
-      ok: true,
-      commitHash: 'abc123',
-      summary: '1 file changed',
-      pushed: false,
-      pushError: null,
-    })
+    expect(result).toEqual({ ok: true, commitHash: 'abc123', summary: '1 file changed' })
     expect(useGitStore.getState().isCommitting).toBe(false)
     expect(apiMock.getGitStatus).toHaveBeenCalledWith(PROJECT_PATH)
   })
@@ -63,7 +54,6 @@ describe('useGitStore commit behavior', () => {
       message: 'empty commit',
       amend: false,
       paths: [],
-      push: false,
     })
 
     expect(result.ok).toBe(false)
@@ -78,7 +68,6 @@ describe('useGitStore commit behavior', () => {
       message: 'fail',
       amend: false,
       paths: [],
-      push: false,
     })
 
     expect(result).toEqual({ ok: false, code: 'unknown', message: 'IPC failure' })

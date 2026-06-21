@@ -30,7 +30,6 @@ export interface GitCommitPayload {
   readonly message: string
   readonly amend: boolean
   readonly paths: readonly string[]
-  readonly push: boolean
 }
 
 export const GIT_COMMIT_ERROR_CODES = [
@@ -38,25 +37,15 @@ export const GIT_COMMIT_ERROR_CODES = [
   'nothing-to-commit',
   'merge-in-progress',
   'empty-message',
-  'no-upstream',
-  'push-rejected',
-  'remote-auth',
   'unknown',
 ] as const
 
 export type GitCommitErrorCode = (typeof GIT_COMMIT_ERROR_CODES)[number]
 
-export interface GitPushFailure {
-  readonly code: GitCommitErrorCode
-  readonly message: string
-}
-
 export interface GitCommitSuccess {
   readonly ok: true
   readonly commitHash: string
   readonly summary: string
-  readonly pushed: boolean
-  readonly pushError: GitPushFailure | null
 }
 
 export interface GitCommitFailure {

@@ -160,54 +160,29 @@ function ChangedFilesSelector({
 interface CommitDialogFooterProps {
   readonly canSubmit: boolean
   readonly isCommitting: boolean
-  readonly loadingAction: 'commit' | 'push' | null
   readonly onClose: () => void
   readonly onCommit: () => void
-  readonly onCommitAndPush: () => void
 }
 
 export function CommitDialogFooter({
   canSubmit,
   isCommitting,
-  loadingAction,
   onClose,
   onCommit,
-  onCommitAndPush,
 }: CommitDialogFooterProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-bg-secondary/30 px-4 py-3">
-      <p className="min-w-0 flex-1 text-[12px] text-text-tertiary">
-        Commit and push uses the current branch upstream.
-      </p>
+    <div className="flex items-center justify-end gap-2 border-t border-border bg-bg-secondary/30 px-4 py-3">
       <Button variant="secondary" onClick={onClose}>
         Cancel
       </Button>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="secondary"
-          onClick={onCommit}
-          disabled={!canSubmit || isCommitting}
-          leftIcon={
-            isCommitting && loadingAction === 'commit' ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : undefined
-          }
-        >
-          Commit
-        </Button>
-        <Button
-          variant="accent"
-          onClick={onCommitAndPush}
-          disabled={!canSubmit}
-          leftIcon={
-            isCommitting && loadingAction === 'push' ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : undefined
-          }
-        >
-          Commit & push
-        </Button>
-      </div>
+      <Button
+        variant="accent"
+        onClick={onCommit}
+        disabled={!canSubmit}
+        leftIcon={isCommitting ? <Loader2 className="size-3.5 animate-spin" /> : undefined}
+      >
+        Commit
+      </Button>
     </div>
   )
 }
