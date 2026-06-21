@@ -9,6 +9,7 @@ import { useWaggleLaunchPromptStore, useWaggleStore } from '@/features/waggle/st
 import { useUIStore } from '@/shell/ui-store'
 import { renderWithQueryClient } from '@/test-utils/query-test-utils'
 import { createPreset, PROJECT_PATH, PROVIDER_MODELS } from './WaggleSection.test-utils'
+import { WaggleDependencyDialog } from '../sections/WaggleDependencyDialog'
 
 const {
   listWagglePresetsMock,
@@ -580,15 +581,63 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click(await screen.findByText('Install'))
+    const installButton = await screen.findByRole('button', { name: 'Install' })
+    await waitFor(() => {
+      expect(installButton).toBeEnabled()
+    })
+    fireEvent.click(installButton)
 
-    // The test previously checked for a "Setup" button to open the dependency dialog.
-    // The design has changed so we now just use "Install" on the card.
-    // Assuming the dialog handles the actual install action after reviewing dependencies.
-    // Let's verify the install mutation is called since we mocked the dialog away or changed the flow.
     await waitFor(() => {
       expect(installWaggleAppDependenciesMock).toHaveBeenCalledWith(preset, PROJECT_PATH)
     })
+  })
+
+  it('renders the dependency dialog with a bounded shell and scrollable body', () => {
+    const preset = createPreset()
+
+    renderWithQueryClient(
+      <WaggleDependencyDialog
+        preset={preset}
+        status={{
+          ready: false,
+          requiredDependencyCount: 2,
+          optionalDependencyCount: 4,
+          installedCount: 1,
+          missingCount: 1,
+          unsupportedCount: 0,
+          optionalInstalledCount: 0,
+          optionalMissingCount: 4,
+          optionalUnsupportedCount: 0,
+          dependencies: Array.from({ length: 8 }, (_, index) => ({
+            kind: index % 2 === 0 ? 'mcp' : 'skill',
+            id: `dependency-${index}`,
+            label: `Dependency ${index + 1}`,
+            required: index < 2,
+            state: index === 0 ? 'installed' : 'missing',
+            description: 'A long dependency description that should stay inside the dialog body.',
+            setupSteps: [
+              'First setup instruction.',
+              'Second setup instruction.',
+            ],
+          })),
+        }}
+        isInstalling={false}
+        onInstall={async () => {}}
+        onClose={() => {}}
+      />,
+    )
+
+    expect(screen.getByTestId('waggle-dependency-dialog')).toHaveClass(
+      'max-h-[min(88vh,820px)]',
+      'flex-col',
+      'overflow-hidden',
+    )
+    expect(screen.getByTestId('waggle-dependency-dialog-body')).toHaveClass(
+      'min-h-0',
+      'flex-1',
+      'overflow-y-auto',
+      'overscroll-contain',
+    )
   })
 
   it('loads a selected preset into the editable form', async () => {

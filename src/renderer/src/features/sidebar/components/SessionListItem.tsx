@@ -50,8 +50,8 @@ function SessionTitleButton({
     >
       <span
         className={cn(
-          'truncate text-[12px]',
-          isActive ? 'font-bold text-accent' : 'font-bold text-text-secondary',
+          'truncate text-[12.5px]',
+          isActive ? 'font-semibold text-accent' : 'font-medium text-text-primary/84',
         )}
       >
         {truncate(session.title, TITLE_TRUNCATE_LENGTH)}
@@ -75,8 +75,8 @@ function SessionActionsTrigger({
     <div className="relative ml-2 flex items-center justify-end">
       <span
         className={cn(
-          'text-[10px] whitespace-nowrap',
-          isActive ? 'text-text-secondary' : 'text-text-muted',
+          'text-[10.5px] font-medium whitespace-nowrap',
+          isActive ? 'text-text-secondary' : 'text-text-tertiary',
         )}
       >
         {formatRelativeTime(session.updatedAt)}
@@ -87,7 +87,7 @@ function SessionActionsTrigger({
         aria-label={`Open session actions for ${session.title}`}
         onClick={onClick}
         className={cn(
-          'absolute -right-1 z-10 flex size-6 items-center justify-center rounded-lg text-text-tertiary opacity-0 transition-[background-color,color,opacity] hover:bg-bg-hover hover:text-text-primary group-hover:opacity-100 focus:opacity-100',
+          'absolute -right-1 z-10 flex size-6 items-center justify-center rounded-lg text-text-secondary opacity-0 transition-[background-color,color,opacity] hover:bg-bg-hover hover:text-text-primary group-hover:opacity-100 focus:opacity-100',
           menuOpen ? 'opacity-100' : null,
         )}
       >

@@ -42,7 +42,7 @@ export function SidebarBrandArea({ isFullscreen }: { readonly isFullscreen: bool
             />
           </div>
           <div className="min-w-0">
-            <p className="no-drag truncate text-[14px] font-bold tracking-tight text-text-primary">
+            <p className="no-drag truncate text-[15px] font-semibold tracking-[-0.015em] text-text-primary">
               TuringMachine
             </p>
           </div>
@@ -83,15 +83,15 @@ function SidebarShortcut({
         'flex h-8 w-full items-center gap-3 rounded-md px-2.5 text-left transition-colors',
         active
           ? 'bg-bg-active text-text-primary'
-          : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
+          : 'text-text-primary/82 hover:bg-bg-hover hover:text-text-primary',
       )}
       title={`Open ${label}`}
     >
-      <Icon className={cn('size-4 shrink-0', active ? 'text-accent' : 'text-text-tertiary')} />
+      <Icon className={cn('size-4 shrink-0', active ? 'text-accent' : 'text-text-secondary')} />
       <span
         className={cn(
-          'text-[12px]',
-          active ? 'font-bold' : 'font-bold',
+          'text-[12.5px]',
+          active ? 'font-semibold' : 'font-medium',
           italic ? 'italic' : '',
         )}
       >
@@ -123,7 +123,7 @@ export function SidebarPrimaryActions({
         className="no-drag flex h-11 w-full items-center gap-3 rounded-md bg-accent px-4 text-left text-accent-foreground transition-colors hover:bg-accent-dim"
       >
         <Edit3 className="size-4.5 shrink-0" />
-        <span className="text-[12px] font-bold tracking-[-0.01em]">New thread</span>
+        <span className="text-[13px] font-semibold tracking-[-0.01em]">New thread</span>
       </Button>
 
       <div className="mt-10 space-y-1">
@@ -165,13 +165,15 @@ export function SidebarProjectsHeader({
 }) {
   return (
     <div className="no-drag flex shrink-0 items-center justify-between px-6 pb-4 pt-10">
-      <span className="text-[10px] font-bold tracking-[0.25em] text-text-muted">THREADS</span>
+      <span className="text-[10.5px] font-semibold tracking-[0.22em] text-text-tertiary">
+        THREADS
+      </span>
       <div className="flex items-center gap-2">
         <Button
           variant="unstyled"
           aria-label="Open project folder"
           onClick={onOpenProject}
-          className="flex size-7 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary"
+          className="flex size-7 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
           title="Open project folder"
         >
           <FolderPlus className="size-4" />
@@ -187,7 +189,7 @@ export function SidebarProjectsHeader({
               aria-label="Sort sessions"
               onClick={() => onSetSortMenuOpen(!sortMenuOpen)}
               className={cn(
-                'flex size-7 items-center justify-center rounded-md text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary',
+                'flex size-7 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary',
                 sortMenuOpen && 'bg-bg-hover text-text-primary',
               )}
               title="Sort sessions"
@@ -226,10 +228,10 @@ export function SidebarSettingsButton({ onOpenSettings }: { readonly onOpenSetti
         variant="unstyled"
         aria-label="Settings"
         onClick={onOpenSettings}
-        className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+        className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-text-primary/82 transition-colors hover:bg-bg-hover hover:text-text-primary"
       >
-        <Settings className="size-4.5 shrink-0 text-text-tertiary" />
-        <span className="text-[12px] font-bold">Settings</span>
+        <Settings className="size-4.5 shrink-0 text-text-secondary" />
+        <span className="text-[12.5px] font-medium">Settings</span>
       </Button>
     </div>
   )

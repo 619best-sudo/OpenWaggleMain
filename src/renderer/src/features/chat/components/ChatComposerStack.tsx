@@ -71,7 +71,7 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
       />
 
       {commandPaletteOpen && (
-        <div className="mx-auto w-full max-w-[720px] px-5 pb-2">
+        <div className="mx-auto w-full max-w-[960px] px-5 pb-2">
           <CommandPalette
             slashSkills={slashSkills}
             onSelectSkill={onSelectSkill}
@@ -90,7 +90,7 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
         onClose={onCloseForkSelector}
       />
 
-      <div className="mx-auto w-full max-w-[720px] px-5 pb-5" data-chat-composer-form="true">
+      <div className="mx-auto w-full max-w-[960px] px-5 pb-5" data-chat-composer-form="true">
         {compactionStatus ? (
           <CompactionStatusStrip state={compactionStatus} onCancel={onCancel} />
         ) : null}

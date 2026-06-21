@@ -143,6 +143,94 @@ describe('mergeBackgroundReconnectMessages', () => {
       mergeBackgroundReconnectMessages([persistedUser], [optimisticUser, cachedAssistant]),
     ).toEqual([persistedUser, cachedAssistant])
   })
+
+  it('does not duplicate an assistant reconnect message that has the same turn content under a different id', () => {
+    const persistedUser = userMessage('persisted-user-1', 'Say hi')
+    const persistedAssistant: UIMessage = {
+      id: 'persisted-assistant-1',
+      role: 'assistant',
+      parts: [
+        { type: 'thinking', content: 'Okay, the user just said "Hi".' },
+        { type: 'text', content: 'Hello! How can I assist you today?' },
+      ],
+      createdAt: new Date(2),
+    }
+    const liveAssistant: UIMessage = {
+      id: 'live-assistant-1',
+      role: 'assistant',
+      parts: [
+        { type: 'thinking', content: 'Okay, the user just said "Hi".' },
+        { type: 'text', content: 'Hello! How can I assist you today?' },
+      ],
+      createdAt: new Date(2),
+    }
+
+    expect(
+      mergeBackgroundReconnectMessages(
+        [persistedUser, persistedAssistant],
+        [persistedUser, liveAssistant],
+      ),
+    ).toEqual([persistedUser, persistedAssistant])
+  })
+
+  it('does not duplicate an assistant turn when only the streamed thinking stepId differs', () => {
+    const persistedUser = userMessage('persisted-user-1', 'Summarize this')
+    const persistedAssistant: UIMessage = {
+      id: 'persisted-assistant-1',
+      role: 'assistant',
+      parts: [
+        { type: 'thinking', content: 'Need to inspect the file first.' },
+        { type: 'text', content: 'Here is the summary.' },
+      ],
+      createdAt: new Date(2),
+    }
+    const liveAssistant: UIMessage = {
+      id: 'live-assistant-1',
+      role: 'assistant',
+      parts: [
+        {
+          type: 'thinking',
+          content: 'Need to inspect the file first.',
+          stepId: 'live-assistant-1:thinking:0',
+        },
+        { type: 'text', content: 'Here is the summary.' },
+      ],
+      createdAt: new Date(2),
+    }
+
+    expect(
+      mergeBackgroundReconnectMessages(
+        [persistedUser, persistedAssistant],
+        [persistedUser, liveAssistant],
+      ),
+    ).toEqual([persistedUser, persistedAssistant])
+  })
+
+  it('keeps separate assistant turns when the same answer text belongs to a different user turn', () => {
+    const reconnectMessages = [
+      userMessage('user-1', 'Say hi'),
+      {
+        id: 'assistant-1',
+        role: 'assistant',
+        parts: [{ type: 'text', content: 'Hello! How can I assist you today?' }],
+        createdAt: new Date(2),
+      } satisfies UIMessage,
+    ]
+    const currentMessages = [
+      ...reconnectMessages,
+      userMessage('user-2', 'Say hi again'),
+      {
+        id: 'assistant-2',
+        role: 'assistant',
+        parts: [{ type: 'text', content: 'Hello! How can I assist you today?' }],
+        createdAt: new Date(4),
+      } satisfies UIMessage,
+    ]
+
+    expect(mergeBackgroundReconnectMessages(reconnectMessages, currentMessages)).toEqual(
+      currentMessages,
+    )
+  })
 })
 
 describe('sessionToUIMessages', () => {

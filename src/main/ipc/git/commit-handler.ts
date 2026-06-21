@@ -1,5 +1,10 @@
 import { decodeUnknownOrThrow, Schema } from '@shared/schema'
-import type { GitCommitFailure, GitCommitPayload, GitCommitResult } from '@shared/types/git'
+import type {
+  GitCommitFailure,
+  GitCommitPayload,
+  GitCommitResult,
+  GitPushFailure,
+} from '@shared/types/git'
 import * as Effect from 'effect/Effect'
 import { typedHandle } from '../typed-ipc'
 import { isGitRepository, projectPathSchema, runGit } from './shared'
@@ -28,6 +33,54 @@ function mapCommitFailure(stderr: string): GitCommitFailure {
   }
 
   return commitFailure('unknown', message || 'Git commit failed.')
+}
+
+function pushFailure(code: GitPushFailure['code'], message: string): GitPushFailure {
+  return { code, message }
+}
+
+function mapPushFailure(stderr: string): GitPushFailure {
+  const message = stderr.trim()
+  const lower = message.toLowerCase()
+
+  if (lower.includes('not a git repository')) {
+    return pushFailure('not-git-repo', 'Selected folder is not a Git repository.')
+  }
+  if (
+    lower.includes('has no upstream branch') ||
+    lower.includes('no upstream configured for branch') ||
+    lower.includes('set the remote as upstream')
+  ) {
+    return pushFailure(
+      'no-upstream',
+      'This branch has no upstream remote. Set an upstream branch before pushing.',
+    )
+  }
+  if (
+    lower.includes('authentication failed') ||
+    lower.includes('could not read username') ||
+    lower.includes('permission denied') ||
+    lower.includes('repository not found')
+  ) {
+    return pushFailure(
+      'remote-auth',
+      'Authentication with the remote failed. Check your Git credentials and try again.',
+    )
+  }
+  if (
+    lower.includes('[rejected]') ||
+    lower.includes('non-fast-forward') ||
+    lower.includes('fetch first') ||
+    lower.includes('failed to push some refs') ||
+    lower.includes('remote contains work that you do not have locally')
+  ) {
+    return pushFailure(
+      'push-rejected',
+      'Push was rejected by the remote. Pull or sync the branch, then try again.',
+    )
+  }
+
+  return pushFailure('unknown', message || 'Git push failed.')
 }
 
 async function commitGit(projectPath: string, payload: GitCommitPayload): Promise<GitCommitResult> {
@@ -60,6 +113,29 @@ async function commitGit(projectPath: string, payload: GitCommitPayload): Promis
     ok: true,
     commitHash,
     summary,
+    pushed: false,
+    pushError: null,
+  }
+}
+
+async function pushCommit(projectPath: string, result: GitCommitResult): Promise<GitCommitResult> {
+  if (!result.ok) {
+    return result
+  }
+
+  const pushResult = await runGit(projectPath, ['push'])
+  if (pushResult.code === 0) {
+    return {
+      ...result,
+      pushed: true,
+      pushError: null,
+    }
+  }
+
+  return {
+    ...result,
+    pushed: false,
+    pushError: mapPushFailure(`${pushResult.stderr}\n${pushResult.stdout}`),
   }
 }
 
@@ -88,6 +164,7 @@ const commitPayloadSchema = Schema.Struct({
   message: Schema.String,
   amend: Schema.Boolean,
   paths: Schema.Array(Schema.String),
+  push: Schema.Boolean,
 })
 
 export function registerGitCommitHandlers(): void {
@@ -95,7 +172,10 @@ export function registerGitCommitHandlers(): void {
     Effect.gen(function* () {
       const projectPath = decodeUnknownOrThrow(projectPathSchema, rawPath)
       const payload = decodeUnknownOrThrow(commitPayloadSchema, rawPayload)
-      const result = yield* Effect.promise(() => commitGit(projectPath, payload))
+      const result = yield* Effect.promise(async () => {
+        const commitResult = await commitGit(projectPath, payload)
+        return payload.push ? pushCommit(projectPath, commitResult) : commitResult
+      })
       if (result.ok) {
         invalidateGitStatusCache(projectPath)
       }

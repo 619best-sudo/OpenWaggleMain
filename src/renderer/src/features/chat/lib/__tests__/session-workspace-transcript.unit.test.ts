@@ -192,6 +192,22 @@ describe('resolveTranscriptMessages', () => {
     ])
   })
 
+  it('does not append a duplicate assistant response when the live copy has a different id', () => {
+    const user = sessionNode('user-head', null, 'user', 'Head user', 0)
+    const assistant = sessionNode('assistant-head', 'user-head', 'assistant', 'Head answer', 1)
+
+    const resolved = resolveTranscriptMessages({
+      activeSessionId: SESSION_DETAIL_ID,
+      activeWorkspace: workspaceWithPath([user, assistant], assistant.id, assistant.id),
+      messages: [
+        uiMessage('user-head', 'user', 'Head user'),
+        uiMessage('assistant-live-copy', 'assistant', 'Head answer'),
+      ],
+    })
+
+    expect(resolved.map((message) => message.id)).toEqual(['user-head', 'assistant-head'])
+  })
+
   it('preserves an unsaved tail even when the workspace path and cached messages have no overlap yet', () => {
     const persistedUser = sessionNode('persisted-user', null, 'user', 'Persisted user', 0)
 

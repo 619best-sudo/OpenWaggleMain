@@ -213,6 +213,7 @@ describe('ChatPanel', () => {
     })
     expect(screen.queryByText(/open a project/i)).toBeNull()
     expect(document.querySelector('[data-user-message-id="u1"]')).toHaveClass('px-5')
+    expect(document.querySelector('[data-user-message-id="u1"]')).toHaveClass('max-w-[960px]')
   })
 
   it('routes custom branch-summary submission through send instead of enqueue while loading', () => {
@@ -245,8 +246,9 @@ describe('ChatPanel', () => {
   })
 
   it('renders the composer input area', () => {
-    renderPanel()
+    const { container } = renderPanel()
     expect(screen.getByRole('textbox')).toBeInTheDocument()
+    expect(container.querySelector('[data-chat-composer-form="true"]')).toHaveClass('max-w-[960px]')
   })
 
   it('copies the Turing user prompt into the composer when the CTA is clicked', () => {

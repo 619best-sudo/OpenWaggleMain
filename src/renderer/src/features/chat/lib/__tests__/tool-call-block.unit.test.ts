@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildFencedCodeMarkdown,
   buildTailPreview,
-  getEditUnifiedDiff,
+  getToolDiffData,
   getResultError,
   getStringArg,
   getToolResultText,
@@ -64,7 +64,7 @@ describe('tool call block view helpers', () => {
   })
 
   it('parses edit diffs from normalized tool result details', () => {
-    const diff = getEditUnifiedDiff(
+    const diff = getToolDiffData(
       {
         kind: 'json',
         data: {
@@ -79,6 +79,18 @@ describe('tool call block view helpers', () => {
     expect(diff?.additions).toBe(1)
     expect(diff?.deletions).toBe(1)
     expect(diff?.lines.map((line) => line.type)).toEqual(['meta', 'remove', 'add'])
+  })
+
+  it('derives write line additions from the written content', () => {
+    const diff = getToolDiffData(
+      { kind: 'json', data: { message: 'File written: notes.txt' } },
+      'write',
+      { content: 'first line\nsecond line\n' },
+    )
+
+    expect(diff?.additions).toBe(2)
+    expect(diff?.deletions).toBe(0)
+    expect(diff?.lines).toEqual([])
   })
 
   it('returns the last visible output lines for long command output', () => {

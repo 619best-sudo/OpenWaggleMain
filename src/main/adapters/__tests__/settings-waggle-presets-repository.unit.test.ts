@@ -536,6 +536,33 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(webEngineer?.config.agents[1]?.roleDescription).toContain('generationPrompt:')
     expect(webEngineer?.config.agents[1]?.roleDescription).toContain('videoDeliveryMode:')
     expect(webEngineer?.config.agents[1]?.roleDescription).toContain('Persist every generated asset inside the repository')
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
+      'continue implementing the web change with the best fallback',
+    )
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
+      'prefer focused edits that preserve the surrounding file instead of rewriting the whole file',
+    )
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
+      'correct the call and retry with the exact repo path plus a smaller scoped edit',
+    )
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
+      'If scaffold or project-init commands fail, read the exact CLI error and retry with an adapted setup',
+    )
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
+      'generator rejects the current directory name, path, or contents',
+    )
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
+      'uppercase directory-name restrictions, non-empty destinations, unsupported flags, or package-manager differences',
+    )
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
+      'Every file write must include the exact repository path required by the tool',
+    )
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
+      'existing repo asset -> CSS or SVG treatment -> gradients, shapes, or illustrated blocks -> plain placeholder copy',
+    )
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
+      'failed-no-provider, failed-tool-error, or fallback-used',
+    )
     expect(webEngineer?.config.agents[0]?.roleDescription).toContain('Figma')
     expect(webEngineer?.config.agents[0]?.roleDescription).toContain(
       'microinteractions and small animation polish as something that can apply anywhere',
@@ -550,10 +577,76 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(webEngineer?.config.agents[0]?.roleDescription).toContain(
       'Do not mark the task blocked just because one direct file read failed',
     )
+    expect(webEngineer?.config.agents[0]?.roleDescription).toContain(
+      'Do not mark the web task blocked solely because a media tool has no configured providers',
+    )
+    expect(webEngineer?.config.agents[0]?.roleDescription).toContain(
+      'If a scaffold generator is likely to fail because the current directory name, destination path, or existing files violate CLI constraints',
+    )
+    expect(webEngineer?.config.agents[0]?.roleDescription).toContain(
+      'Do not mark the web task blocked solely because a generator CLI failed once',
+    )
+    expect(webEngineer?.config.agents[0]?.roleDescription).toContain(
+      'modify an existing file incrementally versus create a new file',
+    )
     expect(webEngineer?.config.agents[2]?.roleDescription).toContain('asset outputs created:')
     expect(webEngineer?.config.agents[2]?.roleDescription).toContain('all-frames')
+    expect(webEngineer?.config.agents[2]?.roleDescription).toContain(
+      'fall back to code-only animation, native CSS transitions, or a static but polished state',
+    )
+    expect(webEngineer?.config.agents[2]?.roleDescription).toContain(
+      'prefer scoped style, component, or timeline edits instead of rewriting the entire file',
+    )
+    expect(webEngineer?.config.agents[2]?.roleDescription).toContain(
+      'retry with the exact path and a narrower change',
+    )
     expect(webEngineer?.config.agents[3]?.roleDescription).toContain('Playwright')
     expect(webEngineer?.config.agents[3]?.roleDescription).toContain('Figma')
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain(
+      'verify the implemented fallback path as it actually shipped',
+    )
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain(
+      'Treat a web verification pass as requiring actual Playwright execution',
+    )
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain(
+      'Do not mark verification verdict as pass if Playwright did not actually run',
+    )
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain(
+      'Reasoning about HTML, CSS, JS, or a hypothetical manual browser check is not Playwright evidence',
+    )
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain(
+      'cite the screenshot and/or log artifacts actually reviewed in the Playwright evidence section',
+    )
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain(
+      'spacing, margins, alignment, overflow, stacking, responsiveness',
+    )
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain(
+      'broken image links, failed media loads, missing icons, or visible missing-asset placeholders',
+    )
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain(
+      'Treat broken layout, inconsistent spacing, clipped content, overlap, horizontal scroll, obviously bad margins, or visually chaotic composition as real verification failures',
+    )
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain('viewports checked')
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain('layout and spacing checks')
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain('asset loading checks')
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain(
+      'accessibility and UX checks',
+    )
+    expect(webEngineer?.config.agents[3]?.outputContract?.requiredSections).toEqual([
+      'verification verdict',
+      'compile or runtime evidence',
+      'viewports checked',
+      'playwright evidence reviewed',
+      'layout and spacing checks',
+      'asset loading checks',
+      'accessibility and ux checks',
+      'comparison against request or reference',
+      'regressions or mismatches found',
+      'highest-value next fix for planner',
+    ])
+    expect(webEngineer?.config.loopContract).toMatchObject({
+      placeholderPolicy: 'prefer-placeholders-over-blocking',
+    })
 
     expect(mobileEngineer?.config.agents.map((agent) => agent.label)).toEqual([
       'Mobile Planner',
@@ -566,12 +659,27 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('generationPrompt:')
     expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('videoDeliveryMode:')
     expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('Persist every generated asset inside the repository')
+    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain(
+      'prefer focused edits that preserve the surrounding file instead of rewriting the whole file',
+    )
+    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain(
+      'correct the call and retry with the exact repo path plus a smaller scoped edit',
+    )
+    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain(
+      'Every file write must include the exact repository path required by the tool',
+    )
+    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain(
+      'generated screen component, style block, or markup blob becomes very large',
+    )
     expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain('Figma')
     expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain(
       'microinteractions and small animation polish as something that can apply anywhere',
     )
     expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain(
       'generated images or video as opt-in, not default',
+    )
+    expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain(
+      'modify an existing file incrementally versus create a new file',
     )
     expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain('motion and media decision')
     expect(mobileEngineer?.config.agents[0]?.roleDescription).toContain(
@@ -582,8 +690,57 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     )
     expect(mobileEngineer?.config.agents[2]?.roleDescription).toContain('asset outputs created:')
     expect(mobileEngineer?.config.agents[2]?.roleDescription).toContain('all-frames')
+    expect(mobileEngineer?.config.agents[2]?.roleDescription).toContain(
+      'prefer scoped style, component, or timeline edits instead of rewriting the entire file',
+    )
+    expect(mobileEngineer?.config.agents[2]?.roleDescription).toContain(
+      'retry with the exact path and a narrower change',
+    )
     expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain('mobile runtime evidence')
     expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain('Figma')
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
+      'Treat a mobile verification pass as requiring actual simulator, emulator, or device runtime execution',
+    )
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
+      'Do not mark verification verdict as pass if mobile runtime tooling did not actually run',
+    )
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
+      'Reasoning about code, screenshots, or a hypothetical manual simulator/device check is not mobile runtime evidence',
+    )
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
+      'cite the screenshot and/or log artifacts actually reviewed in the mobile runtime evidence section',
+    )
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
+      'spacing, margins, alignment, overflow, safe-area fit, typography fit, interaction states',
+    )
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
+      'broken image links, failed media loads, missing icons, or visible missing-asset placeholders',
+    )
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
+      'Treat broken layout, inconsistent spacing, clipped content, overlap, safe-area collisions, or visually chaotic composition as real verification failures',
+    )
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
+      'device or runtime targets checked',
+    )
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
+      'layout and spacing checks',
+    )
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain('asset loading checks')
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
+      'accessibility and ux checks',
+    )
+    expect(mobileEngineer?.config.agents[3]?.outputContract?.requiredSections).toEqual([
+      'verification verdict',
+      'compile or runtime evidence',
+      'device or runtime targets checked',
+      'mobile runtime evidence reviewed',
+      'layout and spacing checks',
+      'asset loading checks',
+      'accessibility and ux checks',
+      'comparison against request or reference',
+      'regressions or mismatches found',
+      'highest-value next fix for planner',
+    ])
 
     expect(backendEngineer?.config.agents.map((agent) => agent.label)).toEqual([
       'Backend Planner',

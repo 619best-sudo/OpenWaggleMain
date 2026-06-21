@@ -24,6 +24,12 @@ importers:
       '@diegogbrisa/ts-match':
         specifier: 1.2.0
         version: 1.2.0
+      '@fontsource/fira-sans':
+        specifier: ^5.2.7
+        version: 5.2.7
+      '@fontsource/puritan':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@lexical/react':
         specifier: ^0.42.0
         version: 0.42.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(yjs@13.6.30)
@@ -1259,11 +1265,17 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
+  '@fontsource/fira-sans@5.2.7':
+    resolution: {integrity: sha512-5DE4AealD/VnbwdzMgnpWfCttMQBbteNiK9DCJE7cVwZEbDTPLUoFDMMvxNQ498nZc5in7Mta9c/s+3Ehh0BAg==}
+
   '@fontsource/inter@5.2.8':
     resolution: {integrity: sha512-P6r5WnJoKiNVV+zvW2xM13gNdFhAEpQ9dQJHt3naLvfg+LkF2ldgSLiF4T41lf1SQCM9QmkqPTn4TH568IRagg==}
 
   '@fontsource/poppins@5.2.7':
     resolution: {integrity: sha512-6uQyPmseo4FgI97WIhA4yWRlNaoLk4vSDK/PyRwdqqZb5zAEuc+Kunt8JTMcsHYUEGYBtN15SNkMajMdqUSUmg==}
+
+  '@fontsource/puritan@5.2.8':
+    resolution: {integrity: sha512-+A/CVZizoNFHPXJsRmlDqTKURc1YabMzk4/drF34TynSnQZV7JxMC+E7jhKdl2LigPf7iGK5CICA/0x9hcW5ig==}
 
   '@fontsource/space-grotesk@5.2.10':
     resolution: {integrity: sha512-XNXEbT74OIITPqw2H6HXwPDp85fy43uxfBwFR5PU+9sLnjuLj12KlhVM9nZVN6q6dlKjkuN8JisW/OBxwxgUew==}
@@ -8777,9 +8789,13 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
+  '@fontsource/fira-sans@5.2.7': {}
+
   '@fontsource/inter@5.2.8': {}
 
   '@fontsource/poppins@5.2.7': {}
+
+  '@fontsource/puritan@5.2.8': {}
 
   '@fontsource/space-grotesk@5.2.10': {}
 

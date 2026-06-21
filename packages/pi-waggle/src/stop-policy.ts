@@ -18,12 +18,34 @@ const QA_REQUIRED_SECTIONS = [
   'logs',
   'exact_next_cycle',
 ] as const
+const WEB_VERIFIER_REQUIRED_SECTIONS = [
+  'verification verdict',
+  'viewports checked',
+  'playwright evidence reviewed',
+  'layout and spacing checks',
+  'asset loading checks',
+  'accessibility and ux checks',
+] as const
+const MOBILE_VERIFIER_REQUIRED_SECTIONS = [
+  'verification verdict',
+  'device or runtime targets checked',
+  'mobile runtime evidence reviewed',
+  'layout and spacing checks',
+  'asset loading checks',
+  'accessibility and ux checks',
+] as const
 const RUNTIME_EVIDENCE_KEYWORDS =
   /\b(browser|playwright|devtools|command|build|dev server|console|log|screenshot|page|open|opened|click|clicked|loaded|rendered|pnpm|npm)\b/i
+const MOBILE_RUNTIME_EVIDENCE_KEYWORDS =
+  /\b(simulator|emulator|device|mobile|ios|android|screen|runtime|tap|tapped|scroll|scrolled|opened|rendered|screenshot|log)\b/i
+const EVIDENCE_ARTIFACT_REFERENCE_PATTERN =
+  /\b(screenshot|screenshots|screen shot|screen shots|png|jpg|jpeg|webp|console log|browser log|runtime log|device log|logcat|logs)\b/i
 const CODE_MUTATION_TOOL_NAME_PATTERN =
   /\b(write|apply[_-]?patch|edit|replace|delete|create[_-]?file|move[_-]?file|rename)\b/i
 const QA_IMPLEMENTATION_INTENT_PATTERN =
   /\b(?:i|we)\s+(?:need to|will|am going to|must)\s+(?:create|implement|add|write|edit|modify|fix|patch)\b.*(?:\.js|\.ts|\.tsx|\.jsx|\.html|\.css|file|component|server|button)\b|\blet'?s\s+(?:create|implement|add|write|edit|modify|fix|patch)\b.*(?:\.js|\.ts|\.tsx|\.jsx|\.html|\.css|file|component|server|button)\b/i
+const PLAYWRIGHT_TOOL_NAME_PATTERN = /\bplaywright\b/i
+const MOBILE_RUNTIME_TOOL_NAME_PATTERN = /\bmobile(?:[_-]?(?:mcp|device))\b/i
 
 type PiAssistantMessage = Extract<AgentEndEvent['messages'][number], { readonly role: 'assistant' }>
 type PiToolResultMessage = Extract<
@@ -129,6 +151,23 @@ function isQaRuntimeContract(config: WaggleConfig, turnNumber: number) {
   return QA_REQUIRED_SECTIONS.every((section) => requiredSections.includes(section))
 }
 
+function hasRequiredSections(
+  requiredSections: readonly string[],
+  expectedSections: readonly string[],
+) {
+  return expectedSections.every((section) => requiredSections.includes(section))
+}
+
+function isWebVerifierContract(config: WaggleConfig, turnNumber: number) {
+  const requiredSections = getWaggleTurn(config, turnNumber).agent.outputContract?.requiredSections ?? []
+  return hasRequiredSections(requiredSections, WEB_VERIFIER_REQUIRED_SECTIONS)
+}
+
+function isMobileVerifierContract(config: WaggleConfig, turnNumber: number) {
+  const requiredSections = getWaggleTurn(config, turnNumber).agent.outputContract?.requiredSections ?? []
+  return hasRequiredSections(requiredSections, MOBILE_VERIFIER_REQUIRED_SECTIONS)
+}
+
 function validateQaRuntimeTurn(
   responseText: string,
   toolCallNames: readonly string[],
@@ -166,6 +205,94 @@ function validateQaRuntimeTurn(
     if (!RUNTIME_EVIDENCE_KEYWORDS.test(evidenceReviewed ?? '')) {
       return 'Approved QA turns must describe concrete runtime evidence such as browser actions, commands, screenshots, or logs.'
     }
+  }
+
+  return null
+}
+
+function validateWebVerifierTurn(
+  responseText: string,
+  toolCallNames: readonly string[],
+): string | null {
+  const verdict = readSectionValue(responseText, 'verification verdict')?.trim().toLocaleLowerCase() ?? ''
+  if (verdict !== 'pass') {
+    return null
+  }
+
+  const evidenceReviewed = readSectionValue(responseText, 'playwright evidence reviewed')
+  const viewportsChecked = readSectionValue(responseText, 'viewports checked')
+  const layoutChecks = readSectionValue(responseText, 'layout and spacing checks')
+  const assetChecks = readSectionValue(responseText, 'asset loading checks')
+  const accessibilityChecks = readSectionValue(responseText, 'accessibility and ux checks')
+
+  if (!toolCallNames.some((name) => PLAYWRIGHT_TOOL_NAME_PATTERN.test(name))) {
+    return 'Web verifier pass requires an actual Playwright tool call.'
+  }
+
+  if (isNoneValue(evidenceReviewed)) {
+    return 'Web verifier pass must include concrete Playwright evidence instead of "none".'
+  }
+  if (isNoneValue(viewportsChecked)) {
+    return 'Web verifier pass must list the viewports checked.'
+  }
+  if (isNoneValue(layoutChecks)) {
+    return 'Web verifier pass must summarize layout and spacing checks.'
+  }
+  if (isNoneValue(assetChecks)) {
+    return 'Web verifier pass must summarize asset loading checks.'
+  }
+  if (isNoneValue(accessibilityChecks)) {
+    return 'Web verifier pass must summarize accessibility and UX checks.'
+  }
+  if (!RUNTIME_EVIDENCE_KEYWORDS.test(evidenceReviewed ?? '')) {
+    return 'Web verifier pass must describe concrete Playwright runtime evidence such as browser actions, screenshots, or logs.'
+  }
+  if (!EVIDENCE_ARTIFACT_REFERENCE_PATTERN.test(evidenceReviewed ?? '')) {
+    return 'Web verifier pass must cite at least one screenshot or log artifact in Playwright evidence reviewed.'
+  }
+
+  return null
+}
+
+function validateMobileVerifierTurn(
+  responseText: string,
+  toolCallNames: readonly string[],
+): string | null {
+  const verdict = readSectionValue(responseText, 'verification verdict')?.trim().toLocaleLowerCase() ?? ''
+  if (verdict !== 'pass') {
+    return null
+  }
+
+  const runtimeTargets = readSectionValue(responseText, 'device or runtime targets checked')
+  const evidenceReviewed = readSectionValue(responseText, 'mobile runtime evidence reviewed')
+  const layoutChecks = readSectionValue(responseText, 'layout and spacing checks')
+  const assetChecks = readSectionValue(responseText, 'asset loading checks')
+  const accessibilityChecks = readSectionValue(responseText, 'accessibility and ux checks')
+
+  if (!toolCallNames.some((name) => MOBILE_RUNTIME_TOOL_NAME_PATTERN.test(name))) {
+    return 'Mobile verifier pass requires an actual mobile runtime tool call.'
+  }
+
+  if (isNoneValue(runtimeTargets)) {
+    return 'Mobile verifier pass must list the runtime targets checked.'
+  }
+  if (isNoneValue(evidenceReviewed)) {
+    return 'Mobile verifier pass must include concrete mobile runtime evidence instead of "none".'
+  }
+  if (isNoneValue(layoutChecks)) {
+    return 'Mobile verifier pass must summarize layout and spacing checks.'
+  }
+  if (isNoneValue(assetChecks)) {
+    return 'Mobile verifier pass must summarize asset loading checks.'
+  }
+  if (isNoneValue(accessibilityChecks)) {
+    return 'Mobile verifier pass must summarize accessibility and UX checks.'
+  }
+  if (!MOBILE_RUNTIME_EVIDENCE_KEYWORDS.test(evidenceReviewed ?? '')) {
+    return 'Mobile verifier pass must describe concrete runtime evidence such as device actions, screenshots, or logs.'
+  }
+  if (!EVIDENCE_ARTIFACT_REFERENCE_PATTERN.test(evidenceReviewed ?? '')) {
+    return 'Mobile verifier pass must cite at least one screenshot or log artifact in mobile runtime evidence reviewed.'
   }
 
   return null
@@ -347,6 +474,26 @@ export function evaluatePiWaggleStopPolicy(input: {
     )
     if (qaValidationError) {
       return recoverableErrorDecision(input.state, qaValidationError)
+    }
+  }
+
+  if (isWebVerifierContract(input.config, input.turnNumber)) {
+    const webVerifierValidationError = validateWebVerifierTurn(
+      input.summary.responseText,
+      input.summary.toolCallNames,
+    )
+    if (webVerifierValidationError) {
+      return recoverableErrorDecision(input.state, webVerifierValidationError)
+    }
+  }
+
+  if (isMobileVerifierContract(input.config, input.turnNumber)) {
+    const mobileVerifierValidationError = validateMobileVerifierTurn(
+      input.summary.responseText,
+      input.summary.toolCallNames,
+    )
+    if (mobileVerifierValidationError) {
+      return recoverableErrorDecision(input.state, mobileVerifierValidationError)
     }
   }
 

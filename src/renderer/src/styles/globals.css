@@ -4,47 +4,51 @@
 @theme {
   /* Surfaces */
   --color-bg-app: light-dark(var(--theme-bg-app-light), var(--theme-bg-app-dark));
-  --color-bg: light-dark(#f2f2f2, #0e0e0e);
+  --color-bg: light-dark(#f2f2f2, #141518);
   --color-bg-secondary: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 8%, #ffffff),
-    color-mix(in srgb, var(--theme-dark-tint) 25%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 22%, #141518)
   );
   --color-bg-tertiary: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 5%, #ffffff),
-    color-mix(in srgb, var(--theme-dark-tint) 40%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 32%, #141518)
   );
   --color-bg-hover: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 10%, #ffffff),
-    color-mix(in srgb, var(--theme-dark-tint) 55%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 42%, #141518)
   );
   --color-bg-active: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 15%, #ffffff),
-    color-mix(in srgb, var(--theme-dark-tint) 70%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 52%, #141518)
   );
 
   /* Borders */
   --color-border: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 15%, #d1d1d1),
-    color-mix(in srgb, var(--theme-dark-tint) 50%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 34%, #141518)
   );
   --color-border-light: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 8%, #e1e1e1),
-    color-mix(in srgb, var(--theme-dark-tint) 30%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 24%, #141518)
   );
 
   /* Text hierarchy */
-  --color-text-primary: light-dark(#0e0e0e, #f2f2f2);
+  --color-text-primary: light-dark(#0e0e0e, #e8e3db);
   --color-text-secondary: light-dark(
     color-mix(in srgb, #0e0e0e 80%, var(--theme-light-tint)),
-    color-mix(in srgb, #f2f2f2 85%, var(--theme-dark-tint))
+    color-mix(in srgb, #e8e3db 76%, var(--theme-dark-tint))
   );
   --color-text-tertiary: light-dark(
     color-mix(in srgb, #0e0e0e 60%, var(--theme-light-tint)),
-    color-mix(in srgb, #f2f2f2 65%, var(--theme-dark-tint))
+    color-mix(in srgb, #e8e3db 58%, var(--theme-dark-tint))
   );
   --color-text-muted: light-dark(
     color-mix(in srgb, #0e0e0e 40%, var(--theme-light-tint)),
-    color-mix(in srgb, #f2f2f2 45%, var(--theme-dark-tint))
+    color-mix(in srgb, #e8e3db 42%, var(--theme-dark-tint))
+  );
+  --color-chat-reading-text: light-dark(
+    var(--color-text-primary),
+    color-mix(in srgb, var(--color-text-primary) 90%, #ffffff 10%)
   );
 
   /* Semantic + brand */
@@ -62,48 +66,48 @@
   /* Design-specific tokens */
   --color-input-card-border: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 12%, #d1d1d1),
-    color-mix(in srgb, var(--theme-dark-tint) 50%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 36%, #141518)
   );
   --color-button-border: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 18%, #c1c1c1),
-    color-mix(in srgb, var(--theme-dark-tint) 60%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 42%, #141518)
   );
   --color-diff-card-bg: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 4%, #ffffff),
-    color-mix(in srgb, var(--theme-dark-tint) 15%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 16%, #141518)
   );
   --color-diff-card-border: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 14%, #d1d1d1),
-    color-mix(in srgb, var(--theme-dark-tint) 40%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 32%, #141518)
   );
   --color-code-card: light-dark(
-    var(--color-bg-tertiary),
-    color-mix(in srgb, var(--theme-dark-tint) 18%, #0e0e0e)
+    color-mix(in srgb, var(--theme-light-tint) 10%, #ffffff),
+    color-mix(in srgb, var(--theme-dark-tint) 32%, #141518)
   );
   --color-code-card-hover: light-dark(
-    color-mix(in srgb, var(--color-bg-tertiary) 82%, var(--color-bg-hover)),
-    color-mix(in srgb, var(--theme-dark-tint) 26%, #0e0e0e)
+    color-mix(in srgb, var(--theme-light-tint) 14%, #ffffff),
+    color-mix(in srgb, var(--theme-dark-tint) 40%, #141518)
   );
   --color-link-yellow: #f5a623;
-  --color-thinking-text: light-dark(#737373, #808080);
+  --color-thinking-text: light-dark(#737373, #8c867f);
   --radius-panel: 22px;
 
   /* Diff panel */
   --color-diff-bg: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 3%, #ffffff),
-    color-mix(in srgb, var(--theme-dark-tint) 10%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 12%, #141518)
   );
   --color-diff-file-bg: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 6%, #f9f9f9),
-    color-mix(in srgb, var(--theme-dark-tint) 20%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 18%, #141518)
   );
   --color-diff-file-border: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 12%, #e5e5e5),
-    color-mix(in srgb, var(--theme-dark-tint) 35%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 28%, #141518)
   );
   --color-diff-header-bg: light-dark(
     color-mix(in srgb, var(--theme-light-tint) 10%, #f0f0f0),
-    color-mix(in srgb, var(--theme-dark-tint) 25%, #0e0e0e)
+    color-mix(in srgb, var(--theme-dark-tint) 22%, #141518)
   );
   --color-diff-add-bg: light-dark(#e6f4ea, #111a13);
   --color-diff-remove-bg: light-dark(#fce8e6, #211012);
@@ -119,8 +123,8 @@
   /* Typography */
   --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
   --font-sans:
-    Poppins, Inter, "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+    "Fira Sans", Inter, "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
 }
 
 @layer base {
@@ -136,22 +140,33 @@
     --theme-light-accent: #08154c;
     --theme-light-accent-dim: #01092d;
     --theme-light-accent-foreground: #f2f2f2;
-    --theme-dark-tint: #08154c;
-    --theme-dark-tint-deep: #01092d;
-    --theme-dark-accent: #f2f2f2;
-    --theme-dark-accent-dim: #cccccc;
-    --theme-dark-accent-foreground: #01092d;
+    --theme-dark-tint: #243041;
+    --theme-dark-tint-deep: #171d28;
+    --theme-dark-accent: #cad6e3;
+    --theme-dark-accent-dim: #9eabbb;
+    --theme-dark-accent-foreground: #121720;
     --theme-bg-app-light: #e5e5e5;
-    --theme-bg-app-dark: #01092d;
+    --theme-bg-app-dark: #161922;
+  }
+
+  html[data-theme="dark"] {
+    --color-text-secondary: color-mix(in srgb, #e8e3db 78%, #243041);
+    --color-text-tertiary: color-mix(in srgb, #e8e3db 66%, #243041);
+    --color-text-muted: color-mix(in srgb, #e8e3db 54%, #243041);
+    --color-thinking-text: color-mix(in srgb, #e8e3db 48%, #243041);
   }
 
   html[data-theme="cocoa"] {
-    --theme-dark-tint: #2f1b1a;
-    --theme-dark-tint-deep: color-mix(in srgb, #2f1b1a 55%, #0e0e0e);
-    --theme-dark-accent: color-mix(in srgb, #2f1b1a 34%, #f2f2f2);
-    --theme-dark-accent-dim: color-mix(in srgb, #2f1b1a 48%, #f2f2f2);
-    --theme-dark-accent-foreground: #1a1211;
-    --theme-bg-app-dark: color-mix(in srgb, #2f1b1a 55%, #0e0e0e);
+    --theme-dark-tint: #382825;
+    --theme-dark-tint-deep: color-mix(in srgb, #382825 62%, #141518);
+    --theme-dark-accent: color-mix(in srgb, #382825 28%, #e8e3db);
+    --theme-dark-accent-dim: color-mix(in srgb, #382825 42%, #d7ccc0);
+    --theme-dark-accent-foreground: #181311;
+    --theme-bg-app-dark: color-mix(in srgb, #382825 52%, #141518);
+    --color-text-secondary: color-mix(in srgb, #e8e3db 78%, #382825);
+    --color-text-tertiary: color-mix(in srgb, #e8e3db 66%, #382825);
+    --color-text-muted: color-mix(in srgb, #e8e3db 54%, #382825);
+    --color-thinking-text: color-mix(in srgb, #e8e3db 48%, #382825);
   }
 
   html[data-theme="metallic-gold"] {
@@ -161,6 +176,10 @@
     --theme-dark-accent-dim: color-mix(in srgb, #b48e43 78%, #6a5224);
     --theme-dark-accent-foreground: #1f1608;
     --theme-bg-app-dark: color-mix(in srgb, #b48e43 72%, #1a140a);
+    --color-text-secondary: color-mix(in srgb, #f2ead8 80%, #6a5224);
+    --color-text-tertiary: color-mix(in srgb, #f2ead8 68%, #6a5224);
+    --color-text-muted: color-mix(in srgb, #f2ead8 56%, #6a5224);
+    --color-thinking-text: color-mix(in srgb, #f2ead8 50%, #6a5224);
   }
 
   html[data-theme="velvet-obsidian"] {
@@ -170,6 +189,10 @@
     --theme-dark-accent-dim: color-mix(in srgb, #171721 40%, #d7d7dd);
     --theme-dark-accent-foreground: #0b0b11;
     --theme-bg-app-dark: color-mix(in srgb, #171721 88%, #050507);
+    --color-text-secondary: color-mix(in srgb, #ece9f3 79%, #171721);
+    --color-text-tertiary: color-mix(in srgb, #ece9f3 67%, #171721);
+    --color-text-muted: color-mix(in srgb, #ece9f3 55%, #171721);
+    --color-thinking-text: color-mix(in srgb, #ece9f3 49%, #171721);
   }
 
   html[data-theme="bulgarian-rose"] {
@@ -179,6 +202,17 @@
     --theme-dark-accent-dim: color-mix(in srgb, #4a0603 42%, #d9caca);
     --theme-dark-accent-foreground: #170504;
     --theme-bg-app-dark: color-mix(in srgb, #4a0603 86%, #080202);
+    --color-text-secondary: color-mix(in srgb, #eedddb 79%, #4a0603);
+    --color-text-tertiary: color-mix(in srgb, #eedddb 67%, #4a0603);
+    --color-text-muted: color-mix(in srgb, #eedddb 55%, #4a0603);
+    --color-thinking-text: color-mix(in srgb, #eedddb 49%, #4a0603);
+  }
+
+  html[data-theme="light"] {
+    --color-text-secondary: color-mix(in srgb, #0e0e0e 84%, #08154c);
+    --color-text-tertiary: color-mix(in srgb, #0e0e0e 74%, #08154c);
+    --color-text-muted: color-mix(in srgb, #0e0e0e 64%, #08154c);
+    --color-thinking-text: color-mix(in srgb, #0e0e0e 56%, #08154c);
   }
 
   html[data-theme="cream"] {
@@ -188,10 +222,10 @@
     --theme-light-accent-foreground: #fffdf8;
     --theme-bg-app-light: #f1e9da;
     --theme-bg-app-dark: #f1e9da;
-    --color-text-secondary: color-mix(in srgb, #0e0e0e 86%, #f1e9da);
-    --color-text-tertiary: color-mix(in srgb, #0e0e0e 74%, #f1e9da);
-    --color-text-muted: color-mix(in srgb, #0e0e0e 62%, #f1e9da);
-    --color-thinking-text: color-mix(in srgb, #0e0e0e 55%, #f1e9da);
+    --color-text-secondary: color-mix(in srgb, #0e0e0e 88%, #f1e9da);
+    --color-text-tertiary: color-mix(in srgb, #0e0e0e 78%, #f1e9da);
+    --color-text-muted: color-mix(in srgb, #0e0e0e 68%, #f1e9da);
+    --color-thinking-text: color-mix(in srgb, #0e0e0e 60%, #f1e9da);
   }
 
   html[data-theme="platinum"] {
@@ -201,10 +235,10 @@
     --theme-light-accent-foreground: #f8fafb;
     --theme-bg-app-light: #dae0e1;
     --theme-bg-app-dark: #dae0e1;
-    --color-text-secondary: color-mix(in srgb, #0e0e0e 86%, #dae0e1);
-    --color-text-tertiary: color-mix(in srgb, #0e0e0e 74%, #dae0e1);
-    --color-text-muted: color-mix(in srgb, #0e0e0e 62%, #dae0e1);
-    --color-thinking-text: color-mix(in srgb, #0e0e0e 55%, #dae0e1);
+    --color-text-secondary: color-mix(in srgb, #0e0e0e 88%, #dae0e1);
+    --color-text-tertiary: color-mix(in srgb, #0e0e0e 78%, #dae0e1);
+    --color-text-muted: color-mix(in srgb, #0e0e0e 68%, #dae0e1);
+    --color-thinking-text: color-mix(in srgb, #0e0e0e 60%, #dae0e1);
   }
 
   html,
@@ -217,8 +251,8 @@
     color: var(--color-text-primary);
     font-family: var(--font-sans);
     font-size: 16px;
-    line-height: 1.45;
-    letter-spacing: 0.006em;
+    line-height: 1.5;
+    letter-spacing: 0.004em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -326,7 +360,7 @@
 
   /* Markdown prose */
   .prose {
-    color: var(--color-text-primary);
+    color: var(--color-chat-reading-text);
     line-height: 1.65;
     font-size: 14px;
   }
@@ -473,11 +507,11 @@
   }
   .prose h3 {
     font-size: 1.05em;
-    color: var(--color-text-secondary);
+    color: color-mix(in srgb, var(--color-chat-reading-text) 84%, var(--color-text-secondary));
   }
   .prose h4 {
     font-size: 1em;
-    color: var(--color-text-secondary);
+    color: color-mix(in srgb, var(--color-chat-reading-text) 78%, var(--color-text-secondary));
   }
 
   /* Emphasis */
@@ -487,7 +521,7 @@
   }
   .prose em {
     font-style: italic;
-    color: var(--color-text-secondary);
+    color: color-mix(in srgb, var(--color-chat-reading-text) 82%, var(--color-text-secondary));
   }
 
   /* Horizontal rule */
@@ -504,7 +538,7 @@
     padding: 0.5em 1em;
     background: color-mix(in srgb, var(--color-bg-secondary) 50%, transparent);
     border-radius: 0 6px 6px 0;
-    color: var(--color-text-secondary);
+    color: color-mix(in srgb, var(--color-chat-reading-text) 78%, var(--color-text-secondary));
     margin: 0.75em 0;
   }
 
@@ -549,6 +583,7 @@
 
   /* User bubble compact modifier — must appear after .prose rules (overrides via source order) */
   .prose-user {
+    color: var(--color-chat-reading-text);
     font-size: 14px;
     line-height: 1.55;
   }
@@ -606,6 +641,7 @@
   .prose-thinking th,
   .prose-thinking td {
     color: var(--color-thinking-text);
+    font-style: normal;
   }
 
   .prose-thinking blockquote {

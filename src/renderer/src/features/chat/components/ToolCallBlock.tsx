@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { parseToolArgs } from '@/features/chat/lib/tool-args'
 import {
   buildTailPreview,
-  getEditUnifiedDiff,
+  getToolDiffData,
   getResultError,
   getStringArg,
   getToolResultText,
@@ -65,9 +65,8 @@ function shouldReadResultText(
   result: ToolCallResultPayload | undefined,
   expanded: boolean,
   isRunning: boolean,
-  isError: boolean,
 ) {
-  return result !== undefined && (expanded || isRunning || isError)
+  return result !== undefined && (expanded || isRunning)
 }
 
 function previewText(enabled: boolean, text: string) {
@@ -78,9 +77,8 @@ function readableResultText(
   result: ToolCallResultPayload | undefined,
   expanded: boolean,
   isRunning: boolean,
-  isError: boolean,
 ) {
-  if (!result || !shouldReadResultText(result, expanded, isRunning, isError)) {
+  if (!result || !shouldReadResultText(result, expanded, isRunning)) {
     return ''
   }
   return getToolResultText(result.content)
@@ -100,8 +98,8 @@ function buildToolCallViewModel({
   const isRunning = isToolRunning(state, result, isStreaming)
   const awaitingResult = (!result || !hasConcreteResult) && !isRunning
   const parsedArgs = parseToolArgs(args)
-  const diff = result && !isError ? getEditUnifiedDiff(result.content, name) : null
-  const resultText = readableResultText(result, expanded, isRunning, isError)
+  const diff = result && !isError ? getToolDiffData(result.content, name, parsedArgs) : null
+  const resultText = readableResultText(result, expanded, isRunning)
 
   return {
     actionText: resolveActionText({ name, args: parsedArgs, awaitingResult, isError, isRunning }),
@@ -111,7 +109,7 @@ function buildToolCallViewModel({
     diff,
     failedOutputPreview: previewText(!expanded && isError, resultText),
     hasConcreteResult,
-    inlineDiffVisible: diff !== null && diff.lines.length <= INLINE_DIFF_LINE_LIMIT,
+    inlineDiffVisible: diff !== null && diff.lines.length > 0 && diff.lines.length <= INLINE_DIFF_LINE_LIMIT,
     isError,
     isRunning,
     parsedArgs,
@@ -178,7 +176,7 @@ function ExpandedToolDetails({
       <ExpandedCopyActions args={args} view={view} />
       <ExpandedDiffSection diff={view.diff} />
       <div className="px-3 py-2">
-        <div className="mb-1 text-[13px] text-text-secondary">Arguments</div>
+        <div className="mb-1 text-[13px] font-medium text-text-primary/82">Arguments</div>
         <ToolArgs name={name} args={view.parsedArgs} rawArgs={args} path={view.path} />
       </div>
       <ExpandedResultSection name={name} result={result} view={view} />
@@ -204,8 +202,8 @@ function ExpandedCopyActions({
   )
 }
 
-function ExpandedDiffSection({ diff }: { readonly diff: ReturnType<typeof getEditUnifiedDiff> }) {
-  if (!diff) {
+function ExpandedDiffSection({ diff }: { readonly diff: ReturnType<typeof getToolDiffData> }) {
+  if (!diff || diff.lines.length === 0) {
     return null
   }
   return (
@@ -224,12 +222,12 @@ function ExpandedResultSection({
   readonly result: ToolCallResultPayload | undefined
   readonly view: ToolCallViewModel
 }) {
-  if (!view.hasConcreteResult || !result || view.diff || view.isError) {
+  if (!view.hasConcreteResult || !result || (view.diff?.lines.length ?? 0) > 0 || view.isError) {
     return null
   }
   return (
     <div className="border-t border-border/15 px-3 py-2">
-      <div className="mb-1 text-[13px] text-text-secondary">Result</div>
+      <div className="mb-1 text-[13px] font-medium text-text-primary/82">Result</div>
       <ToolResult content={result.content} isError={view.isError} name={name} path={view.path} />
     </div>
   )
@@ -249,7 +247,7 @@ function ExpandedErrorSection({
   }
   return (
     <div role="alert" className="border-t border-border/15 px-3 py-2">
-      <div className="mb-1 text-[13px] text-text-secondary">Error</div>
+      <div className="mb-1 text-[13px] font-medium text-text-primary/82">Error</div>
       <ToolResult
         content={view.resultError ?? result.content}
         isError

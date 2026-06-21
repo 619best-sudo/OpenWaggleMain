@@ -177,7 +177,7 @@ export function AssistantMessageBubble({
                         key={`${message.id}-thinking-${value.stepId ?? String(i)}`}
                         text={value.content}
                         isStreaming={!!isStreaming}
-                        className="prose-thinking italic"
+                        className="prose-thinking"
                       />
                     ) : null,
                   )

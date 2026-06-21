@@ -141,6 +141,66 @@ function mergeAssistantParts(
   return mergedParts
 }
 
+function stableValue(value: unknown) {
+  if (typeof value === 'string') {
+    return value
+  }
+
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+function assistantPartSignature(part: UIMessagePart) {
+  return matchBy(part, 'type')
+    .with('text', (value) => `text:${value.content}`)
+    // Persisted reasoning parts do not carry the transient stream step id.
+    .with('thinking', (value) => `thinking:${value.content}`)
+    .with(
+      'tool-call',
+      (value) => `tool-call:${value.name}:${value.arguments}:${value.state}:${value.id}`,
+    )
+    .with(
+      'tool-result',
+      (value) =>
+        `tool-result:${value.toolCallId}:${stableValue(value.content)}:${value.state}:${value.error ?? ''}`,
+    )
+    .with('image', (value) => `image:${value.source.value}`)
+    .with('audio', (value) => `audio:${value.source.value}`)
+    .with('video', (value) => `video:${value.source.value}`)
+    .with('document', (value) => `document:${value.source.value}`)
+    .exhaustive()
+}
+
+function buildAssistantTurnKey(message: UIMessage, previousUserText: string | null) {
+  if (message.role !== 'assistant') {
+    return null
+  }
+
+  return `${previousUserText ?? 'no-user'}::${message.parts.map(assistantPartSignature).join('|')}`
+}
+
+function buildReconnectAssistantTurnKeys(messages: readonly UIMessage[]) {
+  const keys = new Set<string>()
+  let previousUserText: string | null = null
+
+  for (const message of messages) {
+    if (message.role === 'user') {
+      previousUserText = getNonEmptyUserMessageText(message)
+      continue
+    }
+
+    const key = buildAssistantTurnKey(message, previousUserText)
+    if (key) {
+      keys.add(key)
+    }
+  }
+
+  return keys
+}
+
 export function mergeBackgroundReconnectMessages(
   reconnectMessages: UIMessage[],
   currentMessages: UIMessage[],
@@ -148,6 +208,7 @@ export function mergeBackgroundReconnectMessages(
   const currentMessagesById = new Map(currentMessages.map((message) => [message.id, message]))
   const reconnectMessageIds = new Set(reconnectMessages.map((message) => message.id))
   const reconnectUserCountsByText = countUserMessagesByText(reconnectMessages)
+  const reconnectAssistantTurnKeys = buildReconnectAssistantTurnKeys(reconnectMessages)
   const mergedMessages = reconnectMessages.map((message) => {
     const currentMessage = currentMessagesById.get(message.id)
     return match(currentMessage)
@@ -168,13 +229,22 @@ export function mergeBackgroundReconnectMessages(
       .otherwise((value) => value)
   })
 
+  let previousUserText: string | null = null
   for (const currentMessage of currentMessages) {
+    if (currentMessage.role === 'user') {
+      previousUserText = getNonEmptyUserMessageText(currentMessage)
+    }
+
     if (!reconnectMessageIds.has(currentMessage.id)) {
       const currentUserText = getNonEmptyUserMessageText(currentMessage)
       if (
         currentUserText &&
         consumeUserMessageTextCount(reconnectUserCountsByText, currentUserText)
       ) {
+        continue
+      }
+      const assistantTurnKey = buildAssistantTurnKey(currentMessage, previousUserText)
+      if (assistantTurnKey && reconnectAssistantTurnKeys.has(assistantTurnKey)) {
         continue
       }
       mergedMessages.push(currentMessage)

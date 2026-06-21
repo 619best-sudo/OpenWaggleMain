@@ -43,7 +43,7 @@ function ProjectMenuButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[12px] transition-colors hover:bg-bg-hover disabled:cursor-not-allowed disabled:text-text-muted disabled:hover:bg-transparent',
+        'flex w-full items-center gap-2 px-3 py-1.5 text-left text-[12.5px] font-medium transition-colors hover:bg-bg-hover disabled:cursor-not-allowed disabled:text-text-muted disabled:hover:bg-transparent',
         danger ? 'text-error' : 'text-text-secondary',
       )}
     >
@@ -93,7 +93,7 @@ function ProjectActionsMenu({
             event.stopPropagation()
             toggle()
           }}
-          className="flex size-6 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary"
+          className="flex size-6 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
         >
           <MoreHorizontal className="size-3.5" />
         </Button>
@@ -156,7 +156,7 @@ function ProjectRenameInput({
       }}
       variant="transparent"
       inputSize="sm"
-      className="min-w-0 flex-1 px-0 font-medium text-[12px] text-text-primary"
+      className="min-w-0 flex-1 px-0 text-[12.5px] font-medium text-text-primary"
     />
   )
 }
@@ -183,7 +183,7 @@ function ProjectTitleArea({
   if (state.renaming) {
     return (
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
-        <state.DisclosureIcon className="size-3 shrink-0 text-text-tertiary" />
+        <state.DisclosureIcon className="size-3 shrink-0 text-text-secondary" />
         <Folder className="size-3.5 shrink-0 text-text-secondary" />
         <ProjectRenameInput
           value={state.renameValue}
@@ -205,8 +205,8 @@ function ProjectTitleArea({
       onClick={actions.toggle}
       className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
     >
-      <Folder className="size-3.5 shrink-0 text-text-tertiary" />
-      <span className="min-w-0 flex-1 truncate text-[12px] font-medium tracking-[-0.01em] text-text-secondary">
+      <Folder className="size-3.5 shrink-0 text-text-secondary" />
+      <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium tracking-[-0.01em] text-text-primary/82">
         {state.projectLabel}
       </span>
     </Button>
@@ -272,7 +272,7 @@ export function SidebarProjectHeader({
           type="button"
           aria-label={`New session in ${projectLabel}`}
           onClick={() => actions.newSession(group.projectPath)}
-          className="flex size-6 items-center justify-center rounded-lg text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary"
+          className="flex size-6 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
         >
           <Edit3 className="size-3.5" />
         </Button>

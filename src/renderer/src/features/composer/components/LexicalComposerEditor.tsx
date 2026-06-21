@@ -64,7 +64,7 @@ export function LexicalComposerEditor({
           />
         }
         placeholder={
-          <div className="pointer-events-none absolute top-[14px] left-4 text-[14px] text-[#a1a1aa] select-none">
+          <div className="pointer-events-none absolute top-[14px] left-4 select-none text-[14px] text-text-primary/50">
             {placeholder}
           </div>
         }

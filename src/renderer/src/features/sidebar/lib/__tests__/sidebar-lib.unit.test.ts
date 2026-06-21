@@ -79,12 +79,12 @@ describe('sidebar library helpers', () => {
     })
 
     expect(result.projects.map((project) => project.projectPath)).toEqual([
+      '/work/current',
       '/work/new',
       '/work/old',
       '/work/recent',
-      '/work/current',
     ])
-    expect(projectAt(result.projects, 0).sessions.map((item) => item.title)).toEqual(['New'])
+    expect(projectAt(result.projects, 1).sessions.map((item) => item.title)).toEqual(['New'])
   })
 
   it('sorts sessions within a project using the selected mode', () => {

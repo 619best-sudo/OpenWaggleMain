@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import {
   Check,
   ChevronRight,
@@ -52,11 +53,11 @@ export function ToolCallHeader({
         <ToolActionLabel view={view} result={result} />
         <ToolDiffSummary view={view} />
         {duration > 0 && !view.isRunning && (
-          <span className="shrink-0 text-[12px] text-text-tertiary">{formatDuration(duration)}</span>
+          <span className="shrink-0 text-[12px] text-text-secondary">{formatDuration(duration)}</span>
         )}
         <ChevronRight
           className={cn(
-            'ml-auto size-3 shrink-0 text-text-tertiary transition-transform',
+            'ml-auto size-3 shrink-0 text-text-secondary transition-transform',
             'invisible group-hover/tool:visible',
             expanded && 'visible rotate-90',
           )}
@@ -71,7 +72,7 @@ function ToolGlyph({ view }: { readonly view: ToolCallViewModel }) {
   const Icon = resolveToolIcon(view.toolName)
 
   return (
-    <span className="flex size-5 shrink-0 items-center justify-center rounded bg-bg-secondary/70 text-text-secondary">
+    <span className="flex size-5 shrink-0 items-center justify-center rounded bg-bg-secondary/70 text-text-primary/85">
       <Icon className="size-3.5" />
     </span>
   )
@@ -141,13 +142,48 @@ function ToolActionLabel({
     <span
       className={cn(
         'truncate',
-        view.isRunning && 'text-text-secondary',
-        view.hasConcreteResult && result && !view.isError && 'text-text-secondary',
+        view.isRunning && 'text-text-primary/82',
+        view.hasConcreteResult && result && !view.isError && 'text-text-primary/82',
         result && view.isError && 'text-error/80',
       )}
     >
-      {view.actionText}
+      {renderHighlightedActionText(view)}
     </span>
+  )
+}
+
+function renderHighlightedActionText(view: ToolCallViewModel): ReactNode {
+  if (view.isError) {
+    return view.actionText
+  }
+
+  if (view.toolName === 'bash') {
+    const commandMatch = view.actionText.match(/`[^`]+`/)
+    if (commandMatch) {
+      return highlightSegment(view.actionText, commandMatch[0], 'font-mono text-warning')
+    }
+  }
+
+  if (view.path) {
+    return highlightSegment(view.actionText, view.path, 'font-medium text-info')
+  }
+
+  return view.actionText
+}
+
+function highlightSegment(text: string, segment: string, className: string): ReactNode {
+  const start = text.indexOf(segment)
+  if (start < 0) {
+    return text
+  }
+
+  const end = start + segment.length
+  return (
+    <>
+      {text.slice(0, start)}
+      <span className={className}>{segment}</span>
+      {text.slice(end)}
+    </>
   )
 }
 
@@ -156,9 +192,25 @@ function ToolDiffSummary({ view }: { readonly view: ToolCallViewModel }) {
     return null
   }
   return (
-    <span className="flex items-center gap-1 text-[12px] shrink-0">
-      <span className="text-success">+{view.diff.additions}</span>
-      <span className="text-error">-{view.diff.deletions}</span>
+    <span className="flex shrink-0 items-center gap-2 text-[12px]">
+      {view.diff.additions > 0 && (
+        <span
+          aria-label={`${String(view.diff.additions)} lines added`}
+          title={`${String(view.diff.additions)} lines added`}
+          className="rounded-full bg-success/10 px-1.5 py-0.5 font-medium tabular-nums text-success"
+        >
+          +{view.diff.additions}
+        </span>
+      )}
+      {view.diff.deletions > 0 && (
+        <span
+          aria-label={`${String(view.diff.deletions)} lines removed`}
+          title={`${String(view.diff.deletions)} lines removed`}
+          className="rounded-full bg-error/10 px-1.5 py-0.5 font-medium tabular-nums text-error"
+        >
+          -{view.diff.deletions}
+        </span>
+      )}
     </span>
   )
 }
@@ -179,7 +231,7 @@ function BranchFromToolButton({
       type="button"
       title="Branch from tool result"
       onClick={() => onBranchFromMessage(view.branchSourceMessageId ?? '')}
-      className="opacity-0 text-text-tertiary transition-opacity hover:text-text-primary group-hover/tool:opacity-100 focus:opacity-100"
+      className="opacity-0 text-text-secondary transition-opacity hover:text-text-primary group-hover/tool:opacity-100 focus:opacity-100"
     >
       <GitBranch className="size-3.5" />
     </Button>
@@ -216,7 +268,7 @@ function ToolPreview({ text, tone }: { readonly text: string; readonly tone: 'mu
         'mt-1 overflow-hidden rounded-md px-3 py-2 text-[12px] font-mono whitespace-pre-wrap break-words',
         tone === 'error'
           ? 'max-h-[160px] border border-error/15 bg-error/5 text-error'
-          : 'max-h-[120px] border border-border/10 bg-code-card text-text-secondary',
+          : 'max-h-[120px] border border-border/10 bg-code-card text-text-primary/78',
       )}
     >
       {text}

@@ -61,7 +61,7 @@ const THEME_OPTIONS: ReadonlyArray<{
   {
     value: 'dark',
     title: 'Dark',
-    description: 'Deep surfaces with lower glare for focused work.',
+    description: 'Muted blue-charcoal surfaces with softer contrast for focused work.',
     icon: Moon,
   },
   {
@@ -73,7 +73,7 @@ const THEME_OPTIONS: ReadonlyArray<{
   {
     value: 'cocoa',
     title: 'Cocoa',
-    description: 'Keeps the dark workspace while warming blue accents to a cocoa tint.',
+    description: 'Warm cocoa-charcoal surfaces with the same low-contrast readability as Dark.',
     icon: Palette,
   },
   {

@@ -196,9 +196,34 @@ export function getUnifiedDiffLineClassName(type: UnifiedDiffLine['type']) {
     .exhaustive()
 }
 
-export function getEditUnifiedDiff(content: unknown, name: string): UnifiedDiffData | null {
-  if (name !== 'edit') {
+function countWrittenLines(content: string) {
+  const normalized = content.replace(/\r\n/g, '\n').replace(/\n+$/g, '')
+  if (!normalized) {
+    return 0
+  }
+  return normalized.split(LINE_SPLIT_SEPARATOR).length
+}
+
+function buildWriteSummary(content: string): UnifiedDiffData | null {
+  const additions = countWrittenLines(content)
+  if (additions === 0) {
     return null
+  }
+  return { text: '', lines: [], additions, deletions: 0 }
+}
+
+export function getToolDiffData(
+  content: unknown,
+  name: string,
+  args?: JsonObject,
+): UnifiedDiffData | null {
+  if (name !== 'edit' && name !== 'write') {
+    return null
+  }
+
+  if (name === 'write') {
+    const rawContent = args?.content
+    return typeof rawContent === 'string' ? buildWriteSummary(rawContent) : null
   }
 
   const details = getToolResultDetails(content)

@@ -35,13 +35,16 @@ export function WaggleDependencyDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={`${preset.name} setup`}
     >
-      <div className="w-full max-w-[760px] rounded-2xl border border-border-light bg-bg shadow-2xl">
-        <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
+      <div
+        data-testid="waggle-dependency-dialog"
+        className="flex max-h-[min(88vh,820px)] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl border border-border-light bg-bg shadow-2xl"
+      >
+        <div className="shrink-0 flex items-start justify-between gap-4 border-b border-border px-5 py-4">
           <div className="space-y-1">
             <h2 className="text-[15px] font-semibold text-text-primary">{preset.name} Setup</h2>
             <p className="max-w-[580px] text-[12px] leading-5 text-text-tertiary">
@@ -60,7 +63,10 @@ export function WaggleDependencyDialog({
           </Button>
         </div>
 
-        <div className="space-y-4 p-5">
+        <div
+          data-testid="waggle-dependency-dialog-body"
+          className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-5"
+        >
           <div
             className={cn(
               'rounded-xl border px-4 py-3',
@@ -148,7 +154,7 @@ export function WaggleDependencyDialog({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
+        <div className="shrink-0 flex items-center justify-end gap-2 border-t border-border px-5 py-4">
           <Button variant="secondary" onClick={onClose}>
             Close
           </Button>

@@ -70,11 +70,137 @@ describe('registerGitHandlers commit', () => {
       message: 'test commit',
       amend: false,
       paths: ['src/main/index.ts', 'docs/new.md'],
+      push: false,
     })
 
-    expect(result).toMatchObject({ ok: true, commitHash: 'abc1234' })
+    expect(result).toMatchObject({ ok: true, commitHash: 'abc1234', pushed: false, pushError: null })
     expect(stagedPaths).toEqual([['src/main/index.ts', 'docs/new.md']])
     expect(commitCommands).toEqual(['commit -m test commit -- src/main/index.ts docs/new.md'])
+  })
+
+  it('returns a successful commit with push metadata when pushing succeeds', async () => {
+    const commands: string[] = []
+
+    execFileMock.mockImplementation(
+      (
+        _cmd: string,
+        args: string[],
+        _opts: unknown,
+        cb: (
+          err: (Error & { code?: number; stdout?: string; stderr?: string }) | null,
+          stdout: string,
+          stderr: string,
+        ) => void,
+      ) => {
+        const key = args.join(' ')
+        commands.push(key)
+
+        if (key === 'rev-parse --is-inside-work-tree') {
+          cb(null, 'true\n', '')
+          return
+        }
+        if (key === 'rev-parse -q --verify MERGE_HEAD') {
+          cb({ name: 'GitError', message: 'not merging', code: 1, stdout: '', stderr: '' }, '', '')
+          return
+        }
+        if (key === 'add -- src/file.ts') {
+          cb(null, '', '')
+          return
+        }
+        if (key === 'commit -m ship it -- src/file.ts') {
+          cb(null, '[main abc1234] ship it\n 1 file changed\n', '')
+          return
+        }
+        if (key === 'push') {
+          cb(null, '', '')
+          return
+        }
+        if (key === 'rev-parse HEAD') {
+          cb(null, 'abc1234\n', '')
+          return
+        }
+        cb(new Error(`Unexpected git command: ${key}`), '', '')
+      },
+    )
+
+    registerGitHandlers()
+    const handler = registeredHandler('git:commit')
+
+    const result = await handler?.({}, '/tmp/repo', {
+      message: 'ship it',
+      amend: false,
+      paths: ['src/file.ts'],
+      push: true,
+    })
+
+    expect(result).toMatchObject({ ok: true, pushed: true, pushError: null })
+    expect(commands).toContain('push')
+  })
+
+  it('keeps a successful commit result when push fails after the commit', async () => {
+    execFileMock.mockImplementation(
+      (
+        _cmd: string,
+        args: string[],
+        _opts: unknown,
+        cb: (
+          err: (Error & { code?: number; stdout?: string; stderr?: string }) | null,
+          stdout: string,
+          stderr: string,
+        ) => void,
+      ) => {
+        const key = args.join(' ')
+        match(key)
+          .with('rev-parse --is-inside-work-tree', () => cb(null, 'true\n', ''))
+          .with('rev-parse -q --verify MERGE_HEAD', () =>
+            cb(
+              { name: 'GitError', message: 'not merging', code: 1, stdout: '', stderr: '' },
+              '',
+              '',
+            ),
+          )
+          .with('add -- src/file.ts', () => cb(null, '', ''))
+          .with('commit -m ship it -- src/file.ts', () =>
+            cb(null, '[main abc1234] ship it\n 1 file changed\n', ''),
+          )
+          .with('push', () =>
+            cb(
+              {
+                name: 'GitError',
+                message: 'rejected',
+                code: 1,
+                stdout: '',
+                stderr: '! [rejected] main -> main (non-fast-forward)',
+              },
+              '',
+              '',
+            ),
+          )
+          .with('rev-parse HEAD', () => cb(null, 'abc1234\n', ''))
+          .otherwise(() => cb(new Error(`Unexpected git command: ${key}`), '', ''))
+      },
+    )
+
+    registerGitHandlers()
+    const handler = registeredHandler('git:commit')
+
+    const result = await handler?.({}, '/tmp/repo', {
+      message: 'ship it',
+      amend: false,
+      paths: ['src/file.ts'],
+      push: true,
+    })
+
+    expect(result).toEqual({
+      ok: true,
+      commitHash: 'abc1234',
+      summary: '[main abc1234] ship it',
+      pushed: false,
+      pushError: {
+        code: 'push-rejected',
+        message: 'Push was rejected by the remote. Pull or sync the branch, then try again.',
+      },
+    })
   })
 
   it('maps commit failures to structured error codes', async () => {
@@ -125,6 +251,7 @@ describe('registerGitHandlers commit', () => {
       message: 'test commit',
       amend: false,
       paths: ['src/file.ts'],
+      push: false,
     })
 
     expect(result).toEqual({

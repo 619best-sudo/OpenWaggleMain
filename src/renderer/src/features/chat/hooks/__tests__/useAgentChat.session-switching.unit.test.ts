@@ -220,4 +220,49 @@ describe('useAgentChat session switching', () => {
       sendB.resolve(undefined)
     })
   })
+
+  it('ignores stale cached render snapshots once the run is no longer active', async () => {
+    const sessionId = SessionId('session-stale-cache')
+    hasActiveRunMock.mockReturnValue(false)
+    runRenderSnapshots.set(String(sessionId), {
+      updatedAt: 2,
+      messages: [
+        {
+          id: 'user-live',
+          role: 'user',
+          parts: [{ type: 'text', content: 'Say hi' }],
+          createdAt: new Date(1),
+        },
+        {
+          id: 'assistant-live',
+          role: 'assistant',
+          parts: [{ type: 'text', content: 'Stale cached answer' }],
+          createdAt: new Date(2),
+        },
+      ],
+    })
+
+    const persistedSession = createSessionWithIdAndMessages(sessionId, 3, [
+      {
+        id: MessageId('user-persisted'),
+        role: 'user',
+        createdAt: 1,
+        parts: [{ type: 'text', text: 'Say hi' }],
+      },
+      {
+        id: MessageId('assistant-persisted'),
+        role: 'assistant',
+        createdAt: 2,
+        parts: [{ type: 'text', text: 'Persisted answer' }],
+      },
+    ])
+
+    const { result } = renderHook(() =>
+      useAgentChat(sessionId, persistedSession, SupportedModelId('claude-sonnet-4-5'), 'medium'),
+    )
+
+    await waitFor(() => {
+      expect(result.current.messages.map(getUIMessageText)).toEqual(['Say hi', 'Persisted answer'])
+    })
+  })
 })

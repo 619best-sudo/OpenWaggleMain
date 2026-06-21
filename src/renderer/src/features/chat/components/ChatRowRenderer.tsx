@@ -123,9 +123,9 @@ export function ChatRowRenderer({
     .with('phase-indicator', (value) => (
       <div className="flex items-center gap-2 py-3">
         <Spinner size="sm" className="text-accent" />
-        <span className="text-sm text-text-tertiary">{value.label}...</span>
+        <span className="text-sm text-text-secondary">{value.label}...</span>
         {value.elapsedMs > 0 ? (
-          <span className="text-sm text-text-muted tabular-nums">
+          <span className="text-sm text-text-tertiary tabular-nums">
             {formatElapsed(value.elapsedMs)}
           </span>
         ) : null}

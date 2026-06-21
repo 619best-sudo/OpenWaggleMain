@@ -54,7 +54,7 @@ describe('buildSidebarProjectGroups', () => {
     expect(grouped.projects[2]?.sessions).toEqual([])
   })
 
-  it('orders projects by newest first-session timestamp without promoting the selected project', () => {
+  it('promotes the current working directory to the top of the list', () => {
     const grouped = buildSidebarProjectGroups({
       currentProjectPath: '/repo/current',
       recentProjects: ['/repo/sessionless'],
@@ -67,10 +67,28 @@ describe('buildSidebarProjectGroups', () => {
     })
 
     expect(grouped.projects.map((project) => project.projectPath)).toEqual([
-      '/repo/newer',
       '/repo/current',
+      '/repo/newer',
       '/repo/older',
       '/repo/sessionless',
+    ])
+  })
+
+  it('orders projects by latest activity instead of the oldest thread in the folder', () => {
+    const grouped = buildSidebarProjectGroups({
+      currentProjectPath: null,
+      recentProjects: [],
+      sortMode: 'recent',
+      sessions: [
+        makeSession('one', 'Old first thread', '/repo/older-folder', UPDATED_AT_NEW, 10),
+        makeSession('two', 'Older folder follow-up', '/repo/older-folder', UPDATED_AT_OLD, 20),
+        makeSession('three', 'Newer folder', '/repo/newer-folder', UPDATED_AT_MIDDLE, 40),
+      ],
+    })
+
+    expect(grouped.projects.map((project) => project.projectPath)).toEqual([
+      '/repo/older-folder',
+      '/repo/newer-folder',
     ])
   })
 

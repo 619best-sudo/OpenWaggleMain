@@ -46,7 +46,7 @@ export function CodeBlock({ children, language, className }: CodeBlockProps) {
       )}
     >
       <div className="flex items-center justify-between border-b border-border/10 px-3 py-1.5">
-        <span className="font-mono text-[12px] text-text-muted">{language ?? 'text'}</span>
+        <span className="font-mono text-[12px] font-medium text-info">{language ?? 'text'}</span>
         <Button
           variant="unstyled"
           type="button"

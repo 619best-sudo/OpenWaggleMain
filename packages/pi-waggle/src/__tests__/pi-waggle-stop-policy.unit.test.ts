@@ -58,6 +58,64 @@ function qaConfig(): WaggleConfig {
   }
 }
 
+function webVerifierConfig(): WaggleConfig {
+  return {
+    mode: 'sequential',
+    agents: [
+      {
+        label: 'Web Verifier',
+        model: 'openai/gpt-5.5',
+        roleDescription: 'Verifies web UI changes with Playwright.',
+        color: 'emerald',
+        outputContract: {
+          requiredSections: [
+            'verification verdict',
+            'compile or runtime evidence',
+            'viewports checked',
+            'playwright evidence reviewed',
+            'layout and spacing checks',
+            'asset loading checks',
+            'accessibility and ux checks',
+            'comparison against request or reference',
+            'regressions or mismatches found',
+            'highest-value next fix for planner',
+          ],
+        },
+      },
+    ],
+    stop: { primary: 'consensus', maxTurnsSafety: MAX_TURNS },
+  }
+}
+
+function mobileVerifierConfig(): WaggleConfig {
+  return {
+    mode: 'sequential',
+    agents: [
+      {
+        label: 'Mobile Verifier',
+        model: 'openai/gpt-5.5',
+        roleDescription: 'Verifies mobile UI changes in runtime.',
+        color: 'emerald',
+        outputContract: {
+          requiredSections: [
+            'verification verdict',
+            'compile or runtime evidence',
+            'device or runtime targets checked',
+            'mobile runtime evidence reviewed',
+            'layout and spacing checks',
+            'asset loading checks',
+            'accessibility and ux checks',
+            'comparison against request or reference',
+            'regressions or mismatches found',
+            'highest-value next fix for planner',
+          ],
+        },
+      },
+    ],
+    stop: { primary: 'consensus', maxTurnsSafety: MAX_TURNS },
+  }
+}
+
 function assistantMessage(input: {
   readonly text?: string
   readonly stopReason?: 'stop' | 'length' | 'toolUse' | 'error' | 'aborted'
@@ -224,6 +282,182 @@ describe('pi-waggle stop policy', () => {
 
     expect(decision.continue).toBe(true)
     expect(decision.turnSucceeded).toBe(true)
+  })
+
+  it('rejects a web verifier pass without an actual Playwright tool call', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: webVerifierConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text: `verification verdict: pass
+compile or runtime evidence: pnpm dev served the page
+viewports checked: 390x844 and 1440x900
+playwright evidence reviewed: opened the page in a browser and captured screenshots
+layout and spacing checks: header, hero, and pricing grid stayed aligned without overflow
+asset loading checks: hero image and icons loaded successfully
+accessibility and ux checks: focus states and contrast looked correct on key controls
+comparison against request or reference: matches the requested SaaS landing page
+regressions or mismatches found: none
+highest-value next fix for planner: none`,
+        }),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'Web Verifier',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(false)
+    expect(decision.stop).toBeUndefined()
+    expect(decision.state.consecutiveErrorTurns).toBe(1)
+  })
+
+  it('accepts a web verifier pass with concrete Playwright evidence', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: webVerifierConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text: `verification verdict: pass
+compile or runtime evidence: pnpm dev served the page successfully
+viewports checked: 390x844 and 1440x900
+playwright evidence reviewed: Playwright opened the landing page, clicked the pricing toggle, captured screenshots, and reviewed the browser console logs
+layout and spacing checks: hero, features grid, and footer stayed aligned with no horizontal overflow in either viewport
+asset loading checks: hero media, icons, and web fonts loaded without broken requests
+accessibility and ux checks: focus states remained visible and primary controls kept readable contrast
+comparison against request or reference: matches the requested layout and motion closely
+regressions or mismatches found: none
+highest-value next fix for planner: none`,
+          toolCallId: 'tool-1',
+          toolCallName: 'playwright',
+        }),
+        toolResultMessage('tool-1'),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'Web Verifier',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(true)
+  })
+
+  it('rejects a web verifier pass without screenshot or log artifact references', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: webVerifierConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text: `verification verdict: pass
+compile or runtime evidence: pnpm dev served the page successfully
+viewports checked: 390x844 and 1440x900
+playwright evidence reviewed: Playwright opened the landing page, clicked the pricing toggle, and verified the browser state after interaction
+layout and spacing checks: hero, features grid, and footer stayed aligned with no horizontal overflow in either viewport
+asset loading checks: hero media, icons, and web fonts loaded without broken requests
+accessibility and ux checks: focus states remained visible and primary controls kept readable contrast
+comparison against request or reference: matches the requested layout and motion closely
+regressions or mismatches found: none
+highest-value next fix for planner: none`,
+          toolCallId: 'tool-3',
+          toolCallName: 'playwright',
+        }),
+        toolResultMessage('tool-3'),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'Web Verifier',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(false)
+    expect(decision.stop).toBeUndefined()
+    expect(decision.state.consecutiveErrorTurns).toBe(1)
+  })
+
+  it('rejects a mobile verifier pass without an actual mobile runtime tool call', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: mobileVerifierConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text: `verification verdict: pass
+compile or runtime evidence: app launched successfully
+device or runtime targets checked: iPhone 15 simulator
+mobile runtime evidence reviewed: opened the updated screen, tapped the CTA, and captured screenshots
+layout and spacing checks: screen spacing looked correct and no safe-area overlap was visible
+asset loading checks: icons and images loaded without missing assets
+accessibility and ux checks: labels were present and touch targets felt large enough
+comparison against request or reference: matches the requested mobile flow
+regressions or mismatches found: none
+highest-value next fix for planner: none`,
+        }),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'Mobile Verifier',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(false)
+    expect(decision.stop).toBeUndefined()
+    expect(decision.state.consecutiveErrorTurns).toBe(1)
+  })
+
+  it('accepts a mobile verifier pass with concrete runtime evidence', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: mobileVerifierConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text: `verification verdict: pass
+compile or runtime evidence: app launched successfully in the simulator
+device or runtime targets checked: iPhone 15 simulator and Pixel 8 emulator
+mobile runtime evidence reviewed: mobile runtime opened the updated screen, tapped the CTA, scrolled the feed, and captured screenshots plus runtime logs
+layout and spacing checks: cards respected safe areas, text fit without clipping, and no overlap appeared on either device
+asset loading checks: avatars, icons, and remote images loaded successfully
+accessibility and ux checks: labels remained present, contrast stayed readable, and touch targets were large enough
+comparison against request or reference: matches the requested mobile flow
+regressions or mismatches found: none
+highest-value next fix for planner: none`,
+          toolCallId: 'tool-2',
+          toolCallName: 'mobile-mcp',
+        }),
+        toolResultMessage('tool-2'),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'Mobile Verifier',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(true)
+  })
+
+  it('rejects a mobile verifier pass without screenshot or log artifact references', () => {
+    const decision = evaluatePiWaggleStopPolicy({
+      config: mobileVerifierConfig(),
+      turnNumber: 0,
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({
+          text: `verification verdict: pass
+compile or runtime evidence: app launched successfully in the simulator
+device or runtime targets checked: iPhone 15 simulator and Pixel 8 emulator
+mobile runtime evidence reviewed: mobile runtime opened the updated screen, tapped the CTA, and confirmed the flow state after interaction
+layout and spacing checks: cards respected safe areas, text fit without clipping, and no overlap appeared on either device
+asset loading checks: avatars, icons, and remote images loaded successfully
+accessibility and ux checks: labels remained present, contrast stayed readable, and touch targets were large enough
+comparison against request or reference: matches the requested mobile flow
+regressions or mismatches found: none
+highest-value next fix for planner: none`,
+          toolCallId: 'tool-4',
+          toolCallName: 'mobile-mcp',
+        }),
+        toolResultMessage('tool-4'),
+      ]),
+      state: createPiWaggleStopPolicyState(),
+      agentLabel: 'Mobile Verifier',
+    })
+
+    expect(decision.continue).toBe(true)
+    expect(decision.turnSucceeded).toBe(false)
+    expect(decision.stop).toBeUndefined()
+    expect(decision.state.consecutiveErrorTurns).toBe(1)
   })
 
   it('completes when consensus is reached', () => {

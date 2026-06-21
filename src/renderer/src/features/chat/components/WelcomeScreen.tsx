@@ -59,7 +59,7 @@ function StarterPromptButton({
       variant="unstyled"
       type="button"
       onClick={() => onClick?.(prompt.label)}
-      className="flex min-h-11 w-full items-center justify-center gap-3 rounded-md border border-border bg-bg-secondary px-4 py-3 text-center text-[14px] text-text-secondary transition-all hover:border-border-light hover:bg-bg-hover hover:text-text-primary"
+      className="flex min-h-11 w-full items-center justify-center gap-3 rounded-md border border-border bg-bg-secondary px-4 py-3 text-center text-[14px] font-medium text-text-primary/82 transition-all hover:border-border-light hover:bg-bg-hover hover:text-text-primary"
     >
       <prompt.icon
         className="size-4 shrink-0"
@@ -94,7 +94,7 @@ export function WelcomeScreen({
               <h1 className="text-[40px] font-bold tracking-tight text-text-primary">
                 What are we building?
               </h1>
-              <p className="text-[16px] text-text-secondary">
+              <p className="text-[16px] text-text-primary/78">
                 Start typing to build, refactor, or debug.
               </p>
             </div>
@@ -120,7 +120,7 @@ export function WelcomeScreen({
                       setProjectMenuOpen(false)
                       onOpenProject?.()
                     }}
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] text-text-secondary transition-colors hover:bg-bg-hover"
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] text-text-primary/82 transition-colors hover:bg-bg-hover hover:text-text-primary"
                   >
                     <FolderOpen className="size-3.5 shrink-0" />
                     Select folder…
@@ -128,7 +128,7 @@ export function WelcomeScreen({
 
                   {recentProjects.length > 0 && (
                     <div className="mt-1 border-t border-border pt-1">
-                      <div className="px-2.5 py-1 text-[11px] uppercase tracking-wide text-text-muted">
+                      <div className="px-2.5 py-1 text-[11px] uppercase tracking-wide text-text-tertiary">
                         Recent projects
                       </div>
                       {recentProjects.map((path) => (
@@ -137,12 +137,12 @@ export function WelcomeScreen({
                           key={path}
                           type="button"
                           onClick={() => handleChooseProject(path)}
-                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] text-text-secondary transition-colors hover:bg-bg-hover"
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] text-text-primary/82 transition-colors hover:bg-bg-hover hover:text-text-primary"
                         >
-                          <FolderOpen className="size-3.5 shrink-0 text-text-tertiary" />
+                          <FolderOpen className="size-3.5 shrink-0 text-text-secondary" />
                           <span className="min-w-0 flex-1 truncate">{projectName(path)}</span>
                           {path === projectPath ? (
-                            <span className="text-[11px] text-text-muted">Current</span>
+                            <span className="text-[11px] text-text-tertiary">Current</span>
                           ) : null}
                         </Button>
                       ))}
@@ -156,7 +156,7 @@ export function WelcomeScreen({
                   onClick={() => {
                     onOpenProject?.()
                   }}
-                  className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-[14px] text-text-secondary transition-colors hover:border-border-light hover:text-text-primary"
+                  className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-2 text-[14px] font-medium text-text-primary/82 transition-colors hover:border-border-light hover:text-text-primary"
                   title="Open project picker"
                 >
                   <FolderOpen className="size-4 shrink-0" />

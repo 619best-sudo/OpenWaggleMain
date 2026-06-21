@@ -28,7 +28,7 @@ export function CopyButton({ label, value }: { readonly label: string; readonly 
     <Button
       variant="unstyled"
       type="button"
-      className="inline-flex items-center gap-1 rounded border border-border/15 px-1.5 py-0.5 text-[11px] text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+      className="inline-flex items-center gap-1 rounded border border-border/15 px-1.5 py-0.5 text-[11px] text-text-primary/82 transition-colors hover:bg-bg-hover hover:text-text-primary"
       onClick={(event) => {
         event.stopPropagation()
         copy(value)
@@ -53,8 +53,8 @@ export function ToolArgs({
 }) {
   if (name === 'bash' && typeof args.command === 'string') {
     return (
-      <div className="rounded-md border border-border/10 bg-code-card px-3 py-2 font-mono text-[13px] text-text-secondary">
-        <span className="text-text-muted select-none">$ </span>
+      <div className="rounded-md border border-border/10 bg-code-card px-3 py-2 font-mono text-[13px] text-text-primary/82">
+        <span className="text-text-tertiary select-none">$ </span>
         {args.command}
       </div>
     )
@@ -63,7 +63,7 @@ export function ToolArgs({
   const entries = Object.entries(args)
   if (entries.length === 0) {
     return (
-      <pre className="overflow-x-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-secondary">
+      <pre className="overflow-x-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-primary/78">
         {rawArgs || '{}'}
       </pre>
     )
@@ -90,10 +90,11 @@ function ToolArgValue({
   const display =
     typeof value === 'string' ? value : JSON.stringify(value, null, JSON_STRINGIFY_SPACES)
   const isLong = typeof display === 'string' && display.length > LONG_ARGUMENT_PREVIEW_CHARS
+  const isPathLikeKey = name === 'path' || name.endsWith('Path')
 
   return (
     <div>
-      <span className="text-[13px] text-text-secondary">{name}: </span>
+      <span className="text-[13px] text-text-primary/82">{name}: </span>
       {isLong && typeof value === 'string' && FILE_CONTENT_ARG_KEYS.has(name) ? (
         <HighlightedFileContent
           content={value}
@@ -102,13 +103,20 @@ function ToolArgValue({
         />
       ) : isLong ? (
         <pre
-          className="mt-0.5 overflow-x-auto overflow-y-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-secondary"
+          className="mt-0.5 overflow-x-auto overflow-y-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-primary/78"
           style={{ maxHeight: LONG_ARGUMENT_MAX_HEIGHT_PX }}
         >
           {display}
         </pre>
       ) : (
-        <span className="text-[13px] font-mono text-text-secondary">{display}</span>
+        <span
+          className={cn(
+            'text-[13px] font-mono text-text-primary/78',
+            isPathLikeKey && 'font-medium text-info',
+          )}
+        >
+          {display}
+        </span>
       )}
     </div>
   )
@@ -126,11 +134,11 @@ function HighlightedFileContent({
   if (!shouldHighlightCode(content)) {
     return (
       <div>
-        <div className="mb-1 text-[12px] text-text-muted">
+        <div className="mb-1 text-[12px] text-text-tertiary">
           Large file preview shown without syntax highlighting to keep the UI responsive.
         </div>
         <pre
-          className="overflow-x-auto overflow-y-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-secondary whitespace-pre-wrap break-words"
+          className="overflow-x-auto overflow-y-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-primary/78 whitespace-pre-wrap break-words"
           style={{ maxHeight }}
         >
           {content}
@@ -187,7 +195,7 @@ export function ToolResult({
 
   return (
     <pre
-      className="overflow-x-auto overflow-y-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-secondary whitespace-pre-wrap break-words"
+      className="overflow-x-auto overflow-y-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-primary/78 whitespace-pre-wrap break-words"
       style={{ maxHeight: RESULT_MAX_HEIGHT_PX }}
     >
       {displayContent}
@@ -205,10 +213,26 @@ export function UnifiedDiffView({
   return (
     <div className="rounded-md border border-border/15 overflow-hidden text-[12px] font-mono">
       <div className="flex items-center justify-between bg-code-card px-3 py-1.5 border-b border-border/10">
-        <span className="text-text-secondary">Diff</span>
+        <span className="font-medium text-info">Diff</span>
         <div className="flex items-center gap-2 shrink-0 ml-2">
-          {diff.additions > 0 && <span className="text-success">+{diff.additions}</span>}
-          {diff.deletions > 0 && <span className="text-error">-{diff.deletions}</span>}
+          {diff.additions > 0 && (
+            <span
+              aria-label={`${String(diff.additions)} lines added`}
+              title={`${String(diff.additions)} lines added`}
+              className="rounded-full bg-success/10 px-1.5 py-0.5 font-medium tabular-nums text-success"
+            >
+              +{diff.additions}
+            </span>
+          )}
+          {diff.deletions > 0 && (
+            <span
+              aria-label={`${String(diff.deletions)} lines removed`}
+              title={`${String(diff.deletions)} lines removed`}
+              className="rounded-full bg-error/10 px-1.5 py-0.5 font-medium tabular-nums text-error"
+            >
+              -{diff.deletions}
+            </span>
+          )}
         </div>
       </div>
       <div

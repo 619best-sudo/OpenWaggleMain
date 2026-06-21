@@ -24,7 +24,7 @@ describe('ToolCallBlock', () => {
         result={{ content: 'file content', state: 'success' }}
       />,
     )
-    expect(screen.getByText('Read src/main.ts')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Read src\/main\.ts/ })).toBeInTheDocument()
   })
 
   it('renders tool name as fallback for unknown tool', () => {
@@ -41,7 +41,7 @@ describe('ToolCallBlock', () => {
 
   it('shows running action text with ellipsis when running', () => {
     render(<ToolCallBlock name="read" args='{"path":"src/index.ts"}' state="running" isStreaming />)
-    expect(screen.getByText('Reading src/index.ts...')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Reading src\/index\.ts\.\.\./ })).toBeInTheDocument()
   })
 
   it('shows spinner when tool is running', () => {
@@ -57,7 +57,7 @@ describe('ToolCallBlock', () => {
       <ToolCallBlock name="write" args='{"path":"out.txt"}' state="input-complete" />,
     )
 
-    expect(screen.getByText('Requested write out.txt')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Requested write out\.txt/ })).toBeInTheDocument()
     expect(container.querySelector('.animate-spin')).toBeNull()
   })
 
@@ -71,7 +71,7 @@ describe('ToolCallBlock', () => {
       />,
     )
     // Check icon is rendered as an SVG — look for the completed action text style
-    expect(screen.getByText('Read file.ts')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Read file\.ts/ })).toBeInTheDocument()
     // No spinner should be present
     expect(container.querySelector('.animate-spin')).toBeNull()
   })
@@ -85,14 +85,35 @@ describe('ToolCallBlock', () => {
         result={{ content: '', state: 'error', error: 'File not found' }}
       />,
     )
-    expect(screen.getByText('Failed read missing.ts')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Failed read missing\.ts/ })).toBeInTheDocument()
+  })
+
+  it('keeps failed tool output collapsed until expanded', () => {
+    render(
+      <ToolCallBlock
+        name="bash"
+        args='{"command":"npm create next-app"}'
+        state="input-complete"
+        result={{
+          content: 'Could not create a project called "Test" because of npm naming restrictions.',
+          state: 'error',
+          error: 'Could not create a project called "Test" because of npm naming restrictions.',
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: /Failed bash `npm create next-app`/ })).toBeInTheDocument()
+    expect(screen.queryByText(/Could not create a project called "Test"/)).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /Failed bash `npm create next-app`/ }))
+    expect(screen.getByText(/Could not create a project called "Test"/)).toBeInTheDocument()
   })
 
   it('renders completed state once a concrete result exists', () => {
     render(
       <ToolCallBlock
         name="write"
-        args='{"path":"docs/SUMMARY.md"}'
+        args='{"path":"docs/SUMMARY.md","content":"# Summary\n- Item 1\n- Item 2\n"}'
         state="input-complete"
         result={{
           content: '{"kind":"json","data":{"message":"File written: docs/SUMMARY.md"}}',
@@ -101,7 +122,8 @@ describe('ToolCallBlock', () => {
       />,
     )
 
-    expect(screen.getByText('Wrote docs/SUMMARY.md')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Wrote docs\/SUMMARY\.md/ })).toBeInTheDocument()
+    expect(screen.getByText('+3')).toBeInTheDocument()
   })
 
   it('shows bash with backtick-wrapped verb', () => {
@@ -113,7 +135,7 @@ describe('ToolCallBlock', () => {
         result={{ content: '"passed"', state: 'success' }}
       />,
     )
-    expect(screen.getByText('Ran `pnpm test`')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Ran `pnpm test`/ })).toBeInTheDocument()
   })
 
   it('expands to show arguments on click', () => {
@@ -218,9 +240,9 @@ describe('ToolCallBlock', () => {
       />,
     )
 
-    expect(screen.getByText('Edited src/app.ts')).toBeInTheDocument()
-    expect(screen.getAllByText('+1')).toHaveLength(2)
-    expect(screen.getAllByText('-1')).toHaveLength(2)
+    expect(screen.getByRole('button', { name: /Edited src\/app\.ts/ })).toBeInTheDocument()
+    expect(screen.getAllByTitle('1 lines added')).toHaveLength(2)
+    expect(screen.getAllByTitle('1 lines removed')).toHaveLength(2)
     expect(screen.getByText('+new line')).toBeInTheDocument()
   })
 

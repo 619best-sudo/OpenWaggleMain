@@ -79,6 +79,8 @@
   },
   "dependencies": {
     "@diegogbrisa/ts-match": "1.2.0",
+    "@fontsource/fira-sans": "^5.2.7",
+    "@fontsource/puritan": "^5.2.8",
     "@lexical/react": "^0.42.0",
     "@lobehub/icons-static-svg": "^1.87.0",
     "@mariozechner/pi-coding-agent": "0.70.2",
