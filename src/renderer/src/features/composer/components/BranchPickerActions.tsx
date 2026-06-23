@@ -49,7 +49,7 @@ function BranchPickerActionButton({ children, disabled, onClick }: BranchPickerA
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="rounded-md border border-border px-2 py-1 text-[11px] text-text-secondary hover:bg-bg-hover"
+      className="home-panel-frame-soft rounded-md px-2 py-1 text-[11px] text-text-secondary hover:bg-bg-hover"
     >
       {children}
     </Button>

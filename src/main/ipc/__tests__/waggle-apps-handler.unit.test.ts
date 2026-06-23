@@ -158,6 +158,9 @@ describe('registerWaggleAppsHandlers', () => {
         ready: false,
         installedCount: 0,
         missingCount: 1,
+        preflight: expect.objectContaining({
+          verdict: 'blocked',
+        }),
       }),
     )
 
@@ -169,6 +172,9 @@ describe('registerWaggleAppsHandlers', () => {
         status: expect.objectContaining({
           ready: true,
           installedCount: 1,
+          preflight: expect.objectContaining({
+            verdict: 'ready',
+          }),
         }),
       }),
     )

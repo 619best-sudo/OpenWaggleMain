@@ -163,6 +163,9 @@ export const api: OpenWaggleApi = {
   cancelWaggle: send('agent:cancel-waggle'),
   onWaggleEvent: on('waggle:event'),
   onWaggleTurnEvent: on('waggle:turn-event'),
+  sendTeamMessage: invoke('agent:send-team-message'),
+  generateTeamAgent: invoke('agent:generate-team-agent'),
+  cancelTeam: send('agent:cancel-team'),
 
   // Auth
   startOAuth: invoke('auth:start-oauth'),

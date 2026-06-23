@@ -32,6 +32,7 @@ export function WaggleDependencyDialog({
     (status?.optionalMissingCount ?? 0) > 0 ||
     (status?.optionalUnsupportedCount ?? 0) > 0
   const canInstall = dependencyCount > 0 && !isInstalling && hasDependencySetupWork
+  const preflight = status?.preflight ?? null
 
   return (
     <div
@@ -83,6 +84,18 @@ export function WaggleDependencyDialog({
                 {isReady ? <CheckCircle2 className="size-3.5" /> : <Wrench className="size-3.5" />}
                 {isReady ? 'Ready In Waggle App' : 'Needs Waggle App Setup'}
               </span>
+              {preflight ? (
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium uppercase tracking-wide',
+                    preflight.verdict === 'ready' && 'bg-accent/15 text-accent',
+                    preflight.verdict === 'partial' && 'bg-warning/15 text-warning',
+                    preflight.verdict === 'blocked' && 'bg-rose-500/15 text-rose-300',
+                  )}
+                >
+                  Preflight {preflight.verdict}
+                </span>
+              ) : null}
               <span className="text-text-tertiary">
                 {dependencyCount === 0
                   ? 'This Waggle app does not declare any installable dependencies.'
@@ -96,7 +109,39 @@ export function WaggleDependencyDialog({
               setup notes. Required dependencies gate launch. Optional dependencies unlock broader
               task coverage without blocking narrower requests.
             </p>
+            {preflight ? (
+              <p className="mt-2 text-[12px] leading-5 text-text-secondary">{preflight.summary}</p>
+            ) : null}
           </div>
+
+          {preflight && preflight.checks.length > 0 ? (
+            <div className="rounded-xl border border-border-light bg-bg-secondary/35 px-4 py-3">
+              <div className="text-[12px] font-medium text-text-primary">Preflight Checks</div>
+              <div className="mt-3 space-y-2">
+                {preflight.checks.map((check) => (
+                  <div
+                    key={check.id}
+                    className="flex flex-col gap-1 rounded-lg border border-white/6 bg-black/10 px-3 py-2"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[12px] font-medium text-text-primary">{check.label}</span>
+                      <span
+                        className={cn(
+                          'rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+                          check.status === 'pass' && 'bg-accent/15 text-accent',
+                          check.status === 'warn' && 'bg-warning/15 text-warning',
+                          check.status === 'fail' && 'bg-rose-500/15 text-rose-300',
+                        )}
+                      >
+                        {check.status}
+                      </span>
+                    </div>
+                    <p className="text-[12px] leading-5 text-text-tertiary">{check.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {status?.unsupportedCount ? (
             <div className="rounded-xl border border-warning/25 bg-warning/8 px-4 py-3 text-[12px] leading-5 text-warning">

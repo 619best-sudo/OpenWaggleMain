@@ -40,7 +40,7 @@ export function ContextMeter() {
         failed={usage.failed}
       />
       {meter.contextWindow ? (
-        <span className="hidden font-mono text-[11px] text-[#52525b] sm:inline">
+        <span className="hidden font-mono text-[11px] text-text-muted sm:inline">
           / {formatContextWindow(meter.contextWindow)}
         </span>
       ) : null}

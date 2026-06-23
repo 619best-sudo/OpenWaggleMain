@@ -308,4 +308,81 @@ describe('Pi run orchestration', () => {
     expect(session.setModel).toHaveBeenCalledWith(modelFromReference(PRIMARY_MODEL))
     expect(runMocks.disposeOpenWagglePiSession).toHaveBeenCalledWith(session)
   })
+
+  it('auto-compacts the Pi session between successful Waggle handoffs', async () => {
+    const fakePi = createFakePi()
+    const session = createFakeSession(fakePi.getAgentEndHandler)
+    runMocks.createPiProjectModelRuntime.mockImplementation(async (input: RuntimeFactoryInput) => {
+      for (const factory of input.extensionFactories ?? []) {
+        factory(fakePi.pi)
+      }
+      return { model: modelFromReference(input.modelReference), services: {} }
+    })
+    runMocks.createOpenWaggleAgentSessionFromServices.mockResolvedValue({ session })
+
+    await runPiWaggle({
+      session: sessionDetail(),
+      runId: 'run-waggle-auto-compact',
+      payload: payload('Compare the design'),
+      model: PRIMARY_MODEL,
+      signal: new AbortController().signal,
+      onEvent: vi.fn(),
+      waggle: {
+        config: waggleConfig(),
+        inheritedModel: PRIMARY_MODEL,
+        onWaggleEvent: vi.fn(),
+        onTurnEvent: vi.fn(),
+      },
+    })
+
+    expect(session.compact).toHaveBeenCalledTimes(3)
+    expect(session.compact).toHaveBeenCalledWith(
+      expect.stringContaining('Compact this Pi Waggle session before the next agent handoff.'),
+    )
+    expect(session.compact).toHaveBeenCalledWith(
+      expect.stringContaining('Keep these facts in the compact summary:'),
+    )
+  })
+
+  it('continues Waggle turns when auto-compaction fails', async () => {
+    const sessionMessages: unknown[] = []
+    const fakePi = createFakePi((message) => sessionMessages.push(message))
+    const session = {
+      ...createFakeSession(fakePi.getAgentEndHandler, sessionMessages),
+      compact: vi.fn(async () => {
+        throw new Error('Compaction failed')
+      }),
+    }
+    runMocks.createPiProjectModelRuntime.mockImplementation(async (input: RuntimeFactoryInput) => {
+      for (const factory of input.extensionFactories ?? []) {
+        factory(fakePi.pi)
+      }
+      return { model: modelFromReference(input.modelReference), services: {} }
+    })
+    runMocks.createOpenWaggleAgentSessionFromServices.mockResolvedValue({ session })
+
+    const result = await runPiWaggle({
+      session: sessionDetail(),
+      runId: 'run-waggle-compact-failure',
+      payload: payload('Compare the design'),
+      model: PRIMARY_MODEL,
+      signal: new AbortController().signal,
+      onEvent: vi.fn(),
+      waggle: {
+        config: waggleConfig(),
+        inheritedModel: PRIMARY_MODEL,
+        onWaggleEvent: vi.fn(),
+        onTurnEvent: vi.fn(),
+      },
+    })
+
+    expect(session.compact).toHaveBeenCalledTimes(3)
+    expect(result.newMessages.map((message) => message.role)).toEqual([
+      'user',
+      'assistant',
+      'assistant',
+      'assistant',
+      'assistant',
+    ])
+  })
 })

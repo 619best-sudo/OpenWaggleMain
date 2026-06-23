@@ -8,7 +8,7 @@ export function SessionTreePanel({ onClose }: SessionTreePanelProps) {
   const panel = useSessionTreePanelController(onClose)
 
   return (
-    <section className="flex h-full min-w-0 flex-col bg-diff-bg" aria-label="Session Tree">
+    <section className="flex h-full min-w-0 flex-col bg-diff-bg home-panel-frame-soft" aria-label="Session Tree">
       <SessionTreePanelHeader onClose={panel.header.onClose} />
       <SessionTreePanelFilters filters={panel.filters} />
       <SessionTreePanelContent content={panel.content} />

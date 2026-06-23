@@ -9,6 +9,9 @@ export interface IpcSendChannelMap {
   'agent:cancel-waggle': {
     args: [sessionId: SessionId]
   }
+  'agent:cancel-team': {
+    args: [sessionId: SessionId]
+  }
   'terminal:write': {
     args: [terminalId: string, data: string]
   }

@@ -2,6 +2,7 @@ import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
+import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/waggle'
 import type { AgentChatStatus, AgentCompactionStatus } from '../hooks/useAgentChat'
 import type { SessionForkTarget } from '../lib/session-fork-targets'
@@ -42,11 +43,15 @@ export interface ChatComposerSectionState {
   readonly isLoading: boolean
   readonly status: AgentChatStatus
   readonly compactionStatus: AgentCompactionStatus | null
+  readonly activeTeammate: TeammateDefinition | null
+  readonly teamStatus: 'idle' | 'running'
   readonly forkSelectorOpen: boolean
   readonly forkTargets: readonly SessionForkTarget[]
   onStopCollaboration: () => void
   onSelectSkill: (skillId: string, skillName?: string) => void
   onStartWaggle: (config: WaggleConfig) => void
+  onStartTeam: (teammate: TeammateDefinition) => void
+  onClearTeamMode: () => void
   onSendWithWaggle: (payload: AgentSendPayload) => Promise<void>
   onSteer: (messageId: string) => Promise<void>
   onCancel: () => void

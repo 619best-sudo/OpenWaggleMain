@@ -139,6 +139,19 @@ describe('registerSettingsHandlers', () => {
       )
     })
 
+    it('accepts the off-white theme mode', async () => {
+      registerSettingsHandlers()
+
+      const handler = getTypedEffectInvokeHandler('settings:update')
+      expect(handler).toBeDefined()
+
+      const result = await handler?.({}, { themeMode: 'off-white' })
+      expect(result).toEqual({ ok: true })
+      expect(updateSettingsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ themeMode: 'off-white' }),
+      )
+    })
+
     it('rejects an invalid settings payload and returns error', async () => {
       registerSettingsHandlers()
 

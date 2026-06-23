@@ -20,7 +20,7 @@ export function BranchPickerList({
   onOpenActionDialog,
 }: BranchPickerListProps) {
   return (
-    <div className="max-h-[220px] overflow-y-auto rounded-md border border-border bg-bg">
+    <div className="home-panel-frame-soft max-h-[220px] overflow-y-auto rounded-md bg-bg">
       {filteredBranches.length === 0 ? <BranchPickerEmptyState /> : null}
       {localBranches.length > 0 ? (
         <BranchPickerLocalSection
@@ -86,7 +86,7 @@ interface BranchPickerSectionHeaderProps {
 
 function BranchPickerSectionHeader({ label }: BranchPickerSectionHeaderProps) {
   return (
-    <div className="border-b border-border px-2.5 py-1 text-[11px] uppercase tracking-wide text-text-muted">
+    <div className="home-divider-b px-2.5 py-1 text-[11px] uppercase tracking-wide text-text-muted">
       {label}
     </div>
   )
@@ -102,7 +102,7 @@ function LocalBranchRow({ branch, onCheckout, onOpenActionDialog }: LocalBranchR
   return (
     <div
       className={cn(
-        'flex items-center gap-1 border-b border-border px-1.5 py-1 last:border-b-0',
+        'home-divider-b flex items-center gap-1 px-1.5 py-1 last:border-b-0',
         branch.isCurrent ? 'text-accent' : 'text-text-secondary',
       )}
     >
@@ -112,7 +112,7 @@ function LocalBranchRow({ branch, onCheckout, onOpenActionDialog }: LocalBranchR
           variant="unstyled"
           type="button"
           onClick={() => onOpenActionDialog('delete-branch', branch.name)}
-          className="flex size-6 items-center justify-center rounded border border-border text-text-tertiary transition-colors hover:bg-error/10 hover:text-error"
+          className="home-panel-frame-soft flex size-6 items-center justify-center rounded text-text-tertiary transition-colors hover:bg-error/10 hover:text-error"
           title={`Delete "${branch.name}"`}
         >
           <Trash2 className="size-3" />
@@ -134,7 +134,7 @@ function RemoteBranchRow({ branch, onCheckout }: BranchRowProps) {
       type="button"
       onClick={() => onCheckout(branch.name)}
       className={cn(
-        'flex w-full items-center justify-between border-b border-border px-2.5 py-1.5 text-left text-[12px] transition-colors hover:bg-bg-hover last:border-b-0',
+        'home-divider-b flex w-full items-center justify-between px-2.5 py-1.5 text-left text-[12px] transition-colors hover:bg-bg-hover last:border-b-0',
         branch.isCurrent ? 'text-accent' : 'text-text-secondary',
       )}
     >

@@ -167,7 +167,7 @@ export function ChatErrorDisplay({
   }
 
   return (
-    <div className="my-3 rounded-xl border border-error/25 bg-error/6 px-4 py-3">
+    <div className="home-panel-frame-soft my-3 rounded-xl bg-error/6 px-4 py-3">
       <div className="flex items-start gap-3">
         <AlertCircle className="size-4 shrink-0 text-error mt-0.5" />
         <div className="flex-1 min-w-0">

@@ -4,7 +4,7 @@ import type { SessionTreePanelProps } from '../model'
 
 export function SessionTreePanelHeader({ onClose }: SessionTreePanelProps) {
   return (
-    <div className="flex h-12 shrink-0 items-center justify-between border-b border-border px-4">
+    <div className="home-divider-b flex h-12 shrink-0 items-center justify-between px-4">
       <div className="flex min-w-0 items-center gap-2">
         <ListTree className="size-4 shrink-0 text-text-tertiary" />
         <h2 className="truncate text-[13px] font-semibold text-text-primary">Session Tree</h2>

@@ -5,6 +5,7 @@ import { ChatRouteSurface } from '../-chat-route-surface'
 import { McpRouteSurface } from '../-mcp-route-surface'
 import { SettingsRouteSurface } from '../-settings-route-surface'
 import { SkillsRouteSurface } from '../-skills-route-surface'
+import { TeammatesRouteSurface } from '../-teammates-route-surface'
 import { WaggleRouteSurface } from '../-waggle-route-surface'
 
 type SettingsTab = 'profile' | 'general' | 'archived' | 'connections'
@@ -105,6 +106,10 @@ vi.mock('@/features/settings/components/sections/WaggleSection', () => ({
   WaggleSection: () => <section>Waggle panel</section>,
 }))
 
+vi.mock('@/features/teammates/components/TeammatesPanel', () => ({
+  TeammatesPanel: () => <section>Teammates panel</section>,
+}))
+
 vi.mock('@/features/skills/components', () => ({
   SkillsPanel: () => <section>Skills panel</section>,
 }))
@@ -188,6 +193,12 @@ describe('route surfaces', () => {
     render(<WaggleRouteSurface />)
 
     expect(screen.getByText('Waggle panel')).toBeInTheDocument()
+  })
+
+  it('wraps the Team(New) panel in its route surface', () => {
+    render(<TeammatesRouteSurface />)
+
+    expect(screen.getByText('Teammates panel')).toBeInTheDocument()
   })
 
   it('renders chat content with the active diff sidebar and closes it through route state', async () => {

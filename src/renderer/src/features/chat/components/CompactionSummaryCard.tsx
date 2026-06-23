@@ -22,7 +22,7 @@ export function CompactionSummaryCard({
   const tokenLabel = formatTokens(tokensBefore)
 
   return (
-    <section className="group/compaction-summary rounded-xl border border-border-light bg-bg-secondary/80 p-3 text-text-secondary shadow-sm">
+    <section className="home-panel-frame group/compaction-summary rounded-xl bg-bg-secondary/80 p-3 text-text-secondary shadow-sm">
       <div className="flex items-start gap-2">
         <Button
           variant="unstyled"
@@ -59,7 +59,7 @@ export function CompactionSummaryCard({
       </div>
 
       {expanded ? (
-        <div className={cn('mt-3 border-t border-border pt-3 text-[13px] text-text-secondary')}>
+        <div className={cn('home-divider-t mt-3 pt-3 text-[13px] text-text-secondary')}>
           <StreamingText text={summary} />
         </div>
       ) : null}

@@ -101,9 +101,11 @@ describe('createBaseCommands', () => {
     const closeCommandPalette = vi.fn()
     const commands = createBaseCommands({
       closeCommandPalette,
+      configureTeam: vi.fn(),
       configureWaggle: vi.fn(),
       insertCompactCommand: vi.fn(),
       selectPreset: vi.fn(),
+      selectTeam: vi.fn(),
       selectSkill: vi.fn(),
       startWaggle: vi.fn(),
     })

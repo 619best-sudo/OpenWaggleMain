@@ -57,7 +57,7 @@ export function LexicalComposerEditor({
           <ContentEditable
             aria-label="Message input"
             className={cn(
-              'w-full min-h-[24px] resize-none bg-transparent text-[14px] text-[#f1f4ee]',
+              'w-full min-h-[24px] resize-none bg-transparent text-[14px] text-text-primary',
               'focus:outline-none focus-visible:shadow-none',
               'disabled:opacity-50',
             )}

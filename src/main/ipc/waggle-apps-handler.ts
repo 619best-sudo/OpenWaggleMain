@@ -45,6 +45,7 @@ export function registerWaggleAppsHandlers(): void {
         return yield* Effect.promise(() =>
           getWaggleAppInstallStatus({
             projectPath,
+            presetId: decodedPreset.data.id,
             app: decodedPreset.data.app,
             settingsService,
             mcpConfigService,
@@ -74,6 +75,7 @@ export function registerWaggleAppsHandlers(): void {
         return yield* Effect.promise(() =>
           installWaggleAppDependencies({
             projectPath,
+            presetId: decodedPreset.data.id,
             app: decodedPreset.data.app,
             settingsService,
             mcpConfigService,

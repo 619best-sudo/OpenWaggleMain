@@ -31,7 +31,7 @@ interface BranchMenuController {
 
 function DraftBranchRow({ sourceNodeId }: { readonly sourceNodeId: string }) {
   return (
-    <div className="mx-4 flex h-9 items-center gap-2 rounded-md border border-dashed border-border/40 pl-8 pr-4 text-left text-text-tertiary">
+    <div className="mx-4 flex h-9 items-center gap-2 rounded-md border-2 border-dashed border-home-border pl-8 pr-4 text-left text-text-tertiary">
       <span className="min-w-0 flex-1 truncate text-[12px]">Draft branch from {sourceNodeId}</span>
     </div>
   )
@@ -154,7 +154,7 @@ function SidebarBranchItem({
     <div
       className={cn(
         'group mx-4 flex h-9 items-center gap-2 rounded-md pl-8 pr-3 text-left transition-colors',
-        row.isActive ? 'bg-accent/10 text-accent' : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
+        row.isActive ? 'bg-bg-active text-text-primary font-medium' : 'text-text-tertiary hover:bg-bg-hover hover:text-text-secondary',
       )}
     >
       {isRenaming ? (

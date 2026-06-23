@@ -74,12 +74,12 @@ function SendMessageButton({ isLoading, canSend, sendTitle, onSend }: SendMessag
 }
 
 function getSendButtonTone(isLoading: boolean, canSend: boolean) {
-  if (!canSend) return 'bg-white/5 cursor-not-allowed'
+  if (!canSend) return 'bg-bg-hover cursor-not-allowed'
   return isLoading
-    ? 'border border-[#8ba57b]/35 bg-[#8ba57b]/10 hover:bg-[#8ba57b]/20'
-    : 'bg-[#8ba57b] hover:bg-[#9cb88c]'
+    ? 'border border-success/35 bg-success/10 hover:bg-success/20'
+    : 'bg-success hover:bg-success/80'
 }
 
 function getSendIconTone(isLoading: boolean) {
-  return isLoading ? 'text-[#8ba57b]' : 'text-[#09110a]'
+  return isLoading ? 'text-success' : 'text-white'
 }

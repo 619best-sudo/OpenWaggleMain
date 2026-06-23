@@ -299,4 +299,45 @@ describe('applyAgentTransportEvent reasoning streaming', () => {
       },
     ])
   })
+
+  it('appends team auto-submitted prompts as user messages', () => {
+    const messages = applyEvents([
+      {
+        type: 'custom',
+        name: 'team:auto-user-prompt',
+        value: {
+          text: 'Run the website with Playwright and verify the landing page.',
+          agentLabel: 'Decision Maker',
+          generated: true,
+        },
+        timestamp: 10,
+      },
+    ])
+
+    expect(messages).toEqual([
+      {
+        id: 'team-auto-user-10',
+        role: 'user',
+        parts: [{ type: 'text', content: 'Run the website with Playwright and verify the landing page.' }],
+        createdAt: new Date(10),
+      },
+    ])
+  })
+
+  it('ignores non-generated team auto prompt events', () => {
+    const messages = applyEvents([
+      {
+        type: 'custom',
+        name: 'team:auto-user-prompt',
+        value: {
+          text: 'Original user prompt repeated',
+          agentLabel: 'Web Planner',
+          generated: false,
+        },
+        timestamp: 11,
+      },
+    ])
+
+    expect(messages).toEqual([])
+  })
 })

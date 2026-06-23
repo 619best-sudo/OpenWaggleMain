@@ -26,7 +26,7 @@ export function RightSidebarSheet({ children, open, onOpenChange }: RightSidebar
       />
       <aside
         className={cn(
-          'absolute inset-y-0 right-0 min-w-0 overflow-hidden border-l border-border bg-diff-bg shadow-2xl shadow-black/30 transition-transform duration-200 ease-out',
+          'absolute inset-y-0 right-0 min-w-0 overflow-hidden bg-diff-bg shadow-2xl shadow-black/30 transition-transform duration-200 ease-out home-divider-l home-panel-frame-soft',
           open ? 'translate-x-0' : 'translate-x-full',
         )}
         style={{ width: `min(${SHEET_VIEWPORT_WIDTH}, ${String(SHEET_MAX_WIDTH_PX)}px)` }}

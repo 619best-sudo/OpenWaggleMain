@@ -39,7 +39,7 @@ function StandaloneToolResult({
   readonly state: string
 }) {
   return (
-    <div className="rounded-lg border border-border bg-bg-secondary p-3 text-[13px] text-text-secondary">
+    <div className="home-panel-frame-soft rounded-lg bg-bg-secondary p-3 text-[13px] text-text-secondary">
       <div className="mb-2 text-[11px] uppercase tracking-wide text-text-tertiary">
         Tool result · {state}
       </div>

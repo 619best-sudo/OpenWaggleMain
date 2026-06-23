@@ -13,7 +13,7 @@ export function ActionDialog({ onToast }: ActionDialogProps) {
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4">
-      <div className="w-full max-w-[360px] rounded-xl border border-border-light bg-bg-secondary p-4 shadow-2xl">
+      <div className="home-panel-frame w-full max-w-[360px] rounded-xl bg-bg-secondary p-4 shadow-2xl">
         <h3 className="text-sm font-semibold text-text-primary">{dialog.config.title}</h3>
         <p className="mt-1 text-[12px] text-text-tertiary">{dialog.config.description}</p>
         <ActionDialogInput

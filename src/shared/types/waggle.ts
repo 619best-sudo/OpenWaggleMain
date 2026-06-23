@@ -63,6 +63,8 @@ export interface WaggleAppManifest {
 
 export type WaggleAppDependencyKind = 'mcp' | 'skill'
 export type WaggleAppDependencyState = 'installed' | 'missing' | 'unsupported'
+export type WaggleAppPreflightVerdict = 'ready' | 'partial' | 'blocked'
+export type WaggleAppPreflightCheckStatus = 'pass' | 'warn' | 'fail'
 
 export interface WaggleAppDependencyStatus {
   readonly kind: WaggleAppDependencyKind
@@ -73,6 +75,20 @@ export interface WaggleAppDependencyStatus {
   readonly description?: string
   readonly detail?: string
   readonly setupSteps?: readonly string[]
+}
+
+export interface WaggleAppPreflightCheck {
+  readonly id: string
+  readonly label: string
+  readonly status: WaggleAppPreflightCheckStatus
+  readonly detail: string
+  readonly blocking: boolean
+}
+
+export interface WaggleAppPreflightStatus {
+  readonly verdict: WaggleAppPreflightVerdict
+  readonly summary: string
+  readonly checks: readonly WaggleAppPreflightCheck[]
 }
 
 export interface WaggleAppInstallStatus {
@@ -86,6 +102,7 @@ export interface WaggleAppInstallStatus {
   readonly optionalMissingCount: number
   readonly optionalUnsupportedCount: number
   readonly dependencies: readonly WaggleAppDependencyStatus[]
+  readonly preflight?: WaggleAppPreflightStatus
 }
 
 export interface WaggleAppInstallResult {

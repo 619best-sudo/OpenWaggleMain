@@ -1,10 +1,12 @@
 import type { SkillDiscoveryItem } from '@shared/types/standards'
+import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WagglePreset } from '@shared/types/waggle'
 import {
   Archive,
   Copy,
   GitBranch,
   GitPullRequest,
+  Globe,
   ListTree,
   MessageSquare,
   Settings,
@@ -35,6 +37,13 @@ export function createBaseCommands(actions: CommandPaletteActionHandlers) {
       description: 'Start LLM collaboration session',
       icon: <Waypoints className="size-3.5" />,
       action: actions.startWaggle,
+    },
+    {
+      id: 'team-new',
+      label: 'Team(New) Mode',
+      description: 'Arm a Team(New) preset, then send your own prompt',
+      icon: <Globe className="size-3.5" />,
+      action: actions.configureTeam,
     },
     {
       id: 'feedback',
@@ -108,6 +117,29 @@ export function createPresetItems(
   return items
 }
 
+export function createTeamItems(
+  teammates: readonly TeammateDefinition[],
+  lowerQuery: string,
+  selectTeam: CommandPaletteActionHandlers['selectTeam'],
+) {
+  const items: CommandPaletteItem[] = []
+  for (const teammate of teammates) {
+    if (!teamMatchesQuery(teammate, lowerQuery)) continue
+
+    items.push({
+      id: `team-new-${teammate.id}`,
+      label: teammate.name,
+      description: truncateCommandDescription(teammate.description, 88),
+      icon: <Globe className="size-3.5" />,
+      section: 'Team(New)',
+      trailing: 'Loop',
+      action: () => selectTeam(teammate),
+    })
+  }
+
+  return items
+}
+
 export function createConfigureWaggleItem(lowerQuery: string, configureWaggle: () => void) {
   if (!isWaggleFilter(lowerQuery)) return []
   return [
@@ -118,6 +150,20 @@ export function createConfigureWaggleItem(lowerQuery: string, configureWaggle: (
       icon: <Settings className="size-3.5" />,
       section: 'configure',
       action: configureWaggle,
+    },
+  ]
+}
+
+export function createConfigureTeamItem(lowerQuery: string, configureTeam: () => void) {
+  if (!isTeamFilter(lowerQuery)) return []
+  return [
+    {
+      id: 'configure-team-new',
+      label: 'Configure Team(New)...',
+      description: 'Open Team(New) presets and builder',
+      icon: <Settings className="size-3.5" />,
+      section: 'configure',
+      action: configureTeam,
     },
   ]
 }
@@ -179,11 +225,29 @@ function presetMatchesQuery(preset: WagglePreset, lowerQuery: string) {
   )
 }
 
+function teamMatchesQuery(teammate: TeammateDefinition, lowerQuery: string) {
+  return (
+    !lowerQuery ||
+    teammate.name.toLowerCase().includes(lowerQuery) ||
+    teammate.description.toLowerCase().includes(lowerQuery) ||
+    ['team', 'team(new)', 'web executor', 'web'].includes(lowerQuery)
+  )
+}
+
 function isWaggleFilter(lowerQuery: string) {
   return (
     lowerQuery.length > 0 &&
     COMMAND_PALETTE.WAGGLE_QUERY.includes(lowerQuery) &&
     !lowerQuery.startsWith(COMMAND_PALETTE.WAGGLE_COMMAND_PREFIX)
+  )
+}
+
+function isTeamFilter(lowerQuery: string) {
+  return (
+    lowerQuery.length > 0 &&
+    ['team', 'team(new)', 'team new', 'teammate', 'web executor', 'web'].some((query) =>
+      query.includes(lowerQuery),
+    )
   )
 }
 

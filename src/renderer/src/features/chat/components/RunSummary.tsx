@@ -30,9 +30,9 @@ export function RunSummary({ phases, totalMs }: RunSummaryProps) {
   return (
     <div className="flex flex-col gap-1 py-3">
       <div className="flex items-center gap-3 text-xs text-text-muted">
-        <div className="h-px flex-1 bg-border" />
+        <div className="h-px flex-1 bg-home-border" />
         <span>Completed in {formatElapsed(totalMs)}</span>
-        <div className="h-px flex-1 bg-border" />
+        <div className="h-px flex-1 bg-home-border" />
       </div>
       {visiblePhases.length > 0 && (
         <div className="flex flex-col gap-0.5 px-4 pt-1">

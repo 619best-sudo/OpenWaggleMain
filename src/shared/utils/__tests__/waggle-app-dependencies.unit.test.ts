@@ -142,6 +142,12 @@ describe('buildWaggleAppInstallStatus', () => {
     })
 
     expect(status.ready).toBe(true)
+    expect(status.preflight).toEqual(
+      expect.objectContaining({
+        verdict: 'partial',
+        summary: expect.stringMatching(/can launch with reduced confidence: 3 optional missing, 0 optional unsupported/i),
+      }),
+    )
     expect(status.requiredDependencyCount).toBe(1)
     expect(status.optionalDependencyCount).toBe(3)
     expect(status.installedCount).toBe(1)
@@ -251,9 +257,473 @@ describe('buildWaggleAppInstallStatus', () => {
     })
 
     expect(status.ready).toBe(false)
+    expect(status.preflight).toEqual(
+      expect.objectContaining({
+        verdict: 'blocked',
+        summary: expect.stringMatching(/blocked/i),
+      }),
+    )
     expect(status.installedCount).toBe(0)
     expect(status.missingCount).toBe(2)
     expect(status.unsupportedCount).toBe(0)
+  })
+
+  it('marks fully provisioned web presets as preflight ready', () => {
+    const status = buildWaggleAppInstallStatus({
+      presetId: 'web-build',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer'],
+        optionalMcps: ['figma'],
+        optionalSkills: ['ui-screenshot-auditor'],
+      },
+      repoProfile: {
+        detectedSurfaces: ['web'],
+        detectedFrameworks: ['vite'],
+        hasPackageJson: true,
+        availableScripts: ['dev', 'build'],
+        webEntryCandidates: ['index.html', 'src/main.tsx'],
+        mobileEntryCandidates: [],
+        webCommandCandidates: ['pnpm dev', 'pnpm build'],
+        mobileCommandCandidates: [],
+        hasLikelyWebRuntime: true,
+        hasLikelyMobileRuntime: false,
+        hasInstalledNodeModules: true,
+        availableLocalTools: ['node', 'pnpm'],
+        webBootProbe: {
+          status: 'pass',
+          detail: 'Verified local web runtime entry via vite --version.',
+          command: 'vite --version',
+        },
+        mobileBootProbe: null,
+      },
+      mcpSettings: {
+        adapter: {
+          enabled: true,
+          packageSource: 'extensions/pi-mcp-adapter',
+          runtimeConfigPath: null,
+        },
+        sources: [],
+        effective: {
+          mcpServers: {},
+          disabledMcpServers: {},
+          settings: {},
+          imports: [],
+        },
+        servers: [
+          {
+            name: 'playwright',
+            enabled: true,
+            sourceId: 'project-openwaggle',
+            sourceLabel: 'Project OpenWaggle',
+            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            command: 'npx',
+            transport: 'stdio',
+            directTools: 'inherited',
+          },
+          {
+            name: 'figma',
+            enabled: true,
+            sourceId: 'project-openwaggle',
+            sourceLabel: 'Project OpenWaggle',
+            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            command: 'npx',
+            transport: 'stdio',
+            directTools: 'inherited',
+          },
+        ],
+        runtimeConfigPath: null,
+      },
+      catalog: {
+        projectPath: '/tmp/project',
+        skills: [
+          {
+            id: 'frontend-implementer',
+            name: 'frontend-implementer',
+            description: 'Implements frontend UI.',
+            folderPath: '/tmp/project/.openwaggle/skills/frontend-implementer',
+            skillPath: '/tmp/project/.openwaggle/skills/frontend-implementer/SKILL.md',
+            hasScripts: false,
+            enabled: true,
+            loadStatus: 'ok',
+          },
+          {
+            id: 'ui-screenshot-auditor',
+            name: 'ui-screenshot-auditor',
+            description: 'Audits rendered UI.',
+            folderPath: '/tmp/project/.openwaggle/skills/ui-screenshot-auditor',
+            skillPath: '/tmp/project/.openwaggle/skills/ui-screenshot-auditor/SKILL.md',
+            hasScripts: false,
+            enabled: true,
+            loadStatus: 'ok',
+          },
+        ],
+      },
+    })
+
+    expect(status.preflight).toEqual(
+      expect.objectContaining({
+        verdict: 'ready',
+        summary: expect.stringMatching(/Web Build is ready with its declared capabilities/i),
+        checks: expect.arrayContaining([
+          expect.objectContaining({ id: 'browser-verification', status: 'pass' }),
+          expect.objectContaining({ id: 'design-ingest', status: 'pass' }),
+          expect.objectContaining({ id: 'web-app-entry-files', status: 'pass' }),
+          expect.objectContaining({ id: 'web-boot-probe', status: 'pass' }),
+        ]),
+      }),
+    )
+  })
+
+  it('blocks a mobile preset when the repo only looks like web', () => {
+    const status = buildWaggleAppInstallStatus({
+      presetId: 'mobile-build',
+      app: {
+        requiredMcps: ['mobile-mcp'],
+        requiredSkills: ['frontend-implementer'],
+      },
+      repoProfile: {
+        detectedSurfaces: ['web'],
+        detectedFrameworks: ['next'],
+        hasPackageJson: true,
+        availableScripts: ['dev', 'build'],
+        webEntryCandidates: ['app/', 'src/App.tsx'],
+        mobileEntryCandidates: [],
+        webCommandCandidates: ['pnpm dev', 'pnpm build'],
+        mobileCommandCandidates: [],
+        hasLikelyWebRuntime: true,
+        hasLikelyMobileRuntime: false,
+        hasInstalledNodeModules: true,
+        availableLocalTools: ['node', 'pnpm'],
+        webBootProbe: {
+          status: 'pass',
+          detail: 'Verified local web runtime entry via next --version.',
+          command: 'next --version',
+        },
+        mobileBootProbe: null,
+      },
+      mcpSettings: {
+        adapter: {
+          enabled: true,
+          packageSource: 'extensions/pi-mcp-adapter',
+          runtimeConfigPath: null,
+        },
+        sources: [],
+        effective: {
+          mcpServers: {},
+          disabledMcpServers: {},
+          settings: {},
+          imports: [],
+        },
+        servers: [
+          {
+            name: 'mobile-mcp',
+            enabled: true,
+            sourceId: 'project-openwaggle',
+            sourceLabel: 'Project OpenWaggle',
+            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            command: 'npx',
+            transport: 'stdio',
+            directTools: 'inherited',
+          },
+        ],
+        runtimeConfigPath: null,
+      },
+      catalog: {
+        projectPath: '/tmp/project',
+        skills: [
+          {
+            id: 'frontend-implementer',
+            name: 'frontend-implementer',
+            description: 'Implements frontend UI.',
+            folderPath: '/tmp/project/.openwaggle/skills/frontend-implementer',
+            skillPath: '/tmp/project/.openwaggle/skills/frontend-implementer/SKILL.md',
+            hasScripts: false,
+            enabled: true,
+            loadStatus: 'ok',
+          },
+        ],
+      },
+    })
+
+    expect(status.preflight).toEqual(
+      expect.objectContaining({
+        verdict: 'blocked',
+        summary: expect.stringMatching(/blocked/i),
+        checks: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'mobile-surface-match',
+            status: 'fail',
+            detail: expect.stringMatching(/instead of a mobile project/i),
+          }),
+        ]),
+      }),
+    )
+  })
+
+  it('downgrades a web preset to partial when the repo lacks obvious run scripts', () => {
+    const status = buildWaggleAppInstallStatus({
+      presetId: 'web-build',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer'],
+      },
+      repoProfile: {
+        detectedSurfaces: ['web'],
+        detectedFrameworks: ['vite'],
+        hasPackageJson: true,
+        availableScripts: ['lint', 'test'],
+        webEntryCandidates: ['index.html'],
+        mobileEntryCandidates: [],
+        webCommandCandidates: [],
+        mobileCommandCandidates: [],
+        hasLikelyWebRuntime: false,
+        hasLikelyMobileRuntime: false,
+        hasInstalledNodeModules: false,
+        availableLocalTools: ['node', 'pnpm'],
+        webBootProbe: {
+          status: 'warn',
+          detail: 'Detected web entry files, but project dependencies are not installed yet.',
+        },
+        mobileBootProbe: null,
+      },
+      mcpSettings: {
+        adapter: {
+          enabled: true,
+          packageSource: 'extensions/pi-mcp-adapter',
+          runtimeConfigPath: null,
+        },
+        sources: [],
+        effective: {
+          mcpServers: {},
+          disabledMcpServers: {},
+          settings: {},
+          imports: [],
+        },
+        servers: [
+          {
+            name: 'playwright',
+            enabled: true,
+            sourceId: 'project-openwaggle',
+            sourceLabel: 'Project OpenWaggle',
+            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            command: 'npx',
+            transport: 'stdio',
+            directTools: 'inherited',
+          },
+        ],
+        runtimeConfigPath: null,
+      },
+      catalog: {
+        projectPath: '/tmp/project',
+        skills: [
+          {
+            id: 'frontend-implementer',
+            name: 'frontend-implementer',
+            description: 'Implements frontend UI.',
+            folderPath: '/tmp/project/.openwaggle/skills/frontend-implementer',
+            skillPath: '/tmp/project/.openwaggle/skills/frontend-implementer/SKILL.md',
+            hasScripts: false,
+            enabled: true,
+            loadStatus: 'ok',
+          },
+        ],
+      },
+    })
+
+    expect(status.preflight).toEqual(
+      expect.objectContaining({
+        verdict: 'partial',
+        summary: expect.stringMatching(/can launch with reduced confidence: No obvious web dev\/build script was found/i),
+        checks: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'web-surface-match',
+            status: 'pass',
+          }),
+          expect.objectContaining({
+            id: 'web-run-or-build-entry',
+            status: 'warn',
+            detail: expect.stringMatching(/No obvious web dev\/build script was found/i),
+          }),
+          expect.objectContaining({
+            id: 'web-app-entry-files',
+            status: 'pass',
+          }),
+          expect.objectContaining({
+            id: 'web-boot-probe',
+            status: 'warn',
+          }),
+        ]),
+      }),
+    )
+  })
+
+  it('prioritizes runtime warnings over optional coverage in the preflight summary', () => {
+    const status = buildWaggleAppInstallStatus({
+      presetId: 'web-build',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer'],
+        optionalMcps: ['figma'],
+      },
+      repoProfile: {
+        detectedSurfaces: ['web'],
+        detectedFrameworks: ['vite'],
+        hasPackageJson: true,
+        availableScripts: ['lint', 'test'],
+        webEntryCandidates: ['index.html'],
+        mobileEntryCandidates: [],
+        webCommandCandidates: [],
+        mobileCommandCandidates: [],
+        hasLikelyWebRuntime: false,
+        hasLikelyMobileRuntime: false,
+        hasInstalledNodeModules: false,
+        availableLocalTools: ['node', 'npm'],
+        webBootProbe: {
+          status: 'warn',
+          detail: 'Detected web entry files, but project dependencies are not installed yet.',
+        },
+        mobileBootProbe: null,
+      },
+      mcpSettings: {
+        adapter: {
+          enabled: true,
+          packageSource: 'extensions/pi-mcp-adapter',
+          runtimeConfigPath: null,
+        },
+        sources: [],
+        effective: {
+          mcpServers: {},
+          disabledMcpServers: {},
+          settings: {},
+          imports: [],
+        },
+        servers: [
+          {
+            name: 'playwright',
+            enabled: true,
+            sourceId: 'project-openwaggle',
+            sourceLabel: 'Project OpenWaggle',
+            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            command: 'npx',
+            transport: 'stdio',
+            directTools: 'inherited',
+          },
+        ],
+        runtimeConfigPath: null,
+      },
+      catalog: {
+        projectPath: '/tmp/project',
+        skills: [
+          {
+            id: 'frontend-implementer',
+            name: 'frontend-implementer',
+            description: 'Implements frontend UI.',
+            folderPath: '/tmp/project/.openwaggle/skills/frontend-implementer',
+            skillPath: '/tmp/project/.openwaggle/skills/frontend-implementer/SKILL.md',
+            hasScripts: false,
+            enabled: true,
+            loadStatus: 'ok',
+          },
+        ],
+      },
+    })
+
+    expect(status.preflight).toEqual(
+      expect.objectContaining({
+        verdict: 'partial',
+        summary: expect.stringMatching(/can launch with reduced confidence: No obvious web dev\/build script was found/i),
+      }),
+    )
+  })
+
+  it('downgrades to partial when runtime commands exist but local dependencies are missing', () => {
+    const status = buildWaggleAppInstallStatus({
+      presetId: 'web-build',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer'],
+      },
+      repoProfile: {
+        detectedSurfaces: ['web'],
+        detectedFrameworks: ['next'],
+        hasPackageJson: true,
+        availableScripts: ['dev', 'build'],
+        webEntryCandidates: ['app/', 'src/App.tsx'],
+        mobileEntryCandidates: [],
+        webCommandCandidates: ['pnpm dev', 'pnpm build'],
+        mobileCommandCandidates: [],
+        hasLikelyWebRuntime: true,
+        hasLikelyMobileRuntime: false,
+        hasInstalledNodeModules: false,
+        availableLocalTools: ['node', 'pnpm'],
+        webBootProbe: {
+          status: 'warn',
+          detail: 'Detected web entry files, but project dependencies are not installed yet.',
+        },
+        mobileBootProbe: null,
+      },
+      mcpSettings: {
+        adapter: {
+          enabled: true,
+          packageSource: 'extensions/pi-mcp-adapter',
+          runtimeConfigPath: null,
+        },
+        sources: [],
+        effective: {
+          mcpServers: {},
+          disabledMcpServers: {},
+          settings: {},
+          imports: [],
+        },
+        servers: [
+          {
+            name: 'playwright',
+            enabled: true,
+            sourceId: 'project-openwaggle',
+            sourceLabel: 'Project OpenWaggle',
+            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            command: 'npx',
+            transport: 'stdio',
+            directTools: 'inherited',
+          },
+        ],
+        runtimeConfigPath: null,
+      },
+      catalog: {
+        projectPath: '/tmp/project',
+        skills: [
+          {
+            id: 'frontend-implementer',
+            name: 'frontend-implementer',
+            description: 'Implements frontend UI.',
+            folderPath: '/tmp/project/.openwaggle/skills/frontend-implementer',
+            skillPath: '/tmp/project/.openwaggle/skills/frontend-implementer/SKILL.md',
+            hasScripts: false,
+            enabled: true,
+            loadStatus: 'ok',
+          },
+        ],
+      },
+    })
+
+    expect(status.preflight).toEqual(
+      expect.objectContaining({
+        verdict: 'partial',
+        checks: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'web-workspace-runtime',
+            status: 'warn',
+            detail: expect.stringMatching(/local JS dependencies do not appear installed/i),
+          }),
+          expect.objectContaining({
+            id: 'web-boot-probe',
+            status: 'warn',
+            detail: expect.stringMatching(/project dependencies are not installed/i),
+          }),
+        ]),
+      }),
+    )
   })
 
   it('recognizes frontend-ui-audit starter dependency ids as supported', () => {

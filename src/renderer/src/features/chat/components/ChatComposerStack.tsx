@@ -11,6 +11,7 @@ import {
 import { useScopedComposerDrafts } from '@/features/composer/hooks'
 import { useApplyPendingWaggleLaunchPrompt } from '@/features/waggle/hooks'
 import { WaggleCollaborationStatus as WaggleCollaborationStatusBanner } from '@/features/waggle/components'
+import { Button } from '@/shared/ui/Button'
 import type { ChatComposerSectionState } from '../model'
 import { SessionForkSelector } from './SessionForkSelector'
 
@@ -33,9 +34,13 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
     isLoading,
     status,
     compactionStatus,
+    activeTeammate,
+    teamStatus,
     onStopCollaboration,
     onSelectSkill,
     onStartWaggle,
+    onStartTeam,
+    onClearTeamMode,
     onSendWithWaggle,
     onSteer,
     onCancel,
@@ -70,12 +75,29 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
         onUseFollowUpPrompt={onUseFollowUpPrompt}
       />
 
+      {activeTeammate ? (
+        <div className="mx-auto mb-2 w-full max-w-[960px] px-5">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg-secondary/50 px-4 py-3">
+            <div className="text-[13px] text-text-secondary">
+              <span className="font-semibold text-text-primary">Team(New): {activeTeammate.name}</span>{' '}
+              {teamStatus === 'running'
+                ? 'is running in this session.'
+                : 'is armed. Send your own prompt to use it.'}
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClearTeamMode}>
+              Clear
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       {commandPaletteOpen && (
         <div className="mx-auto w-full max-w-[960px] px-5 pb-2">
           <CommandPalette
             slashSkills={slashSkills}
             onSelectSkill={onSelectSkill}
             onStartWaggle={onStartWaggle}
+            onStartTeam={onStartTeam}
             onOpenSessionTree={onOpenSessionTree}
             onForkToNewSession={onOpenForkSelector}
             onCloneToNewSession={onCloneToNewSession}

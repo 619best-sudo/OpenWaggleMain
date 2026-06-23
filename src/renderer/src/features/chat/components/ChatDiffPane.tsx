@@ -24,7 +24,7 @@ export function ChatDiffPane({
 
   return (
     <div className="flex size-full min-w-0 flex-col overflow-hidden bg-diff-bg">
-      <header className="drag-region flex h-12 shrink-0 items-center justify-between border-b border-border bg-diff-header-bg px-3">
+      <header className="home-divider-b drag-region flex h-12 shrink-0 items-center justify-between bg-diff-header-bg px-3">
         <div className="flex min-w-0 items-center gap-2">
           <span className="no-drag text-[13px] font-medium text-text-primary">Changes</span>
           <span className="no-drag text-[11px] text-text-tertiary">Working tree diff</span>

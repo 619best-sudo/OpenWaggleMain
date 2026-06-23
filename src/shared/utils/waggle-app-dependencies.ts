@@ -1,6 +1,8 @@
 import type { McpServerDefinition, McpSettingsView } from '@shared/types/mcp'
 import type { SkillCatalogResult } from '@shared/types/standards'
 import type {
+  WaggleAppPreflightCheck,
+  WaggleAppPreflightStatus,
   WaggleAppDependencyStatus,
   WaggleAppInstallStatus,
   WaggleAppManifest,
@@ -22,6 +24,33 @@ export interface WaggleAppMcpInstallRecipe {
   readonly alternateServerNames?: readonly string[]
   readonly definition: McpServerDefinition
   readonly setupSteps?: readonly string[]
+}
+
+type WaggleRepoSurface = 'web' | 'mobile' | 'backend'
+
+interface WaggleAppRepoProfile {
+  readonly detectedSurfaces: readonly WaggleRepoSurface[]
+  readonly detectedFrameworks: readonly string[]
+  readonly hasPackageJson: boolean
+  readonly availableScripts: readonly string[]
+  readonly webEntryCandidates: readonly string[]
+  readonly mobileEntryCandidates: readonly string[]
+  readonly webCommandCandidates: readonly string[]
+  readonly mobileCommandCandidates: readonly string[]
+  readonly hasLikelyWebRuntime: boolean
+  readonly hasLikelyMobileRuntime: boolean
+  readonly hasInstalledNodeModules: boolean
+  readonly availableLocalTools: readonly string[]
+  readonly webBootProbe: {
+    readonly status: 'pass' | 'warn'
+    readonly detail: string
+    readonly command?: string
+  } | null
+  readonly mobileBootProbe: {
+    readonly status: 'pass' | 'warn'
+    readonly detail: string
+    readonly command?: string
+  } | null
 }
 
 function createStarterSkillMarkdown(input: {
@@ -1022,9 +1051,11 @@ function buildMcpDependencyStatus(
 }
 
 export function buildWaggleAppInstallStatus(input: {
+  readonly presetId?: string
   readonly app: WaggleAppManifest
   readonly catalog: SkillCatalogResult | null
   readonly mcpSettings: McpSettingsView | null
+  readonly repoProfile?: WaggleAppRepoProfile | null
 }): WaggleAppInstallStatus {
   const requiredMcpIds = dedupeDependencyIds(input.app.requiredMcps)
   const requiredSkillIds = dedupeDependencyIds(input.app.requiredSkills)
@@ -1064,6 +1095,16 @@ export function buildWaggleAppInstallStatus(input: {
   const optionalUnsupportedCount = optionalDependencies.filter(
     (dependency) => dependency.state === 'unsupported',
   ).length
+  const preflight = buildWaggleAppPreflightStatus({
+    presetId: input.presetId ?? null,
+    app: input.app,
+    repoProfile: input.repoProfile ?? null,
+    dependencies,
+    missingCount,
+    unsupportedCount,
+    optionalMissingCount,
+    optionalUnsupportedCount,
+  })
 
   return {
     ready: missingCount === 0 && unsupportedCount === 0,
@@ -1076,7 +1117,507 @@ export function buildWaggleAppInstallStatus(input: {
     optionalMissingCount,
     optionalUnsupportedCount,
     dependencies,
+    preflight,
   }
+}
+
+function buildWaggleAppPreflightStatus(input: {
+  readonly presetId: string | null
+  readonly app: WaggleAppManifest
+  readonly repoProfile: WaggleAppRepoProfile | null
+  readonly dependencies: readonly WaggleAppDependencyStatus[]
+  readonly missingCount: number
+  readonly unsupportedCount: number
+  readonly optionalMissingCount: number
+  readonly optionalUnsupportedCount: number
+}): WaggleAppPreflightStatus {
+  const checks: WaggleAppPreflightCheck[] = []
+  const allDependencyIds = new Set(input.dependencies.map((dependency) => dependency.id))
+
+  const requiredFailures = input.missingCount + input.unsupportedCount
+  checks.push({
+    id: 'required-dependencies',
+    label: 'Required Dependencies',
+    status: requiredFailures === 0 ? 'pass' : 'fail',
+    detail:
+      requiredFailures === 0
+        ? 'All required MCPs and skills are installed.'
+        : `${input.missingCount} required missing, ${input.unsupportedCount} required unsupported.`,
+    blocking: requiredFailures > 0,
+  })
+
+  if (input.app.optionalMcps?.length || input.app.optionalSkills?.length) {
+    const optionalGaps = input.optionalMissingCount + input.optionalUnsupportedCount
+    checks.push({
+      id: 'optional-coverage',
+      label: 'Optional Coverage',
+      status: optionalGaps === 0 ? 'pass' : 'warn',
+      detail:
+        optionalGaps === 0
+          ? 'All optional MCPs and skills are available.'
+          : `${input.optionalMissingCount} optional missing, ${input.optionalUnsupportedCount} optional unsupported. Waggle can still run with narrower coverage.`,
+      blocking: false,
+    })
+  }
+
+  maybeAddCapabilityCheck({
+    checks,
+    dependencies: input.dependencies,
+    allDependencyIds,
+    checkId: 'browser-verification',
+    label: 'Browser Verification',
+    capabilityIds: ['playwright'],
+    passDetail: 'Browser runtime verification is available through Playwright.',
+    warnDetail: 'Browser runtime verification will be skipped unless Playwright is installed.',
+    failDetail: 'Browser runtime verification is blocked until Playwright is installed.',
+  })
+
+  maybeAddCapabilityCheck({
+    checks,
+    dependencies: input.dependencies,
+    allDependencyIds,
+    checkId: 'mobile-verification',
+    label: 'Mobile Verification',
+    capabilityIds: ['mobile-mcp'],
+    supplementalIds: ['mobile-device'],
+    passDetail: 'Mobile runtime verification is available through simulator, emulator, or device tooling.',
+    warnDetail:
+      'Mobile runtime verification has limited coverage until mobile automation tooling is installed.',
+    failDetail: 'Mobile runtime verification is blocked until Mobile MCP is installed.',
+  })
+
+  maybeAddCapabilityCheck({
+    checks,
+    dependencies: input.dependencies,
+    allDependencyIds,
+    checkId: 'api-verification',
+    label: 'API Verification',
+    capabilityIds: ['postman'],
+    passDetail: 'API verification tooling is available.',
+    warnDetail: 'API verification will rely on manual commands unless Postman MCP is installed.',
+    failDetail: 'API verification is blocked until Postman MCP is installed.',
+  })
+
+  maybeAddCapabilityCheck({
+    checks,
+    dependencies: input.dependencies,
+    allDependencyIds,
+    checkId: 'data-verification',
+    label: 'Database Verification',
+    capabilityIds: ['database', 'sql', 'postgres'],
+    passDetail: 'Database verification tooling is available.',
+    warnDetail:
+      'Database verification will be narrower until a database inspection MCP is installed.',
+    failDetail: 'Database verification is blocked until a supported database MCP is installed.',
+  })
+
+  maybeAddCapabilityCheck({
+    checks,
+    dependencies: input.dependencies,
+    allDependencyIds,
+    checkId: 'design-ingest',
+    label: 'Design Inputs',
+    capabilityIds: ['figma'],
+    passDetail: 'Design-file ingestion is available through Figma.',
+    warnDetail: 'Figma ingest is unavailable, so Waggle will rely on screenshots or verbal prompts.',
+    failDetail: 'Design-file ingest is blocked until Figma support is installed.',
+  })
+
+  maybeAddCapabilityCheck({
+    checks,
+    dependencies: input.dependencies,
+    allDependencyIds,
+    checkId: 'rich-media',
+    label: 'Rich Media And Motion',
+    capabilityIds: [
+      'multimodal-media',
+      'ffmpeg',
+      'gsap',
+      'remotion',
+      'animejs',
+      'blender',
+      '3d-asset-processing',
+      'gltf-mcp',
+    ],
+    passDetail: 'Rich media, motion, or asset-pipeline tooling is available.',
+    warnDetail: 'Rich media and motion fall back to code-first or static execution until optional tools are installed.',
+    failDetail: 'Rich media generation is blocked until the required media tooling is installed.',
+  })
+
+  addRepoAwareChecks({
+    checks,
+    presetId: input.presetId,
+    repoProfile: input.repoProfile,
+  })
+
+  const hasFailure = checks.some((check) => check.status === 'fail')
+  const hasWarning = checks.some((check) => check.status === 'warn')
+
+  return {
+    verdict: hasFailure ? 'blocked' : hasWarning ? 'partial' : 'ready',
+    summary: buildPreflightSummary({
+      presetId: input.presetId,
+      hasFailure,
+      hasWarning,
+      checks,
+    }),
+    checks,
+  }
+}
+
+function addRepoAwareChecks(input: {
+  readonly checks: WaggleAppPreflightCheck[]
+  readonly presetId: string | null
+  readonly repoProfile: WaggleAppRepoProfile | null
+}) {
+  if (!input.presetId) return
+
+  if (isWebPresetId(input.presetId)) {
+    input.checks.push(buildSurfaceMatchCheck({
+      expectedSurface: 'web',
+      label: 'Project Surface Match',
+      repoProfile: input.repoProfile,
+      unknownDetail:
+        'The repository does not clearly identify itself as a web app yet, so web launch guidance is best-effort.',
+    }))
+    input.checks.push(buildRuntimeCheck({
+      label: 'Web Run Or Build Entry',
+      repoProfile: input.repoProfile,
+      hasRuntime: input.repoProfile?.hasLikelyWebRuntime ?? false,
+      passDetail: buildCommandDetail(
+        input.repoProfile?.webCommandCandidates ?? [],
+        'Likely web run/build entry points were found.',
+      ),
+      warnDetail:
+        'No obvious web dev/build script was found. Web Waggle can still help, but runtime verification may need manual setup.',
+    }))
+    input.checks.push(buildWorkspaceRuntimeCheck({
+      label: 'Web Workspace Runtime',
+      repoProfile: input.repoProfile,
+      commands: input.repoProfile?.webCommandCandidates ?? [],
+      relevantTools: ['node', 'pnpm', 'npm', 'yarn', 'bun'],
+      missingDependenciesDetail:
+        'Web runtime commands exist, but local JS dependencies do not appear installed yet.',
+      missingToolsDetail:
+        'Web runtime commands exist, but local Node/package-manager tools are not clearly available on this machine.',
+      passPrefix: 'Web runtime prerequisites look available.',
+    }))
+    input.checks.push(buildEntryPointCheck({
+      label: 'Web App Entry Files',
+      entries: input.repoProfile?.webEntryCandidates ?? [],
+      target: 'web',
+    }))
+    input.checks.push(buildBootProbeCheck({
+      label: 'Web Boot Probe',
+      probe: input.repoProfile?.webBootProbe ?? null,
+      missingDetail: 'No web boot probe was available for this project.',
+    }))
+    return
+  }
+
+  if (isMobilePresetId(input.presetId)) {
+    input.checks.push(buildSurfaceMatchCheck({
+      expectedSurface: 'mobile',
+      label: 'Project Surface Match',
+      repoProfile: input.repoProfile,
+      unknownDetail:
+        'The repository does not clearly identify itself as a mobile app yet, so mobile launch guidance is best-effort.',
+    }))
+    input.checks.push(buildRuntimeCheck({
+      label: 'Mobile Run Or Build Entry',
+      repoProfile: input.repoProfile,
+      hasRuntime: input.repoProfile?.hasLikelyMobileRuntime ?? false,
+      passDetail: buildCommandDetail(
+        input.repoProfile?.mobileCommandCandidates ?? [],
+        'Likely mobile run/build entry points were found.',
+      ),
+      warnDetail:
+        'No obvious simulator, emulator, or mobile run/build script was found. Mobile Waggle can still plan or edit code, but runtime QA may need manual setup.',
+    }))
+    input.checks.push(buildWorkspaceRuntimeCheck({
+      label: 'Mobile Workspace Runtime',
+      repoProfile: input.repoProfile,
+      commands: input.repoProfile?.mobileCommandCandidates ?? [],
+      relevantTools: ['node', 'pnpm', 'npm', 'yarn', 'bun', 'xcodebuild', 'adb', 'flutter'],
+      missingDependenciesDetail:
+        'Mobile runtime commands exist, but local app dependencies do not appear installed yet.',
+      missingToolsDetail:
+        'Mobile runtime commands exist, but simulator/emulator or CLI toolchain signals are incomplete on this machine.',
+      passPrefix: 'Mobile runtime prerequisites look available.',
+    }))
+    input.checks.push(buildEntryPointCheck({
+      label: 'Mobile App Entry Files',
+      entries: input.repoProfile?.mobileEntryCandidates ?? [],
+      target: 'mobile',
+    }))
+    input.checks.push(buildBootProbeCheck({
+      label: 'Mobile Boot Probe',
+      probe: input.repoProfile?.mobileBootProbe ?? null,
+      missingDetail: 'No mobile boot probe was available for this project.',
+    }))
+  }
+}
+
+function buildSurfaceMatchCheck(input: {
+  readonly expectedSurface: WaggleRepoSurface
+  readonly label: string
+  readonly repoProfile: WaggleAppRepoProfile | null
+  readonly unknownDetail: string
+}): WaggleAppPreflightCheck {
+  const detectedSurfaces = input.repoProfile?.detectedSurfaces ?? []
+  const detectedFrameworks = input.repoProfile?.detectedFrameworks ?? []
+
+  if (detectedSurfaces.includes(input.expectedSurface)) {
+    const frameworkDetail =
+      detectedFrameworks.length > 0
+        ? `Detected ${input.expectedSurface} signals: ${detectedFrameworks.join(', ')}.`
+        : `Detected ${input.expectedSurface} project signals.`
+    return {
+      id: `${input.expectedSurface}-surface-match`,
+      label: input.label,
+      status: 'pass',
+      detail: frameworkDetail,
+      blocking: false,
+    }
+  }
+
+  if (detectedSurfaces.length > 0) {
+    return {
+      id: `${input.expectedSurface}-surface-match`,
+      label: input.label,
+      status: 'fail',
+      detail: `Detected ${detectedSurfaces.join('/')} repo signals instead of a ${input.expectedSurface} project.`,
+      blocking: true,
+    }
+  }
+
+  return {
+    id: `${input.expectedSurface}-surface-match`,
+    label: input.label,
+    status: 'warn',
+    detail: input.unknownDetail,
+    blocking: false,
+  }
+}
+
+function buildRuntimeCheck(input: {
+  readonly label: string
+  readonly repoProfile: WaggleAppRepoProfile | null
+  readonly hasRuntime: boolean
+  readonly passDetail: string
+  readonly warnDetail: string
+}): WaggleAppPreflightCheck {
+  return {
+    id: input.label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    label: input.label,
+    status: input.hasRuntime ? 'pass' : 'warn',
+    detail: input.hasRuntime ? input.passDetail : input.warnDetail,
+    blocking: false,
+  }
+}
+
+function buildWorkspaceRuntimeCheck(input: {
+  readonly label: string
+  readonly repoProfile: WaggleAppRepoProfile | null
+  readonly commands: readonly string[]
+  readonly relevantTools: readonly string[]
+  readonly missingDependenciesDetail: string
+  readonly missingToolsDetail: string
+  readonly passPrefix: string
+}): WaggleAppPreflightCheck {
+  const availableTools = input.repoProfile?.availableLocalTools ?? []
+  const hasCommandCandidate = input.commands.length > 0
+  const hasDependencies = input.repoProfile?.hasInstalledNodeModules ?? false
+  const hasRelevantTool = input.relevantTools.some((tool) => availableTools.includes(tool))
+
+  if (!hasCommandCandidate) {
+    return {
+      id: input.label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      label: input.label,
+      status: 'warn',
+      detail: 'No concrete runtime command candidate was found yet, so live runtime checks remain best-effort.',
+      blocking: false,
+    }
+  }
+
+  if (!hasDependencies) {
+    return {
+      id: input.label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      label: input.label,
+      status: 'warn',
+      detail: input.missingDependenciesDetail,
+      blocking: false,
+    }
+  }
+
+  if (!hasRelevantTool) {
+    return {
+      id: input.label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      label: input.label,
+      status: 'warn',
+      detail: input.missingToolsDetail,
+      blocking: false,
+    }
+  }
+
+  return {
+    id: input.label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    label: input.label,
+    status: 'pass',
+    detail: buildCommandDetail(input.commands, input.passPrefix),
+    blocking: false,
+  }
+}
+
+function buildEntryPointCheck(input: {
+  readonly label: string
+  readonly entries: readonly string[]
+  readonly target: 'web' | 'mobile'
+}): WaggleAppPreflightCheck {
+  return {
+    id: input.label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    label: input.label,
+    status: input.entries.length > 0 ? 'pass' : 'warn',
+    detail:
+      input.entries.length > 0
+        ? `Detected ${input.target} entry files: ${input.entries.slice(0, 5).join(', ')}${input.entries.length > 5 ? ', ...' : ''}.`
+        : `No obvious ${input.target} entry files were found yet.`,
+    blocking: false,
+  }
+}
+
+function buildBootProbeCheck(input: {
+  readonly label: string
+  readonly probe:
+    | {
+        readonly status: 'pass' | 'warn'
+        readonly detail: string
+        readonly command?: string
+      }
+    | null
+  readonly missingDetail: string
+}): WaggleAppPreflightCheck {
+  return {
+    id: input.label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    label: input.label,
+    status: input.probe?.status ?? 'warn',
+    detail:
+      input.probe?.command != null
+        ? `${input.probe.detail} Command: ${input.probe.command}.`
+        : input.probe?.detail ?? input.missingDetail,
+    blocking: false,
+  }
+}
+
+function buildCommandDetail(
+  commands: readonly string[],
+  prefix: string,
+) {
+  if (commands.length === 0) return prefix
+  return `${prefix} Commands: ${commands.slice(0, 5).join(', ')}${commands.length > 5 ? ', ...' : ''}.`
+}
+
+function isWebPresetId(presetId: string) {
+  return presetId === 'web-engineer' || presetId === 'web-build'
+}
+
+function isMobilePresetId(presetId: string) {
+  return presetId === 'mobile-engineer' || presetId === 'mobile-build'
+}
+
+function maybeAddCapabilityCheck(input: {
+  readonly checks: WaggleAppPreflightCheck[]
+  readonly dependencies: readonly WaggleAppDependencyStatus[]
+  readonly allDependencyIds: ReadonlySet<string>
+  readonly checkId: string
+  readonly label: string
+  readonly capabilityIds: readonly string[]
+  readonly supplementalIds?: readonly string[]
+  readonly passDetail: string
+  readonly warnDetail: string
+  readonly failDetail: string
+}) {
+  const declaredIds = [
+    ...input.capabilityIds.filter((id) => input.allDependencyIds.has(id)),
+    ...(input.supplementalIds ?? []).filter((id) => input.allDependencyIds.has(id)),
+  ]
+  if (declaredIds.length === 0) return
+
+  const capabilityDependencies = input.dependencies.filter((dependency) =>
+    declaredIds.includes(dependency.id),
+  )
+  const requiredCapability = capabilityDependencies.some((dependency) => dependency.required)
+  const installedCapability = capabilityDependencies.some(
+    (dependency) => dependency.state === 'installed',
+  )
+
+  input.checks.push({
+    id: input.checkId,
+    label: input.label,
+    status: installedCapability ? 'pass' : requiredCapability ? 'fail' : 'warn',
+    detail: installedCapability
+      ? input.passDetail
+      : requiredCapability
+        ? input.failDetail
+        : input.warnDetail,
+    blocking: !installedCapability && requiredCapability,
+  })
+}
+
+function buildPreflightSummary(input: {
+  readonly presetId: string | null
+  readonly hasFailure: boolean
+  readonly hasWarning: boolean
+  readonly checks: readonly WaggleAppPreflightCheck[]
+}) {
+  if (input.hasFailure) {
+    const firstFailure = input.checks.find((check) => check.status === 'fail')
+    return firstFailure
+      ? `${formatPresetLabel(input.presetId)} is blocked: ${firstFailure.detail}`
+      : `${formatPresetLabel(input.presetId)} is blocked until required capabilities are installed.`
+  }
+  if (input.hasWarning) {
+    const highestPriorityWarning = selectHighestPriorityWarning(input.checks)
+    return highestPriorityWarning
+      ? `${formatPresetLabel(input.presetId)} can launch with reduced confidence: ${highestPriorityWarning.detail}`
+      : `${formatPresetLabel(input.presetId)} can launch, but some checks still need manual verification.`
+  }
+  return `${formatPresetLabel(input.presetId)} is ready with its declared capabilities.`
+}
+
+function selectHighestPriorityWarning(checks: readonly WaggleAppPreflightCheck[]) {
+  const warnings = checks.filter((check) => check.status === 'warn')
+  if (warnings.length === 0) return undefined
+
+  const priorityOrder = [
+    'web-run-or-build-entry',
+    'mobile-run-or-build-entry',
+    'web-workspace-runtime',
+    'mobile-workspace-runtime',
+    'web-boot-probe',
+    'mobile-boot-probe',
+    'web-app-entry-files',
+    'mobile-app-entry-files',
+    'web-surface-match',
+    'mobile-surface-match',
+    'optional-coverage',
+  ]
+
+  for (const id of priorityOrder) {
+    const match = warnings.find((check) => check.id === id)
+    if (match) return match
+  }
+
+  return warnings[0]
+}
+
+function formatPresetLabel(presetId: string | null) {
+  if (!presetId) return 'This Waggle'
+  return presetId
+    .split('-')
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ')
 }
 
 function dedupeDependencyIds(values: readonly string[] | undefined) {

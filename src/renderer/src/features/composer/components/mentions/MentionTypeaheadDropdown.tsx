@@ -56,7 +56,7 @@ export function MentionTypeaheadDropdown({
     <div
       ref={containerRef}
       className={cn(
-        'fixed z-50 min-w-[280px] max-w-[400px] rounded-lg border border-border-light bg-bg-secondary',
+        'home-panel-frame fixed z-50 min-w-[280px] max-w-[400px] rounded-lg bg-bg-secondary',
         'shadow-lg overflow-y-auto py-1',
       )}
       style={{

@@ -39,7 +39,7 @@ export function ToolCallHeader({
   onToggleExpanded,
 }: ToolCallHeaderProps) {
   return (
-    <div className="flex items-center gap-2 rounded-md border border-border/25 bg-code-card px-2 py-0.5 transition-colors hover:bg-code-card-hover">
+    <div className="home-panel-frame-soft flex items-center gap-2 rounded-md bg-code-card px-2 py-0.5 transition-colors hover:bg-code-card-hover">
       <Button
         variant="unstyled"
         type="button"
@@ -72,7 +72,7 @@ function ToolGlyph({ view }: { readonly view: ToolCallViewModel }) {
   const Icon = resolveToolIcon(view.toolName)
 
   return (
-    <span className="flex size-5 shrink-0 items-center justify-center rounded bg-bg-secondary/70 text-text-primary/85">
+    <span className="flex size-5 shrink-0 items-center justify-center rounded bg-bg-secondary/70 text-text-secondary">
       <Icon className="size-3.5" />
     </span>
   )
@@ -267,8 +267,8 @@ function ToolPreview({ text, tone }: { readonly text: string; readonly tone: 'mu
       className={cn(
         'mt-1 overflow-hidden rounded-md px-3 py-2 text-[12px] font-mono whitespace-pre-wrap break-words',
         tone === 'error'
-          ? 'max-h-[160px] border border-error/15 bg-error/5 text-error'
-          : 'max-h-[120px] border border-border/10 bg-code-card text-text-primary/78',
+          ? 'home-panel-frame-soft max-h-[160px] bg-error/5 text-error'
+          : 'home-panel-frame-soft max-h-[120px] bg-code-card text-text-primary',
       )}
     >
       {text}

@@ -68,10 +68,10 @@ export function DiffFileSection({
         </div>
         <div className="flex items-center gap-1">
           {additions > 0 && (
-            <span className="text-[11px] font-semibold text-[#8eab7e]">+{additions}</span>
+            <span className="text-[11px] font-semibold text-diff-add-text">+{additions}</span>
           )}
           {deletions > 0 && (
-            <span className="text-[11px] font-semibold text-[#d86868]">-{deletions}</span>
+            <span className="text-[11px] font-semibold text-diff-remove-text">-{deletions}</span>
           )}
         </div>
       </Button>

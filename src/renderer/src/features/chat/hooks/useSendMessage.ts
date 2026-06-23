@@ -2,6 +2,7 @@ import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionId } from '@shared/types/brand'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { ThinkingLevel } from '@shared/types/settings'
+import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleConfig } from '@shared/types/waggle'
 import { createOptimisticUserMessage } from '@/features/chat/lib/useAgentChat.utils'
 import { useBackgroundRunStore } from '@/features/chat/state/background-run-store'
@@ -17,12 +18,19 @@ interface SendMessageDeps {
   readonly thinkingLevel: ThinkingLevel
   readonly createSession: (projectPath: string) => Promise<SessionId>
   readonly sendMessage: (payload: AgentSendPayload) => Promise<void>
-  readonly sendMessageToSession: (
+  readonly sendFirstMessageToSession: (
     sessionId: SessionId,
     payload: AgentSendPayload,
-    config: WaggleConfig | null,
+    mode:
+      | { readonly kind: 'plain' }
+      | { readonly kind: 'waggle'; readonly config: WaggleConfig }
+      | { readonly kind: 'team'; readonly teammate: TeammateDefinition },
   ) => Promise<void>
   readonly sendWaggleMessage: (payload: AgentSendPayload, config: WaggleConfig) => Promise<void>
+  readonly sendTeamMessage: (
+    payload: AgentSendPayload,
+    teammate: TeammateDefinition,
+  ) => Promise<void>
 }
 
 interface SendMessageHandlers {
@@ -31,6 +39,11 @@ interface SendMessageHandlers {
   readonly handleSendWaggle: (
     payload: AgentSendPayload,
     config: WaggleConfig,
+    targetSessionId?: SessionId | null,
+  ) => Promise<void>
+  readonly handleSendTeam: (
+    payload: AgentSendPayload,
+    teammate: TeammateDefinition,
     targetSessionId?: SessionId | null,
   ) => Promise<void>
 }
@@ -43,8 +56,9 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
     thinkingLevel,
     createSession,
     sendMessage,
-    sendMessageToSession,
+    sendFirstMessageToSession,
     sendWaggleMessage,
+    sendTeamMessage,
   } = deps
 
   async function handleSend(payload: AgentSendPayload) {
@@ -53,7 +67,7 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
         throw new Error('Select a project before sending.')
       }
       const sessionId = await createSession(projectPath)
-      void sendMessageToSession(sessionId, payload, null)
+      void sendFirstMessageToSession(sessionId, payload, { kind: 'plain' })
       return
     }
     await sendMessage(payload)
@@ -69,7 +83,7 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
     targetSessionId?: SessionId | null,
   ) {
     if (targetSessionId) {
-      void sendMessageToSession(targetSessionId, payload, config)
+      void sendFirstMessageToSession(targetSessionId, payload, { kind: 'waggle', config })
       return
     }
     if (!activeSessionId) {
@@ -77,13 +91,33 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
         throw new Error('Select a project before sending.')
       }
       const sessionId = await createSession(projectPath)
-      void sendMessageToSession(sessionId, payload, config)
+      void sendFirstMessageToSession(sessionId, payload, { kind: 'waggle', config })
       return
     }
     await sendWaggleMessage(payload, config)
   }
 
-  return { handleSend, handleSendText, handleSendWaggle }
+  async function handleSendTeam(
+    payload: AgentSendPayload,
+    teammate: TeammateDefinition,
+    targetSessionId?: SessionId | null,
+  ) {
+    if (targetSessionId) {
+      void sendFirstMessageToSession(targetSessionId, payload, { kind: 'team', teammate })
+      return
+    }
+    if (!activeSessionId) {
+      if (!projectPath) {
+        throw new Error('Select a project before sending.')
+      }
+      const sessionId = await createSession(projectPath)
+      void sendFirstMessageToSession(sessionId, payload, { kind: 'team', teammate })
+      return
+    }
+    await sendTeamMessage(payload, teammate)
+  }
+
+  return { handleSend, handleSendText, handleSendWaggle, handleSendTeam }
 }
 
 interface UseSendMessageOptions {
@@ -94,24 +128,33 @@ interface UseSendMessageOptions {
   readonly createSession: (projectPath: string) => Promise<SessionId>
   readonly sendMessage: (payload: AgentSendPayload) => Promise<void>
   readonly sendWaggleMessage: (payload: AgentSendPayload, config: WaggleConfig) => Promise<void>
+  readonly sendTeamMessage: (
+    payload: AgentSendPayload,
+    teammate: TeammateDefinition,
+  ) => Promise<void>
 }
 
 /** Hook wrapper — binds first-message sends to the concrete created session id. */
 export function useSendMessage(options: UseSendMessageOptions): SendMessageHandlers {
-  const { activeSessionId, model, sendMessage, sendWaggleMessage, ...rest } = options
+  const { activeSessionId, model, sendMessage, sendWaggleMessage, sendTeamMessage, ...rest } = options
 
-  async function sendMessageToSession(
+  async function sendFirstMessageToSession(
     sessionId: SessionId,
     payload: AgentSendPayload,
-    config: WaggleConfig | null,
+    mode:
+      | { readonly kind: 'plain' }
+      | { readonly kind: 'waggle'; readonly config: WaggleConfig }
+      | { readonly kind: 'team'; readonly teammate: TeammateDefinition },
   ) {
     const optimisticUserMessage = createOptimisticUserMessage(payload)
     useOptimisticUserMessageStore.getState().add(sessionId, optimisticUserMessage)
     useBackgroundRunStore.getState().setRunRenderMessages(sessionId, [optimisticUserMessage])
 
     try {
-      if (config) {
-        await api.sendWaggleMessage(sessionId, payload, model, config)
+      if (mode.kind === 'waggle') {
+        await api.sendWaggleMessage(sessionId, payload, model, mode.config)
+      } else if (mode.kind === 'team') {
+        await api.sendTeamMessage(sessionId, payload, model, mode.teammate)
       } else {
         await api.sendMessage(sessionId, payload, model)
       }
@@ -128,7 +171,8 @@ export function useSendMessage(options: UseSendMessageOptions): SendMessageHandl
     ...rest,
     activeSessionId,
     sendMessage,
-    sendMessageToSession,
+    sendFirstMessageToSession,
     sendWaggleMessage,
+    sendTeamMessage,
   })
 }

@@ -23,7 +23,7 @@ export function ScrollToBottomButton({ visible, onClick }: ScrollToBottomButtonP
         type="button"
         onClick={onClick}
         className={cn(
-          'pointer-events-auto inline-flex items-center gap-[5px] rounded-full border border-button-border px-2.5 py-1.5',
+          'home-panel-frame-soft pointer-events-auto inline-flex items-center gap-[5px] rounded-full px-2.5 py-1.5',
           'bg-bg-secondary text-[12px] text-text-secondary shadow-sm',
           'transition-colors hover:border-accent/40 hover:bg-bg-hover hover:text-text-primary',
           'active:border-accent/70 active:bg-[color-mix(in_oklab,var(--color-bg-secondary)_88%,var(--color-accent)_12%)] active:text-text-primary',

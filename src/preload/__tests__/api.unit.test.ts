@@ -100,6 +100,7 @@ describe('preload api surface contract', () => {
     'listSkills',
     'setSkillEnabled',
     'getSkillPreview',
+    'importSkillFromUrl',
     // Shell / App
     'copyToClipboard',
     'openLogsDir',
@@ -112,6 +113,9 @@ describe('preload api surface contract', () => {
     'cancelWaggle',
     'onWaggleEvent',
     'onWaggleTurnEvent',
+    'sendTeamMessage',
+    'generateTeamAgent',
+    'cancelTeam',
     // Auth
     'startOAuth',
     'submitAuthCode',

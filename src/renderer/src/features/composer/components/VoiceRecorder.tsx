@@ -39,13 +39,13 @@ export function VoiceRecorder({ fileInputRef, voice }: VoiceRecorderProps) {
             variant="unstyled"
             type="button"
             onClick={voice.stopCapture}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-bg-tertiary text-text-primary transition-colors hover:bg-bg-hover"
+            className="home-panel-frame-soft flex size-8 shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-text-primary transition-colors hover:bg-bg-hover"
             title="Stop recording"
           >
             <Square className="size-3.5" />
           </Button>
         ) : (
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-bg-tertiary text-text-tertiary">
+          <div className="home-panel-frame-soft flex size-8 shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-text-tertiary">
             <Loader2 className="size-3.5 animate-spin" />
           </div>
         )}
@@ -58,7 +58,7 @@ export function VoiceRecorder({ fileInputRef, voice }: VoiceRecorderProps) {
           className={cn(
             'flex size-8 shrink-0 items-center justify-center rounded-full transition-colors',
             voice.mode === 'transcribing'
-              ? 'cursor-not-allowed border border-border bg-bg-tertiary'
+              ? 'home-panel-frame-soft cursor-not-allowed bg-bg-tertiary'
               : 'bg-text-primary text-bg hover:bg-text-primary/90',
           )}
           title="Send recording"

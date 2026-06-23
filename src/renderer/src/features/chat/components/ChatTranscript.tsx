@@ -169,7 +169,7 @@ function buildTranscriptDebugPayload(section: ChatTranscriptSectionState) {
 
   const duplicateGroups = new Map<
     string,
-    { readonly role: UIMessage['role']; readonly text: string; messageIds: string[] }
+    { readonly role: UIMessage['role']; messageIds: string[] }
   >()
 
   for (const entry of messageEntries) {
@@ -182,7 +182,6 @@ function buildTranscriptDebugPayload(section: ChatTranscriptSectionState) {
     }
     duplicateGroups.set(key, {
       role: entry.role,
-      text: entry.text,
       messageIds: [entry.id],
     })
   }
@@ -200,7 +199,6 @@ function buildTranscriptDebugPayload(section: ChatTranscriptSectionState) {
           role: entry.role,
           previousMessageId: previous.id,
           currentMessageId: entry.id,
-          text: entry.text,
         },
       ]
     }
@@ -221,7 +219,6 @@ function buildTranscriptDebugPayload(section: ChatTranscriptSectionState) {
         role: group.role,
         count: group.messageIds.length,
         messageIds: group.messageIds,
-        text: group.text,
       })),
     consecutiveDuplicates,
     transcriptTail: messageEntries.slice(-40).map((entry) => ({
@@ -231,7 +228,6 @@ function buildTranscriptDebugPayload(section: ChatTranscriptSectionState) {
       createdAt: entry.createdAt,
       isTeamAutoPrompt: entry.isTeamAutoPrompt,
       partTypes: entry.partTypes,
-      text: entry.text,
     })),
   }
 }

@@ -1,9 +1,11 @@
 import type { WaggleConfig, WagglePreset } from '@shared/types/waggle'
+import type { TeammateDefinition } from '@shared/types/teammate'
 import type { ReactNode } from 'react'
 
 export interface CommandPaletteCallbacks {
   readonly onSelectSkill: (skillId: string, skillName?: string) => void
   readonly onStartWaggle: (config: WaggleConfig) => void
+  readonly onStartTeam: (teammate: TeammateDefinition) => void
   readonly onOpenSessionTree?: () => void
   readonly onForkToNewSession?: () => void
   readonly onCloneToNewSession?: () => void
@@ -23,7 +25,9 @@ export interface CommandPaletteItem {
 export interface CommandPaletteActionHandlers {
   readonly closeCommandPalette: () => void
   readonly configureWaggle: () => void
+  readonly configureTeam: () => void
   readonly selectPreset: (preset: WagglePreset) => void
+  readonly selectTeam: (teammate: TeammateDefinition) => void
   readonly startWaggle: () => void
   readonly selectSkill: (skillId: string, skillName?: string) => void
   readonly openSessionTree?: () => void

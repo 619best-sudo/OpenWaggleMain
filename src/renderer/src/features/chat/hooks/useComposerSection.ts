@@ -1,6 +1,7 @@
 import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionId } from '@shared/types/brand'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
+import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/waggle'
 import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical'
 import type { AgentChatStatus, AgentCompactionStatus } from '@/features/chat/hooks/useAgentChat'
@@ -17,6 +18,8 @@ export interface ComposerSectionParams {
   readonly isSteering: boolean
   readonly status: AgentChatStatus
   readonly compactionStatus: AgentCompactionStatus | null
+  readonly activeTeammate: TeammateDefinition | null
+  readonly teamStatus: 'idle' | 'running'
   readonly activeSessionId: SessionId | null
   readonly waggleStatus: WaggleCollaborationStatus
   readonly followUpSuggestion: TuringFollowUpSuggestion | null
@@ -31,7 +34,9 @@ export interface ComposerSectionParams {
   readonly handleSendWithWaggle: (payload: AgentSendPayload) => Promise<void>
   readonly handleUseFollowUpPrompt: (suggestion: TuringFollowUpSuggestion) => void
   readonly handleStartWaggle: (config: WaggleConfig) => void
+  readonly handleStartTeam: (teammate: TeammateDefinition) => void
   readonly handleStopCollaboration: () => void
+  readonly handleClearTeamMode: () => void
   readonly handleSkipBranchSummary: () => void
   readonly handleSummarizeBranch: () => void
   readonly handleStartCustomBranchSummary: () => void
@@ -48,6 +53,8 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     isSteering,
     status,
     compactionStatus,
+    activeTeammate,
+    teamStatus,
     activeSessionId,
     waggleStatus,
     followUpSuggestion,
@@ -62,7 +69,9 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     handleSendWithWaggle,
     handleUseFollowUpPrompt,
     handleStartWaggle,
+    handleStartTeam,
     handleStopCollaboration,
+    handleClearTeamMode,
     handleSkipBranchSummary,
     handleSummarizeBranch,
     handleStartCustomBranchSummary,
@@ -114,9 +123,13 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     isLoading: isLoading || isSteering || phase.current !== null,
     status,
     compactionStatus,
+    activeTeammate,
+    teamStatus,
     onStopCollaboration: handleStopCollaboration,
     onSelectSkill: handleSelectSkill,
     onStartWaggle: handleStartWaggle,
+    onStartTeam: handleStartTeam,
+    onClearTeamMode: handleClearTeamMode,
     onSendWithWaggle: handleSendWithWaggle,
     onSteer: handleSteer,
     onCancel: stop,

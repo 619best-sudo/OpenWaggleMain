@@ -10,7 +10,7 @@ interface BranchSummaryCardProps {
 
 export function BranchSummaryCard({ id, summary, onBranchFromMessage }: BranchSummaryCardProps) {
   return (
-    <section className="group/branch-summary rounded-xl border border-border-light bg-bg-secondary/80 p-3 text-text-secondary shadow-sm">
+    <section className="home-panel-frame group/branch-summary rounded-xl bg-bg-secondary/80 p-3 text-text-secondary shadow-sm">
       <div className="flex items-start gap-2">
         <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
           <GitBranch className="size-3" />

@@ -32,8 +32,8 @@ export function ModelSelectorRow({ model, isSelected, onSelect }: ModelSelectorR
       title={model.id}
       className={cn(
         'group flex h-8 w-full items-center gap-2 rounded-lg px-2.5 text-left transition-colors',
-        'cursor-pointer text-[#e7e9ee] hover:bg-[#171b21]',
-        isSelected && 'bg-[#1a1f28]',
+        'cursor-pointer text-text-primary hover:bg-bg-hover',
+        isSelected && 'bg-bg-active',
       )}
     >
       <ProviderModelIcon

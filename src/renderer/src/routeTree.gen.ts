@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WaggleRouteImport } from './routes/waggle'
+import { Route as TeammatesRouteImport } from './routes/teammates'
 import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -22,6 +23,11 @@ import { Route as SessionsSessionIdRouteImport } from './routes/sessions.$sessio
 const WaggleRoute = WaggleRouteImport.update({
   id: '/waggle',
   path: '/waggle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeammatesRoute = TeammatesRouteImport.update({
+  id: '/teammates',
+  path: '/teammates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SkillsRoute = SkillsRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/settings': typeof SettingsRouteWithChildren
   '/skills': typeof SkillsRoute
+  '/teammates': typeof TeammatesRoute
   '/waggle': typeof WaggleRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/settings/$tab': typeof SettingsTabRoute
@@ -77,6 +84,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/skills': typeof SkillsRoute
+  '/teammates': typeof TeammatesRoute
   '/waggle': typeof WaggleRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/settings/$tab': typeof SettingsTabRoute
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/settings': typeof SettingsRouteWithChildren
   '/skills': typeof SkillsRoute
+  '/teammates': typeof TeammatesRoute
   '/waggle': typeof WaggleRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/settings/$tab': typeof SettingsTabRoute
@@ -102,6 +111,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/settings'
     | '/skills'
+    | '/teammates'
     | '/waggle'
     | '/sessions/$sessionId'
     | '/settings/$tab'
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
   to:
     | '/mcp'
     | '/skills'
+    | '/teammates'
     | '/waggle'
     | '/sessions/$sessionId'
     | '/settings/$tab'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/settings'
     | '/skills'
+    | '/teammates'
     | '/waggle'
     | '/sessions/$sessionId'
     | '/settings/$tab'
@@ -133,6 +145,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   SettingsRoute: typeof SettingsRouteWithChildren
   SkillsRoute: typeof SkillsRoute
+  TeammatesRoute: typeof TeammatesRoute
   WaggleRoute: typeof WaggleRoute
   SessionsSessionIdRoute: typeof SessionsSessionIdRoute
 }
@@ -144,6 +157,13 @@ declare module '@tanstack/react-router' {
       path: '/waggle'
       fullPath: '/waggle'
       preLoaderRoute: typeof WaggleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teammates': {
+      id: '/teammates'
+      path: '/teammates'
+      fullPath: '/teammates'
+      preLoaderRoute: typeof TeammatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/skills': {
@@ -234,6 +254,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   SettingsRoute: SettingsRouteWithChildren,
   SkillsRoute: SkillsRoute,
+  TeammatesRoute: TeammatesRoute,
   WaggleRoute: WaggleRoute,
   SessionsSessionIdRoute: SessionsSessionIdRoute,
 }

@@ -1,5 +1,6 @@
 import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionId, SupportedModelId } from '@shared/types/brand'
+import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/waggle'
 import { useBranchSummaryStore } from '@/features/chat/state/branch-summary-store'
 import { parseCompactCommand, parseSessionCopyCommand } from '@/features/composer/commands'
@@ -20,17 +21,30 @@ interface ChatSendWorkflowParams {
     config: WaggleConfig,
     targetSessionId?: SessionId | null,
   ) => Promise<void>
+  readonly handleSendTeam: (
+    payload: AgentSendPayload,
+    teammate: TeammateDefinition,
+    targetSessionId?: SessionId | null,
+  ) => Promise<void>
   readonly model: SupportedModelId
   readonly phase: { readonly reset: () => void }
   readonly refreshSession: (sessionId: SessionId) => Promise<void>
   readonly refreshSessionWorkspace: (sessionId: SessionId) => Promise<void>
   readonly sessionCopy: ReturnType<typeof useSessionCopyWorkflow>
   readonly setUserDidSend: (value: boolean) => void
+  readonly armActiveTeammate: (teammate: TeammateDefinition, sessionId: SessionId | null) => void
+  readonly clearActiveTeammate: () => void
+  readonly startTeamRun: (sessionId: SessionId, teammate: TeammateDefinition) => void
+  readonly finishTeamRun: (sessionId: SessionId) => void
+  readonly clearWaggleConfig: () => void
   readonly setWaggleConfig: (config: WaggleConfig, sessionId: SessionId | null) => void
   readonly showToast: (message: string) => void
   readonly startWaggleCollaboration: (sessionId: SessionId, config: WaggleConfig) => void
   readonly stop: () => void
   readonly stopWaggleCollaboration: () => void
+  readonly activeTeammate: TeammateDefinition | null
+  readonly teamOwningId: SessionId | null
+  readonly teamStatus: 'idle' | 'running'
   readonly waggleConfig: WaggleConfig | null
   readonly waggleOwningId: SessionId | null
   readonly waggleStatus: WaggleCollaborationStatus
@@ -101,7 +115,28 @@ async function sendThroughActiveMode(params: ChatSendWorkflowParams, payload: Ag
     await params.handleSendWaggle(payload, waggleConfig, targetSessionId)
     return
   }
+  const teammate = activeTeammateForSend(params)
+  if (teammate) {
+    const targetSessionId = params.activeSessionId ?? params.teamOwningId
+    if (targetSessionId) {
+      params.startTeamRun(targetSessionId, teammate)
+    }
+    await params.handleSendTeam(payload, teammate, targetSessionId)
+    return
+  }
   await params.handleSend(payload)
+}
+
+function activeTeammateForSend(params: ChatSendWorkflowParams): TeammateDefinition | null {
+  if (!params.activeTeammate) return null
+  if (
+    params.teamOwningId &&
+    params.activeSessionId &&
+    params.teamOwningId !== params.activeSessionId
+  ) {
+    return null
+  }
+  return params.activeTeammate
 }
 
 export function useChatSendWorkflow(params: ChatSendWorkflowParams) {
@@ -128,10 +163,23 @@ export function useChatSendWorkflow(params: ChatSendWorkflowParams) {
         api.cancelWaggle(params.activeSessionId)
         params.stopWaggleCollaboration()
       }
+      if (
+        params.activeSessionId &&
+        params.teamStatus === 'running' &&
+        params.teamOwningId === params.activeSessionId
+      ) {
+        api.cancelTeam(params.activeSessionId)
+        params.finishTeamRun(params.activeSessionId)
+      }
       params.stop()
     },
     startWaggle(config: WaggleConfig) {
+      params.clearActiveTeammate()
       params.setWaggleConfig(config, params.activeSessionId)
+    },
+    startTeam(teammate: TeammateDefinition) {
+      params.clearWaggleConfig()
+      params.armActiveTeammate(teammate, params.activeSessionId)
     },
     stopCollaboration() {
       if (params.activeSessionId) api.cancelWaggle(params.activeSessionId)

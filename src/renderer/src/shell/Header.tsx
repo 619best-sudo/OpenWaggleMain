@@ -47,6 +47,7 @@ export function Header() {
     isChatRoute ||
     pathname.startsWith('/mcp') ||
     pathname.startsWith('/skills') ||
+    pathname.startsWith('/teammates') ||
     pathname.startsWith('/waggle')
 
   function handleRefreshGit() {

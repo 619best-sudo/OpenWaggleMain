@@ -41,11 +41,11 @@ export function CodeBlock({ children, language, className }: CodeBlockProps) {
   return (
     <div
       className={cn(
-        'group relative my-3 rounded-lg border border-border/15 bg-code-card',
+        'home-panel-frame-soft group relative my-3 rounded-lg bg-code-card',
         className,
       )}
     >
-      <div className="flex items-center justify-between border-b border-border/10 px-3 py-1.5">
+      <div className="home-divider-b flex items-center justify-between px-3 py-1.5">
         <span className="font-mono text-[12px] font-medium text-info">{language ?? 'text'}</span>
         <Button
           variant="unstyled"

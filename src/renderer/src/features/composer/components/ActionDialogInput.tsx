@@ -32,7 +32,7 @@ export function ActionDialogInput({
       onKeyDown={handleKeyDown}
       placeholder={placeholder}
       inputSize="sm"
-      className="mt-3 h-9 border-border"
+      className="mt-3 h-9 border-home-border"
     />
   )
 }

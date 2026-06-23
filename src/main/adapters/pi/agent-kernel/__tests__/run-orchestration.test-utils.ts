@@ -63,6 +63,11 @@ export interface FakeRunSession {
   }
   readonly abort: () => Promise<undefined>
   readonly prompt: (text: string) => Promise<void>
+  readonly compact: (instructions?: string) => Promise<{
+    readonly summary: string
+    readonly firstKeptEntryId: string
+    readonly tokensBefore: number
+  }>
   readonly sendCustomMessage: (message: unknown, options: unknown) => Promise<void>
   readonly setModel: (model: FakeModel) => Promise<void>
   readonly subscribe: (listener: unknown) => () => void
@@ -165,6 +170,11 @@ export function createFakeSession(
       getLeafId: () => null,
     },
     abort: vi.fn(async () => undefined),
+    compact: vi.fn(async () => ({
+      summary: 'Compacted Waggle session',
+      firstKeptEntryId: 'entry-2',
+      tokensBefore: 512,
+    })),
     prompt: vi.fn(async (text: string) => {
       messages.push(assistantMessage(`response to ${text}`))
     }),

@@ -2,6 +2,7 @@ import type { SkillDiscoveryItem } from '@shared/types/standards'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { usePreferencesStore } from '@/features/settings/state'
+import { BUILT_IN_TEAMMATES } from '@/features/teammates/lib/built-in-teammates'
 import { useWaggleStore } from '@/features/waggle/state'
 import { wagglePresetsQueryOptions } from '@/queries/waggle-presets'
 import { useUIStore } from '@/shell/ui-store'
@@ -11,9 +12,11 @@ import {
 } from '../lib/command-palette-actions'
 import {
   createBaseCommands,
+  createConfigureTeamItem,
   createConfigureWaggleItem,
   createPresetItems,
   createSkillItems,
+  createTeamItems,
   filterBaseCommands,
 } from '../lib/command-palette-items'
 import { normalizeCommandQuery } from '../lib/command-palette-text'
@@ -29,6 +32,7 @@ export function useCommandPaletteItems({
   slashSkills,
   onSelectSkill,
   onStartWaggle,
+  onStartTeam,
   onOpenSessionTree,
   onForkToNewSession,
   onCloneToNewSession,
@@ -42,11 +46,20 @@ export function useCommandPaletteItems({
     closeCommandPalette()
     void navigate({ to: '/waggle' })
   }
+  const configureTeam = () => {
+    closeCommandPalette()
+    void navigate({ to: '/teammates' })
+  }
   const actions: CommandPaletteActionHandlers = {
     closeCommandPalette,
     configureWaggle,
+    configureTeam,
     selectPreset: (preset) => {
       onStartWaggle(preset.config)
+      closeCommandPalette()
+    },
+    selectTeam: (teammate) => {
+      onStartTeam(teammate)
       closeCommandPalette()
     },
     startWaggle: () => {
@@ -75,6 +88,8 @@ export function useCommandPaletteItems({
     ...filterBaseCommands(createBaseCommands(actions), lowerQuery),
     ...createSkillItems(slashSkills, lowerQuery, actions.selectSkill),
     ...createPresetItems(wagglePresetsQuery.data ?? [], lowerQuery, actions.selectPreset),
+    ...createTeamItems(BUILT_IN_TEAMMATES, lowerQuery, actions.selectTeam),
     ...createConfigureWaggleItem(lowerQuery, actions.configureWaggle),
+    ...createConfigureTeamItem(lowerQuery, actions.configureTeam),
   ]
 }

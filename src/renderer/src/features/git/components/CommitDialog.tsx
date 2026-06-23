@@ -88,11 +88,11 @@ export function CommitDialog({
       aria-modal="true"
       aria-label="Commit changes"
     >
-      <div className="w-full max-w-[620px] overflow-hidden rounded-2xl border border-border-light bg-bg shadow-2xl">
-        <div className="flex items-center justify-between gap-4 border-b border-border bg-bg-secondary/50 px-4 py-3">
+      <div className="w-full max-w-[620px] overflow-hidden rounded-2xl home-panel-frame-soft bg-bg shadow-2xl">
+        <div className="home-divider-b flex items-center justify-between gap-4 bg-bg-secondary/50 px-4 py-3">
           <div className="flex items-center gap-3">
             <h2 className="text-sm font-semibold text-text-primary">Commit changes</h2>
-            <div className="flex items-center gap-3 border-l border-border pl-3 text-[13px] text-text-secondary">
+            <div className="home-divider-l flex items-center gap-3 pl-3 text-[13px] text-text-secondary">
               {status ? (
                 <div className="flex items-center">
                   <span className="font-medium text-text-primary">

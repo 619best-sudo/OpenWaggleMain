@@ -68,7 +68,7 @@ export function ChatRowRenderer({
     ))
     .with('waggle-turn', (value) => (
       <section
-        className="flex flex-col gap-2 rounded-lg border border-border/15 bg-bg-secondary/15 p-2"
+        className="home-panel-frame-soft flex flex-col gap-2 rounded-lg bg-bg-secondary/15 p-2"
         data-waggle-turn={value.id}
       >
         <TurnDivider
@@ -83,7 +83,7 @@ export function ChatRowRenderer({
               key={messageRow.message.id}
               className={cn(
                 'px-2 py-2',
-                index > 0 && 'border-t border-border/10',
+                index > 0 && 'home-divider-t pt-2',
                 index === 0 && 'rounded-md',
                 index === 0 && 'bg-bg-secondary/20',
               )}

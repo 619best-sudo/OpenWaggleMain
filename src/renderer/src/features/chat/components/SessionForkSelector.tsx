@@ -31,7 +31,7 @@ export function SessionForkSelector({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4">
-      <section className="w-full max-w-[520px] rounded-xl border border-border-light bg-bg-secondary p-4 shadow-2xl">
+      <section className="home-panel-frame w-full max-w-[520px] rounded-xl bg-bg-secondary p-4 shadow-2xl">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
             <GitBranch className="size-4" />
@@ -45,7 +45,7 @@ export function SessionForkSelector({
           </div>
         </div>
 
-        <div className="mt-4 max-h-[360px] overflow-y-auto rounded-lg border border-border bg-bg">
+        <div className="home-panel-frame-soft mt-4 max-h-[360px] overflow-y-auto rounded-lg bg-bg">
           {targets.length === 0 ? (
             <div className="px-3 py-6 text-center text-[13px] text-text-tertiary">
               No user messages are available to fork.
@@ -58,7 +58,7 @@ export function SessionForkSelector({
                 type="button"
                 onClick={() => onSelect(target)}
                 className={cn(
-                  'block w-full border-b border-border px-3 py-2.5 text-left transition-colors last:border-b-0',
+                  'home-divider-b block w-full px-3 py-2.5 text-left transition-colors last:border-b-0',
                   'hover:bg-bg-hover focus:bg-bg-hover focus:outline-none',
                 )}
               >
@@ -78,7 +78,7 @@ export function SessionForkSelector({
             variant="unstyled"
             type="button"
             onClick={onClose}
-            className="h-8 rounded-md border border-border px-3 text-[12px] text-text-secondary transition-colors hover:bg-bg-hover"
+            className="home-panel-frame-soft h-8 rounded-md px-3 text-[12px] text-text-secondary transition-colors hover:bg-bg-hover"
           >
             Cancel
           </Button>

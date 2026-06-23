@@ -29,7 +29,7 @@ export function QueuedMessages({
   if (queue.length === 0 || !sessionId) return null
 
   return (
-    <div className="mx-auto flex w-[calc(100%-28px)] flex-col gap-1.5 rounded-t-[var(--radius-panel)] border-x border-t border-border-light bg-bg-secondary p-[8px_10px_6px_10px] opacity-60">
+    <div className="home-panel-frame-soft home-divider-x home-divider-t mx-auto flex w-[calc(100%-28px)] flex-col gap-1.5 rounded-t-[var(--radius-panel)] bg-bg-secondary p-[8px_10px_6px_10px] opacity-60">
       {/* Header */}
       <div className="flex items-center gap-1.5 px-1">
         <Timer className="size-3 text-text-tertiary" />

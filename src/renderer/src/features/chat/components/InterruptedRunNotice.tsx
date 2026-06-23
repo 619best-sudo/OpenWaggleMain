@@ -23,7 +23,7 @@ export function InterruptedRunNotice({
   onDismiss,
 }: InterruptedRunNoticeProps) {
   return (
-    <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-text-secondary">
+    <div className="home-panel-frame-soft rounded-xl bg-amber-500/10 px-4 py-3 text-text-secondary">
       <div className="flex items-start gap-3">
         <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-400" />
         <div className="min-w-0 flex-1">

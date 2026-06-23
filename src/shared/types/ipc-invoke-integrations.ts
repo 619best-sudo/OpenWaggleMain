@@ -38,6 +38,11 @@ import type {
   WaggleConfig,
   WagglePreset,
 } from './waggle'
+import type {
+  TeammateAgentGenerationInput,
+  TeammateAgentGenerationResult,
+  TeammateDefinition,
+} from './teammate'
 
 // ─── IPC Channel Map ─────────────────────────────────────────
 // Single source of truth for every IPC channel.
@@ -161,6 +166,23 @@ export interface IpcIntegrationInvokeChannelMap {
       config: WaggleConfig,
     ]
     return: undefined
+  }
+  'agent:send-team-message': {
+    args: [
+      sessionId: SessionId,
+      payload: AgentSendPayload,
+      model: SupportedModelId,
+      teammate: TeammateDefinition,
+    ]
+    return: undefined
+  }
+  'agent:generate-team-agent': {
+    args: [
+      projectPath: string,
+      model: SupportedModelId,
+      input: TeammateAgentGenerationInput,
+    ]
+    return: TeammateAgentGenerationResult
   }
   // Auth
   'auth:start-oauth': {

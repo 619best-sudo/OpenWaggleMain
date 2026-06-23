@@ -17,8 +17,8 @@ export function ComposerAttachButton({ fileInputRef }: ComposerAttachButtonProps
       onClick={() => fileInputRef.current?.click()}
       disabled={!projectPath}
       className={cn(
-        'flex size-6 shrink-0 items-center justify-center rounded-md border border-white/10 text-[#a1a1aa] transition-colors',
-        projectPath ? 'hover:bg-white/5 hover:text-white' : 'cursor-not-allowed opacity-60',
+        'flex size-6 shrink-0 items-center justify-center rounded-md border border-home-border text-text-secondary transition-colors',
+        projectPath ? 'hover:bg-bg-hover hover:text-text-primary' : 'cursor-not-allowed opacity-60',
       )}
       title={projectPath ? 'Attach files' : 'Select a project first'}
     >

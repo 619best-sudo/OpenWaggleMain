@@ -1,6 +1,7 @@
 import type { AgentSendPayload } from '@shared/types/agent'
 import { SessionId, SessionNodeId, SupportedModelId } from '@shared/types/brand'
 import type { IpcEventChannelMap } from '@shared/types/ipc-events'
+import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleConfig } from '@shared/types/waggle'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -31,6 +32,7 @@ const apiMock = vi.hoisted(() => {
     getRunCompletedHandler: () => runCompletedHandler,
     listActiveRuns: vi.fn(),
     compactSession: vi.fn(),
+    cancelTeam: vi.fn(),
     cancelWaggle: vi.fn(),
     cloneSessionToNew: vi.fn(),
     forkSessionToNew: vi.fn(),
@@ -48,6 +50,7 @@ const apiMock = vi.hoisted(() => {
 vi.mock('@/shared/lib/ipc', () => ({
   api: {
     cancelWaggle: apiMock.cancelWaggle,
+    cancelTeam: apiMock.cancelTeam,
     cloneSessionToNew: apiMock.cloneSessionToNew,
     compactSession: apiMock.compactSession,
     forkSessionToNew: apiMock.forkSessionToNew,
@@ -106,6 +109,26 @@ function phaseHandle(current: StreamingPhaseHandle['current'] = null): Streaming
   }
 }
 
+function teammate(): TeammateDefinition {
+  return {
+    id: 'web-executor',
+    name: 'Web Executor',
+    description: 'Build and verify websites.',
+    launchPromptPlaceholder: 'Build a marketing site',
+    launchButtonLabel: 'Launch Team(New)',
+    app: { requiredMcps: [], requiredSkills: [] },
+    agents: [],
+    loopPolicy: {
+      initialAgentId: 'planner',
+      decisionMakerAgentId: 'verifier',
+      maxDecisionMakerCalls: 3,
+      maxAutoSubmittedPrompts: 6,
+      defaultWorkerAgentId: 'builder',
+      endConditionSummary: 'Stop when verified.',
+    },
+  }
+}
+
 function sendWorkflowParams(overrides: Partial<Parameters<typeof useChatSendWorkflow>[0]> = {}) {
   const params = {
     activeSessionId: SESSION_ID,
@@ -116,6 +139,7 @@ function sendWorkflowParams(overrides: Partial<Parameters<typeof useChatSendWork
     clearDraftBranchForSession: vi.fn(),
     draftBranch: null,
     handleSend: vi.fn().mockResolvedValue(undefined),
+    handleSendTeam: vi.fn().mockResolvedValue(undefined),
     handleSendWaggle: vi.fn().mockResolvedValue(undefined),
     model: MODEL,
     phase: { reset: vi.fn() },
@@ -131,11 +155,19 @@ function sendWorkflowParams(overrides: Partial<Parameters<typeof useChatSendWork
       selectForkTarget: vi.fn(),
     },
     setUserDidSend: vi.fn(),
+    armActiveTeammate: vi.fn(),
+    clearActiveTeammate: vi.fn(),
+    startTeamRun: vi.fn(),
+    finishTeamRun: vi.fn(),
+    clearWaggleConfig: vi.fn(),
     setWaggleConfig: vi.fn(),
     showToast: vi.fn(),
     startWaggleCollaboration: vi.fn(),
     stop: vi.fn(),
     stopWaggleCollaboration: vi.fn(),
+    activeTeammate: null,
+    teamOwningId: null,
+    teamStatus: 'idle',
     waggleConfig: null,
     waggleOwningId: null,
     waggleStatus: 'idle',
@@ -149,6 +181,7 @@ describe('chat orchestration hooks', () => {
     apiMock.listActiveRuns.mockReset()
     apiMock.compactSession.mockReset()
     apiMock.cancelWaggle.mockReset()
+    apiMock.cancelTeam.mockReset()
     apiMock.cloneSessionToNew.mockReset()
     apiMock.forkSessionToNew.mockReset()
     apiMock.onAgentEvent.mockClear()
@@ -261,6 +294,22 @@ describe('chat orchestration hooks', () => {
     expect(params.handleSend).not.toHaveBeenCalled()
   })
 
+  it('sends through Team(New) when an armed teammate belongs to the active session', async () => {
+    const config = teammate()
+    const params = sendWorkflowParams({ activeTeammate: config })
+    const { result } = renderHook(() => useChatSendWorkflow(params))
+
+    await act(() => result.current.sendWithWaggle(payload('Build the homepage')))
+
+    expect(params.startTeamRun).toHaveBeenCalledWith(SESSION_ID, config)
+    expect(params.handleSendTeam).toHaveBeenCalledWith(
+      payload('Build the homepage'),
+      config,
+      SESSION_ID,
+    )
+    expect(params.handleSend).not.toHaveBeenCalled()
+  })
+
   it('cancels both Waggle collaboration and the active run when collaboration is running', () => {
     const params = sendWorkflowParams({ waggleStatus: 'running' })
     const { result } = renderHook(() => useChatSendWorkflow(params))
@@ -269,6 +318,21 @@ describe('chat orchestration hooks', () => {
 
     expect(apiMock.cancelWaggle).toHaveBeenCalledWith(SESSION_ID)
     expect(params.stopWaggleCollaboration).toHaveBeenCalledOnce()
+    expect(params.stop).toHaveBeenCalledOnce()
+  })
+
+  it('cancels Team(New) when a team run is active for the current session', () => {
+    const params = sendWorkflowParams({
+      activeTeammate: teammate(),
+      teamOwningId: SESSION_ID,
+      teamStatus: 'running',
+    })
+    const { result } = renderHook(() => useChatSendWorkflow(params))
+
+    act(() => result.current.cancelRun())
+
+    expect(apiMock.cancelTeam).toHaveBeenCalledWith(SESSION_ID)
+    expect(params.finishTeamRun).toHaveBeenCalledWith(SESSION_ID)
     expect(params.stop).toHaveBeenCalledOnce()
   })
 
@@ -281,6 +345,8 @@ describe('chat orchestration hooks', () => {
         isSteering: false,
         status: 'ready',
         compactionStatus: null,
+        activeTeammate: null,
+        teamStatus: 'idle',
         activeSessionId: SESSION_ID,
         waggleStatus: 'idle',
         followUpSuggestion: null,
@@ -295,7 +361,9 @@ describe('chat orchestration hooks', () => {
         handleSendWithWaggle: vi.fn().mockResolvedValue(undefined),
         handleUseFollowUpPrompt: vi.fn(),
         handleStartWaggle: startWaggle,
+        handleStartTeam: vi.fn(),
         handleStopCollaboration: vi.fn(),
+        handleClearTeamMode: vi.fn(),
         handleSkipBranchSummary: vi.fn(),
         handleSummarizeBranch: vi.fn(),
         handleStartCustomBranchSummary: vi.fn(),

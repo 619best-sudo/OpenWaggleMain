@@ -7,8 +7,16 @@ export interface ProviderProbeInput {
   readonly projectPath?: string | null
 }
 
+export interface ProviderGenerateTextInput {
+  readonly providerId: string
+  readonly modelId: string
+  readonly prompt: string
+  readonly projectPath?: string | null
+}
+
 export interface ProviderProbeServiceShape {
   readonly probeCredentials: (input: ProviderProbeInput) => Effect.Effect<void, Error>
+  readonly generateText: (input: ProviderGenerateTextInput) => Effect.Effect<string, Error>
 }
 
 export class ProviderProbeService extends Context.Tag('@openwaggle/ProviderProbeService')<

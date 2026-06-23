@@ -45,6 +45,11 @@ import type {
   SkillCatalogResult,
   SkillImportResult,
 } from './standards'
+import type {
+  TeammateAgentGenerationInput,
+  TeammateAgentGenerationResult,
+  TeammateDefinition,
+} from './teammate'
 import type { UpdateStatus } from './updater'
 import type { VoiceTranscriptionRequest, VoiceTranscriptionResult } from './voice'
 import type {
@@ -231,6 +236,18 @@ export interface OpenWaggleApi {
   cancelWaggle(sessionId: SessionId): void
   onWaggleEvent(callback: (payload: IpcEventPayload<'waggle:event'>) => void): () => void
   onWaggleTurnEvent(callback: (payload: IpcEventPayload<'waggle:turn-event'>) => void): () => void
+  sendTeamMessage(
+    sessionId: SessionId,
+    payload: AgentSendPayload,
+    model: SupportedModelId,
+    teammate: TeammateDefinition,
+  ): Promise<void>
+  generateTeamAgent(
+    projectPath: string,
+    model: SupportedModelId,
+    input: TeammateAgentGenerationInput,
+  ): Promise<TeammateAgentGenerationResult>
+  cancelTeam(sessionId: SessionId): void
 
   // Auth
   startOAuth(provider: OAuthProvider): Promise<void>

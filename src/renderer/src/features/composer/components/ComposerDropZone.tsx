@@ -13,7 +13,7 @@ export function ComposerDropZone({ fileAttachment, children }: ComposerDropZoneP
     <section
       aria-label="Composer file drop zone"
       className={cn(
-        'relative rounded-md border border-border bg-bg transition-all',
+        'home-panel-frame relative rounded-md bg-bg transition-all',
         'focus-within:border-accent/40',
         fileAttachment.isDragOver && !fileAttachment.isAtCapacity && 'border-accent/40 bg-accent/5',
         fileAttachment.isDragOver &&

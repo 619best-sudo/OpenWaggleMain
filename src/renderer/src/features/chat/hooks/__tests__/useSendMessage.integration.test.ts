@@ -1,5 +1,6 @@
 import type { AgentSendPayload } from '@shared/types/agent'
 import { SessionId, SupportedModelId } from '@shared/types/brand'
+import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleConfig } from '@shared/types/waggle'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createSendHandlers } from '../useSendMessage'
@@ -7,6 +8,7 @@ import { createSendHandlers } from '../useSendMessage'
 vi.mock('@/shared/lib/ipc', () => ({
   api: {
     sendMessage: vi.fn(),
+    sendTeamMessage: vi.fn(),
     sendWaggleMessage: vi.fn(),
   },
 }))
@@ -20,7 +22,10 @@ function makeDeps(overrides: Partial<SendDeps> = {}) {
     thinkingLevel: 'medium',
     createSession: vi.fn<SendDeps['createSession']>().mockResolvedValue(SessionId('new-session')),
     sendMessage: vi.fn<(p: AgentSendPayload) => Promise<void>>().mockResolvedValue(undefined),
-    sendMessageToSession: vi.fn<SendDeps['sendMessageToSession']>().mockResolvedValue(undefined),
+    sendFirstMessageToSession: vi.fn<SendDeps['sendFirstMessageToSession']>().mockResolvedValue(
+      undefined,
+    ),
+    sendTeamMessage: vi.fn<SendDeps['sendTeamMessage']>().mockResolvedValue(undefined),
     sendWaggleMessage: vi
       .fn<(payload: AgentSendPayload) => Promise<void>>()
       .mockResolvedValue(undefined),
@@ -53,7 +58,9 @@ describe('createSendHandlers', () => {
       await handleSend(payload)
 
       expect(deps.createSession).toHaveBeenCalledWith('/test/project')
-      expect(deps.sendMessageToSession).toHaveBeenCalledWith('new-session', payload, null)
+      expect(deps.sendFirstMessageToSession).toHaveBeenCalledWith('new-session', payload, {
+        kind: 'plain',
+      })
       expect(deps.sendMessage).not.toHaveBeenCalled()
     })
 
@@ -115,8 +122,45 @@ describe('createSendHandlers', () => {
       await handleSendWaggle(payload, config)
 
       expect(deps.createSession).toHaveBeenCalledWith('/test/project')
-      expect(deps.sendMessageToSession).toHaveBeenCalledWith('new-session', payload, config)
+      expect(deps.sendFirstMessageToSession).toHaveBeenCalledWith('new-session', payload, {
+        kind: 'waggle',
+        config,
+      })
       expect(deps.sendWaggleMessage).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('handleSendTeam', () => {
+    it('sends first-message Team(New) payloads to the created session instead of plain chat', async () => {
+      const deps = makeDeps({ activeSessionId: null })
+      const { handleSendTeam } = createSendHandlers(deps)
+      const payload: AgentSendPayload = { text: 'build the site', thinkingLevel: 'medium', attachments: [] }
+      const teammate: TeammateDefinition = {
+        id: 'web-executor',
+        name: 'Web Executor',
+        description: 'Build and verify websites.',
+        launchPromptPlaceholder: 'Build a website',
+        launchButtonLabel: 'Launch Team(New)',
+        app: { requiredMcps: [], requiredSkills: [] },
+        agents: [],
+        loopPolicy: {
+          initialAgentId: 'planner',
+          decisionMakerAgentId: 'verifier',
+          maxDecisionMakerCalls: 3,
+          maxAutoSubmittedPrompts: 6,
+          defaultWorkerAgentId: 'builder',
+          endConditionSummary: 'Stop when verified.',
+        },
+      }
+
+      await handleSendTeam(payload, teammate)
+
+      expect(deps.createSession).toHaveBeenCalledWith('/test/project')
+      expect(deps.sendFirstMessageToSession).toHaveBeenCalledWith('new-session', payload, {
+        kind: 'team',
+        teammate,
+      })
+      expect(deps.sendTeamMessage).not.toHaveBeenCalled()
     })
   })
 })

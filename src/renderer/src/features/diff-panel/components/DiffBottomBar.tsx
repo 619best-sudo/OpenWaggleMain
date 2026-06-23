@@ -45,10 +45,10 @@ export function DiffBottomBar({
           type="button"
           onClick={onStageAll}
           disabled={!hasChanges}
-          className="flex items-center gap-1 h-[26px] px-3 rounded-[5px] bg-[#111a13] border border-[#8eab7e] text-[12px] disabled:opacity-40 transition-opacity hover:bg-[#8eab7e] hover:text-black group"
+          className="flex items-center gap-1 h-[26px] px-3 rounded-[5px] bg-diff-stage-bg/10 border border-diff-stage-bg text-[12px] disabled:opacity-40 transition-colors hover:bg-diff-stage-bg hover:text-white group"
         >
-          <span className="text-[14px] font-semibold text-[#8eab7e] group-hover:text-black">+</span>
-          <span className="font-medium text-[#8eab7e] group-hover:text-black">Stage all</span>
+          <span className="text-[14px] font-semibold text-diff-stage-bg group-hover:text-white">+</span>
+          <span className="font-medium text-diff-stage-bg group-hover:text-white">Stage all</span>
         </Button>
       </div>
     </div>

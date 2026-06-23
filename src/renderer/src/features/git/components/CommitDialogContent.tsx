@@ -113,9 +113,9 @@ function ChangedFilesSelector({
   readonly onTogglePath: (filePath: string) => void
 }) {
   return (
-    <div className="max-h-[220px] overflow-y-auto rounded-xl border border-border-light bg-bg-secondary/35">
+    <div className="home-panel-frame-soft max-h-[220px] overflow-y-auto rounded-xl bg-bg-secondary/35">
       {changedFiles.length > 0 && (
-        <div className="flex items-center gap-2 border-b border-border bg-bg-secondary/60 px-3 py-2">
+        <div className="home-divider-b flex items-center gap-2 bg-bg-secondary/60 px-3 py-2">
           <Checkbox
             checked={selectedPaths.size === changedFiles.length}
             onChange={onToggleAll}

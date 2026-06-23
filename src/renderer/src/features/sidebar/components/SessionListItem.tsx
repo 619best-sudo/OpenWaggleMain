@@ -43,15 +43,15 @@ function SessionTitleButton({
 }) {
   return (
     <Button
-      variant="unstyled"
-      type="button"
-      onClick={() => onSelect(sessionId)}
-      className="min-w-0 flex-1 truncate text-left"
-    >
+        variant="unstyled"
+        type="button"
+        onClick={() => onSelect(sessionId)}
+        className="group min-w-0 flex-1 truncate text-left"
+      >
       <span
         className={cn(
-          'truncate text-[12.5px]',
-          isActive ? 'font-semibold text-accent' : 'font-medium text-text-primary/84',
+          'truncate text-[12.5px] transition-colors',
+          isActive ? 'font-semibold text-text-primary' : 'font-medium text-text-tertiary group-hover:text-text-secondary',
         )}
       >
         {truncate(session.title, TITLE_TRUNCATE_LENGTH)}

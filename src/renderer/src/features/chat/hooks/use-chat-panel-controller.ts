@@ -1,6 +1,6 @@
 import { SessionId } from '@shared/types/brand'
 import type { WaggleCollaborationStatus } from '@shared/types/waggle'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAgentChat } from '@/features/chat/hooks/useAgentChat'
 import { useAutoSendQueue } from '@/features/chat/hooks/useAutoSendQueue'
 import { useSendMessage } from '@/features/chat/hooks/useSendMessage'
@@ -10,6 +10,7 @@ import { maybeOpenBranchSummaryPrompt } from '@/features/chat/lib/branch-summary
 import { replaceComposerText } from '@/features/composer/lib/set-composer-text'
 import { useComposerStore } from '@/features/composer/state'
 import { useSkills } from '@/features/skills/hooks'
+import { useTeamModeStore } from '@/features/teammates/state/team-mode-store'
 import { useWaggleChat } from '@/features/waggle/hooks'
 import {
   findWagglePresetForTuringSuggestion,
@@ -77,7 +78,7 @@ export function useChatPanelSections(): ChatPanelSections {
     compactionStatus,
   } = useAgentChat(activeSessionId, activeSession, model, thinkingLevel)
 
-  const { handleSend, handleSendText, handleSendWaggle } = useSendMessage({
+  const { handleSend, handleSendText, handleSendWaggle, handleSendTeam } = useSendMessage({
     activeSessionId,
     model,
     projectPath,
@@ -85,6 +86,12 @@ export function useChatPanelSections(): ChatPanelSections {
     createSession,
     sendMessage,
     sendWaggleMessage,
+    sendTeamMessage: async (payload, teammate) => {
+      if (!activeSessionId) {
+        throw new Error('No active session for Team(New) send.')
+      }
+      await api.sendTeamMessage(activeSessionId, payload, model, teammate)
+    },
   })
 
   async function handleStarterPrompt(content: string) {
@@ -111,14 +118,32 @@ export function useChatPanelSections(): ChatPanelSections {
   const waggleActiveCollaborationId = useWaggleStore((s) => s.activeCollaborationId)
   const waggleConfigSessionId = useWaggleStore((s) => s.configSessionId)
   const setWaggleConfig = useWaggleStore((s) => s.setConfig)
+  const clearWaggleConfig = useWaggleStore((s) => s.clearConfig)
   const startWaggleCollaboration = useWaggleStore((s) => s.startCollaboration)
   const stopWaggleCollaboration = useWaggleStore((s) => s.stopCollaboration)
   const queueWaggleLaunchPrompt = useWaggleLaunchPromptStore((s) => s.queuePrompt)
+  const activeTeammate = useTeamModeStore((s) => s.activeTeammate)
+  const teamConfigSessionId = useTeamModeStore((s) => s.configSessionId)
+  const teamRunningSessionId = useTeamModeStore((s) => s.runningSessionId)
+  const teamStatus = useTeamModeStore((s) => s.status)
+  const armActiveTeammate = useTeamModeStore((s) => s.armTeammate)
+  const clearActiveTeammate = useTeamModeStore((s) => s.clear)
+  const startTeamRun = useTeamModeStore((s) => s.startRun)
+  const finishTeamRun = useTeamModeStore((s) => s.finishRun)
 
   // Scope waggle status to the active session — other sessions see 'idle'
   const waggleOwningId = waggleActiveCollaborationId ?? waggleConfigSessionId
   const waggleStatus: WaggleCollaborationStatus =
     waggleOwningId && waggleOwningId !== activeSessionId ? 'idle' : waggleStoreStatus
+  const teamOwningId = teamRunningSessionId ?? teamConfigSessionId
+  const scopedActiveTeammate =
+    teamOwningId && activeSessionId && teamOwningId !== activeSessionId ? null : activeTeammate
+
+  useEffect(() => {
+    return api.onRunCompleted(({ sessionId }) => {
+      useTeamModeStore.getState().finishRun(sessionId)
+    })
+  }, [])
 
   const sessionCopy = useSessionCopyWorkflow({
     activeSessionId,
@@ -160,6 +185,7 @@ export function useChatPanelSections(): ChatPanelSections {
     clearDraftBranchForSession,
     draftBranch,
     handleSend,
+    handleSendTeam,
     handleSendWaggle,
     model,
     phase,
@@ -167,11 +193,19 @@ export function useChatPanelSections(): ChatPanelSections {
     refreshSessionWorkspace,
     sessionCopy,
     setUserDidSend,
+    armActiveTeammate,
+    clearActiveTeammate,
+    startTeamRun,
+    finishTeamRun,
+    clearWaggleConfig,
     setWaggleConfig,
     showToast,
     startWaggleCollaboration,
     stop,
     stopWaggleCollaboration,
+    activeTeammate: scopedActiveTeammate,
+    teamOwningId,
+    teamStatus,
     waggleConfig,
     waggleOwningId,
     waggleStatus,
@@ -288,6 +322,7 @@ export function useChatPanelSections(): ChatPanelSections {
       }
 
       setWaggleConfig(matchedPreset.config, activeSessionId)
+      clearActiveTeammate()
       queueWaggleLaunchPrompt(activeSessionId, String(matchedPreset.id), suggestion.userPrompt)
       showToast(`"${matchedPreset.name}" is ready with the suggested user prompt.`)
     } catch (error) {
@@ -302,6 +337,8 @@ export function useChatPanelSections(): ChatPanelSections {
     isSteering,
     status,
     compactionStatus,
+    activeTeammate: scopedActiveTeammate,
+    teamStatus,
     forkSelectorOpen: sessionCopy.forkSelectorOpen,
     forkTargets: sessionCopy.forkTargets,
     activeSessionId,
@@ -316,7 +353,9 @@ export function useChatPanelSections(): ChatPanelSections {
     handleSendWithWaggle: sendWorkflow.sendWithWaggle,
     handleUseFollowUpPrompt,
     handleStartWaggle: sendWorkflow.startWaggle,
+    handleStartTeam: sendWorkflow.startTeam,
     handleStopCollaboration: sendWorkflow.stopCollaboration,
+    handleClearTeamMode: clearActiveTeammate,
     handleSkipBranchSummary: branchSummary.skipBranchSummary,
     handleSummarizeBranch: () => {
       void branchSummary.materializeBranchSummary()

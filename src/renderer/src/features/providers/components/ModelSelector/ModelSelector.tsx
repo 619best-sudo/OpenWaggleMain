@@ -151,15 +151,15 @@ export function ModelSelector({
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         className={cn(
-          'no-drag flex h-[26px] items-center gap-[5px] rounded-md border border-white/10 px-2.5 transition-colors hover:bg-white/5 hover:text-white',
-          selectedModel ? 'text-[#a1a1aa]' : 'text-[#71717a]',
+          'no-drag flex h-[26px] items-center gap-[5px] rounded-md border border-home-border px-2.5 transition-colors hover:bg-bg-hover hover:text-text-primary',
+          selectedModel ? 'text-text-secondary' : 'text-text-tertiary',
         )}
       >
         {selectedModel && <SelectedModelIcon provider={selectedModel.provider} />}
         <span className="max-w-[180px] truncate text-[12px]">
           {selectedModel?.name ?? 'Select model'}
         </span>
-        <span className="text-[9px] text-[#52525b]">&#x2228;</span>
+        <span className="text-[9px] text-text-muted">&#x2228;</span>
       </Button>
 
       {isOpen && (

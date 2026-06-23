@@ -36,7 +36,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
     <div className="flex size-full gap-2 overflow-hidden bg-bg-app p-2">
       <Sidebar />
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-[16px] border border-border/70 bg-bg shadow-sm">
+      <div className="home-panel-frame flex min-w-0 flex-1 flex-col overflow-hidden rounded-[16px] bg-bg shadow-sm">
         {showChatHeader ? <Header /> : null}
         {children}
         <WorkspaceTerminal />

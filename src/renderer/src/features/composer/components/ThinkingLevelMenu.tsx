@@ -90,13 +90,13 @@ function ThinkingLevelTrigger({
       onClick={() => onToggle(!open && canOpen)}
       disabled={!canOpen}
       className={cn(
-        'flex h-[26px] items-center gap-[5px] rounded-md border border-white/10 px-2.5 transition-colors',
-        canOpen ? 'hover:bg-white/5' : 'cursor-not-allowed opacity-70',
+        'flex h-[26px] items-center gap-[5px] rounded-md border border-home-border px-2.5 transition-colors',
+        canOpen ? 'hover:bg-bg-hover' : 'cursor-not-allowed opacity-70',
       )}
       title={title}
     >
-      <span className="text-[12px] text-[#a1a1aa]">{label}</span>
-      <span className="text-[9px] text-[#52525b]">&#x2228;</span>
+      <span className="text-[12px] text-text-secondary">{label}</span>
+      <span className="text-[9px] text-text-muted">&#x2228;</span>
     </Button>
   )
 }
@@ -119,8 +119,8 @@ function ThinkingLevelOptions({
       type="button"
       onClick={() => onSelect(level)}
       className={cn(
-        'flex w-full items-center justify-between px-3 py-1.5 text-left text-[12px] transition-colors hover:bg-white/5',
-        effectiveThinkingLevel === level ? 'text-[#8ba57b]' : 'text-[#a1a1aa]',
+        'flex w-full items-center justify-between px-3 py-1.5 text-left text-[12px] transition-colors hover:bg-bg-hover',
+        effectiveThinkingLevel === level ? 'text-success' : 'text-text-secondary',
       )}
     >
       <span>{THINKING_LEVEL_LABELS[level]}</span>

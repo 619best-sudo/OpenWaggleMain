@@ -18,7 +18,7 @@ export function ContextMeterRing({
     <div
       className={cn(
         'relative flex shrink-0 items-center justify-center rounded-full',
-        'text-[#52525b]',
+        'text-text-muted',
       )}
       style={{ width: CONTEXT_METER.GEOMETRY.SIZE, height: CONTEXT_METER.GEOMETRY.SIZE }}
     >

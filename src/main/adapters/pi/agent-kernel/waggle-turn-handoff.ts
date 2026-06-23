@@ -64,6 +64,10 @@ export function finalizeWaggleTurnHandoff(draft: WaggleTurnHandoffDraft): Waggle
   }
 }
 
+const MAX_COMPACTION_PROMPT_SUMMARIES = 3
+const MAX_COMPACTION_ARTIFACTS = 4
+const MAX_COMPACTION_TEXT_LENGTH = 360
+
 export function collectToolExecutionHandoff(
   draft: WaggleTurnHandoffDraft,
   registry: WaggleArtifactRegistry,
@@ -179,6 +183,55 @@ export function appendTurnHandoffToPrompt(
   return lines.join('\n')
 }
 
+export function buildWaggleTurnCompactionInstructions(input: {
+  readonly handoff: WaggleTurnHandoff | null
+  readonly responseText: string
+  readonly meta: WaggleStreamMetadata
+}): string {
+  const lines = [
+    'Compact this Pi Waggle session before the next agent handoff.',
+    'Goal: reduce transcript token growth while preserving only the durable context needed for the next Waggle turn.',
+    'Prefer concise bullets. Remove repeated reasoning, raw tool logs, and large tool result blobs.',
+    'Keep these facts in the compact summary:',
+    `- Completed turn: ${String(input.meta.turnNumber + 1)} by ${input.meta.agentLabel} using ${input.meta.agentModel}.`,
+    '- Preserve the original user goal, constraints, and acceptance criteria.',
+    '- Preserve unresolved blockers, rollback requirements, and the exact next-agent obligations when present.',
+  ]
+
+  const responseSummary = summarizeForCompaction(input.responseText)
+  if (responseSummary) {
+    lines.push(`- Latest turn outcome: ${responseSummary}`)
+  }
+
+  if (input.handoff?.loopDirectives.length) {
+    lines.push('- Critical loop directives:')
+    for (const directive of input.handoff.loopDirectives) {
+      lines.push(`  - ${summarizeForCompaction(directive)}`)
+    }
+  }
+
+  const promptSummaries = input.handoff?.promptSummaries.slice(0, MAX_COMPACTION_PROMPT_SUMMARIES) ?? []
+  if (promptSummaries.length > 0) {
+    lines.push('- Preserve these concise prompt summaries:')
+    for (const promptSummary of promptSummaries) {
+      lines.push(`  - ${summarizeForCompaction(promptSummary)}`)
+    }
+  }
+
+  const artifacts = input.handoff?.artifacts.slice(0, MAX_COMPACTION_ARTIFACTS) ?? []
+  if (artifacts.length > 0) {
+    lines.push('- Preserve these artifact references exactly:')
+    for (const artifact of artifacts) {
+      lines.push(
+        `  - ${artifact.id} (${artifact.kind}) path=${artifact.path} uri=${artifact.uri} sourceTool=${artifact.sourceTool}`,
+      )
+    }
+    lines.push('- Keep artifact ids, absolute paths, and URIs exactly as written.')
+  }
+
+  return lines.join('\n')
+}
+
 export function collectResponseDirectiveHandoff(
   draft: WaggleTurnHandoffDraft,
   input: { readonly responseText: string; readonly includeRollbackDirective?: boolean },
@@ -252,6 +305,16 @@ function addLoopDirective(draft: WaggleTurnHandoffDraft, directive: string) {
   }
   draft.seenLoopDirectives.add(directive)
   draft.loopDirectives.push(directive)
+}
+
+function summarizeForCompaction(value: string) {
+  const normalized = value.replace(/\s+/g, ' ').trim()
+  if (!normalized) {
+    return ''
+  }
+  return normalized.length > MAX_COMPACTION_TEXT_LENGTH
+    ? `${normalized.slice(0, MAX_COMPACTION_TEXT_LENGTH)}...`
+    : normalized
 }
 
 function escapeRegExp(value: string) {

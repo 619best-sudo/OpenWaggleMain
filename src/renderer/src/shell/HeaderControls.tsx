@@ -87,7 +87,7 @@ export function TerminalButton({ open, projectPath, onToggle }: TerminalButtonPr
       aria-expanded={open}
       onClick={onToggle}
       className={cn(
-        'no-drag h-7 border border-border bg-transparent px-2.5 hover:bg-bg-hover',
+        'no-drag h-7 border border-home-border bg-transparent px-2.5 hover:bg-bg-hover',
         !projectPath && 'pointer-events-none opacity-30',
       )}
       disabled={!projectPath}
@@ -141,7 +141,7 @@ export function SessionTreeButton({
       onClick={onToggle}
       disabled={disabled}
       className={cn(
-        'no-drag h-7 border border-border px-2 hover:bg-bg-hover',
+        'no-drag h-7 border border-home-border px-2 hover:bg-bg-hover',
         open ? 'bg-bg-active' : 'bg-transparent',
         disabled && 'pointer-events-none opacity-30',
       )}

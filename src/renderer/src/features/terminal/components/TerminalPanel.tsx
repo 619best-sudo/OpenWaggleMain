@@ -58,7 +58,7 @@ function TerminalSessionView({
         className={cn('h-full flex-1 overflow-hidden bg-black', !active && 'hidden')}
       />
       {active && terminalStatus.errorMessage && (
-        <div className="border-t border-border px-3 py-2 text-[12px] text-error">
+        <div className="home-divider-t px-3 py-2 text-[12px] text-error">
           {terminalStatus.errorMessage}
         </div>
       )}
@@ -86,7 +86,7 @@ function TerminalTabButton({
           : 'bg-transparent text-text-secondary hover:bg-bg-hover hover:text-text-primary',
       )}
     >
-      {active && <div className="absolute left-0 top-0 h-[2px] w-full bg-border" />}
+      {active && <div className="absolute left-0 top-0 h-[2px] w-full bg-home-border-vibrant" />}
       <button
         type="button"
         role="tab"
@@ -156,8 +156,8 @@ export function TerminalPanel({ projectPath, onClose }: TerminalPanelProps) {
   }
 
   return (
-    <div className="flex h-full shrink-0 flex-col bg-black">
-      <div className="flex h-11 items-center justify-between gap-2 bg-bg-tertiary pr-2">
+    <div className="home-divider-t flex h-full shrink-0 flex-col bg-black">
+      <div className="home-divider-b flex h-11 items-center justify-between gap-2 bg-bg-tertiary pr-2">
         <div className="flex h-full min-w-0 flex-1 items-center overflow-x-auto" role="tablist">
           {tabs.map((tab, index) => {
             const isActive = tab.key === activeTab?.key

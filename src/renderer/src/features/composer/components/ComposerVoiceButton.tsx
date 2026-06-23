@@ -34,8 +34,8 @@ export function ComposerVoiceButton({ mode, onToggleVoice }: ComposerVoiceButton
 }
 
 function getVoiceButtonTone(isTranscribing: boolean, isListening: boolean) {
-  if (isTranscribing) return 'cursor-not-allowed text-[#a1a1aa]'
-  return isListening ? 'text-[#8ba57b]' : 'text-[#a1a1aa] hover:text-white'
+  if (isTranscribing) return 'cursor-not-allowed text-text-tertiary'
+  return isListening ? 'text-success' : 'text-text-secondary hover:text-text-primary'
 }
 
 function getVoiceButtonTitle(mode: VoiceRecorderMode) {

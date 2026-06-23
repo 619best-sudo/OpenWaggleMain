@@ -231,19 +231,17 @@ describe('WaggleSection', () => {
 
     expect(screen.queryByText('Claude Sonnet 4.5')).not.toBeInTheDocument()
     expect(screen.queryByText('Claude Opus 4')).not.toBeInTheDocument()
-    expect(screen.getByText(/reviewer/i)).toBeInTheDocument()
-    expect(screen.getByText(/implementer/i)).toBeInTheDocument()
-    expect(screen.getByText(/2 mcps/i)).toBeInTheDocument()
-    expect(screen.getByText(/1 skill/i)).toBeInTheDocument()
-    expect(await screen.findByText(/1\/3 dependencies ready/i)).toBeInTheDocument()
-    expect(
-      screen.getByText(/dependency checks and install actions here are waggle-app-only/i),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/needs waggle setup/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Install' })).toBeInTheDocument()
   })
 
-  it('groups built-in presets into launch, inspection, specialist, and custom sections', async () => {
+  it('groups built-in presets into lifecycle, launch, inspection, specialist, and custom sections', async () => {
     listWagglePresetsMock.mockResolvedValueOnce([
+      createPreset({
+        id: WagglePresetId('turing'),
+        name: 'Turing',
+        isBuiltIn: true,
+        app: { requiredMcps: [], requiredSkills: [] },
+      }),
       createPreset({
         id: WagglePresetId('product-planning'),
         name: 'Product Planning',
@@ -251,8 +249,37 @@ describe('WaggleSection', () => {
         app: { requiredMcps: [], requiredSkills: [] },
       }),
       createPreset({
+        id: WagglePresetId('design-asset-direction'),
+        name: 'Design And Asset Direction',
+        isBuiltIn: true,
+        app: { requiredMcps: [], requiredSkills: ['media-director'] },
+      }),
+      createPreset({
+        id: WagglePresetId('qa-repair-loop'),
+        name: 'QA Repair Loop',
+        isBuiltIn: true,
+        app: { requiredMcps: [], requiredSkills: ['ui-screenshot-auditor'] },
+      }),
+      createPreset({
+        id: WagglePresetId('mobile-build'),
+        name: 'Mobile Build',
+        isBuiltIn: true,
+        app: { requiredMcps: ['mobile-mcp'], requiredSkills: ['frontend-implementer'] },
+      }),
+      createPreset({
+        id: WagglePresetId('release-readiness'),
+        name: 'Release Readiness',
+        isBuiltIn: true,
+        app: { requiredMcps: [], requiredSkills: ['release-checker'] },
+      }),
+      createPreset({
         id: WagglePresetId('development-qa'),
         name: 'Development QA',
+        isBuiltIn: true,
+      }),
+      createPreset({
+        id: WagglePresetId('product-ui'),
+        name: 'Product UI',
         isBuiltIn: true,
       }),
       createPreset({
@@ -288,14 +315,177 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    expect(await screen.findByText('Core Launch Set')).toBeInTheDocument()
+    expect(await screen.findByText('Product And Tech Lifecycle')).toBeInTheDocument()
+    expect(screen.getByText('Mobile Lifecycle')).toBeInTheDocument()
+    expect(screen.getByText('Core Launch Set')).toBeInTheDocument()
     expect(screen.getByText('Quality And Inspection')).toBeInTheDocument()
     expect(screen.getByText('UI Specialists')).toBeInTheDocument()
     expect(screen.getByText('Other Built-Ins')).toBeInTheDocument()
     expect(screen.getByText('Custom Waggles')).toBeInTheDocument()
-    expect(screen.getByText('Quality Assurance Engineer')).toBeInTheDocument()
+    expect(screen.getAllByText('Turing')).toHaveLength(2)
+    expect(screen.getAllByText('Design And Asset Direction')).toHaveLength(2)
+    expect(screen.getAllByText('Mobile Build')).toHaveLength(2)
+    expect(screen.getAllByText('QA Repair Loop')).toHaveLength(2)
+    expect(screen.getAllByText('Release Readiness')).toHaveLength(2)
+    expect(screen.getAllByText('Quality Assurance Engineer').length).toBeGreaterThan(0)
     expect(screen.getByText('Person 360')).toBeInTheDocument()
     expect(screen.getByText('Person Profile With Optional Career Pass')).toBeInTheDocument()
+    expect(
+      screen.getByText(/Run the end-to-end chain in order: Turing -> Product Planning -> Design And Asset Direction/i),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Use this curated mobile path when the request is app-first: Turing -> Product Planning -> Design And Asset Direction -> Mobile Build/i),
+    ).toBeInTheDocument()
+  })
+
+  it('shows compact lifecycle guidance on cards for build and QA presets', async () => {
+    listWagglePresetsMock.mockResolvedValueOnce([
+      createPreset({
+        id: WagglePresetId('mobile-build'),
+        name: 'Mobile Build',
+        isBuiltIn: true,
+        app: { requiredMcps: ['mobile-mcp'], requiredSkills: ['frontend-implementer'] },
+      }),
+      createPreset({
+        id: WagglePresetId('qa-repair-loop'),
+        name: 'QA Repair Loop',
+        isBuiltIn: true,
+        app: { requiredMcps: [], requiredSkills: ['ui-screenshot-auditor'] },
+      }),
+      createPreset({
+        id: WagglePresetId('quality-assurance-engineer'),
+        name: 'Quality Assurance Engineer',
+        isBuiltIn: true,
+      }),
+    ])
+
+    renderWithQueryClient(<WaggleSection />)
+
+    const mobileStage = await screen.findAllByTestId('preset-stage-mobile-build')
+    expect(within(elementAt(mobileStage, 0)).getByText('Build')).toBeInTheDocument()
+    expect(screen.getAllByText(/Best For: Implementing the planned mobile screen or flow/i)).not.toHaveLength(0)
+    expect(screen.getAllByTestId('preset-next-mobile-build')).not.toHaveLength(0)
+    expect(screen.getAllByText(/Recommended Next: QA Repair Loop/i)).not.toHaveLength(0)
+
+    const qaStage = await screen.findAllByTestId('preset-stage-qa-repair-loop')
+    expect(within(elementAt(qaStage, 0)).getByText('QA')).toBeInTheDocument()
+    expect(screen.getAllByText(/Best For: Self-healing verify -> fix -> retest cycles/i)).not.toHaveLength(0)
+    expect(screen.getAllByText(/Recommended Next: Release Readiness when fixes pass/i)).not.toHaveLength(0)
+
+    const qaEngineerStage = await screen.findAllByTestId('preset-stage-quality-assurance-engineer')
+    expect(within(elementAt(qaEngineerStage, 0)).getByText('QA')).toBeInTheDocument()
+    expect(screen.getAllByText(/Best For: Broader cross-surface QA before ship/i)).not.toHaveLength(0)
+  })
+
+  it('shows compact lifecycle guidance on routing, planning, design, release, and deployment cards', async () => {
+    listWagglePresetsMock.mockResolvedValueOnce([
+      createPreset({
+        id: WagglePresetId('turing'),
+        name: 'Turing',
+        isBuiltIn: true,
+        app: { requiredMcps: [], requiredSkills: [] },
+      }),
+      createPreset({
+        id: WagglePresetId('product-planning'),
+        name: 'Product Planning',
+        isBuiltIn: true,
+        app: { requiredMcps: [], requiredSkills: [] },
+      }),
+      createPreset({
+        id: WagglePresetId('design-asset-direction'),
+        name: 'Design And Asset Direction',
+        isBuiltIn: true,
+        app: { requiredMcps: [], requiredSkills: ['media-director'] },
+      }),
+      createPreset({
+        id: WagglePresetId('release-readiness'),
+        name: 'Release Readiness',
+        isBuiltIn: true,
+        app: { requiredMcps: [], requiredSkills: ['release-checker'] },
+      }),
+      createPreset({
+        id: WagglePresetId('deployment'),
+        name: 'Deployment',
+        isBuiltIn: true,
+        app: { requiredMcps: [], requiredSkills: [] },
+      }),
+    ])
+
+    renderWithQueryClient(<WaggleSection />)
+
+    const turingStage = await screen.findAllByTestId('preset-stage-turing')
+    expect(within(elementAt(turingStage, 0)).getByText('Routing')).toBeInTheDocument()
+    const turingGuidance = await screen.findAllByTestId('preset-guidance-turing')
+    expect(within(elementAt(turingGuidance, 0)).getByText(/Best For: Routing the next lifecycle step from repo context/i)).toBeInTheDocument()
+    expect(within(elementAt(turingGuidance, 0)).getByText(/Recommended Next: Usually Product Planning or a build Waggle/i)).toBeInTheDocument()
+
+    const planningStage = await screen.findAllByTestId('preset-stage-product-planning')
+    expect(within(elementAt(planningStage, 0)).getByText('Planning')).toBeInTheDocument()
+    const planningGuidance = await screen.findAllByTestId('preset-guidance-product-planning')
+    expect(within(elementAt(planningGuidance, 0)).getByText(/Best For: Turning a vague request into a buildable scope/i)).toBeInTheDocument()
+    expect(within(elementAt(planningGuidance, 0)).getByText(/Recommended Next: Design And Asset Direction or a build Waggle/i)).toBeInTheDocument()
+
+    const designStage = await screen.findAllByTestId('preset-stage-design-asset-direction')
+    expect(within(elementAt(designStage, 0)).getByText('Design')).toBeInTheDocument()
+    const designGuidance = await screen.findAllByTestId('preset-guidance-design-asset-direction')
+    expect(within(elementAt(designGuidance, 0)).getByText(/Best For: Choosing UI direction, hero mode, and asset fallbacks/i)).toBeInTheDocument()
+    expect(within(elementAt(designGuidance, 0)).getByText(/Recommended Next: Web Build or Mobile Build/i)).toBeInTheDocument()
+
+    const releaseStage = await screen.findAllByTestId('preset-stage-release-readiness')
+    expect(within(elementAt(releaseStage, 0)).getByText('Release')).toBeInTheDocument()
+    const releaseGuidance = await screen.findAllByTestId('preset-guidance-release-readiness')
+    expect(within(elementAt(releaseGuidance, 0)).getByText(/Best For: Ship, merge, beta, or demo decisions/i)).toBeInTheDocument()
+    expect(within(elementAt(releaseGuidance, 0)).getByText(/Recommended Next: Deployment/i)).toBeInTheDocument()
+
+    const deploymentStage = await screen.findAllByTestId('preset-stage-deployment')
+    expect(within(elementAt(deploymentStage, 0)).getByText('Deploy')).toBeInTheDocument()
+    const deploymentGuidance = await screen.findAllByTestId('preset-guidance-deployment')
+    expect(within(elementAt(deploymentGuidance, 0)).getByText(/Best For: Automated rollout or a manual deployment runbook/i)).toBeInTheDocument()
+  })
+
+  it('shows preflight verdicts on lifecycle cards when capability coverage is partial', async () => {
+    const preset = createPreset({
+      id: WagglePresetId('mobile-build'),
+      name: 'Mobile Build',
+      isBuiltIn: true,
+      app: { requiredMcps: ['mobile-mcp'], requiredSkills: ['frontend-implementer'] },
+    })
+    listWagglePresetsMock.mockResolvedValueOnce([preset])
+    getWaggleAppInstallStatusMock.mockResolvedValueOnce({
+      ready: true,
+      requiredDependencyCount: 2,
+      optionalDependencyCount: 2,
+      installedCount: 2,
+      missingCount: 0,
+      unsupportedCount: 0,
+      optionalInstalledCount: 0,
+      optionalMissingCount: 2,
+      optionalUnsupportedCount: 0,
+      dependencies: [],
+      preflight: {
+        verdict: 'partial',
+        summary:
+          'Mobile Build can launch, but some optional capabilities are missing and coverage will be narrower.',
+        checks: [
+          {
+            id: 'required-dependencies',
+            label: 'Required Dependencies',
+            status: 'pass',
+            detail: 'All required MCPs and skills are installed.',
+            blocking: false,
+          },
+        ],
+      },
+    })
+
+    renderWithQueryClient(<WaggleSection />)
+
+    const preflightBadges = await screen.findAllByTestId('preset-preflight-mobile-build')
+    expect(within(elementAt(preflightBadges, 0)).getByText(/Preflight partial/i)).toBeInTheDocument()
+    expect(screen.getAllByTestId('preset-preflight-summary-mobile-build')).not.toHaveLength(0)
+    expect(
+      screen.getAllByText(/can launch, but some optional capabilities are missing and coverage will be narrower/i),
+    ).not.toHaveLength(0)
   })
 
   it('installs Waggle app dependencies from the list card', async () => {
@@ -304,7 +494,11 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click(await screen.findByText('Install'))
+    const installButton = await screen.findByRole('button', { name: 'Install' })
+    await waitFor(() => {
+      expect(installButton).toBeEnabled()
+    })
+    fireEvent.click(installButton)
 
     await waitFor(() => {
       expect(installWaggleAppDependenciesMock).toHaveBeenCalledWith(preset, PROJECT_PATH)
@@ -383,7 +577,7 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /starter prompts/i }))
+    fireEvent.click(elementAt(await screen.findAllByRole('button', { name: /starter prompts/i }), 0))
     fireEvent.click(await screen.findByRole('button', { name: /edit existing feature/i }))
 
     await waitFor(() => {
@@ -395,6 +589,48 @@ describe('WaggleSection', () => {
       expect(useWaggleStore.getState().activeConfig).toEqual(preset.config)
       expect(useWaggleLaunchPromptStore.getState().pendingBySessionId['session-123']?.prompt).toMatch(
         /edit to an existing backend feature/i,
+      )
+    })
+  })
+
+  it('launches Turing with a mobile lifecycle starter prompt', async () => {
+    const preset = createPreset({
+      id: WagglePresetId('turing'),
+      name: 'Turing',
+      isBuiltIn: true,
+      app: {
+        requiredMcps: [],
+        requiredSkills: [],
+      },
+    })
+    listWagglePresetsMock.mockResolvedValueOnce([preset])
+    getWaggleAppInstallStatusMock.mockResolvedValueOnce({
+      ready: true,
+      requiredDependencyCount: 0,
+      optionalDependencyCount: 0,
+      installedCount: 0,
+      missingCount: 0,
+      unsupportedCount: 0,
+      optionalInstalledCount: 0,
+      optionalMissingCount: 0,
+      optionalUnsupportedCount: 0,
+      dependencies: [],
+    })
+
+    renderWithQueryClient(<WaggleSection />)
+
+    fireEvent.click(elementAt(await screen.findAllByRole('button', { name: /starter prompts/i }), 0))
+    fireEvent.click(await screen.findByRole('button', { name: /route mobile feature flow/i }))
+
+    await waitFor(() => {
+      expect(createSessionMock).toHaveBeenCalledWith(PROJECT_PATH)
+      expect(navigateMock).toHaveBeenCalledWith({
+        to: '/sessions/$sessionId',
+        params: { sessionId: 'session-123' },
+      })
+      expect(useWaggleStore.getState().activeConfig).toEqual(preset.config)
+      expect(useWaggleLaunchPromptStore.getState().pendingBySessionId['session-123']?.prompt).toMatch(
+        /mobile-build, qa-repair-loop, or quality-assurance-engineer/i,
       )
     })
   })
@@ -427,7 +663,7 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /starter prompts/i }))
+    fireEvent.click(elementAt(await screen.findAllByRole('button', { name: /starter prompts/i }), 0))
     fireEvent.click(await screen.findByRole('button', { name: /figma to web ui/i }))
 
     await waitFor(() => {
@@ -471,7 +707,7 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /starter prompts/i }))
+    fireEvent.click(elementAt(await screen.findAllByRole('button', { name: /starter prompts/i }), 0))
     fireEvent.click(await screen.findByRole('button', { name: /mobile regression and blast radius/i }))
 
     await waitFor(() => {
@@ -515,7 +751,7 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /starter prompts/i }))
+    fireEvent.click(elementAt(await screen.findAllByRole('button', { name: /starter prompts/i }), 0))
     fireEvent.click(await screen.findByRole('button', { name: /disturbed flow blast radius/i }))
 
     await waitFor(() => {
@@ -559,7 +795,7 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /starter prompts/i }))
+    fireEvent.click(elementAt(await screen.findAllByRole('button', { name: /starter prompts/i }), 0))
     fireEvent.click(await screen.findByRole('button', { name: /mixed disturbed flow regression/i }))
 
     await waitFor(() => {
@@ -571,6 +807,94 @@ describe('WaggleSection', () => {
       expect(useWaggleStore.getState().activeConfig).toEqual(preset.config)
       expect(useWaggleLaunchPromptStore.getState().pendingBySessionId['session-123']?.prompt).toMatch(
         /disturbed other files or flows/i,
+      )
+    })
+  })
+
+  it('launches Web Build with a lifecycle starter prompt', async () => {
+    const preset = createPreset({
+      id: WagglePresetId('web-build'),
+      name: 'Web Build',
+      isBuiltIn: true,
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer'],
+        optionalMcps: ['figma', 'multimodal-media', 'ffmpeg'],
+        optionalSkills: ['ui-screenshot-auditor', 'media-director'],
+      },
+    })
+    listWagglePresetsMock.mockResolvedValueOnce([preset])
+    getWaggleAppInstallStatusMock.mockResolvedValueOnce({
+      ready: true,
+      requiredDependencyCount: 2,
+      optionalDependencyCount: 5,
+      installedCount: 2,
+      missingCount: 0,
+      unsupportedCount: 0,
+      optionalInstalledCount: 5,
+      optionalMissingCount: 0,
+      optionalUnsupportedCount: 0,
+      dependencies: [],
+    })
+
+    renderWithQueryClient(<WaggleSection />)
+
+    fireEvent.click(elementAt(await screen.findAllByRole('button', { name: /starter prompts/i }), 0))
+    fireEvent.click(await screen.findByRole('button', { name: /hero build with media fallback/i }))
+
+    await waitFor(() => {
+      expect(createSessionMock).toHaveBeenCalledWith(PROJECT_PATH)
+      expect(navigateMock).toHaveBeenCalledWith({
+        to: '/sessions/$sessionId',
+        params: { sessionId: 'session-123' },
+      })
+      expect(useWaggleStore.getState().activeConfig).toEqual(preset.config)
+      expect(useWaggleLaunchPromptStore.getState().pendingBySessionId['session-123']?.prompt).toMatch(
+        /static, animated-ui, video, or frames/i,
+      )
+    })
+  })
+
+  it('launches QA Repair Loop with a mobile starter prompt', async () => {
+    const preset = createPreset({
+      id: WagglePresetId('qa-repair-loop'),
+      name: 'QA Repair Loop',
+      isBuiltIn: true,
+      app: {
+        requiredMcps: [],
+        requiredSkills: ['ui-screenshot-auditor', 'backend-auditor'],
+        optionalMcps: ['playwright', 'mobile-mcp', 'mobile-device', 'postman', 'database'],
+        optionalSkills: ['frontend-implementer'],
+      },
+    })
+    listWagglePresetsMock.mockResolvedValueOnce([preset])
+    getWaggleAppInstallStatusMock.mockResolvedValueOnce({
+      ready: true,
+      requiredDependencyCount: 2,
+      optionalDependencyCount: 6,
+      installedCount: 2,
+      missingCount: 0,
+      unsupportedCount: 0,
+      optionalInstalledCount: 6,
+      optionalMissingCount: 0,
+      optionalUnsupportedCount: 0,
+      dependencies: [],
+    })
+
+    renderWithQueryClient(<WaggleSection />)
+
+    fireEvent.click(elementAt(await screen.findAllByRole('button', { name: /starter prompts/i }), 0))
+    fireEvent.click(await screen.findByRole('button', { name: /verify, fix, and retest mobile change/i }))
+
+    await waitFor(() => {
+      expect(createSessionMock).toHaveBeenCalledWith(PROJECT_PATH)
+      expect(navigateMock).toHaveBeenCalledWith({
+        to: '/sessions/$sessionId',
+        params: { sessionId: 'session-123' },
+      })
+      expect(useWaggleStore.getState().activeConfig).toEqual(preset.config)
+      expect(useWaggleLaunchPromptStore.getState().pendingBySessionId['session-123']?.prompt).toMatch(
+        /device or simulator behavior/i,
       )
     })
   })
@@ -608,6 +932,26 @@ describe('WaggleSection', () => {
           optionalInstalledCount: 0,
           optionalMissingCount: 4,
           optionalUnsupportedCount: 0,
+          preflight: {
+            verdict: 'blocked',
+            summary: 'Review Pair is blocked until required capabilities are installed.',
+            checks: [
+              {
+                id: 'required-dependencies',
+                label: 'Required Dependencies',
+                status: 'fail',
+                detail: '1 required missing, 0 required unsupported.',
+                blocking: true,
+              },
+              {
+                id: 'optional-coverage',
+                label: 'Optional Coverage',
+                status: 'warn',
+                detail: '4 optional missing, 0 optional unsupported. Waggle can still run with narrower coverage.',
+                blocking: false,
+              },
+            ],
+          },
           dependencies: Array.from({ length: 8 }, (_, index) => ({
             kind: index % 2 === 0 ? 'mcp' : 'skill',
             id: `dependency-${index}`,
@@ -638,6 +982,11 @@ describe('WaggleSection', () => {
       'overflow-y-auto',
       'overscroll-contain',
     )
+    expect(screen.getByText(/Preflight blocked/i)).toBeInTheDocument()
+    expect(screen.getByText(/Review Pair is blocked until required capabilities are installed/i)).toBeInTheDocument()
+    expect(screen.getByText('Preflight Checks')).toBeInTheDocument()
+    expect(screen.getByText('Required Dependencies')).toBeInTheDocument()
+    expect(screen.getByText('Optional Coverage')).toBeInTheDocument()
   })
 
   it('loads a selected preset into the editable form', async () => {
@@ -858,7 +1207,12 @@ describe('WaggleSection', () => {
     renderWithQueryClient(
       <>
         <WaggleSection />
-        <CommandPalette slashSkills={[]} onSelectSkill={vi.fn()} onStartWaggle={vi.fn()} />
+        <CommandPalette
+          slashSkills={[]}
+          onSelectSkill={vi.fn()}
+          onStartWaggle={vi.fn()}
+          onStartTeam={vi.fn()}
+        />
       </>,
     )
 

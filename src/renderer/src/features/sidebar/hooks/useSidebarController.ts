@@ -106,6 +106,9 @@ function buildControllerOutput(
     handleOpenSkills() {
       void state.navigate({ to: '/skills' })
     },
+    handleOpenTeammates() {
+      void state.navigate({ to: '/teammates' as never })
+    },
     handleOpenWaggle() {
       void state.navigate({ to: '/waggle' as never })
     },

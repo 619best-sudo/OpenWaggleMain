@@ -27,9 +27,9 @@ export function CopyButton({ label, value }: { readonly label: string; readonly 
   return (
     <Button
       variant="unstyled"
-      type="button"
-      className="inline-flex items-center gap-1 rounded border border-border/15 px-1.5 py-0.5 text-[11px] text-text-primary/82 transition-colors hover:bg-bg-hover hover:text-text-primary"
-      onClick={(event) => {
+        type="button"
+        className="inline-flex items-center gap-1 rounded border-2 border-home-border px-1.5 py-0.5 text-[11px] text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+        onClick={(event) => {
         event.stopPropagation()
         copy(value)
       }}
@@ -53,7 +53,7 @@ export function ToolArgs({
 }) {
   if (name === 'bash' && typeof args.command === 'string') {
     return (
-      <div className="rounded-md border border-border/10 bg-code-card px-3 py-2 font-mono text-[13px] text-text-primary/82">
+      <div className="home-panel-frame-soft rounded-md bg-code-card px-3 py-2 font-mono text-[13px] text-text-primary">
         <span className="text-text-tertiary select-none">$ </span>
         {args.command}
       </div>
@@ -63,7 +63,7 @@ export function ToolArgs({
   const entries = Object.entries(args)
   if (entries.length === 0) {
     return (
-      <pre className="overflow-x-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-primary/78">
+      <pre className="home-panel-frame-soft overflow-x-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-text-primary">
         {rawArgs || '{}'}
       </pre>
     )
@@ -103,7 +103,7 @@ function ToolArgValue({
         />
       ) : isLong ? (
         <pre
-          className="mt-0.5 overflow-x-auto overflow-y-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-primary/78"
+          className="home-panel-frame-soft mt-0.5 overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-text-primary"
           style={{ maxHeight: LONG_ARGUMENT_MAX_HEIGHT_PX }}
         >
           {display}
@@ -138,7 +138,7 @@ function HighlightedFileContent({
           Large file preview shown without syntax highlighting to keep the UI responsive.
         </div>
         <pre
-          className="overflow-x-auto overflow-y-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-primary/78 whitespace-pre-wrap break-words"
+          className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-text-primary whitespace-pre-wrap break-words"
           style={{ maxHeight }}
         >
           {content}
@@ -172,7 +172,7 @@ export function ToolResult({
 
   if (isError) {
     return (
-      <div className="rounded-md border border-error/20 bg-error/5 px-3 py-2">
+      <div className="rounded-md border-2 border-error/20 bg-error/5 px-3 py-2">
         <div className="flex items-start gap-2">
           <AlertCircle className="size-3.5 text-error shrink-0 mt-0.5" />
           <pre className="text-[13px] font-mono text-error whitespace-pre-wrap break-words flex-1">
@@ -195,7 +195,7 @@ export function ToolResult({
 
   return (
     <pre
-      className="overflow-x-auto overflow-y-auto rounded-md border border-border/10 bg-code-card p-2 font-mono text-[13px] text-text-primary/78 whitespace-pre-wrap break-words"
+      className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-text-primary/78 whitespace-pre-wrap break-words"
       style={{ maxHeight: RESULT_MAX_HEIGHT_PX }}
     >
       {displayContent}
@@ -211,8 +211,8 @@ export function UnifiedDiffView({
   readonly compact?: boolean
 }) {
   return (
-    <div className="rounded-md border border-border/15 overflow-hidden text-[12px] font-mono">
-      <div className="flex items-center justify-between bg-code-card px-3 py-1.5 border-b border-border/10">
+    <div className="home-panel-frame-soft rounded-md overflow-hidden text-[12px] font-mono">
+      <div className="home-divider-b flex items-center justify-between bg-code-card px-3 py-1.5">
         <span className="font-medium text-info">Diff</span>
         <div className="flex items-center gap-2 shrink-0 ml-2">
           {diff.additions > 0 && (

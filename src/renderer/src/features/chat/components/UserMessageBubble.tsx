@@ -100,7 +100,7 @@ function AttachmentChip({ name }: { readonly name: string }) {
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md border border-border',
+        'inline-flex items-center gap-1.5 rounded-md border-2 border-home-border',
         'bg-bg-tertiary px-2 py-1 text-[12px] text-text-secondary',
       )}
     >
@@ -138,7 +138,7 @@ export function UserMessageBubble({
       <div
         className={cn(
           'relative min-w-0 max-w-full rounded-[16px_16px_2px_16px]',
-          'border border-border-light bg-bg-hover px-3.5 py-2.5',
+          'home-panel-frame-soft bg-bg-hover px-3.5 py-2.5',
         )}
       >
         {attachmentParts.length > 0 && (

@@ -20,6 +20,7 @@ import { logger } from './constants'
 import { createPiRunSessionRuntime, runSubscribedPiOperation } from './run-lifecycle'
 import { createSessionListener } from './session-listener'
 import { resolveSessionProjectPath } from './session-manager'
+import { createStuckTerminalToolWatchdog } from './stuck-terminal-tool-watchdog'
 import { createWaggleArtifactRegistry } from './waggle-artifact-registry'
 import { resolveWaggleRuntimeConfig } from './waggle-model-resolution'
 import {
@@ -29,6 +30,7 @@ import {
 } from './waggle-run-messages'
 import {
   appendLoopDirective,
+  buildWaggleTurnCompactionInstructions,
   collectToolExecutionHandoff,
   collectResponseDirectiveHandoff,
   createWaggleTurnHandoffDraft,
@@ -86,6 +88,33 @@ function emitWaggleTurnEnd(input: PiWaggleKernelRunInput, meta: WaggleStreamMeta
   })
 }
 
+async function compactBeforeNextWaggleTurn(input: {
+  readonly session: AgentSession | null
+  readonly meta: WaggleStreamMetadata
+  readonly handoff: WaggleTurnHandoff | null
+  readonly responseText: string
+}) {
+  if (!input.session || input.session.isCompacting) {
+    return
+  }
+
+  try {
+    await input.session.compact(
+      buildWaggleTurnCompactionInstructions({
+        handoff: input.handoff,
+        responseText: input.responseText,
+        meta: input.meta,
+      }),
+    )
+  } catch (error) {
+    logger.warn('Failed to compact Pi Waggle session before handoff', {
+      error: error instanceof Error ? error.message : String(error),
+      turnNumber: input.meta.turnNumber,
+      agentLabel: input.meta.agentLabel,
+    })
+  }
+}
+
 async function restoreInitialWaggleModel(input: {
   readonly session: AgentSession
   readonly model: PiModel
@@ -116,6 +145,7 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
   const rollbackTracker = createWaggleTurnRollbackTracker(projectPath)
   let nextTurnHandoff: WaggleTurnHandoff | null = null
   let activeTurnHandoff: WaggleTurnHandoffDraft = createWaggleTurnHandoffDraft()
+  let liveSession: AgentSession | null = null
 
   const waggleExtension = createPiWaggleExtension<WaggleStreamMetadata>({
     config: runtimeConfig,
@@ -155,6 +185,14 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
       policyState = evaluation.state
 
       if (evaluation.turnSucceeded) {
+        if (evaluation.continue && !input.signal.aborted) {
+          await compactBeforeNextWaggleTurn({
+            session: liveSession,
+            meta,
+            handoff: completedTurnHandoff,
+            responseText: summary.responseText,
+          })
+        }
         nextTurnHandoff = completedTurnHandoff
         emitWaggleTurnEnd(input, meta)
       } else {
@@ -214,7 +252,15 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
     skillToggles: input.skillToggles,
     extensionFactories: [waggleExtension.factory],
   })
+  liveSession = session
 
+  const abortWarning = 'Failed to abort Pi Waggle turn cleanly'
+  const watchdog = createStuckTerminalToolWatchdog({
+    session,
+    runId: input.runId,
+    emitErrorEvent: (event) => input.waggle.onWaggleEvent(withTransportEventModel(event, currentMeta), currentMeta),
+    abortWarning,
+  })
   const unsubscribe = session.subscribe(
     createSessionListener(
       {
@@ -222,6 +268,7 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
         model: initialRuntimeModel,
         onEvent: (event) => {
           const transportEvent = withTransportEventModel(event, currentMeta)
+          watchdog.observe(transportEvent)
           if (
             transportEvent.type === 'tool_execution_start' &&
             (transportEvent.toolName === 'write' || transportEvent.toolName === 'edit')
@@ -254,29 +301,34 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
     ),
   )
 
-  return runSubscribedPiOperation({
-    runInput: input,
-    session,
-    unsubscribe,
-    abortWarning: 'Failed to abort Pi Waggle turn cleanly',
-    preAbortWarning: 'Failed to abort pre-cancelled Pi Waggle turn cleanly',
-    operation: async () => {
-      appendEnabledWaggleModeState({ session, runInput: input })
-      emitWaggleTurnStart(input, currentMeta)
-      try {
-        await sendInitialWaggleMessages({
-          session,
-          model,
-          meta: currentMeta,
-          payload: input.payload,
-          runId: input.runId,
-          runtimeConfig,
-        })
-        await waggleExtension.done
-      } finally {
-        await restoreInitialWaggleModel({ session, model })
-      }
-    },
-    buildErrorMessages: buildPiRunAssistantMessages,
-  })
+  try {
+    return await runSubscribedPiOperation({
+      runInput: input,
+      session,
+      unsubscribe,
+      abortWarning,
+      preAbortWarning: 'Failed to abort pre-cancelled Pi Waggle turn cleanly',
+      operation: () =>
+        watchdog.watch(async () => {
+          appendEnabledWaggleModeState({ session, runInput: input })
+          emitWaggleTurnStart(input, currentMeta)
+          try {
+            await sendInitialWaggleMessages({
+              session,
+              model,
+              meta: currentMeta,
+              payload: input.payload,
+              runId: input.runId,
+              runtimeConfig,
+            })
+            await waggleExtension.done
+          } finally {
+            await restoreInitialWaggleModel({ session, model })
+          }
+        }),
+      buildErrorMessages: buildPiRunAssistantMessages,
+    })
+  } finally {
+    watchdog.stop()
+  }
 }

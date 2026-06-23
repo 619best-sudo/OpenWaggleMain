@@ -86,6 +86,7 @@ const TestProviderProbeLayer = Layer.succeed(ProviderProbeService, {
       try: () => Promise.resolve(probeCredentialsMock(input)),
       catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
     }),
+  generateText: () => Effect.dieMessage('not used by settings handler tests'),
 })
 
 const TestLayer = Layer.mergeAll(

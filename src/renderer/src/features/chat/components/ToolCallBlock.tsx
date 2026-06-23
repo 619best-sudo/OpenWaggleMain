@@ -172,7 +172,7 @@ function ExpandedToolDetails({
   readonly view: ToolCallViewModel
 }) {
   return (
-    <div className="mt-1 overflow-hidden rounded-md border border-border/20 bg-code-card">
+    <div className="home-panel-frame-soft mt-1 overflow-hidden rounded-md bg-code-card">
       <ExpandedCopyActions args={args} view={view} />
       <ExpandedDiffSection diff={view.diff} />
       <div className="px-3 py-2">
@@ -193,7 +193,7 @@ function ExpandedCopyActions({
   readonly view: ToolCallViewModel
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-border/15 px-3 py-2">
+    <div className="home-divider-b flex flex-wrap items-center gap-2 px-3 py-2">
       <CopyButton label="Copy args" value={args} />
       {view.path && <CopyButton label="Copy path" value={view.path} />}
       {view.command && <CopyButton label="Copy command" value={view.command} />}
@@ -226,7 +226,7 @@ function ExpandedResultSection({
     return null
   }
   return (
-    <div className="border-t border-border/15 px-3 py-2">
+    <div className="home-divider-t px-3 py-2">
       <div className="mb-1 text-[13px] font-medium text-text-primary/82">Result</div>
       <ToolResult content={result.content} isError={view.isError} name={name} path={view.path} />
     </div>
@@ -246,7 +246,7 @@ function ExpandedErrorSection({
     return null
   }
   return (
-    <div role="alert" className="border-t border-border/15 px-3 py-2">
+    <div role="alert" className="home-divider-t px-3 py-2">
       <div className="mb-1 text-[13px] font-medium text-text-primary/82">Error</div>
       <ToolResult
         content={view.resultError ?? result.content}

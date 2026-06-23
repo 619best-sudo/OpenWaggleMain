@@ -42,7 +42,7 @@ function AttachmentFileChip({
   return (
     <div
       className={cn(
-        'group/chip relative inline-flex items-center gap-2 rounded-lg border border-border',
+        'home-panel-frame-soft group/chip relative inline-flex items-center gap-2 rounded-lg',
         'bg-bg px-2.5 py-1.5 text-[12px] text-text-secondary',
       )}
     >
@@ -105,7 +105,7 @@ export function AutoTextAttachmentChips({
       {pendingTextAttachmentChips.map((chip) => (
         <span
           key={chip.operationId}
-          className="inline-flex min-w-[210px] flex-col rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[12px] text-text-secondary"
+          className="home-panel-frame-soft inline-flex min-w-[210px] flex-col rounded-lg bg-bg px-2.5 py-1.5 text-[12px] text-text-secondary"
         >
           <span className="inline-flex items-center gap-1.5">
             {chip.status === 'ready' ? (

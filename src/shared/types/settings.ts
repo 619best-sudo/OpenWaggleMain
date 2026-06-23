@@ -4,7 +4,7 @@ export type Provider = string
 export const THINKING_LEVELS = ['off', 'minimal', 'low', 'medium', 'high', 'xhigh'] as const
 export type ThinkingLevel = (typeof THINKING_LEVELS)[number]
 
-export const THEME_MODES = ['light', 'dark', 'cocoa', 'metallic-gold', 'cream', 'velvet-obsidian', 'platinum', 'bulgarian-rose'] as const
+export const THEME_MODES = ['light', 'dark', 'cocoa', 'metallic-gold', 'cream', 'velvet-obsidian', 'platinum', 'bulgarian-rose', 'off-white'] as const
 export type ThemeMode = (typeof THEME_MODES)[number]
 
 export function isThemeMode(value: unknown): value is ThemeMode {
@@ -12,7 +12,7 @@ export function isThemeMode(value: unknown): value is ThemeMode {
 }
 
 export function isLightThemeMode(mode: ThemeMode): boolean {
-  return mode === 'light' || mode === 'cream' || mode === 'platinum'
+  return mode === 'light' || mode === 'cream' || mode === 'platinum' || mode === 'off-white'
 }
 
 export const DEFAULT_MODEL_REF = SupportedModelId('')

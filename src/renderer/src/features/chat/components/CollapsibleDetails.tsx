@@ -19,12 +19,12 @@ export function CollapsibleDetails({
       className="flex items-center gap-2 w-full py-1 text-text-muted hover:text-text-secondary transition-colors group"
       onClick={onToggle}
     >
-      <span className="h-px flex-1 bg-border group-hover:bg-border-light transition-colors" />
+      <span className="h-px flex-1 bg-home-border group-hover:bg-home-border-vibrant transition-colors" />
       <span className="flex items-center gap-1 text-xs shrink-0 select-none">
         {showDetails ? 'Hide details' : collapseLabel}
         {showDetails ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
       </span>
-      <span className="h-px flex-1 bg-border group-hover:bg-border-light transition-colors" />
+      <span className="h-px flex-1 bg-home-border group-hover:bg-home-border-vibrant transition-colors" />
     </Button>
   )
 }

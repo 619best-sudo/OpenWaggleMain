@@ -9,6 +9,37 @@ import {
   updateToolExecution,
 } from './chat-stream-tool-events'
 
+function appendTeamAutoPromptMessage(
+  messages: readonly UIMessage[],
+  event: Extract<AgentTransportEvent, { type: 'custom' }>,
+) {
+  if (event.name !== 'team:auto-user-prompt') {
+    return messages.slice()
+  }
+  if (!event.value || typeof event.value !== 'object' || Array.isArray(event.value)) {
+    return messages.slice()
+  }
+
+  const text = 'text' in event.value ? event.value.text : ''
+  const generated = 'generated' in event.value ? event.value.generated : true
+  if (typeof text !== 'string' || text.trim().length === 0) {
+    return messages.slice()
+  }
+  if (generated !== true) {
+    return messages.slice()
+  }
+
+  return [
+    ...messages,
+    {
+      id: `team-auto-user-${event.timestamp}`,
+      role: 'user',
+      parts: [{ type: 'text', content: text }],
+      createdAt: new Date(event.timestamp),
+    },
+  ]
+}
+
 export function applyAgentTransportEvent(
   messages: readonly UIMessage[],
   event: AgentTransportEvent,
@@ -27,13 +58,13 @@ export function applyAgentTransportEvent(
     .with('tool_execution_start', (value) => startToolExecution(messages, value))
     .with('tool_execution_update', (value) => updateToolExecution(messages, value))
     .with('tool_execution_end', (value) => finishToolExecution(messages, value))
+    .with('custom', (value) => appendTeamAutoPromptMessage(messages, value))
     .with(
       'queue_update',
       'compaction_start',
       'compaction_end',
       'auto_retry_start',
       'auto_retry_end',
-      'custom',
       cloneMessages,
     )
     .exhaustive()

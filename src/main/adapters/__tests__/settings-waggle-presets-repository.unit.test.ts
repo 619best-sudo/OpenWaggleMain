@@ -99,11 +99,18 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('code-review'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('product-planning'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('turing'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('design-asset-direction'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('product-ui'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('web-build'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('mobile-build'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('backend-systems'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('backend-build'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('backend-engineer'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('qa-debug'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('qa-repair-loop'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('launch-readiness'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('release-readiness'))
+    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('deployment'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('development-qa'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('quality-assurance-engineer'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('security-audit'))
@@ -175,11 +182,37 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
         agents: [{ label: 'Context Reader' }, { label: 'Installed Waggle Selector' }],
       },
     })
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('design-asset-direction')),
+    ).toMatchObject({
+      name: 'Design And Asset Direction',
+      app: {
+        requiredMcps: [],
+        requiredSkills: ['media-director'],
+        optionalMcps: ['figma', 'multimodal-media', 'ffmpeg', 'playwright'],
+        optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor'],
+      },
+      config: {
+        agents: [{ label: 'Design Planner' }, { label: 'Asset Strategist' }],
+      },
+    })
     expect(presets.find((preset) => preset.id === WagglePresetId('product-ui'))).toMatchObject({
       name: 'Product UI',
       app: {
         requiredMcps: ['playwright'],
         requiredSkills: ['frontend-implementer', 'ui-screenshot-auditor'],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('web-build'))).toMatchObject({
+      name: 'Web Build',
+      app: {
+        requiredMcps: ['playwright'],
+        requiredSkills: ['frontend-implementer'],
+        optionalMcps: ['figma', 'multimodal-media', 'ffmpeg', 'gsap', 'remotion', 'animejs'],
+        optionalSkills: ['ui-screenshot-auditor', 'media-director'],
+      },
+      config: {
+        agents: [{ label: 'Web Builder' }, { label: 'Integration Reviewer' }],
       },
     })
     expect(presets.find((preset) => preset.id === WagglePresetId('web-engineer'))).toMatchObject({
@@ -207,6 +240,26 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
           { label: 'Web Animation Expert' },
           { label: 'Web Verifier' },
         ],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('mobile-build'))).toMatchObject({
+      name: 'Mobile Build',
+      app: {
+        requiredMcps: ['mobile-mcp'],
+        requiredSkills: ['frontend-implementer'],
+        optionalMcps: [
+          'mobile-device',
+          'figma',
+          'multimodal-media',
+          'ffmpeg',
+          'gsap',
+          'remotion',
+          'animejs',
+        ],
+        optionalSkills: ['ui-screenshot-auditor', 'media-director'],
+      },
+      config: {
+        agents: [{ label: 'Mobile Builder' }, { label: 'Integration Reviewer' }],
       },
     })
     expect(presets.find((preset) => preset.id === WagglePresetId('mobile-engineer'))).toMatchObject(
@@ -239,6 +292,18 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
         },
       },
     )
+    expect(presets.find((preset) => preset.id === WagglePresetId('backend-build'))).toMatchObject({
+      name: 'Backend Build',
+      app: {
+        requiredMcps: [],
+        requiredSkills: ['backend-auditor'],
+        optionalMcps: ['postman', 'database'],
+        optionalSkills: [],
+      },
+      config: {
+        agents: [{ label: 'Backend Builder' }, { label: 'Integration Reviewer' }],
+      },
+    })
     expect(presets.find((preset) => preset.id === WagglePresetId('backend-systems'))).toMatchObject(
       {
         name: 'Backend Systems',
@@ -283,6 +348,23 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
         ],
       },
     })
+    expect(presets.find((preset) => preset.id === WagglePresetId('qa-repair-loop'))).toMatchObject({
+      name: 'QA Repair Loop',
+      app: {
+        requiredMcps: [],
+        requiredSkills: ['ui-screenshot-auditor', 'backend-auditor'],
+        optionalMcps: ['playwright', 'mobile-mcp', 'mobile-device', 'postman', 'database'],
+        optionalSkills: ['frontend-implementer'],
+      },
+      config: {
+        agents: [
+          { label: 'Verifier' },
+          { label: 'Repair Planner' },
+          { label: 'Fixer' },
+          { label: 'Final Verifier' },
+        ],
+      },
+    })
     expect(
       presets.find((preset) => preset.id === WagglePresetId('launch-readiness')),
     ).toMatchObject({
@@ -290,6 +372,32 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       app: {
         requiredMcps: [],
         requiredSkills: ['release-checker'],
+      },
+    })
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('release-readiness')),
+    ).toMatchObject({
+      name: 'Release Readiness',
+      app: {
+        requiredMcps: [],
+        requiredSkills: ['release-checker'],
+      },
+      config: {
+        agents: [{ label: 'Release Owner' }, { label: 'Release Checker' }],
+      },
+    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('deployment'))).toMatchObject({
+      name: 'Deployment',
+      app: {
+        requiredMcps: [],
+        requiredSkills: [],
+      },
+      config: {
+        agents: [
+          { label: 'Deployment Planner' },
+          { label: 'Deployment Executor' },
+          { label: 'Post-Deploy Checker' },
+        ],
       },
     })
     expect(presets.find((preset) => preset.id === WagglePresetId('development-qa'))).toMatchObject({
@@ -485,14 +593,25 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     })
   })
 
-  it('preserves prompt contracts for Code Review, Turing, Web Engineer, Mobile Engineer, Backend Engineer, Quality Assurance Engineer, and Debugger And Fix', async () => {
+  it('preserves prompt contracts for lifecycle presets alongside Code Review, Turing, Web Engineer, Mobile Engineer, Backend Engineer, Quality Assurance Engineer, and Debugger And Fix', async () => {
     const presets = await runWithRepository((repository) => repository.list(projectPath))
 
     const codeReview = presets.find((preset) => preset.id === WagglePresetId('code-review'))
     const turing = presets.find((preset) => preset.id === WagglePresetId('turing'))
+    const designAssetDirection = presets.find(
+      (preset) => preset.id === WagglePresetId('design-asset-direction'),
+    )
+    const webBuild = presets.find((preset) => preset.id === WagglePresetId('web-build'))
+    const mobileBuild = presets.find((preset) => preset.id === WagglePresetId('mobile-build'))
+    const backendBuild = presets.find((preset) => preset.id === WagglePresetId('backend-build'))
     const webEngineer = presets.find((preset) => preset.id === WagglePresetId('web-engineer'))
     const mobileEngineer = presets.find((preset) => preset.id === WagglePresetId('mobile-engineer'))
     const backendEngineer = presets.find((preset) => preset.id === WagglePresetId('backend-engineer'))
+    const qaRepairLoop = presets.find((preset) => preset.id === WagglePresetId('qa-repair-loop'))
+    const releaseReadiness = presets.find(
+      (preset) => preset.id === WagglePresetId('release-readiness'),
+    )
+    const deployment = presets.find((preset) => preset.id === WagglePresetId('deployment'))
     const qaEngineer = presets.find(
       (preset) => preset.id === WagglePresetId('quality-assurance-engineer'),
     )
@@ -514,8 +633,15 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       'Context Reader',
       'Installed Waggle Selector',
     ])
-    expect(turing?.config.agents[0]?.roleDescription).toContain('user prompt for next Waggle')
+    expect(turing?.config.agents[0]?.roleDescription).toContain('lifecycle phase')
+    expect(turing?.config.agents[0]?.roleDescription).toContain(
+      'product-planning -> design-asset-direction -> web-build or mobile-build or backend-build -> qa-repair-loop -> release-readiness -> deployment',
+    )
+    expect(turing?.config.agents[0]?.roleDescription).toContain('mobile-build over generic UI routes')
     expect(turing?.config.agents[1]?.roleDescription).toContain('Only recommend a next Waggle')
+    expect(turing?.config.agents[1]?.roleDescription).toContain(
+      'mobile development, QA, and release steps stay coherent',
+    )
     expect(turing?.config.agents[1]?.outputContract?.requiredSections).toEqual([
       'selected next Waggle',
       'why it is installed and ready',
@@ -524,6 +650,64 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       'user prompt for next Waggle',
       'fallback Waggle if needed',
     ])
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('product-planning'))?.config.agents[0]
+        ?.roleDescription,
+    ).toContain(
+      'design-asset-direction, web-build, mobile-build, backend-build, qa-repair-loop, or release-readiness',
+    )
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('product-planning'))?.config.agents[0]
+        ?.roleDescription,
+    ).toContain('If the request is primarily mobile, prefer mobile-build')
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('product-planning'))?.config.agents[1]
+        ?.roleDescription,
+    ).toContain('mobile or mixed-surface')
+
+    expect(designAssetDirection?.config.agents.map((agent) => agent.label)).toEqual([
+      'Design Planner',
+      'Asset Strategist',
+    ])
+    expect(designAssetDirection?.config.agents[0]?.roleDescription).toContain('hero mode')
+    expect(designAssetDirection?.config.agents[0]?.roleDescription).toContain('asset source of truth')
+    expect(designAssetDirection?.config.agents[1]?.roleDescription).toContain(
+      'repo assets, user-provided assets, external references, generated assets, code-only fallback',
+    )
+    expect(designAssetDirection?.config.agents[1]?.outputContract?.requiredSections).toEqual([
+      'asset plan summary',
+      'required assets',
+      'optional assets',
+      'asset sourcing order',
+      'generated asset requests if any',
+      'repo paths to use',
+      'final builder handoff',
+    ])
+
+    expect(webBuild?.config.agents.map((agent) => agent.label)).toEqual([
+      'Web Builder',
+      'Integration Reviewer',
+    ])
+    expect(webBuild?.config.agents[0]?.roleDescription).toContain('asset paths used')
+    expect(webBuild?.config.agents[1]?.roleDescription).toContain('build-to-QA readiness')
+
+    expect(mobileBuild?.config.agents.map((agent) => agent.label)).toEqual([
+      'Mobile Builder',
+      'Integration Reviewer',
+    ])
+    expect(mobileBuild?.config.agents[0]?.roleDescription).toContain('screen or flow ready for QA')
+    expect(mobileBuild?.config.agents[1]?.roleDescription).toContain('device flow')
+
+    expect(backendBuild?.config.agents.map((agent) => agent.label)).toEqual([
+      'Backend Builder',
+      'Integration Reviewer',
+    ])
+    expect(backendBuild?.config.agents[0]?.roleDescription).toContain(
+      'endpoint or flow ready for QA',
+    )
+    expect(backendBuild?.config.agents[1]?.roleDescription).toContain(
+      'first high-risk backend verification target',
+    )
 
     expect(webEngineer?.config.agents.map((agent) => agent.label)).toEqual([
       'Web Planner',
@@ -740,6 +924,68 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       'comparison against request or reference',
       'regressions or mismatches found',
       'highest-value next fix for planner',
+    ])
+
+    expect(qaRepairLoop?.config.agents.map((agent) => agent.label)).toEqual([
+      'Verifier',
+      'Repair Planner',
+      'Fixer',
+      'Final Verifier',
+    ])
+    expect(qaRepairLoop?.config.agents[0]?.roleDescription).toContain(
+      'Do not say pass without real evidence',
+    )
+    expect(qaRepairLoop?.config.agents[0]?.outputContract?.requiredSections).toEqual([
+      'verdict',
+      'scope checked',
+      'evidence reviewed',
+      'failures found',
+      'severity',
+      'highest-value next fix',
+      'retest plan',
+    ])
+    expect(qaRepairLoop?.config.agents[1]?.roleDescription).toContain(
+      'defects selected for this pass',
+    )
+    expect(qaRepairLoop?.config.agents[2]?.roleDescription).toContain('known unknowns')
+    expect(qaRepairLoop?.config.agents[3]?.outputContract?.requiredSections).toEqual([
+      'retest verdict',
+      'checks rerun',
+      'remaining failures',
+      'ship risk',
+      'next route',
+    ])
+
+    expect(releaseReadiness?.config.agents.map((agent) => agent.label)).toEqual([
+      'Release Owner',
+      'Release Checker',
+    ])
+    expect(releaseReadiness?.config.agents[0]?.roleDescription).toContain('verification completed')
+    expect(releaseReadiness?.config.agents[1]?.outputContract?.requiredSections).toEqual([
+      'release verdict',
+      'strongest evidence',
+      'blocker if not ready',
+      'smallest remaining work',
+      'ship recommendation',
+    ])
+
+    expect(deployment?.config.agents.map((agent) => agent.label)).toEqual([
+      'Deployment Planner',
+      'Deployment Executor',
+      'Post-Deploy Checker',
+    ])
+    expect(deployment?.config.agents[0]?.roleDescription).toContain(
+      'deployment mode: automated / manual-runbook',
+    )
+    expect(deployment?.config.agents[1]?.roleDescription).toContain(
+      'Prefer a precise manual runbook over fake automation',
+    )
+    expect(deployment?.config.agents[2]?.outputContract?.requiredSections).toEqual([
+      'deployment verdict',
+      'evidence reviewed',
+      'remaining issues',
+      'rollback recommendation',
+      'next route',
     ])
 
     expect(backendEngineer?.config.agents.map((agent) => agent.label)).toEqual([

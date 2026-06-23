@@ -34,7 +34,7 @@ export function SidebarBrandArea({ isFullscreen }: { readonly isFullscreen: bool
       />
       <div className="drag-region shrink-0 px-6 pt-6">
         <div className="flex items-center gap-3">
-          <div className="overflow-hidden rounded-2xl border border-border/70 bg-white shadow-sm">
+          <div className="home-panel-frame-soft overflow-hidden rounded-2xl bg-white shadow-sm">
             <img
               src={appLogo}
               alt="TuringMachine logo"
@@ -106,12 +106,14 @@ export function SidebarPrimaryActions({
   onNewSession,
   onOpenMcp,
   onOpenSkills,
+  onOpenTeammates,
   onOpenWaggle,
 }: {
   readonly activeView: SidebarView
   readonly onNewSession: () => void
   readonly onOpenMcp: () => void
   readonly onOpenSkills: () => void
+  readonly onOpenTeammates: () => void
   readonly onOpenWaggle: () => void
 }) {
   return (
@@ -127,6 +129,12 @@ export function SidebarPrimaryActions({
       </Button>
 
       <div className="mt-10 space-y-1">
+        <SidebarShortcut
+          active={activeView === 'teammates'}
+          icon={Users}
+          label="Team(New)"
+          onClick={onOpenTeammates}
+        />
         <SidebarShortcut
           active={activeView === 'waggle'}
           icon={Users}

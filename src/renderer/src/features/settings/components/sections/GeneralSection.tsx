@@ -101,6 +101,12 @@ const THEME_OPTIONS: ReadonlyArray<{
     icon: Sun,
   },
   {
+    value: 'off-white',
+    title: 'Off White',
+    description: 'A light theme variant featuring off-white surfaces and complementary shading.',
+    icon: Sun,
+  },
+  {
     value: 'bulgarian-rose',
     title: 'Bulgarian Rose',
     description: 'Replaces the blue dark-theme palette with a Bulgarian Rose tint based on #4A0603.',

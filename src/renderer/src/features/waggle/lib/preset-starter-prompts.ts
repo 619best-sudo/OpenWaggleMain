@@ -7,6 +7,90 @@ export interface WaggleStarterPrompt {
 }
 
 const PRESET_STARTER_PROMPTS: Readonly<Record<string, readonly WaggleStarterPrompt[]>> = {
+  turing: [
+    {
+      id: 'route-full-product-lifecycle',
+      title: 'Route full product lifecycle',
+      prompt:
+        'Read this request and route it into the best next lifecycle Waggle for this repository. Decide whether the work should begin with product-planning, design-asset-direction, web-build, mobile-build, backend-build, qa-repair-loop, quality-assurance-engineer, release-readiness, or deployment, and explain the likely follow-up Waggle after that first step.',
+    },
+    {
+      id: 'route-mobile-feature-flow',
+      title: 'Route mobile feature flow',
+      prompt:
+        'This request is likely a mobile product change. Inspect the repository first, determine whether the next step should be product-planning, design-asset-direction, mobile-build, qa-repair-loop, or quality-assurance-engineer, and produce a concrete starter prompt for the chosen Waggle plus the likely follow-up step after it.',
+    },
+  ],
+  'product-planning': [
+    {
+      id: 'plan-mvp-lifecycle',
+      title: 'Plan MVP and lifecycle',
+      prompt:
+        'Turn this request into a concrete MVP plan for this repository. Define what should be built first, what acceptance criteria must hold, whether design-asset-direction is needed, which build Waggle should execute next, and what QA and release steps should follow after implementation.',
+    },
+    {
+      id: 'plan-mobile-feature',
+      title: 'Plan mobile feature',
+      prompt:
+        'Create a build-ready plan for a mobile feature or mobile product improvement in this repository. Clarify the target users, affected screens or flows, acceptance criteria, design or asset needs, the exact scope for mobile-build, and the QA path that should follow before release.',
+    },
+  ],
+  'design-asset-direction': [
+    {
+      id: 'beautiful-landing-direction',
+      title: 'Beautiful landing page direction',
+      prompt:
+        'Turn this request into a build-ready design and asset plan for a beautiful landing page or homepage hero in this repository. Start from the best available source such as repo UI, screenshots, Figma, external references, or only a verbal prompt. Decide the section structure, hierarchy, hero mode, and asset sourcing order. If rich media is not clearly justified, default to static or code-only UI and name the exact fallback ladder before handing off to build.',
+    },
+    {
+      id: 'app-ui-from-verbal-brief',
+      title: 'App UI from verbal brief',
+      prompt:
+        'Create a design and asset direction from a verbal product prompt only. Inspect the current product surfaces first, map the requested screens or sections into the existing design language, decide whether assets are truly needed, and produce a concrete builder handoff with components, layout structure, hero mode if relevant, repo asset paths, and fallback rules.',
+    },
+  ],
+  'web-build': [
+    {
+      id: 'build-planned-web-surface',
+      title: 'Build planned web surface',
+      prompt:
+        'Implement the scoped web surface from the latest planning and asset handoff. Build the real route or component in this repository, reuse the existing architecture, keep any generated or imported assets inside the repo, and leave a clean route-plus-risk handoff for the QA Repair Loop.',
+    },
+    {
+      id: 'hero-with-fallbacks',
+      title: 'Hero build with media fallback',
+      prompt:
+        'Build a polished landing page or hero section in this repository using the provided design and asset plan. If the asset plan calls for static, animated-ui, video, or frames, follow it exactly. If the rich-media path fails, keep the page shippable with the declared fallback instead of stalling the implementation, then hand off the exact route and states for QA.',
+    },
+  ],
+  'mobile-build': [
+    {
+      id: 'build-planned-mobile-flow',
+      title: 'Build planned mobile flow',
+      prompt:
+        'Implement the scoped mobile screen or flow from the latest planning and asset handoff. Fit the change into the current navigation, screen, and styling architecture, preserve platform behavior, keep assets in repo-owned paths, and hand off the exact runtime flow for the QA Repair Loop.',
+    },
+    {
+      id: 'mobile-ui-refinement',
+      title: 'Refine existing mobile UI',
+      prompt:
+        'Refine an existing mobile screen or flow in this repository rather than creating a duplicate UX path. Use the latest design and asset handoff, preserve surrounding navigation and state, apply the smallest reliable implementation, and leave a clean device-flow handoff for QA.',
+    },
+  ],
+  'backend-build': [
+    {
+      id: 'implement-scoped-backend-change',
+      title: 'Implement scoped backend change',
+      prompt:
+        'Implement the planned backend, API, or data change in this repository. Start from the current contracts and persistence paths, apply the smallest reliable change, preserve validation and error handling, and hand off the exact endpoint, command, and data expectations for the QA Repair Loop.',
+    },
+    {
+      id: 'bugfix-with-verification-handoff',
+      title: 'Backend bugfix with QA handoff',
+      prompt:
+        'Fix a scoped backend or API issue in the real implementation path. Avoid broad refactors, preserve adjacent behavior, and leave a precise verification handoff that names the affected endpoints, commands, and expected stored-data results.',
+    },
+  ],
   'web-engineer': [
     {
       id: 'landing-page-refresh',
@@ -129,6 +213,54 @@ const PRESET_STARTER_PROMPTS: Readonly<Record<string, readonly WaggleStarterProm
       title: 'Mixed disturbed flow regression',
       prompt:
         'Debug and fix a mixed regression where one change may have disturbed other files or flows. First classify the issue across UI, backend, logic, mobile, API, or SQL layers, then reproduce the main failure and investigate all adjacent routes, screens, endpoints, database behaviors, and shared logic that may have been disturbed. Use the right MCPs for each layer, gather evidence, apply the smallest reversible fix, verify both the main issue and the disturbed flows, and if the attempt does not work, revert it fully and send the failed-attempt learning into the next planner cycle.',
+    },
+  ],
+  'qa-repair-loop': [
+    {
+      id: 'verify-fix-retest-web',
+      title: 'Verify, fix, and retest web change',
+      prompt:
+        'Run a QA repair loop for a changed web surface in this repository. Start by verifying the real browser behavior with the strongest evidence available, turn any failures into a concrete defect list, apply the smallest focused fix, and rerun the critical checks before deciding whether the result now passes or needs another loop.',
+    },
+    {
+      id: 'verify-fix-retest-mobile',
+      title: 'Verify, fix, and retest mobile change',
+      prompt:
+        'Run a QA repair loop for a changed mobile screen or flow in this repository. Start by verifying the real device or simulator behavior with mobile runtime tooling, turn any failures into a concrete defect list, apply the smallest focused fix, and rerun the critical mobile checks before deciding whether the result now passes or needs another loop.',
+    },
+    {
+      id: 'verify-fix-retest-mixed',
+      title: 'Verify, fix, and retest mixed issue',
+      prompt:
+        'Run a QA repair loop for a mixed issue that may span UI, backend, API, mobile, or data behavior. Verify first, produce structured defects, pick the single highest-value repair pass, apply the smallest fix, and rerun the most important checks before deciding the next route.',
+    },
+  ],
+  'release-readiness': [
+    {
+      id: 'ship-readiness-check',
+      title: 'Ship readiness check',
+      prompt:
+        'Decide whether this change is ready to ship. Summarize what changed, what evidence exists, what remains assumed, what the biggest risks are, and whether the current state is ready, almost ready, or not ready for release.',
+    },
+    {
+      id: 'beta-demo-merge-decision',
+      title: 'Beta, demo, or merge decision',
+      prompt:
+        'Evaluate this work for the next milestone such as merge, demo, beta, or release. Use the strongest available verification evidence, separate true blockers from lower-priority follow-ups, and produce a decisive recommendation plus the smallest remaining work if it is not ready.',
+    },
+  ],
+  deployment: [
+    {
+      id: 'manual-runbook-deployment',
+      title: 'Manual deployment runbook',
+      prompt:
+        'Prepare and execute the safest deployment path available in this repository. If automated deployment tooling is not installed here, produce the exact manual deployment runbook, list prerequisites, record commands or steps in order, and finish with the post-deploy checks that should validate the result.',
+    },
+    {
+      id: 'post-release-validation',
+      title: 'Post-release validation',
+      prompt:
+        'Validate a deployment result for this repository. Review the planned deployment path, the actual execution evidence, any runtime smoke checks, and decide whether the deployment succeeded, partially completed, or failed with a rollback recommendation.',
     },
   ],
 }

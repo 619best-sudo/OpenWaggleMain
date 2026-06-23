@@ -118,8 +118,8 @@ export function ComposerModelPicker() {
           title={triggerTitle}
           onClick={() => setOpen((current) => !current)}
           className={cn(
-            'no-drag flex size-[26px] items-center justify-center rounded-md border border-white/10 transition-colors',
-            'text-[#a1a1aa] hover:bg-white/5 hover:text-white',
+            'no-drag flex size-[26px] items-center justify-center rounded-md border border-home-border transition-colors',
+            'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
           )}
         >
           {selectedModel ? (
@@ -157,7 +157,7 @@ export function ComposerModelPicker() {
           )}
         </div>
 
-        <div className="mt-1 border-t border-border/10 pt-1.5">
+        <div className="home-divider-t mt-1 pt-1.5">
           <div className="px-2 pb-1 text-[10px] font-medium tracking-[0.12em] text-text-muted uppercase">
             Thinking
           </div>
@@ -236,10 +236,10 @@ function ThinkingChip({
       type="button"
       onClick={onClick}
       className={cn(
-        'rounded-md border px-2 py-1 text-[11px] transition-colors',
+        'home-panel-frame-soft rounded-md px-2 py-1 text-[11px] transition-colors',
         active
-          ? 'border-accent/35 bg-accent/10 text-text-primary'
-          : 'border-border/30 bg-bg-secondary/30 text-text-secondary hover:bg-bg-hover hover:text-text-primary',
+          ? 'bg-accent/10 text-text-primary'
+          : 'bg-bg-secondary/30 text-text-secondary hover:bg-bg-hover hover:text-text-primary',
       )}
     >
       {label}

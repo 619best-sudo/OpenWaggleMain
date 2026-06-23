@@ -9,6 +9,7 @@ import type { PiModel } from '../../pi-provider-catalog'
 import { createWaggleArtifactRegistry } from '../waggle-artifact-registry'
 import { buildWaggleTurnCustomMessage } from '../waggle-run-messages'
 import {
+  buildWaggleTurnCompactionInstructions,
   collectResponseDirectiveHandoff,
   collectToolExecutionHandoff,
   createWaggleTurnHandoffDraft,
@@ -336,5 +337,50 @@ exact next loop instructions: revert the failed button patch first, then inspect
     expect(promptText).toContain('waggle-artifact-001 (image)')
     expect(promptText).toContain('waggle-artifact-002 (image)')
     expect(promptText).toContain('waggle-artifact-003 (image)')
+  })
+})
+
+describe('buildWaggleTurnCompactionInstructions', () => {
+  it('preserves critical handoff state while asking Pi to drop verbose transcript details', () => {
+    const tempDir = createTempDir()
+    const imagePath = path.join(tempDir, 'generated.png')
+    fs.writeFileSync(imagePath, Buffer.from('fake-image-data'))
+
+    const draft = createWaggleTurnHandoffDraft()
+    const meta = createMeta()
+    collectToolExecutionHandoff(
+      draft,
+      createWaggleArtifactRegistry('waggle-1'),
+      {
+        type: 'tool_execution_end',
+        toolCallId: 'tool-compact',
+        toolName: 'generate-image',
+        args: { prompt: 'A cinematic watercolor fox under neon signs' },
+        result: { outputPath: imagePath },
+        isError: false,
+        timestamp: 1,
+        model: 'openai/gpt-4.1',
+      },
+      meta,
+    )
+    collectResponseDirectiveHandoff(draft, {
+      responseText: `keep or revert current fix: revert
+failed-attempt learning for next planner pass: keep the same layout but replace the button treatment
+exact next loop instructions: revert the failed patch first and inspect the parent spacing`,
+    })
+
+    const instructions = buildWaggleTurnCompactionInstructions({
+      handoff: finalizeWaggleTurnHandoff(draft),
+      responseText:
+        'Implemented the current draft, but the final spacing is still wrong and needs another reviewer pass.',
+      meta,
+    })
+
+    expect(instructions).toContain('Compact this Pi Waggle session before the next agent handoff.')
+    expect(instructions).toContain('Prefer concise bullets. Remove repeated reasoning, raw tool logs')
+    expect(instructions).toContain('Completed turn: 2 by Critic using openai/gpt-4.1.')
+    expect(instructions).toContain('Rollback required: the previous fix attempt was rejected')
+    expect(instructions).toContain('waggle-artifact-001 (image)')
+    expect(instructions).toContain(imagePath)
   })
 })

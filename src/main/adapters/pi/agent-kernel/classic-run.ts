@@ -7,6 +7,7 @@ import {
 } from './run-lifecycle'
 import { createSessionListener } from './session-listener'
 import { resolveSessionProjectPath } from './session-manager'
+import { createStuckTerminalToolWatchdog } from './stuck-terminal-tool-watchdog'
 
 export async function runPiSession(input: AgentKernelRunInput) {
   const projectPath = resolveSessionProjectPath(input.session)
@@ -18,14 +19,30 @@ export async function runPiSession(input: AgentKernelRunInput) {
     skillToggles: input.skillToggles,
   })
 
-  const unsubscribe = session.subscribe(createSessionListener(input, input.runId))
-  return runSubscribedPiOperation({
-    runInput: input,
+  const abortWarning = 'Failed to abort Pi session cleanly'
+  const watchdog = createStuckTerminalToolWatchdog({
     session,
-    unsubscribe,
-    abortWarning: 'Failed to abort Pi session cleanly',
-    preAbortWarning: 'Failed to abort pre-cancelled Pi session cleanly',
-    operation: () => promptPiSession(session, model, input.payload),
-    buildErrorMessages: (appended) => buildPiRunNewMessages(input.payload, appended),
+    runId: input.runId,
+    emitErrorEvent: input.onEvent,
+    abortWarning,
   })
+  const onEvent = (event: Parameters<typeof input.onEvent>[0]) => {
+    watchdog.observe(event)
+    input.onEvent(event)
+  }
+  const unsubscribe = session.subscribe(createSessionListener({ ...input, onEvent }, input.runId))
+
+  try {
+    return await runSubscribedPiOperation({
+      runInput: input,
+      session,
+      unsubscribe,
+      abortWarning,
+      preAbortWarning: 'Failed to abort pre-cancelled Pi session cleanly',
+      operation: () => watchdog.watch(() => promptPiSession(session, model, input.payload)),
+      buildErrorMessages: (appended) => buildPiRunNewMessages(input.payload, appended),
+    })
+  } finally {
+    watchdog.stop()
+  }
 }
