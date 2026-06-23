@@ -1,8 +1,12 @@
 import { matchBy } from '@diegogbrisa/ts-match'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
+import type { UIMessage } from '@shared/types/chat-ui'
+import { Bug, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useChatScrollBehaviour } from '../hooks/useChatScrollBehaviour'
 import type { ChatRow } from '../lib/types-chat-row'
 import type { ChatTranscriptSectionState } from '../model'
+import { Button } from '@/shared/ui/Button'
 import { ChatRowRenderer } from './ChatRowRenderer'
 import { ScrollToBottomButton } from './ScrollToBottomButton'
 import { WelcomeScreen } from './WelcomeScreen'
@@ -116,9 +120,126 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
   )
 }
 
+function summarizeMessageText(message: UIMessage) {
+  return message.parts
+    .map((part) => {
+      switch (part.type) {
+        case 'text':
+          return part.content
+        case 'thinking':
+          return `[thinking] ${part.content}`
+        case 'tool-call':
+          return `[tool-call:${part.name}] ${part.arguments}`
+        case 'tool-result':
+          return `[tool-result:${part.toolCallId}]`
+        case 'image':
+          return '[image]'
+        case 'audio':
+          return '[audio]'
+        case 'video':
+          return '[video]'
+        case 'document':
+          return '[document]'
+        default:
+          return ''
+      }
+    })
+    .filter((value) => value.trim().length > 0)
+    .join('\n')
+    .trim()
+}
+
+function buildTranscriptDebugPayload(section: ChatTranscriptSectionState) {
+  const messageEntries = section.messages.map((message, index) => {
+    const text = summarizeMessageText(message)
+    const normalizedText = text.replace(/\s+/g, ' ').trim()
+    const isTeamAutoPrompt = message.id.startsWith('team-auto-user-')
+
+    return {
+      index,
+      id: message.id,
+      role: message.role,
+      createdAt: message.createdAt instanceof Date ? message.createdAt.toISOString() : null,
+      isTeamAutoPrompt,
+      partTypes: message.parts.map((part) => part.type),
+      text,
+      normalizedText,
+    }
+  })
+
+  const duplicateGroups = new Map<
+    string,
+    { readonly role: UIMessage['role']; readonly text: string; messageIds: string[] }
+  >()
+
+  for (const entry of messageEntries) {
+    if (!entry.normalizedText) continue
+    const key = `${entry.role}::${entry.normalizedText}`
+    const existing = duplicateGroups.get(key)
+    if (existing) {
+      existing.messageIds.push(entry.id)
+      continue
+    }
+    duplicateGroups.set(key, {
+      role: entry.role,
+      text: entry.text,
+      messageIds: [entry.id],
+    })
+  }
+
+  const consecutiveDuplicates = messageEntries.slice(1).flatMap((entry, index) => {
+    const previous = messageEntries[index]
+    if (
+      previous &&
+      previous.role === entry.role &&
+      previous.normalizedText.length > 0 &&
+      previous.normalizedText === entry.normalizedText
+    ) {
+      return [
+        {
+          role: entry.role,
+          previousMessageId: previous.id,
+          currentMessageId: entry.id,
+          text: entry.text,
+        },
+      ]
+    }
+    return []
+  })
+
+  return {
+    capturedAt: new Date().toISOString(),
+    sessionId: section.activeSessionId ? String(section.activeSessionId) : null,
+    projectPath: section.projectPath,
+    messageCount: messageEntries.length,
+    chatRowCount: section.chatRows.length,
+    lastUserMessageId: section.lastUserMessageId,
+    teamAutoPromptMessageCount: messageEntries.filter((entry) => entry.isTeamAutoPrompt).length,
+    duplicateMessageGroups: Array.from(duplicateGroups.values())
+      .filter((group) => group.messageIds.length > 1)
+      .map((group) => ({
+        role: group.role,
+        count: group.messageIds.length,
+        messageIds: group.messageIds,
+        text: group.text,
+      })),
+    consecutiveDuplicates,
+    transcriptTail: messageEntries.slice(-40).map((entry) => ({
+      index: entry.index,
+      id: entry.id,
+      role: entry.role,
+      createdAt: entry.createdAt,
+      isTeamAutoPrompt: entry.isTeamAutoPrompt,
+      partTypes: entry.partTypes,
+      text: entry.text,
+    })),
+  }
+}
+
 // ─── Component ──────────────────────────────────────────────
 
 export function ChatTranscript({ section }: ChatTranscriptProps) {
+  const [isDebugPanelOpen, setIsDebugPanelOpen] = useState(false)
   const {
     messages,
     isLoading,
@@ -139,6 +260,10 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
     userDidSend,
     onUserDidSendConsumed,
   } = section
+  const transcriptDebugPayload = useMemo(
+    () => JSON.stringify(buildTranscriptDebugPayload(section), null, 2),
+    [section],
+  )
 
   const {
     scrollerRef,
@@ -217,6 +342,56 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
           />
         </div>
       </div>
+      {messages.length > 0 ? (
+        <>
+          {isDebugPanelOpen ? (
+            <div
+              id="transcript-debug-panel"
+              className="absolute inset-x-4 bottom-16 z-20 ml-auto w-full max-w-[680px] overflow-hidden rounded-2xl border border-border bg-bg shadow-2xl"
+            >
+              <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+                <div>
+                  <h3 className="text-[13px] font-semibold text-text-primary">Transcript Debug</h3>
+                  <p className="text-[11px] text-text-tertiary">
+                    Copy this payload and paste it back to debug repeated transcript issues.
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  radius="full"
+                  onClick={() => setIsDebugPanelOpen(false)}
+                  aria-label="Close transcript debug panel"
+                >
+                  <X className="size-4" />
+                </Button>
+              </div>
+              <div className="p-4">
+                <textarea
+                  readOnly
+                  value={transcriptDebugPayload}
+                  className="min-h-[320px] max-h-[60vh] w-full resize-y rounded-xl border border-border bg-bg-secondary px-3 py-3 text-[12px] leading-5 text-text-secondary outline-none"
+                  aria-label="Transcript debug payload"
+                />
+              </div>
+            </div>
+          ) : null}
+          <div className="absolute bottom-3 right-4 z-10">
+            <Button
+              variant="secondary"
+              size="sm"
+              radius="full"
+              className="home-panel-frame-soft bg-bg-secondary shadow-sm"
+              leftIcon={<Bug className="size-3.5" />}
+              onClick={() => setIsDebugPanelOpen((current) => !current)}
+              aria-expanded={isDebugPanelOpen}
+              aria-controls="transcript-debug-panel"
+            >
+              Transcript Debug
+            </Button>
+          </div>
+        </>
+      ) : null}
       <ScrollToBottomButton visible={showScrollToBottom} onClick={scrollToBottom} />
     </div>
   )

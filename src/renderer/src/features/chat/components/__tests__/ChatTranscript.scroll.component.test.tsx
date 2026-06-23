@@ -275,6 +275,46 @@ describe('ChatTranscript t3-style scroll behavior', () => {
     expect(scrollToBottomButton.parentElement).toHaveClass('opacity-100')
   })
 
+  it('opens a floating transcript debug payload panel for copy/paste debugging', async () => {
+    const repeatedAutoPrompt = createTextMessage(
+      'team-auto-user-2',
+      'user',
+      'Continue implementing the feature.',
+    )
+    const { container } = render(
+      <ChatTranscript
+        section={createSection({
+          activeSessionId: 'session-1' as ChatTranscriptSectionState['activeSessionId'],
+          messages: [
+            createTextMessage('msg-1', 'assistant', 'Implemented part one.'),
+            repeatedAutoPrompt,
+            createTextMessage('team-auto-user-3', 'user', 'Continue implementing the feature.'),
+          ],
+          chatRows: [
+            createMessageChatRow(createTextMessage('msg-1', 'assistant', 'Implemented part one.')),
+            createMessageChatRow(repeatedAutoPrompt),
+            createMessageChatRow(
+              createTextMessage('team-auto-user-3', 'user', 'Continue implementing the feature.'),
+            ),
+          ],
+        })}
+      />,
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(REQUEST_ANIMATION_FRAME_DELAY_MS)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Transcript Debug' }))
+
+    const debugPayload = screen.getByLabelText('Transcript debug payload') as HTMLTextAreaElement
+    expect(debugPayload).toBeInTheDocument()
+    expect(debugPayload.value).toContain('"sessionId": "session-1"')
+    expect(debugPayload.value).toContain('"teamAutoPromptMessageCount": 2')
+    expect(debugPayload.value).toContain('"duplicateMessageGroups"')
+    expect(container.querySelector('#transcript-debug-panel')).not.toBeNull()
+  })
+
   it('does not scroll when lastUserMessageId is null', async () => {
     const { container } = render(
       <ChatTranscript

@@ -23,6 +23,15 @@ function userMessage(id: string, content: string) {
   }
 }
 
+function assistantMessage(id: string, parts: UIMessage['parts']) {
+  return {
+    id,
+    role: 'assistant',
+    parts,
+    createdAt: new Date(2),
+  } satisfies UIMessage
+}
+
 describe('formatAttachmentPreview', () => {
   it('shows only attachment label for auto-converted long prompt files', () => {
     const preview = formatAttachmentPreview({
@@ -132,16 +141,31 @@ describe('mergeBackgroundReconnectMessages', () => {
   it('does not duplicate an optimistic user message already present in the reconnect snapshot', () => {
     const persistedUser = userMessage('persisted-user-1', 'Draft a one-page summary of this app')
     const optimisticUser = userMessage('optimistic-user-1', 'Draft a one-page summary of this app')
-    const cachedAssistant: UIMessage = {
-      id: 'assistant-live-1',
-      role: 'assistant',
-      parts: [{ type: 'thinking', content: 'Inspecting implementation files' }],
-      createdAt: new Date(2),
-    }
+    const cachedAssistant = assistantMessage('assistant-live-1', [
+      { type: 'thinking', content: 'Inspecting implementation files' },
+    ])
 
     expect(
       mergeBackgroundReconnectMessages([persistedUser], [optimisticUser, cachedAssistant]),
     ).toEqual([persistedUser, cachedAssistant])
+  })
+
+  it('does not keep a duplicate assistant turn when reconnect returns the same content with a different id', () => {
+    const reconnectAssistant = assistantMessage('assistant-persisted-1', [
+      { type: 'thinking', content: 'Inspecting implementation files' },
+      { type: 'text', content: 'Implemented the landing page.' },
+    ])
+    const cachedAssistantDuplicate = assistantMessage('assistant-live-1', [
+      { type: 'thinking', content: 'Inspecting implementation files' },
+      { type: 'text', content: 'Implemented the landing page.' },
+    ])
+
+    expect(
+      mergeBackgroundReconnectMessages(
+        [userMessage('persisted-user-1', 'Create landing page'), reconnectAssistant],
+        [userMessage('persisted-user-1', 'Create landing page'), cachedAssistantDuplicate],
+      ),
+    ).toEqual([userMessage('persisted-user-1', 'Create landing page'), reconnectAssistant])
   })
 })
 

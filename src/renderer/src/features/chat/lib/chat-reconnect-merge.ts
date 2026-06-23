@@ -13,6 +13,73 @@ function isAssistantMessage(
   return message.role === 'assistant'
 }
 
+function normalizeComparableText(text: string) {
+  return text.replace(/\s+/g, ' ').trim()
+}
+
+function getComparableAssistantSignature(message: UIMessage) {
+  if (!isAssistantMessage(message)) {
+    return null
+  }
+
+  const signature = message.parts
+    .map((part) =>
+      matchBy(part, 'type')
+        .with('text', (value) => `text:${normalizeComparableText(value.content)}`)
+        .with(
+          'thinking',
+          (value) =>
+            `thinking:${value.stepId ?? ''}:${normalizeComparableText(value.content)}`,
+        )
+        .with(
+          'tool-call',
+          (value) =>
+            `tool-call:${value.id}:${value.name}:${value.arguments}:${value.state ?? ''}`,
+        )
+        .with(
+          'tool-result',
+          (value) => `tool-result:${value.toolCallId}:${value.state}:${value.content}`,
+        )
+        .with('image', (value) => `image:${value.source.value}`)
+        .with('audio', (value) => `audio:${value.source.value}`)
+        .with('video', (value) => `video:${value.source.value}`)
+        .with('document', (value) => `document:${value.source.value}`)
+        .exhaustive(),
+    )
+    .join('\n')
+
+  return signature.length > 0 ? signature : null
+}
+
+function countAssistantMessagesBySignature(messages: readonly UIMessage[]) {
+  const countsBySignature = new Map<string, number>()
+  for (const message of messages) {
+    const signature = getComparableAssistantSignature(message)
+    if (!signature) {
+      continue
+    }
+    countsBySignature.set(signature, (countsBySignature.get(signature) ?? 0) + 1)
+  }
+  return countsBySignature
+}
+
+function consumeAssistantMessageSignatureCount(
+  countsBySignature: Map<string, number>,
+  message: UIMessage,
+) {
+  const signature = getComparableAssistantSignature(message)
+  if (!signature) {
+    return false
+  }
+
+  const count = countsBySignature.get(signature) ?? 0
+  if (count === 0) {
+    return false
+  }
+  countsBySignature.set(signature, count - 1)
+  return true
+}
+
 function mergeTextContent(snapshotContent: string, currentContent: string) {
   return match({ snapshotContent, currentContent })
     .when(
@@ -148,6 +215,7 @@ export function mergeBackgroundReconnectMessages(
   const currentMessagesById = new Map(currentMessages.map((message) => [message.id, message]))
   const reconnectMessageIds = new Set(reconnectMessages.map((message) => message.id))
   const reconnectUserCountsByText = countUserMessagesByText(reconnectMessages)
+  const reconnectAssistantCountsBySignature = countAssistantMessagesBySignature(reconnectMessages)
   const mergedMessages = reconnectMessages.map((message) => {
     const currentMessage = currentMessagesById.get(message.id)
     return match(currentMessage)
@@ -175,6 +243,9 @@ export function mergeBackgroundReconnectMessages(
         currentUserText &&
         consumeUserMessageTextCount(reconnectUserCountsByText, currentUserText)
       ) {
+        continue
+      }
+      if (consumeAssistantMessageSignatureCount(reconnectAssistantCountsBySignature, currentMessage)) {
         continue
       }
       mergedMessages.push(currentMessage)
