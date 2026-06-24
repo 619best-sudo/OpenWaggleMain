@@ -24,6 +24,24 @@ import type {
 import { openFeedbackModal } from './command-palette-actions'
 import { truncateCommandDescription } from './command-palette-text'
 
+const TEAM_DISCOVERY_TERMS = [
+  'team',
+  'team(new)',
+  'team new',
+  'teammate',
+  'web executor',
+  'web',
+] as const
+
+const TEAM_SEARCH_ALIASES: Record<string, readonly string[]> = {
+  'web executor': ['web', 'website', 'site', 'landing page', 'frontend'],
+  'code reviewer': ['review', 'reviewer', 'code review', 'audit', 'quality'],
+  'robust qa': ['qa', 'test', 'testing', 'verify', 'verification'],
+  debugger: ['debug', 'debugger', 'bug', 'fix', 'troubleshoot'],
+  'backend developer': ['backend', 'api', 'server', 'database', 'db'],
+  'mobile developer': ['mobile', 'app', 'ios', 'android', 'react native'],
+}
+
 export function createBaseCommands(actions: CommandPaletteActionHandlers) {
   const optionalCommands: CommandPaletteItem[] = []
   appendOptionalCommand(optionalCommands, createSessionTreeCommand(actions))
@@ -226,11 +244,13 @@ function presetMatchesQuery(preset: WagglePreset, lowerQuery: string) {
 }
 
 function teamMatchesQuery(teammate: TeammateDefinition, lowerQuery: string) {
+  const aliasTerms = TEAM_SEARCH_ALIASES[teammate.name.toLowerCase()] ?? []
   return (
     !lowerQuery ||
     teammate.name.toLowerCase().includes(lowerQuery) ||
     teammate.description.toLowerCase().includes(lowerQuery) ||
-    ['team', 'team(new)', 'web executor', 'web'].includes(lowerQuery)
+    TEAM_DISCOVERY_TERMS.includes(lowerQuery as (typeof TEAM_DISCOVERY_TERMS)[number]) ||
+    aliasTerms.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term))
   )
 }
 
@@ -245,9 +265,10 @@ function isWaggleFilter(lowerQuery: string) {
 function isTeamFilter(lowerQuery: string) {
   return (
     lowerQuery.length > 0 &&
-    ['team', 'team(new)', 'team new', 'teammate', 'web executor', 'web'].some((query) =>
-      query.includes(lowerQuery),
-    )
+    [
+      ...TEAM_DISCOVERY_TERMS,
+      ...Object.values(TEAM_SEARCH_ALIASES).flat(),
+    ].some((query) => query.includes(lowerQuery) || lowerQuery.includes(query))
   )
 }
 

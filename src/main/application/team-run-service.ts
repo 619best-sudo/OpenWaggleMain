@@ -456,19 +456,19 @@ function buildFallbackPrompt(input: {
     return [
       'Review the latest chat transcript, verify the website if possible, and decide whether the task is complete.',
       '',
-      `Original team: ${input.teammate.name}`,
-      `Current target agent: ${input.nextAgent.label}`,
+      `Original Team: ${input.teammate.name}`,
+      `Current Target Agent: ${input.nextAgent.label}`,
       '',
-      routedInstructions ? `Previous exact next loop instructions: ${routedInstructions}` : null,
+      routedInstructions ? `Previous Exact Next Loop Instructions: ${routedInstructions}` : null,
       '',
       'The prior assistant transcript is already in context. Do not ask for it again.',
       'Use Playwright whenever the app can run, then end with these exact sections:',
-      '- website open check: passed / failed / blocked',
-      '- playwright evidence reviewed:',
-      '- biggest blocker or confirmation:',
-      '- next agent:',
-      '- next user prompt:',
-      '- final decision: complete / continue / blocked',
+      '- Website Open Check: Passed / Failed / Blocked',
+      '- Playwright Evidence Reviewed:',
+      '- Biggest Blocker or Confirmation:',
+      '- Next Agent:',
+      '- Next User Prompt:',
+      '- Final Decision: Complete / Continue / Blocked',
     ]
       .filter((line) => line !== null)
       .join('\n')
@@ -479,13 +479,13 @@ function buildFallbackPrompt(input: {
     `Continue the ${input.teammate.name} task as ${input.nextAgent.label}.`,
     '',
     'Use the latest chat transcript as context and continue from the current state.',
-    routedInstructions ? `Decision Maker instructions: ${routedInstructions}` : null,
+    routedInstructions ? `Decision Maker Instructions: ${routedInstructions}` : null,
     '',
     'End with these exact sections:',
-    '- execution summary:',
-    '- next agent:',
-    '- next user prompt:',
-    '- unresolved blockers:',
+    '- Execution Summary:',
+    '- Next Agent:',
+    '- Next User Prompt:',
+    '- Unresolved Blockers:',
   ]
     .filter((line) => line !== null)
     .join('\n')
@@ -558,7 +558,7 @@ function parseDecisionValue(value: string | null): ParsedTeamSections['finalDeci
 function readSectionValue(text: string, label: string): string | null {
   const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const pattern = new RegExp(
-    `(?:^|\\n)\\s*[-*]?\\s*${escapedLabel}\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*[-*]?\\s*[a-z][^\\n]*:\\s|$)`,
+    `(?:^|\\n)\\s*[-*]?\\s*(?:\\*\\*)?${escapedLabel}(?:\\*\\*)?\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*[-*]?\\s*(?:\\*\\*)?[a-z][^\\n]*?(?:\\*\\*)?\\s*:\\s|$)`,
     'i',
   )
   const match = pattern.exec(text)

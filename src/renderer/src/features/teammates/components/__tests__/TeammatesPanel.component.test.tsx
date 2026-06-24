@@ -68,6 +68,17 @@ describe('TeammatesPanel', () => {
     })
   })
 
+  it('renders the expanded built-in teammate catalog', () => {
+    render(<TeammatesPanel />)
+
+    expect(screen.getByRole('heading', { name: 'Web Executor' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Code Reviewer' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Robust QA' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Debugger' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Backend Developer' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Mobile Developer' })).toBeInTheDocument()
+  })
+
   it('launches the built-in teammate into a session and sends the first team prompt', async () => {
     render(<TeammatesPanel />)
 
@@ -89,12 +100,14 @@ describe('TeammatesPanel', () => {
         SupportedModelId('openai/gpt-5'),
         expect.objectContaining({
           loopPolicy: expect.objectContaining({
-            decisionMakerAgentId: 'web-verifier',
+            decisionMakerAgentId: 'web-decision-maker',
           }),
           agents: expect.arrayContaining([
             expect.objectContaining({ id: 'web-planner' }),
+            expect.objectContaining({ id: 'web-architect' }),
             expect.objectContaining({ id: 'web-builder' }),
-            expect.objectContaining({ id: 'web-verifier' }),
+            expect.objectContaining({ id: 'web-qa' }),
+            expect.objectContaining({ id: 'web-decision-maker' }),
           ]),
         }),
       )

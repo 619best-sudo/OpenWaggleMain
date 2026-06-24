@@ -24,7 +24,7 @@ import { TextInput } from '@/shared/ui/TextInput'
 import { Textarea } from '@/shared/ui/Textarea'
 import { ToggleSwitch } from '@/shared/ui/ToggleSwitch'
 import { useUIStore } from '@/shell/ui-store'
-import { BUILT_IN_TEAMMATES } from '../lib/built-in-teammates'
+import { BUILT_IN_TEAMMATES } from '../lib/team-new-built-ins'
 import {
   applyGeneratedAgentResult,
   buildTeammateFromDraft,

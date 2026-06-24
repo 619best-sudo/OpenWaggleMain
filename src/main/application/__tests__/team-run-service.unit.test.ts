@@ -136,16 +136,16 @@ describe('executeTeamRun', () => {
     executeAgentRunMock
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`execution summary: implemented the landing page
-final decision: complete`),
+          successResult(`Execution Summary: Implemented the landing page
+Final Decision: Complete`),
         ),
       )
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`website open check: passed
-next agent: executor
-next user prompt: do not use
-final decision: complete`),
+          successResult(`Website Open Check: Passed
+Next Agent: executor
+Next User Prompt: Do not use
+Final Decision: Complete`),
         ),
       )
     generateTextMock
@@ -188,20 +188,20 @@ final decision: complete`),
 
   it('uses the decision maker next prompt when continuing back to the executor', async () => {
     executeAgentRunMock
-      .mockReturnValueOnce(Effect.succeed(successResult('execution summary: implemented the page')))
+      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Implemented the page')))
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`website open check: failed
-next agent: executor
-next user prompt: Fix the broken startup and keep the new landing page.
-final decision: continue`),
+          successResult(`Website Open Check: Failed
+Next Agent: executor
+Next User Prompt: Fix the broken startup and keep the new landing page.
+Final Decision: Continue`),
         ),
       )
-      .mockReturnValueOnce(Effect.succeed(successResult('execution summary: startup fixed')))
+      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Startup fixed')))
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`website open check: passed
-final decision: complete`),
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
         ),
       )
     generateTextMock
@@ -276,17 +276,17 @@ final decision: complete`),
     }
 
     executeAgentRunMock
-      .mockReturnValueOnce(Effect.succeed(successResult('execution summary: first pass finished')))
+      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: First pass finished')))
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`execution summary: second pass finished
-next agent: decision-maker`),
+          successResult(`Execution Summary: Second pass finished
+Next Agent: decision-maker`),
         ),
       )
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`website open check: passed
-final decision: complete`),
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
         ),
       )
     generateTextMock
@@ -323,22 +323,22 @@ final decision: complete`),
     executeAgentRunMock
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`execution summary: implemented the hero section and main CTA.
+          successResult(`Execution Summary: Implemented the hero section and main CTA.
 If you want, I can wire the pricing grid and mobile navigation next.
-unresolved blockers: none`),
+Unresolved Blockers: None`),
         ),
       )
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`execution summary: completed the remaining website implementation
-next agent: decision-maker
-unresolved blockers: none`),
+          successResult(`Execution Summary: Completed the remaining website implementation
+Next Agent: decision-maker
+Unresolved Blockers: None`),
         ),
       )
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`website open check: passed
-final decision: complete`),
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
         ),
       )
     generateTextMock
@@ -375,16 +375,16 @@ final decision: complete`),
     executeAgentRunMock
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`execution summary: implementation finished
-recommended next agent: decision-maker
-next user prompt: Verify the current website in Playwright.
-unresolved blockers: none`),
+          successResult(`Execution Summary: Implementation finished
+Recommended Next Agent: decision-maker
+Next User Prompt: Verify the current website in Playwright.
+Unresolved Blockers: None`),
         ),
       )
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`website open check: passed
-final decision: complete`),
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
         ),
       )
     generateTextMock
@@ -443,11 +443,11 @@ final decision: complete`),
     }
 
     executeAgentRunMock
-      .mockReturnValueOnce(Effect.succeed(successResult('execution summary: implemented the page')))
+      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Implemented the page')))
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`website open check: passed
-final decision: complete`),
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
         ),
       )
     generateTextMock
@@ -506,18 +506,18 @@ final decision: complete`),
     }
 
     executeAgentRunMock
-      .mockReturnValueOnce(Effect.succeed(successResult('execution summary: implemented the page')))
+      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Implemented the page')))
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`website open check: passed
-final decision: complete`),
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
         ),
       )
-      .mockReturnValueOnce(Effect.succeed(successResult('execution summary: review completed')))
+      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Review completed')))
       .mockReturnValueOnce(
         Effect.succeed(
-          successResult(`website open check: passed
-final decision: complete`),
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
         ),
       )
     generateTextMock
