@@ -1,3 +1,4 @@
+import type { SupportedModelId } from './brand'
 import type { WaggleAppManifest } from './waggle'
 
 export type TeammateAgentKind = 'executor' | 'decision-maker' | 'worker' | 'reviewer'
@@ -15,6 +16,7 @@ export interface TeammateAgentDefinition {
   readonly id: string
   readonly label: string
   readonly kind: TeammateAgentKind
+  readonly modelOverride?: SupportedModelId
   readonly roleDescription: string
   readonly whyToRun?: string
   readonly runWhen?: readonly TeammateRunWhen[]
@@ -34,6 +36,7 @@ export interface TeammateAgentGenerationInput {
 export interface TeammateAgentGenerationResult {
   readonly label: string
   readonly kind: TeammateAgentKind
+  readonly modelOverride?: SupportedModelId
   readonly roleDescription: string
   readonly whyToRun?: string
   readonly runWhen?: readonly TeammateRunWhen[]

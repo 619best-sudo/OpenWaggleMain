@@ -2,6 +2,7 @@ import { SessionId, SupportedModelId } from '@shared/types/brand'
 import { DEFAULT_SETTINGS } from '@shared/types/settings'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useProviderStore } from '@/features/providers/state/provider-store'
 import { usePreferencesStore } from '@/features/settings/state'
 import { TeammatesPanel } from '../TeammatesPanel'
 
@@ -66,6 +67,109 @@ describe('TeammatesPanel', () => {
       },
       isLoaded: true,
     })
+    useProviderStore.setState((state) => ({
+      ...state,
+      baseProviderModels: [
+        {
+          provider: 'openai',
+          displayName: 'OpenAI',
+          auth: {
+            configured: true,
+            source: 'environment-or-custom',
+            apiKeyConfigured: true,
+            apiKeySource: 'environment-or-custom',
+            oauthConnected: false,
+            supportsApiKey: true,
+            supportsOAuth: false,
+          },
+          models: [
+            {
+              id: SupportedModelId('openai/gpt-5'),
+              modelId: 'gpt-5',
+              name: 'GPT-5',
+              provider: 'openai',
+              available: true,
+              availableThinkingLevels: ['minimal', 'low', 'medium', 'high'],
+              input: ['text'],
+            },
+          ],
+        },
+        {
+          provider: 'openrouter',
+          displayName: 'OpenRouter',
+          auth: {
+            configured: true,
+            source: 'environment-or-custom',
+            apiKeyConfigured: true,
+            apiKeySource: 'environment-or-custom',
+            oauthConnected: false,
+            supportsApiKey: true,
+            supportsOAuth: false,
+          },
+          models: [
+            {
+              id: SupportedModelId('openrouter/anthropic/claude-sonnet-4'),
+              modelId: 'anthropic/claude-sonnet-4',
+              name: 'Claude Sonnet 4',
+              provider: 'openrouter',
+              available: true,
+              availableThinkingLevels: ['minimal', 'low', 'medium', 'high'],
+              input: ['text'],
+            },
+          ],
+        },
+      ],
+      providerModels: [
+        {
+          provider: 'openai',
+          displayName: 'OpenAI',
+          auth: {
+            configured: true,
+            source: 'environment-or-custom',
+            apiKeyConfigured: true,
+            apiKeySource: 'environment-or-custom',
+            oauthConnected: false,
+            supportsApiKey: true,
+            supportsOAuth: false,
+          },
+          models: [
+            {
+              id: SupportedModelId('openai/gpt-5'),
+              modelId: 'gpt-5',
+              name: 'GPT-5',
+              provider: 'openai',
+              available: true,
+              availableThinkingLevels: ['minimal', 'low', 'medium', 'high'],
+              input: ['text'],
+            },
+          ],
+        },
+        {
+          provider: 'openrouter',
+          displayName: 'OpenRouter',
+          auth: {
+            configured: true,
+            source: 'environment-or-custom',
+            apiKeyConfigured: true,
+            apiKeySource: 'environment-or-custom',
+            oauthConnected: false,
+            supportsApiKey: true,
+            supportsOAuth: false,
+          },
+          models: [
+            {
+              id: SupportedModelId('openrouter/anthropic/claude-sonnet-4'),
+              modelId: 'anthropic/claude-sonnet-4',
+              name: 'Claude Sonnet 4',
+              provider: 'openrouter',
+              available: true,
+              availableThinkingLevels: ['minimal', 'low', 'medium', 'high'],
+              input: ['text'],
+            },
+          ],
+        },
+      ],
+    }))
   })
 
   it('renders the expanded built-in teammate catalog', () => {
@@ -79,11 +183,29 @@ describe('TeammatesPanel', () => {
     expect(screen.getByRole('heading', { name: 'Mobile Developer' })).toBeInTheDocument()
   })
 
-  it('launches the built-in teammate into a session and sends the first team prompt', async () => {
+  it('launches the built-in teammate with edited agent prompts and dependencies', async () => {
     render(<TeammatesPanel />)
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[1]!)
     expect(screen.getByLabelText('Task prompt')).toHaveValue('')
+    fireEvent.change(document.getElementById('built-in-required-mcps')!, {
+      target: { value: 'playwright, database' },
+    })
+    fireEvent.change(document.getElementById('built-in-optional-mcps')!, {
+      target: { value: 'figma' },
+    })
+    fireEvent.change(document.getElementById('built-in-required-skills')!, {
+      target: { value: 'frontend-implementer' },
+    })
+    fireEvent.change(document.getElementById('built-in-optional-skills')!, {
+      target: { value: 'ui-ux-pro-max' },
+    })
+    fireEvent.change(document.getElementById('built-in-agent-model-web-planner')!, {
+      target: { value: 'openrouter/anthropic/claude-sonnet-4' },
+    })
+    fireEvent.change(document.getElementById('built-in-agent-prompt-web-planner')!, {
+      target: { value: 'You are Web Planner. Customize the execution plan for this launch.' },
+    })
     fireEvent.change(screen.getByLabelText('Task prompt'), {
       target: { value: 'Create a SaaS landing page and make sure it opens.' },
     })
@@ -99,11 +221,21 @@ describe('TeammatesPanel', () => {
         }),
         SupportedModelId('openai/gpt-5'),
         expect.objectContaining({
+          app: {
+            requiredMcps: ['playwright', 'database'],
+            requiredSkills: ['frontend-implementer'],
+            optionalMcps: ['figma'],
+            optionalSkills: ['ui-ux-pro-max'],
+          },
           loopPolicy: expect.objectContaining({
             decisionMakerAgentId: 'web-decision-maker',
           }),
           agents: expect.arrayContaining([
-            expect.objectContaining({ id: 'web-planner' }),
+            expect.objectContaining({
+              id: 'web-planner',
+              modelOverride: SupportedModelId('openrouter/anthropic/claude-sonnet-4'),
+              roleDescription: 'You are Web Planner. Customize the execution plan for this launch.',
+            }),
             expect.objectContaining({ id: 'web-architect' }),
             expect.objectContaining({ id: 'web-builder' }),
             expect.objectContaining({ id: 'web-qa' }),
@@ -129,10 +261,26 @@ describe('TeammatesPanel', () => {
     fireEvent.change(screen.getByLabelText('Team task prompt'), {
       target: { value: 'Review the latest code changes and decide whether the work is ready.' },
     })
+    fireEvent.click(screen.getByText('Dependencies', { selector: 'h4' }))
+    fireEvent.change(document.getElementById('custom-team-required-mcps')!, {
+      target: { value: 'playwright, database' },
+    })
+    fireEvent.change(document.getElementById('custom-team-optional-mcps')!, {
+      target: { value: 'figma\nhttp' },
+    })
+    fireEvent.change(document.getElementById('custom-team-required-skills')!, {
+      target: { value: 'ui-critic, backend-auditor' },
+    })
+    fireEvent.change(document.getElementById('custom-team-optional-skills')!, {
+      target: { value: 'ui-ux-pro-max' },
+    })
     // Expand Loop Policy & UI section
     fireEvent.click(screen.getByText('Loop Policy & UI'))
     fireEvent.change(screen.getByLabelText('Decision maker'), {
       target: { value: 'agent-1' },
+    })
+    fireEvent.change(document.getElementById('agent-model-agent-1')!, {
+      target: { value: 'openrouter/anthropic/claude-sonnet-4' },
     })
     fireEvent.click(screen.getAllByRole('button', { name: 'Launch Custom Team' })[0]!)
 
@@ -146,6 +294,12 @@ describe('TeammatesPanel', () => {
         SupportedModelId('openai/gpt-5'),
         expect.objectContaining({
           name: 'Review Squad',
+          app: {
+            requiredMcps: ['playwright', 'database'],
+            requiredSkills: ['ui-critic', 'backend-auditor'],
+            optionalMcps: ['figma', 'http'],
+            optionalSkills: ['ui-ux-pro-max'],
+          },
           loopPolicy: expect.objectContaining({
             decisionMakerAgentId: 'agent-1',
             initialAgentId: 'agent-1',
@@ -154,6 +308,7 @@ describe('TeammatesPanel', () => {
             expect.objectContaining({
               id: 'agent-1',
               kind: 'decision-maker',
+              modelOverride: SupportedModelId('openrouter/anthropic/claude-sonnet-4'),
               isDecisionMaker: true,
             }),
           ]),

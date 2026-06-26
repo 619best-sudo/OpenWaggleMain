@@ -53,11 +53,13 @@ export function ToolCallHeader({
         <ToolActionLabel view={view} result={result} />
         <ToolDiffSummary view={view} />
         {duration > 0 && !view.isRunning && (
-          <span className="shrink-0 text-[12px] text-text-secondary">{formatDuration(duration)}</span>
+          <span className="shrink-0 text-[12px] text-[color:var(--color-code-card-muted-text)]">
+            {formatDuration(duration)}
+          </span>
         )}
         <ChevronRight
           className={cn(
-            'ml-auto size-3 shrink-0 text-text-secondary transition-transform',
+            'ml-auto size-3 shrink-0 text-[color:var(--color-code-card-muted-text)] transition-transform',
             'invisible group-hover/tool:visible',
             expanded && 'visible rotate-90',
           )}
@@ -72,7 +74,7 @@ function ToolGlyph({ view }: { readonly view: ToolCallViewModel }) {
   const Icon = resolveToolIcon(view.toolName)
 
   return (
-    <span className="flex size-5 shrink-0 items-center justify-center rounded bg-bg-secondary/70 text-text-secondary">
+      <span className="flex size-5 shrink-0 items-center justify-center rounded bg-bg-secondary/70 text-[color:var(--color-code-card-muted-text)]">
       <Icon className="size-3.5" />
     </span>
   )
@@ -118,12 +120,12 @@ function ToolStatusIcon({
       <Loader2
         role="status"
         aria-label="Running"
-        className="size-3.5 shrink-0 animate-spin text-text-secondary"
+        className="size-3.5 shrink-0 animate-spin text-[color:var(--color-code-card-muted-text)]"
       />
     )
   }
   if (view.hasConcreteResult && result && !view.isError) {
-    return <Check className="size-3.5 shrink-0 text-text-secondary" />
+    return <Check className="size-3.5 shrink-0 text-[color:var(--color-code-card-muted-text)]" />
   }
   if (result && view.isError) {
     return <X className="size-3.5 text-error/80 shrink-0" />
@@ -141,9 +143,12 @@ function ToolActionLabel({
   return (
     <span
       className={cn(
-        'truncate',
-        view.isRunning && 'text-text-primary/82',
-        view.hasConcreteResult && result && !view.isError && 'text-text-primary/82',
+        'truncate text-[color:var(--color-code-card-label-text)]',
+        view.isRunning && 'text-[color:var(--color-code-card-label-text)]',
+        view.hasConcreteResult &&
+          result &&
+          !view.isError &&
+          'text-[color:var(--color-code-card-label-text)]',
         result && view.isError && 'text-error/80',
       )}
     >
@@ -165,7 +170,11 @@ function renderHighlightedActionText(view: ToolCallViewModel): ReactNode {
   }
 
   if (view.path) {
-    return highlightSegment(view.actionText, view.path, 'font-medium text-info')
+    return highlightSegment(
+      view.actionText,
+      view.path,
+      'font-medium text-[color:var(--color-tool-call-file-text)]',
+    )
   }
 
   return view.actionText
@@ -231,7 +240,7 @@ function BranchFromToolButton({
       type="button"
       title="Branch from tool result"
       onClick={() => onBranchFromMessage(view.branchSourceMessageId ?? '')}
-      className="opacity-0 text-text-secondary transition-opacity hover:text-text-primary group-hover/tool:opacity-100 focus:opacity-100"
+      className="opacity-0 text-[color:var(--color-code-card-muted-text)] transition-opacity hover:text-[color:var(--color-code-card-label-text)] group-hover/tool:opacity-100 focus:opacity-100"
     >
       <GitBranch className="size-3.5" />
     </Button>
@@ -268,7 +277,7 @@ function ToolPreview({ text, tone }: { readonly text: string; readonly tone: 'mu
         'mt-1 overflow-hidden rounded-md px-3 py-2 text-[12px] font-mono whitespace-pre-wrap break-words',
         tone === 'error'
           ? 'home-panel-frame-soft max-h-[160px] bg-error/5 text-error'
-          : 'home-panel-frame-soft max-h-[120px] bg-code-card text-text-primary',
+          : 'home-panel-frame-soft max-h-[120px] bg-code-card text-[color:var(--color-code-card-text)]',
       )}
     >
       {text}

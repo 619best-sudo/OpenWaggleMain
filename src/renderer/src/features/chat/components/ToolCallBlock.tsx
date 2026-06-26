@@ -176,7 +176,9 @@ function ExpandedToolDetails({
       <ExpandedCopyActions args={args} view={view} />
       <ExpandedDiffSection diff={view.diff} />
       <div className="px-3 py-2">
-        <div className="mb-1 text-[13px] font-medium text-text-primary/82">Arguments</div>
+        <div className="mb-1 text-[13px] font-medium text-[color:var(--color-code-card-label-text)]">
+          Arguments
+        </div>
         <ToolArgs name={name} args={view.parsedArgs} rawArgs={args} path={view.path} />
       </div>
       <ExpandedResultSection name={name} result={result} view={view} />
@@ -227,7 +229,9 @@ function ExpandedResultSection({
   }
   return (
     <div className="home-divider-t px-3 py-2">
-      <div className="mb-1 text-[13px] font-medium text-text-primary/82">Result</div>
+      <div className="mb-1 text-[13px] font-medium text-[color:var(--color-code-card-label-text)]">
+        Result
+      </div>
       <ToolResult content={result.content} isError={view.isError} name={name} path={view.path} />
     </div>
   )
@@ -247,7 +251,9 @@ function ExpandedErrorSection({
   }
   return (
     <div role="alert" className="home-divider-t px-3 py-2">
-      <div className="mb-1 text-[13px] font-medium text-text-primary/82">Error</div>
+      <div className="mb-1 text-[13px] font-medium text-[color:var(--color-code-card-label-text)]">
+        Error
+      </div>
       <ToolResult
         content={view.resultError ?? result.content}
         isError

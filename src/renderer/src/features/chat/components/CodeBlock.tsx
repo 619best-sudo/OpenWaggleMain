@@ -46,12 +46,14 @@ export function CodeBlock({ children, language, className }: CodeBlockProps) {
       )}
     >
       <div className="home-divider-b flex items-center justify-between px-3 py-1.5">
-        <span className="font-mono text-[12px] font-medium text-info">{language ?? 'text'}</span>
+        <span className="font-mono text-[12px] font-medium text-[color:var(--color-tool-call-file-text)]">
+          {language ?? 'text'}
+        </span>
         <Button
           variant="unstyled"
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1 text-[13px] text-text-muted transition-colors hover:text-text-secondary"
+          className="flex items-center gap-1 text-[13px] text-[color:var(--color-code-card-muted-text)] transition-colors hover:text-[color:var(--color-code-card-label-text)]"
         >
           {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
           {copied ? 'Copied' : 'Copy'}

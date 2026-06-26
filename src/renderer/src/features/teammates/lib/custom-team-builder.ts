@@ -6,12 +6,14 @@ import type {
   TeammatePromptMode,
   TeammateRunWhen,
 } from '@shared/types/teammate'
+import type { SupportedModelId } from '@shared/types/brand'
 
 export interface TeamAgentDraft {
   readonly id: string
   readonly instructionSeed: string
   readonly label: string
   readonly kind: TeammateAgentKind
+  readonly modelOverride?: SupportedModelId
   readonly roleDescription: string
   readonly whyToRun: string
   readonly runWhen: readonly TeammateRunWhen[]
@@ -28,6 +30,10 @@ export interface TeamBuilderDraft {
   readonly description: string
   readonly launchPromptPlaceholder: string
   readonly launchButtonLabel: string
+  readonly requiredMcps: readonly string[]
+  readonly optionalMcps: readonly string[]
+  readonly requiredSkills: readonly string[]
+  readonly optionalSkills: readonly string[]
   readonly initialAgentId: string
   readonly decisionMakerAgentId: string
   readonly maxDecisionMakerCalls: number
@@ -83,6 +89,23 @@ function titleCaseWords(value: string) {
 function trimSentence(value: string, fallback: string) {
   const trimmed = value.trim()
   return trimmed.length > 0 ? trimmed : fallback
+}
+
+function normalizeDependencyList(values: readonly string[] | undefined) {
+  if (!values) return []
+
+  const normalizedValues: string[] = []
+  const seen = new Set<string>()
+
+  for (const value of values) {
+    const normalized = value.trim()
+    if (!normalized) continue
+    if (seen.has(normalized)) continue
+    seen.add(normalized)
+    normalizedValues.push(normalized)
+  }
+
+  return normalizedValues
 }
 
 export function getDefaultRunWhen(kind: TeammateAgentKind): readonly TeammateRunWhen[] {
@@ -142,6 +165,7 @@ export function createDefaultAgentDraft(index = 1): TeamAgentDraft {
     instructionSeed: '',
     label: index === 1 ? 'Executor' : `Agent ${index}`,
     kind,
+    modelOverride: undefined,
     roleDescription: getDefaultRoleDescription(kind, index === 1 ? 'Executor' : `Agent ${index}`),
     whyToRun: getDefaultWhyToRun(kind),
     runWhen: getDefaultRunWhen(kind),
@@ -161,12 +185,50 @@ export function createDefaultTeamBuilderDraft(): TeamBuilderDraft {
     description: 'A custom teammate built from your own set of agents.',
     launchPromptPlaceholder: 'Describe the task this team should execute.',
     launchButtonLabel: 'Launch Custom Team',
+    requiredMcps: [],
+    optionalMcps: [],
+    requiredSkills: [],
+    optionalSkills: [],
     initialAgentId: firstAgent.id,
     decisionMakerAgentId: '',
     maxDecisionMakerCalls: 3,
     maxAutoSubmittedPrompts: 6,
     taskPrompt: '',
     agents: [firstAgent],
+  }
+}
+
+export function createTeamBuilderDraftFromTeammate(teammate: TeammateDefinition): TeamBuilderDraft {
+  return {
+    id: teammate.id,
+    name: teammate.name,
+    description: teammate.description,
+    launchPromptPlaceholder: teammate.launchPromptPlaceholder,
+    launchButtonLabel: teammate.launchButtonLabel,
+    requiredMcps: normalizeDependencyList(teammate.app.requiredMcps),
+    optionalMcps: normalizeDependencyList(teammate.app.optionalMcps),
+    requiredSkills: normalizeDependencyList(teammate.app.requiredSkills),
+    optionalSkills: normalizeDependencyList(teammate.app.optionalSkills),
+    initialAgentId: teammate.loopPolicy.initialAgentId,
+    decisionMakerAgentId: teammate.loopPolicy.decisionMakerAgentId,
+    maxDecisionMakerCalls: teammate.loopPolicy.maxDecisionMakerCalls,
+    maxAutoSubmittedPrompts: teammate.loopPolicy.maxAutoSubmittedPrompts,
+    taskPrompt: '',
+    agents: teammate.agents.map((agent) => ({
+      id: agent.id,
+      instructionSeed: '',
+      label: agent.label,
+      kind: agent.kind,
+      modelOverride: agent.modelOverride,
+      roleDescription: agent.roleDescription,
+      whyToRun: agent.whyToRun ?? '',
+      runWhen: agent.runWhen ?? getDefaultRunWhen(agent.kind),
+      minRuns: agent.minRuns,
+      maxRuns: agent.maxRuns,
+      isDecisionMaker: agent.isDecisionMaker ?? agent.kind === 'decision-maker',
+      createPrompt: agent.createPrompt ?? getDefaultPromptMode(agent.kind),
+      suggestedNextAgentIfSuccess: agent.suggestedNextAgentIfSuccess ?? '',
+    })),
   }
 }
 
@@ -244,6 +306,7 @@ export function applyGeneratedAgentResult(
     ...fallback,
     label: generated.label,
     kind: generated.kind,
+    modelOverride: generated.modelOverride,
     roleDescription: generated.roleDescription,
     whyToRun: generated.whyToRun ?? fallback.whyToRun,
     runWhen: generated.runWhen && generated.runWhen.length > 0 ? generated.runWhen : fallback.runWhen,
@@ -278,6 +341,7 @@ function toAgentDefinition(agent: TeamAgentDraft): TeammateAgentDefinition {
     id: normalized.id,
     label: normalized.label.trim() || 'Unnamed Agent',
     kind: normalized.kind,
+    modelOverride: normalized.modelOverride?.trim() ? normalized.modelOverride : undefined,
     roleDescription: normalized.roleDescription.trim(),
     whyToRun: normalized.whyToRun.trim() || undefined,
     runWhen: normalized.runWhen,
@@ -291,6 +355,10 @@ function toAgentDefinition(agent: TeamAgentDraft): TeammateAgentDefinition {
 
 export function buildTeammateFromDraft(draft: TeamBuilderDraft): TeammateDefinition {
   const normalizedAgents = draft.agents.map(normalizeAgentDraft)
+  const requiredMcps = normalizeDependencyList(draft.requiredMcps)
+  const optionalMcps = normalizeDependencyList(draft.optionalMcps)
+  const requiredSkills = normalizeDependencyList(draft.requiredSkills)
+  const optionalSkills = normalizeDependencyList(draft.optionalSkills)
   const decisionMaker =
     normalizedAgents.find((agent) => agent.id === draft.decisionMakerAgentId) ||
     normalizedAgents.find((agent) => agent.isDecisionMaker) ||
@@ -310,8 +378,10 @@ export function buildTeammateFromDraft(draft: TeamBuilderDraft): TeammateDefinit
       draft.launchPromptPlaceholder.trim() || 'Describe the task this custom team should run.',
     launchButtonLabel: draft.launchButtonLabel.trim() || 'Launch Custom Team',
     app: {
-      requiredMcps: [],
-      requiredSkills: [],
+      requiredMcps,
+      requiredSkills,
+      ...(optionalMcps.length > 0 ? { optionalMcps } : {}),
+      ...(optionalSkills.length > 0 ? { optionalSkills } : {}),
     },
     agents: normalizedAgents.map(toAgentDefinition),
     loopPolicy: {

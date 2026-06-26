@@ -28,7 +28,7 @@ export function CopyButton({ label, value }: { readonly label: string; readonly 
     <Button
       variant="unstyled"
         type="button"
-        className="inline-flex items-center gap-1 rounded border-2 border-home-border px-1.5 py-0.5 text-[11px] text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+        className="inline-flex items-center gap-1 rounded border-2 border-home-border px-1.5 py-0.5 text-[11px] text-[color:var(--color-code-card-muted-text)] transition-colors hover:bg-bg-hover hover:text-[color:var(--color-code-card-label-text)]"
         onClick={(event) => {
         event.stopPropagation()
         copy(value)
@@ -53,8 +53,8 @@ export function ToolArgs({
 }) {
   if (name === 'bash' && typeof args.command === 'string') {
     return (
-      <div className="home-panel-frame-soft rounded-md bg-code-card px-3 py-2 font-mono text-[13px] text-text-primary">
-        <span className="text-text-tertiary select-none">$ </span>
+      <div className="home-panel-frame-soft rounded-md bg-code-card px-3 py-2 font-mono text-[13px] text-[color:var(--color-code-card-text)]">
+        <span className="select-none text-[color:var(--color-code-card-muted-text)]">$ </span>
         {args.command}
       </div>
     )
@@ -63,7 +63,7 @@ export function ToolArgs({
   const entries = Object.entries(args)
   if (entries.length === 0) {
     return (
-      <pre className="home-panel-frame-soft overflow-x-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-text-primary">
+      <pre className="home-panel-frame-soft overflow-x-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-[color:var(--color-code-card-text)]">
         {rawArgs || '{}'}
       </pre>
     )
@@ -94,7 +94,7 @@ function ToolArgValue({
 
   return (
     <div>
-      <span className="text-[13px] text-text-primary/82">{name}: </span>
+      <span className="text-[13px] text-[color:var(--color-code-card-label-text)]">{name}: </span>
       {isLong && typeof value === 'string' && FILE_CONTENT_ARG_KEYS.has(name) ? (
         <HighlightedFileContent
           content={value}
@@ -103,7 +103,7 @@ function ToolArgValue({
         />
       ) : isLong ? (
         <pre
-          className="home-panel-frame-soft mt-0.5 overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-text-primary"
+          className="home-panel-frame-soft mt-0.5 overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-[color:var(--color-code-card-text)]"
           style={{ maxHeight: LONG_ARGUMENT_MAX_HEIGHT_PX }}
         >
           {display}
@@ -111,8 +111,8 @@ function ToolArgValue({
       ) : (
         <span
           className={cn(
-            'text-[13px] font-mono text-text-primary/78',
-            isPathLikeKey && 'font-medium text-info',
+            'text-[13px] font-mono text-[color:var(--color-code-card-text)]',
+            isPathLikeKey && 'font-medium text-[color:var(--color-tool-call-file-text)]',
           )}
         >
           {display}
@@ -134,11 +134,11 @@ function HighlightedFileContent({
   if (!shouldHighlightCode(content)) {
     return (
       <div>
-        <div className="mb-1 text-[12px] text-text-tertiary">
+        <div className="mb-1 text-[12px] text-[color:var(--color-code-card-muted-text)]">
           Large file preview shown without syntax highlighting to keep the UI responsive.
         </div>
         <pre
-          className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-text-primary whitespace-pre-wrap break-words"
+          className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-[color:var(--color-code-card-text)] whitespace-pre-wrap break-words"
           style={{ maxHeight }}
         >
           {content}
@@ -195,7 +195,7 @@ export function ToolResult({
 
   return (
     <pre
-      className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-text-primary/78 whitespace-pre-wrap break-words"
+      className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-[color:var(--color-code-card-text)] whitespace-pre-wrap break-words"
       style={{ maxHeight: RESULT_MAX_HEIGHT_PX }}
     >
       {displayContent}
@@ -213,7 +213,7 @@ export function UnifiedDiffView({
   return (
     <div className="home-panel-frame-soft rounded-md overflow-hidden text-[12px] font-mono">
       <div className="home-divider-b flex items-center justify-between bg-code-card px-3 py-1.5">
-        <span className="font-medium text-info">Diff</span>
+        <span className="font-medium text-[color:var(--color-tool-call-file-text)]">Diff</span>
         <div className="flex items-center gap-2 shrink-0 ml-2">
           {diff.additions > 0 && (
             <span

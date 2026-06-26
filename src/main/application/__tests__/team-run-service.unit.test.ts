@@ -132,6 +132,68 @@ describe('executeTeamRun', () => {
     generateTextMock.mockReset()
   })
 
+  it('uses per-agent model overrides when present', async () => {
+    const teammate: TeammateDefinition = {
+      ...BASE_TEAMMATE,
+      agents: [
+        {
+          id: 'executor',
+          label: 'Executor',
+          kind: 'executor',
+          modelOverride: SupportedModelId('openrouter/anthropic/claude-sonnet-4'),
+          roleDescription: 'Builds and fixes the website.',
+        },
+        {
+          id: 'decision-maker',
+          label: 'Decision Maker',
+          kind: 'decision-maker',
+          modelOverride: SupportedModelId('openrouter/openai/gpt-4o'),
+          roleDescription: 'Verifies with Playwright and decides whether to stop.',
+        },
+      ],
+    }
+
+    executeAgentRunMock
+      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Implemented the landing page')))
+      .mockReturnValueOnce(
+        Effect.succeed(
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
+        ),
+      )
+    generateTextMock
+      .mockReturnValueOnce(routeJson({ nextAgentId: 'decision-maker' }))
+      .mockReturnValueOnce(routeJson({ finalDecision: 'complete' }))
+
+    const result = await runTeam({
+      sessionId: SessionId('session-team-model-overrides'),
+      runId: 'team-session-team-model-overrides',
+      payload: {
+        text: 'Create a SaaS landing page.',
+        thinkingLevel: 'medium',
+        attachments: [],
+      },
+      model: SupportedModelId('openai/gpt-5'),
+      teammate,
+      signal: new AbortController().signal,
+      onEvent: () => undefined,
+    })
+
+    expect(result).toEqual({ outcome: 'success' })
+    expect(executeAgentRunMock).toHaveBeenCalledTimes(2)
+    expect(executeAgentRunMock.mock.calls[0]?.[0]).toEqual(
+      expect.objectContaining({
+        model: SupportedModelId('openrouter/anthropic/claude-sonnet-4'),
+      }),
+    )
+    expect(executeAgentRunMock.mock.calls[1]?.[0]).toEqual(
+      expect.objectContaining({
+        model: SupportedModelId('openrouter/openai/gpt-4o'),
+      }),
+    )
+    expect(getProviderForModelMock).toHaveBeenCalledWith('openai/gpt-5')
+  })
+
   it('stops only when the decision maker says complete', async () => {
     executeAgentRunMock
       .mockReturnValueOnce(

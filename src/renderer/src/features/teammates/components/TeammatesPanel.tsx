@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import type { SessionId } from '@shared/types/brand'
+import { SessionId, SupportedModelId } from '@shared/types/brand'
+import type { ProviderInfo } from '@shared/types/llm'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import { useNavigate } from '@tanstack/react-router'
 import {
@@ -16,6 +17,7 @@ import {
 import { useMemo, useState } from 'react'
 import { useEscapeHotkey } from '@/shared/hooks/useEscapeHotkey'
 import { useChat } from '@/features/chat/hooks/useChat'
+import { useProviderStore } from '@/features/providers/state/provider-store'
 import { usePreferencesStore } from '@/features/settings/state'
 import { api } from '@/shared/lib/ipc'
 import { Button } from '@/shared/ui/Button'
@@ -30,6 +32,7 @@ import {
   buildTeammateFromDraft,
   createDefaultAgentDraft,
   createDefaultTeamBuilderDraft,
+  createTeamBuilderDraftFromTeammate,
   TEAM_AGENT_KIND_OPTIONS,
   TEAM_PROMPT_MODE_OPTIONS,
   TEAM_RUN_WHEN_OPTIONS,
@@ -38,6 +41,12 @@ import {
 } from '../lib/custom-team-builder'
 
 type AgentEditorMode = 'manual' | 'generate'
+const TEAM_DEFAULT_MODEL_VALUE = '__team-default-model__'
+
+interface TeamModelOption {
+  readonly id: string
+  readonly label: string
+}
 
 function AgentPill({ label }: { readonly label: string }) {
   return (
@@ -57,14 +66,14 @@ function DependencyPill({ label }: { readonly label: string }) {
 
 function FieldLabel({ htmlFor, children }: { readonly htmlFor?: string; readonly children: React.ReactNode }) {
   return (
-    <span className="block text-[13px] font-medium text-text-primary" id={htmlFor ? undefined : undefined}>
+    <span className="block text-[14px] font-semibold tracking-tight text-text-primary" id={htmlFor ? undefined : undefined}>
       {children}
     </span>
   )
 }
 
 function SectionHint({ children }: { readonly children: React.ReactNode }) {
-  return <p className="text-[12px] leading-5 text-text-tertiary">{children}</p>
+  return <p className="text-[13px] leading-relaxed text-text-secondary/90">{children}</p>
 }
 
 interface CollapsibleSectionProps {
@@ -79,9 +88,9 @@ function CollapsibleSection({ title, description, defaultExpanded = false, child
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   
   return (
-    <section className="rounded-xl border border-border-light bg-bg-secondary/30 shadow-sm overflow-hidden">
+    <section className="rounded-xl border border-border bg-bg shadow-sm overflow-hidden">
       <div 
-        className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-bg-hover transition-colors"
+        className="flex items-center justify-between px-5 py-4 cursor-pointer bg-bg hover:bg-bg-hover transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex-1 pr-4">
@@ -90,13 +99,13 @@ function CollapsibleSection({ title, description, defaultExpanded = false, child
         </div>
         <div className="flex items-center gap-3">
           {action && <div onClick={(e) => e.stopPropagation()}>{action}</div>}
-          <div className="flex size-6 items-center justify-center rounded-md bg-bg text-text-tertiary">
+          <div className="flex size-6 items-center justify-center rounded-md bg-bg-secondary text-text-tertiary">
             {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
           </div>
         </div>
       </div>
       {isExpanded && (
-        <div className="px-5 pb-5 pt-1 border-t border-border-light/50">
+        <div className="px-5 pb-5 pt-4 border-t border-border-light bg-bg">
           {children}
         </div>
       )}
@@ -165,7 +174,7 @@ function TeamEditorDialog({
             <X className="size-4.5" />
           </Button>
         </div>
-        <div className="flex-1 overflow-y-auto bg-bg p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto bg-bg-secondary p-6">{children}</div>
       </div>
     </div>
   )
@@ -246,16 +255,76 @@ function summarizeDescription(text: string, fallback: string) {
   return firstSentence.length > 140 ? `${firstSentence.slice(0, 137)}...` : firstSentence
 }
 
+function parseDependencyInput(value: string) {
+  const normalizedValues: string[] = []
+  const seen = new Set<string>()
+
+  for (const part of value.split(/[,\n]/)) {
+    const normalized = part.trim()
+    if (!normalized || seen.has(normalized)) continue
+    seen.add(normalized)
+    normalizedValues.push(normalized)
+  }
+
+  return normalizedValues
+}
+
+function formatDependencyInput(values: readonly string[]) {
+  return values.join('\n')
+}
+
+function buildDependencyLabels(app: TeammateDefinition['app']) {
+  return [
+    ...app.requiredMcps.map((dependency) => `MCP: ${dependency}`),
+    ...app.requiredSkills.map((dependency) => `Skill: ${dependency}`),
+    ...(app.optionalMcps?.map((dependency) => `Optional MCP: ${dependency}`) ?? []),
+    ...(app.optionalSkills?.map((dependency) => `Optional Skill: ${dependency}`) ?? []),
+  ]
+}
+
+function buildTeamModelOptions(providerModels: readonly ProviderInfo[]): readonly TeamModelOption[] {
+  const options: TeamModelOption[] = []
+  const seen = new Set<string>()
+
+  for (const provider of providerModels) {
+    for (const model of provider.models) {
+      const normalizedId = model.id.trim()
+      if (!normalizedId || !model.available || seen.has(normalizedId)) continue
+      seen.add(normalizedId)
+      options.push({
+        id: normalizedId,
+        label: `${model.name.trim() || model.modelId} (${provider.displayName})`,
+      })
+    }
+  }
+
+  return options
+}
+
+function toModelSelectValue(modelOverride?: string) {
+  return modelOverride?.trim() ? modelOverride : TEAM_DEFAULT_MODEL_VALUE
+}
+
+function summarizeAgentModel(modelOverride: string | undefined, selectedModel: string) {
+  if (modelOverride?.trim()) {
+    return `Override: ${modelOverride}`
+  }
+  return selectedModel.trim() ? `Team default: ${selectedModel}` : 'Team default: none selected'
+}
+
 export function TeammatesPanel() {
   const navigate = useNavigate()
   const projectPath = usePreferencesStore((state) => state.settings.projectPath)
   const selectedModel = usePreferencesStore((state) => state.settings.selectedModel)
   const thinkingLevel = usePreferencesStore((state) => state.settings.thinkingLevel)
+  const providerModels = useProviderStore((state) => state.providerModels)
   const { activeSession, activeSessionId, createSession } = useChat()
   const showToast = useUIStore((state) => state.showToast)
   const builtInTeammates = useMemo(() => BUILT_IN_TEAMMATES, [])
-  const [drafts, setDrafts] = useState<Record<string, string>>(() =>
-    Object.fromEntries(builtInTeammates.map((teammate) => [teammate.id, ''])),
+  const [builtInTeamDrafts, setBuiltInTeamDrafts] = useState<Record<string, TeamBuilderDraft>>(() =>
+    Object.fromEntries(
+      builtInTeammates.map((teammate) => [teammate.id, createTeamBuilderDraftFromTeammate(teammate)]),
+    ),
   )
   const [customTeam, setCustomTeam] = useState<TeamBuilderDraft>(() => createDefaultTeamBuilderDraft())
   const [agentEditorModes, setAgentEditorModes] = useState<Record<string, AgentEditorMode>>(() =>
@@ -268,9 +337,54 @@ export function TeammatesPanel() {
 
   const activeBuiltInTeammate =
     builtInTeammates.find((teammate) => teammate.id === activeBuiltInEditorId) ?? null
+  const activeBuiltInDraft = activeBuiltInTeammate
+    ? (builtInTeamDrafts[activeBuiltInTeammate.id] ?? createTeamBuilderDraftFromTeammate(activeBuiltInTeammate))
+    : null
+  const customDependencyLabels = useMemo(
+    () =>
+      buildDependencyLabels({
+        requiredMcps: customTeam.requiredMcps,
+        requiredSkills: customTeam.requiredSkills,
+        optionalMcps: customTeam.optionalMcps,
+        optionalSkills: customTeam.optionalSkills,
+      }),
+    [customTeam.optionalMcps, customTeam.optionalSkills, customTeam.requiredMcps, customTeam.requiredSkills],
+  )
+  const teamModelOptions = useMemo(() => buildTeamModelOptions(providerModels), [providerModels])
 
-  function updateDraft(teammateId: string, value: string) {
-    setDrafts((current) => ({ ...current, [teammateId]: value }))
+  function updateBuiltInDraft(teammateId: string, patch: Partial<TeamBuilderDraft>) {
+    setBuiltInTeamDrafts((current) => {
+      const baseTeammate = builtInTeammates.find((teammate) => teammate.id === teammateId)
+      if (!baseTeammate) return current
+
+      return {
+        ...current,
+        [teammateId]: {
+          ...(current[teammateId] ?? createTeamBuilderDraftFromTeammate(baseTeammate)),
+          ...patch,
+        },
+      }
+    })
+  }
+
+  function updateBuiltInAgent(
+    teammateId: string,
+    agentId: string,
+    updater: (agent: TeamAgentDraft) => TeamAgentDraft,
+  ) {
+    setBuiltInTeamDrafts((current) => {
+      const baseTeammate = builtInTeammates.find((teammate) => teammate.id === teammateId)
+      if (!baseTeammate) return current
+
+      const currentDraft = current[teammateId] ?? createTeamBuilderDraftFromTeammate(baseTeammate)
+      return {
+        ...current,
+        [teammateId]: {
+          ...currentDraft,
+          agents: currentDraft.agents.map((agent) => (agent.id === agentId ? updater(agent) : agent)),
+        },
+      }
+    })
   }
 
   function updateCustomTeam(patch: Partial<TeamBuilderDraft>) {
@@ -486,7 +600,24 @@ export function TeammatesPanel() {
   }
 
   async function handleLaunchBuiltIn(teammate: TeammateDefinition) {
-    await launchTeam(teammate, drafts[teammate.id]?.trim() ?? '')
+    const draft = builtInTeamDrafts[teammate.id] ?? createTeamBuilderDraftFromTeammate(teammate)
+    const generatedTeammate = buildTeammateFromDraft(draft)
+
+    await launchTeam(
+      {
+        ...teammate,
+        app: generatedTeammate.app,
+        agents: generatedTeammate.agents,
+        loopPolicy: {
+          ...teammate.loopPolicy,
+          initialAgentId: generatedTeammate.loopPolicy.initialAgentId,
+          decisionMakerAgentId: generatedTeammate.loopPolicy.decisionMakerAgentId,
+          maxDecisionMakerCalls: generatedTeammate.loopPolicy.maxDecisionMakerCalls,
+          maxAutoSubmittedPrompts: generatedTeammate.loopPolicy.maxAutoSubmittedPrompts,
+        },
+      },
+      draft.taskPrompt.trim(),
+    )
   }
 
   async function handleLaunchCustomTeam() {
@@ -556,7 +687,7 @@ export function TeammatesPanel() {
                 'Build your own team with specialists, a decision maker, and auto-generated handoffs.',
               )}
               agentLabels={customTeam.agents.map((agent) => agent.label || agent.id)}
-              dependencyLabels={[]}
+              dependencyLabels={customDependencyLabels}
               onEdit={() => setIsCustomEditorOpen(true)}
             />
           </div>
@@ -578,7 +709,16 @@ export function TeammatesPanel() {
                 role={summarizeRole(teammate.agents.map((agent) => agent.label))}
                 description={summarizeDescription(teammate.description, teammate.loopPolicy.endConditionSummary)}
                 agentLabels={teammate.agents.map((agent) => agent.label)}
-                dependencyLabels={teammate.app.requiredMcps.map((dependency) => `MCP: ${dependency}`)}
+                dependencyLabels={buildDependencyLabels({
+                  requiredMcps:
+                    builtInTeamDrafts[teammate.id]?.requiredMcps ?? teammate.app.requiredMcps,
+                  requiredSkills:
+                    builtInTeamDrafts[teammate.id]?.requiredSkills ?? teammate.app.requiredSkills,
+                  optionalMcps:
+                    builtInTeamDrafts[teammate.id]?.optionalMcps ?? teammate.app.optionalMcps,
+                  optionalSkills:
+                    builtInTeamDrafts[teammate.id]?.optionalSkills ?? teammate.app.optionalSkills,
+                })}
                 onEdit={() => setActiveBuiltInEditorId(teammate.id)}
               />
             ))}
@@ -593,8 +733,8 @@ export function TeammatesPanel() {
           onClose={() => setIsCustomEditorOpen(false)}
         >
           <div className="space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border-light bg-bg-secondary/35 px-4 py-3 mb-2">
-              <div className="text-[12px] leading-5 text-text-tertiary">
+            <div className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-accent/10 bg-accent/5 px-5 py-4 mb-2 shadow-sm">
+              <div className="text-[13px] leading-5 text-text-secondary">
                 Build your team below. Use the AI generator to auto-fill agents from a simple prompt.
               </div>
               <Button variant="secondary" size="sm" leftIcon={<Plus className="size-4" />} onClick={addAgent}>
@@ -607,8 +747,8 @@ export function TeammatesPanel() {
               description="Basic identity and the primary task prompt for this team."
               defaultExpanded={true}
             >
-              <div className="grid gap-4 lg:grid-cols-2 mt-4">
-                <label className="space-y-2">
+              <div className="flex flex-col gap-4 mt-4">
+                <label className="space-y-1.5">
                   <FieldLabel htmlFor="custom-team-name">Team name</FieldLabel>
                   <TextInput
                     id="custom-team-name"
@@ -617,26 +757,106 @@ export function TeammatesPanel() {
                   />
                 </label>
 
-                <label className="space-y-2 lg:col-span-2">
+                <label className="space-y-1.5">
                   <FieldLabel htmlFor="custom-team-description">Description</FieldLabel>
                   <Textarea
                     id="custom-team-description"
                     value={customTeam.description}
                     onChange={(event) => updateCustomTeam({ description: event.currentTarget.value })}
-                    className="min-h-[88px]"
+                    className="min-h-[60px]"
                   />
                 </label>
 
-                <label className="space-y-2 lg:col-span-2">
+                <label className="space-y-1.5">
                   <FieldLabel htmlFor="custom-team-task-prompt">Team task prompt</FieldLabel>
                   <Textarea
                     id="custom-team-task-prompt"
                     value={customTeam.taskPrompt}
                     onChange={(event) => updateCustomTeam({ taskPrompt: event.currentTarget.value })}
                     placeholder={customTeam.launchPromptPlaceholder}
-                    className="min-h-[120px]"
+                    className="min-h-[80px]"
                   />
                 </label>
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Dependencies"
+              description="Allow MCPs and skills for this custom team. Use commas or new lines between entries."
+            >
+              <div className="flex flex-col gap-4 mt-4">
+                <label className="space-y-1.5">
+                  <FieldLabel htmlFor="custom-team-required-mcps">Required MCPs</FieldLabel>
+                  <Textarea
+                    id="custom-team-required-mcps"
+                    value={formatDependencyInput(customTeam.requiredMcps)}
+                    onChange={(event) =>
+                      updateCustomTeam({ requiredMcps: parseDependencyInput(event.currentTarget.value) })
+                    }
+                    placeholder="playwright, database"
+                    resize="none"
+                    className="min-h-[60px]"
+                  />
+                  <SectionHint>Required MCPs gate launch readiness for this team.</SectionHint>
+                </label>
+
+                <label className="space-y-1.5">
+                  <FieldLabel htmlFor="custom-team-optional-mcps">Optional MCPs</FieldLabel>
+                  <Textarea
+                    id="custom-team-optional-mcps"
+                    value={formatDependencyInput(customTeam.optionalMcps)}
+                    onChange={(event) =>
+                      updateCustomTeam({ optionalMcps: parseDependencyInput(event.currentTarget.value) })
+                    }
+                    placeholder="figma, http"
+                    resize="none"
+                    className="min-h-[60px]"
+                  />
+                  <SectionHint>Optional MCPs broaden coverage without blocking narrower tasks.</SectionHint>
+                </label>
+
+                <label className="space-y-1.5">
+                  <FieldLabel htmlFor="custom-team-required-skills">Required skills</FieldLabel>
+                  <Textarea
+                    id="custom-team-required-skills"
+                    value={formatDependencyInput(customTeam.requiredSkills)}
+                    onChange={(event) =>
+                      updateCustomTeam({ requiredSkills: parseDependencyInput(event.currentTarget.value) })
+                    }
+                    placeholder="frontend-implementer"
+                    resize="none"
+                    className="min-h-[60px]"
+                  />
+                  <SectionHint>Required skills should be present whenever this team launches.</SectionHint>
+                </label>
+
+                <label className="space-y-1.5">
+                  <FieldLabel htmlFor="custom-team-optional-skills">Optional skills</FieldLabel>
+                  <Textarea
+                    id="custom-team-optional-skills"
+                    value={formatDependencyInput(customTeam.optionalSkills)}
+                    onChange={(event) =>
+                      updateCustomTeam({ optionalSkills: parseDependencyInput(event.currentTarget.value) })
+                    }
+                    placeholder="ui-ux-pro-max"
+                    resize="none"
+                    className="min-h-[60px]"
+                  />
+                  <SectionHint>Optional skills help specialists go deeper when those tools are available.</SectionHint>
+                </label>
+
+                <div className="space-y-1.5 rounded-xl border border-border-light bg-bg-secondary px-4 py-3">
+                  <FieldLabel>Dependency summary</FieldLabel>
+                  {customDependencyLabels.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {customDependencyLabels.map((label) => (
+                        <DependencyPill key={label} label={label} />
+                      ))}
+                    </div>
+                  ) : (
+                    <SectionHint>No MCPs or skills added yet.</SectionHint>
+                  )}
+                </div>
               </div>
             </CollapsibleSection>
 
@@ -644,8 +864,8 @@ export function TeammatesPanel() {
               title="Loop Policy & UI" 
               description="Advanced routing constraints and interface labels."
             >
-              <div className="grid gap-4 lg:grid-cols-2 mt-4">
-                <label className="space-y-2">
+              <div className="flex flex-col gap-4 mt-4">
+                <label className="space-y-1.5">
                   <FieldLabel htmlFor="custom-team-button-label">Launch button label</FieldLabel>
                   <TextInput
                     id="custom-team-button-label"
@@ -654,7 +874,7 @@ export function TeammatesPanel() {
                   />
                 </label>
 
-                <label className="space-y-2">
+                <label className="space-y-1.5">
                   <FieldLabel htmlFor="custom-team-placeholder">Launch prompt placeholder</FieldLabel>
                   <TextInput
                     id="custom-team-placeholder"
@@ -663,7 +883,7 @@ export function TeammatesPanel() {
                   />
                 </label>
 
-                <label className="space-y-2">
+                <label className="space-y-1.5">
                   <FieldLabel htmlFor="custom-team-initial-agent">Initial agent</FieldLabel>
                   <Select
                     id="custom-team-initial-agent"
@@ -679,7 +899,7 @@ export function TeammatesPanel() {
                   </Select>
                 </label>
 
-                <label className="space-y-2">
+                <label className="space-y-1.5">
                   <FieldLabel htmlFor="custom-team-decision-maker">Decision maker</FieldLabel>
                   <Select
                     id="custom-team-decision-maker"
@@ -696,7 +916,7 @@ export function TeammatesPanel() {
                   </Select>
                 </label>
 
-                <label className="space-y-2">
+                <label className="space-y-1.5">
                   <FieldLabel htmlFor="custom-team-max-decision-maker-calls">Max decision-maker calls</FieldLabel>
                   <TextInput
                     id="custom-team-max-decision-maker-calls"
@@ -711,7 +931,7 @@ export function TeammatesPanel() {
                   />
                 </label>
 
-                <label className="space-y-2">
+                <label className="space-y-1.5">
                   <FieldLabel htmlFor="custom-team-max-auto-prompts">Max auto prompts</FieldLabel>
                   <TextInput
                     id="custom-team-max-auto-prompts"
@@ -802,8 +1022,50 @@ export function TeammatesPanel() {
                         </div>
                       ) : null}
 
-                      <div className="grid gap-5 lg:grid-cols-2">
-                        <label className="space-y-2">
+                      <div className="flex flex-col gap-5">
+                        <div className="space-y-3 rounded-xl border border-border-light bg-bg-secondary px-5 py-4 shadow-sm">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="text-[13px] font-semibold text-text-primary">Agent model</div>
+                              <div className="mt-1 text-[12px] text-text-tertiary">
+                                {summarizeAgentModel(agent.modelOverride, selectedModel)}
+                              </div>
+                            </div>
+                            <AgentPill label={agent.modelOverride ? 'Override' : 'Team Default'} />
+                          </div>
+                          <label className="space-y-1.5 block">
+                            <FieldLabel htmlFor={`agent-model-${agent.id}`}>Choose model</FieldLabel>
+                            <Select
+                              id={`agent-model-${agent.id}`}
+                              value={toModelSelectValue(agent.modelOverride)}
+                              onChange={(event) => {
+                                const value = event.currentTarget.value
+                                updateAgent(agent.id, (current) => ({
+                                  ...current,
+                                  modelOverride:
+                                    value === TEAM_DEFAULT_MODEL_VALUE
+                                      ? undefined
+                                      : SupportedModelId(value),
+                                }))
+                              }}
+                              selectSize="md"
+                            >
+                              <option value={TEAM_DEFAULT_MODEL_VALUE}>
+                                Use team default model ({selectedModel || 'none selected'})
+                              </option>
+                              {teamModelOptions.map((option) => (
+                                <option key={option.id} value={option.id}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </Select>
+                            <SectionHint>
+                              Set a specific model for this agent, or leave it on the team default.
+                            </SectionHint>
+                          </label>
+                        </div>
+
+                        <label className="space-y-1.5">
                           <FieldLabel htmlFor={`agent-name-${agent.id}`}>Agent name</FieldLabel>
                           <TextInput
                             id={`agent-name-${agent.id}`}
@@ -818,9 +1080,9 @@ export function TeammatesPanel() {
                           />
                         </label>
 
-                        <div className="space-y-2 flex items-center justify-between lg:col-span-1 rounded-xl border border-border-light bg-bg px-4 py-2.5">
+                        <div className="space-y-1.5 flex items-center justify-between rounded-xl border border-border-light bg-bg-secondary px-5 py-3 shadow-sm">
                           <div>
-                            <span className="block text-[13px] font-medium text-text-primary">Decision Maker</span>
+                            <span className="block text-[13px] font-semibold text-text-primary">Decision Maker</span>
                             <span className="block text-[11px] text-text-tertiary">Can end the loop</span>
                           </div>
                           <ToggleSwitch 
@@ -831,7 +1093,7 @@ export function TeammatesPanel() {
                         </div>
 
                         {!agent.isDecisionMaker && (
-                          <label className="space-y-2 lg:col-span-2">
+                          <label className="space-y-1.5">
                             <FieldLabel htmlFor={`agent-kind-${agent.id}`}>Agent type</FieldLabel>
                             <div className="flex gap-2">
                               {TEAM_AGENT_KIND_OPTIONS.filter(o => o.value !== 'decision-maker').map((option) => (
@@ -851,7 +1113,7 @@ export function TeammatesPanel() {
                           </label>
                         )}
 
-                        <label className="space-y-2 lg:col-span-2">
+                        <label className="space-y-1.5">
                           <FieldLabel htmlFor={`agent-role-${agent.id}`}>Role description</FieldLabel>
                           <Textarea
                             id={`agent-role-${agent.id}`}
@@ -863,7 +1125,7 @@ export function TeammatesPanel() {
                                 roleDescription: value,
                               }))
                             }}
-                            className="min-h-[80px]"
+                            className="min-h-[60px]"
                           />
                         </label>
 
@@ -871,8 +1133,8 @@ export function TeammatesPanel() {
                           title="Advanced Configuration" 
                           description="Run constraints, routing, and prompt behavior."
                         >
-                          <div className="grid gap-5 lg:grid-cols-2 mt-4">
-                            <label className="space-y-2 lg:col-span-2">
+                          <div className="flex flex-col gap-4 mt-4">
+                            <label className="space-y-1.5">
                               <FieldLabel htmlFor={`agent-why-${agent.id}`}>Why to run</FieldLabel>
                               <Textarea
                                 id={`agent-why-${agent.id}`}
@@ -884,11 +1146,11 @@ export function TeammatesPanel() {
                                     whyToRun: value,
                                   }))
                                 }}
-                                className="min-h-[60px]"
+                                className="min-h-[50px]"
                               />
                             </label>
 
-                            <div className="space-y-2 lg:col-span-2">
+                            <div className="space-y-1.5">
                               <FieldLabel>Run when</FieldLabel>
                               <div className="flex flex-wrap gap-2">
                                 {TEAM_RUN_WHEN_OPTIONS.map((option) => {
@@ -910,7 +1172,7 @@ export function TeammatesPanel() {
                               </div>
                             </div>
 
-                            <label className="space-y-2">
+                            <label className="space-y-1.5">
                               <FieldLabel htmlFor={`agent-min-runs-${agent.id}`}>Minimum runs</FieldLabel>
                               <TextInput
                                 id={`agent-min-runs-${agent.id}`}
@@ -928,7 +1190,7 @@ export function TeammatesPanel() {
                               />
                             </label>
 
-                            <label className="space-y-2">
+                            <label className="space-y-1.5">
                               <FieldLabel htmlFor={`agent-max-runs-${agent.id}`}>Maximum runs</FieldLabel>
                               <TextInput
                                 id={`agent-max-runs-${agent.id}`}
@@ -946,7 +1208,7 @@ export function TeammatesPanel() {
                               />
                             </label>
 
-                            <label className="space-y-2 lg:col-span-2">
+                            <label className="space-y-1.5">
                               <FieldLabel htmlFor={`agent-prompt-mode-${agent.id}`}>Next prompt content</FieldLabel>
                               <div className="flex gap-2 p-1 bg-bg-secondary rounded-lg border border-border-light inline-flex">
                                 {TEAM_PROMPT_MODE_OPTIONS.map((option) => (
@@ -955,7 +1217,7 @@ export function TeammatesPanel() {
                                     onClick={() => updateAgent(agent.id, (current) => ({ ...current, createPrompt: option.value as TeamAgentDraft['createPrompt'] }))}
                                     className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
                                       agent.createPrompt === option.value 
-                                        ? 'bg-bg border border-border text-text-primary shadow-sm' 
+                                        ? 'bg-bg-elevated border border-border text-text-primary shadow-sm' 
                                         : 'bg-transparent border border-transparent text-text-secondary hover:text-text-primary'
                                     }`}
                                   >
@@ -965,7 +1227,7 @@ export function TeammatesPanel() {
                               </div>
                             </label>
 
-                            <label className="space-y-2 lg:col-span-2">
+                            <label className="space-y-1.5">
                               <FieldLabel htmlFor={`agent-next-${agent.id}`}>Suggested next agent on success</FieldLabel>
                               <Select
                                 id={`agent-next-${agent.id}`}
@@ -1021,20 +1283,25 @@ export function TeammatesPanel() {
       {activeBuiltInTeammate ? (
         <TeamEditorDialog
           title={activeBuiltInTeammate.name}
-          description="Review the team card in full: who the agents are, what the loop policy says, then write the task prompt and launch it."
+          description="Edit the built-in team for this launch: adjust MCPs, skills, and agent prompts, then write the task prompt and launch it."
           onClose={() => setActiveBuiltInEditorId(null)}
         >
           <div className="space-y-6">
             <div className="flex flex-wrap gap-2">
-              {activeBuiltInTeammate.agents.map((agent) => (
+              {activeBuiltInDraft?.agents.map((agent) => (
                 <AgentPill key={agent.id} label={agent.label} />
               ))}
-              {activeBuiltInTeammate.app.requiredMcps.map((dependency) => (
-                <DependencyPill key={dependency} label={`MCP: ${dependency}`} />
+              {buildDependencyLabels({
+                requiredMcps: activeBuiltInDraft?.requiredMcps ?? activeBuiltInTeammate.app.requiredMcps,
+                requiredSkills: activeBuiltInDraft?.requiredSkills ?? activeBuiltInTeammate.app.requiredSkills,
+                optionalMcps: activeBuiltInDraft?.optionalMcps ?? activeBuiltInTeammate.app.optionalMcps,
+                optionalSkills: activeBuiltInDraft?.optionalSkills ?? activeBuiltInTeammate.app.optionalSkills,
+              }).map((dependency) => (
+                <DependencyPill key={dependency} label={dependency} />
               ))}
             </div>
 
-            <div className="rounded-xl border border-border/60 bg-bg-secondary/35 px-4 py-4">
+            <div className="rounded-xl border border-border-light bg-bg-tertiary px-5 py-4 shadow-sm">
               <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-text-tertiary">
                 <Sparkles className="size-3.5" />
                 Loop policy
@@ -1046,26 +1313,168 @@ export function TeammatesPanel() {
               </p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              {activeBuiltInTeammate.agents.map((agent) => (
-                <div key={agent.id} className="rounded-xl border border-border/60 bg-bg px-4 py-4">
-                  <div className="text-[14px] font-semibold text-text-primary">{agent.label}</div>
-                  <div className="mt-2 text-[12px] uppercase tracking-[0.16em] text-text-tertiary">
-                    {agent.kind}
+            <CollapsibleSection
+              title="Dependencies"
+              description="Add, remove, or adjust MCPs and skills for this built-in team. Changes apply to this launch configuration."
+              defaultExpanded={true}
+            >
+              <div className="flex flex-col gap-4 mt-4">
+                <label className="space-y-1.5">
+                  <FieldLabel htmlFor="built-in-required-mcps">Required MCPs</FieldLabel>
+                  <Textarea
+                    id="built-in-required-mcps"
+                    value={formatDependencyInput(activeBuiltInDraft?.requiredMcps ?? [])}
+                    onChange={(event) =>
+                      updateBuiltInDraft(activeBuiltInTeammate.id, {
+                        requiredMcps: parseDependencyInput(event.currentTarget.value),
+                      })
+                    }
+                    placeholder="playwright, database"
+                    resize="none"
+                    className="min-h-[60px]"
+                  />
+                </label>
+
+                <label className="space-y-1.5">
+                  <FieldLabel htmlFor="built-in-optional-mcps">Optional MCPs</FieldLabel>
+                  <Textarea
+                    id="built-in-optional-mcps"
+                    value={formatDependencyInput(activeBuiltInDraft?.optionalMcps ?? [])}
+                    onChange={(event) =>
+                      updateBuiltInDraft(activeBuiltInTeammate.id, {
+                        optionalMcps: parseDependencyInput(event.currentTarget.value),
+                      })
+                    }
+                    placeholder="figma, http"
+                    resize="none"
+                    className="min-h-[60px]"
+                  />
+                </label>
+
+                <label className="space-y-1.5">
+                  <FieldLabel htmlFor="built-in-required-skills">Required skills</FieldLabel>
+                  <Textarea
+                    id="built-in-required-skills"
+                    value={formatDependencyInput(activeBuiltInDraft?.requiredSkills ?? [])}
+                    onChange={(event) =>
+                      updateBuiltInDraft(activeBuiltInTeammate.id, {
+                        requiredSkills: parseDependencyInput(event.currentTarget.value),
+                      })
+                    }
+                    placeholder="frontend-implementer"
+                    resize="none"
+                    className="min-h-[60px]"
+                  />
+                </label>
+
+                <label className="space-y-1.5">
+                  <FieldLabel htmlFor="built-in-optional-skills">Optional skills</FieldLabel>
+                  <Textarea
+                    id="built-in-optional-skills"
+                    value={formatDependencyInput(activeBuiltInDraft?.optionalSkills ?? [])}
+                    onChange={(event) =>
+                      updateBuiltInDraft(activeBuiltInTeammate.id, {
+                        optionalSkills: parseDependencyInput(event.currentTarget.value),
+                      })
+                    }
+                    placeholder="ui-ux-pro-max"
+                    resize="none"
+                    className="min-h-[60px]"
+                  />
+                </label>
+              </div>
+            </CollapsibleSection>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h3 className="text-[15px] font-semibold text-text-primary">Agent prompts and models</h3>
+                <SectionHint>Update each built-in agent prompt and model override before launch if this run needs different instructions.</SectionHint>
+              </div>
+              <div className="flex flex-col gap-4">
+                {activeBuiltInDraft?.agents.map((agent) => (
+                  <div key={agent.id} className="rounded-xl border border-border-light bg-bg px-5 py-5 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[14px] font-semibold text-text-primary">{agent.label}</div>
+                        <div className="mt-2 text-[12px] uppercase tracking-[0.16em] text-text-tertiary">
+                          {agent.kind}
+                        </div>
+                      </div>
+                      {agent.isDecisionMaker ? <AgentPill label="Decision Maker" /> : null}
+                    </div>
+                    {agent.whyToRun ? (
+                      <p className="mt-3 text-[12px] leading-6 text-text-tertiary">{agent.whyToRun}</p>
+                    ) : null}
+                    <div className="mt-4 space-y-3 rounded-xl border border-border-light bg-bg-secondary px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-[13px] font-semibold text-text-primary">Agent model</div>
+                          <div className="mt-1 text-[12px] text-text-tertiary">
+                            {summarizeAgentModel(agent.modelOverride, selectedModel)}
+                          </div>
+                        </div>
+                        <AgentPill label={agent.modelOverride ? 'Override' : 'Team Default'} />
+                      </div>
+                      <label className="block space-y-1.5">
+                        <FieldLabel htmlFor={`built-in-agent-model-${agent.id}`}>Choose model</FieldLabel>
+                        <Select
+                          id={`built-in-agent-model-${agent.id}`}
+                          value={toModelSelectValue(agent.modelOverride)}
+                          onChange={(event) => {
+                            const value = event.currentTarget.value
+                            updateBuiltInAgent(activeBuiltInTeammate.id, agent.id, (current) => ({
+                              ...current,
+                              modelOverride:
+                                value === TEAM_DEFAULT_MODEL_VALUE
+                                  ? undefined
+                                  : SupportedModelId(value),
+                            }))
+                          }}
+                          selectSize="md"
+                        >
+                          <option value={TEAM_DEFAULT_MODEL_VALUE}>
+                            Use team default model ({selectedModel || 'none selected'})
+                          </option>
+                          {teamModelOptions.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </Select>
+                      </label>
+                    </div>
+                    <label className="mt-4 block space-y-1.5">
+                      <FieldLabel htmlFor={`built-in-agent-prompt-${agent.id}`}>Agent prompt</FieldLabel>
+                      <Textarea
+                        id={`built-in-agent-prompt-${agent.id}`}
+                        value={agent.roleDescription}
+                        onChange={(event) => {
+                          const value = event.currentTarget.value
+                          updateBuiltInAgent(activeBuiltInTeammate.id, agent.id, (current) => ({
+                            ...current,
+                            roleDescription: value,
+                          }))
+                        }}
+                        className="min-h-[80px]"
+                      />
+                    </label>
                   </div>
-                  <p className="mt-3 text-[13px] leading-6 text-text-secondary">{agent.roleDescription}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
-            <label className="block space-y-2">
+            <label className="block space-y-1.5">
               <FieldLabel htmlFor="built-in-task-prompt">Task prompt</FieldLabel>
               <Textarea
                 id="built-in-task-prompt"
-                value={drafts[activeBuiltInTeammate.id] ?? ''}
-                onChange={(event) => updateDraft(activeBuiltInTeammate.id, event.currentTarget.value)}
-                placeholder={activeBuiltInTeammate.launchPromptPlaceholder}
-                className="min-h-[132px]"
+                value={activeBuiltInDraft?.taskPrompt ?? ''}
+                onChange={(event) =>
+                  updateBuiltInDraft(activeBuiltInTeammate.id, { taskPrompt: event.currentTarget.value })
+                }
+                placeholder={
+                  activeBuiltInDraft?.launchPromptPlaceholder ?? activeBuiltInTeammate.launchPromptPlaceholder
+                }
+                className="min-h-[80px]"
               />
             </label>
 

@@ -23,6 +23,10 @@ interface ExecuteTeamRunInput {
   readonly onTitleAssigned?: (title: string) => void
 }
 
+function resolveAgentModel(agent: TeammateAgentDefinition, fallbackModel: SupportedModelId) {
+  return agent.modelOverride ?? fallbackModel
+}
+
 export type TeamRunResult =
   | { readonly outcome: 'success' }
   | { readonly outcome: 'aborted' }
@@ -111,11 +115,12 @@ export function executeTeamRun(input: ExecuteTeamRunInput) {
 
     while (!input.signal.aborted) {
       const subRunId = `${input.runId}-${currentAgent.id}-${randomUUID()}`
+      const currentAgentModel = resolveAgentModel(currentAgent, input.model)
       const result = yield* executeAgentRun({
         sessionId: input.sessionId,
         runId: subRunId,
         payload: currentPayload,
-        model: input.model,
+        model: currentAgentModel,
         signal: input.signal,
         onEvent: input.onEvent,
         onTitleAssigned: input.onTitleAssigned,
