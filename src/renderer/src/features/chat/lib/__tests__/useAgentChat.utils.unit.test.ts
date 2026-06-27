@@ -167,6 +167,228 @@ describe('mergeBackgroundReconnectMessages', () => {
       ),
     ).toEqual([userMessage('persisted-user-1', 'Create landing page'), reconnectAssistant])
   })
+
+  it('does not keep a duplicate assistant turn when only the live thinking step id differs', () => {
+    const reconnectAssistant = assistantMessage('assistant-persisted-1', [
+      { type: 'thinking', content: 'Planning the answer.' },
+      { type: 'text', content: 'Implemented the landing page.' },
+    ])
+    const cachedAssistantDuplicate = assistantMessage('assistant-live-1', [
+      {
+        type: 'thinking',
+        content: 'Planning the answer.',
+        stepId: 'assistant-live-1:thinking:0',
+      },
+      { type: 'text', content: 'Implemented the landing page.' },
+    ])
+
+    expect(
+      mergeBackgroundReconnectMessages(
+        [userMessage('persisted-user-1', 'Create landing page'), reconnectAssistant],
+        [userMessage('persisted-user-1', 'Create landing page'), cachedAssistantDuplicate],
+      ),
+    ).toEqual([userMessage('persisted-user-1', 'Create landing page'), reconnectAssistant])
+  })
+
+  it('drops stale merged tool turns appended after the final summary when reconnect returns split persisted rows', () => {
+    const reconnectFirstToolCallAssistant = assistantMessage('assistant-persisted-1', [
+      { type: 'thinking', content: 'Inspecting the page.' },
+      {
+        type: 'tool-call',
+        id: 'tool-1',
+        name: 'playwright_browser_snapshot',
+        arguments: '{"selector":"body"}',
+        state: 'input-complete',
+      },
+    ])
+    const reconnectFirstToolResultAssistant = assistantMessage('assistant-persisted-2', [
+      {
+        type: 'tool-result',
+        toolCallId: 'tool-1',
+        state: 'complete',
+        content: '{"html":"<body>...</body>"}',
+      },
+    ])
+    const reconnectSecondToolCallAssistant = assistantMessage('assistant-persisted-3', [
+      { type: 'thinking', content: 'Checking the CTA.' },
+      {
+        type: 'tool-call',
+        id: 'tool-2',
+        name: 'playwright_browser_evaluate',
+        arguments: '{"script":"cta"}',
+        state: 'input-complete',
+      },
+    ])
+    const reconnectSecondToolResultAssistant = assistantMessage('assistant-persisted-4', [
+      {
+        type: 'tool-result',
+        toolCallId: 'tool-2',
+        state: 'complete',
+        content: '{"cta":"Start now"}',
+      },
+    ])
+    const reconnectSummaryAssistant = assistantMessage('assistant-persisted-5', [
+      { type: 'thinking', content: 'Writing the final summary.' },
+      { type: 'text', content: 'The page headline and CTA are visible.' },
+    ])
+    const staleMergedFirstToolTurn = assistantMessage('assistant-runtime-uuid-1', [
+      { type: 'thinking', content: 'Inspecting the page.' },
+      {
+        type: 'tool-call',
+        id: 'tool-1',
+        name: 'playwright_browser_snapshot',
+        arguments: '{"selector":"body"}',
+        state: 'output-available',
+      },
+      {
+        type: 'tool-result',
+        toolCallId: 'tool-1',
+        state: 'output-available',
+        content: '{"html":"<body>...</body>"}',
+      },
+    ])
+    const staleMergedSecondToolTurn = assistantMessage('assistant-runtime-uuid-2', [
+      { type: 'thinking', content: 'Checking the CTA.' },
+      {
+        type: 'tool-call',
+        id: 'tool-2',
+        name: 'playwright_browser_evaluate',
+        arguments: '{"script":"cta"}',
+        state: 'output-available',
+      },
+      {
+        type: 'tool-result',
+        toolCallId: 'tool-2',
+        state: 'output-available',
+        content: '{"cta":"Start now"}',
+      },
+    ])
+
+    const mergedMessages = mergeBackgroundReconnectMessages(
+      [
+        userMessage('persisted-user-1', 'Check the page'),
+        reconnectFirstToolCallAssistant,
+        reconnectFirstToolResultAssistant,
+        reconnectSecondToolCallAssistant,
+        reconnectSecondToolResultAssistant,
+        reconnectSummaryAssistant,
+      ],
+      [
+        userMessage('persisted-user-1', 'Check the page'),
+        reconnectFirstToolCallAssistant,
+        reconnectFirstToolResultAssistant,
+        reconnectSecondToolCallAssistant,
+        reconnectSecondToolResultAssistant,
+        reconnectSummaryAssistant,
+        staleMergedFirstToolTurn,
+        staleMergedSecondToolTurn,
+      ],
+    )
+
+    expect(mergedMessages.map((message) => message.id)).toEqual([
+      'persisted-user-1',
+      'assistant-persisted-1',
+      'assistant-persisted-2',
+      'assistant-persisted-3',
+      'assistant-persisted-4',
+      'assistant-persisted-5',
+    ])
+  })
+
+  it('drops a stale merged tool turn containing multiple tool calls and results appended after the summary', () => {
+    const reconnectToolCallsAssistant = assistantMessage('assistant-persisted-1', [
+      { type: 'thinking', content: 'Calling two tools.' },
+      {
+        type: 'tool-call',
+        id: 'tool-1',
+        name: 'playwright_browser_snapshot',
+        arguments: '{"selector":"body"}',
+        state: 'input-complete',
+      },
+      {
+        type: 'tool-call',
+        id: 'tool-2',
+        name: 'playwright_browser_evaluate',
+        arguments: '{"script":"cta"}',
+        state: 'input-complete',
+      },
+    ])
+    const reconnectFirstToolResultAssistant = assistantMessage('assistant-persisted-2', [
+      {
+        type: 'tool-result',
+        toolCallId: 'tool-1',
+        state: 'complete',
+        content: '{"html":"<body>...</body>"}',
+      },
+    ])
+    const reconnectSecondToolResultAssistant = assistantMessage('assistant-persisted-3', [
+      {
+        type: 'tool-result',
+        toolCallId: 'tool-2',
+        state: 'complete',
+        content: '{"cta":"Start now"}',
+      },
+    ])
+    const reconnectSummaryAssistant = assistantMessage('assistant-persisted-4', [
+      { type: 'thinking', content: 'Writing the final summary.' },
+      { type: 'text', content: 'Both tools executed.' },
+    ])
+    const staleMergedMultiToolTurn = assistantMessage('assistant-runtime-uuid-1', [
+      { type: 'thinking', content: 'Calling two tools.' },
+      {
+        type: 'tool-call',
+        id: 'tool-2',
+        name: 'playwright_browser_evaluate',
+        arguments: '{"script":"cta"}',
+        state: 'output-available',
+      },
+      {
+        type: 'tool-call',
+        id: 'tool-1',
+        name: 'playwright_browser_snapshot',
+        arguments: '{"selector":"body"}',
+        state: 'output-available',
+      },
+      {
+        type: 'tool-result',
+        toolCallId: 'tool-2',
+        state: 'output-available',
+        content: '{"cta":"Start now"}',
+      },
+      {
+        type: 'tool-result',
+        toolCallId: 'tool-1',
+        state: 'output-available',
+        content: '{"html":"<body>...</body>"}',
+      },
+    ])
+
+    const mergedMessages = mergeBackgroundReconnectMessages(
+      [
+        userMessage('persisted-user-1', 'Check the page'),
+        reconnectToolCallsAssistant,
+        reconnectFirstToolResultAssistant,
+        reconnectSecondToolResultAssistant,
+        reconnectSummaryAssistant,
+      ],
+      [
+        userMessage('persisted-user-1', 'Check the page'),
+        reconnectToolCallsAssistant,
+        reconnectFirstToolResultAssistant,
+        reconnectSecondToolResultAssistant,
+        reconnectSummaryAssistant,
+        staleMergedMultiToolTurn,
+      ],
+    )
+
+    expect(mergedMessages.map((message) => message.id)).toEqual([
+      'persisted-user-1',
+      'assistant-persisted-1',
+      'assistant-persisted-2',
+      'assistant-persisted-3',
+      'assistant-persisted-4',
+    ])
+  })
 })
 
 describe('sessionToUIMessages', () => {

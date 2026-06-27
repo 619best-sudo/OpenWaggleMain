@@ -17,6 +17,16 @@ function normalizeComparableText(text: string) {
   return text.replace(/\s+/g, ' ').trim()
 }
 
+function normalizeComparableToolState(state?: string) {
+  return match(state)
+    .with('complete', 'output-available', () => 'terminal')
+    .with('error', () => 'error')
+    .with('executing', () => 'executing')
+    .with('input-complete', () => 'input-complete')
+    .with('input-streaming', () => 'input-streaming')
+    .otherwise((value) => value ?? '')
+}
+
 function getComparableAssistantSignature(message: UIMessage) {
   if (!isAssistantMessage(message)) {
     return null
@@ -26,19 +36,16 @@ function getComparableAssistantSignature(message: UIMessage) {
     .map((part) =>
       matchBy(part, 'type')
         .with('text', (value) => `text:${normalizeComparableText(value.content)}`)
-        .with(
-          'thinking',
-          (value) =>
-            `thinking:${value.stepId ?? ''}:${normalizeComparableText(value.content)}`,
-        )
+        // `stepId` is renderer-local streaming identity and is absent from persisted snapshots.
+        .with('thinking', (value) => `thinking:${normalizeComparableText(value.content)}`)
         .with(
           'tool-call',
-          (value) =>
-            `tool-call:${value.id}:${value.name}:${value.arguments}:${value.state ?? ''}`,
+          (value) => `tool-call:${value.id}:${value.name}:${value.arguments}`,
         )
         .with(
           'tool-result',
-          (value) => `tool-result:${value.toolCallId}:${value.state}:${value.content}`,
+          (value) =>
+            `tool-result:${value.toolCallId}:${normalizeComparableToolState(value.state)}:${value.content}`,
         )
         .with('image', (value) => `image:${value.source.value}`)
         .with('audio', (value) => `audio:${value.source.value}`)
@@ -46,6 +53,7 @@ function getComparableAssistantSignature(message: UIMessage) {
         .with('document', (value) => `document:${value.source.value}`)
         .exhaustive(),
     )
+    .sort()
     .join('\n')
 
   return signature.length > 0 ? signature : null
@@ -63,11 +71,23 @@ function countAssistantMessagesBySignature(messages: readonly UIMessage[]) {
   return countsBySignature
 }
 
-function consumeAssistantMessageSignatureCount(
+function countAssistantChainsBySignature(messages: readonly UIMessage[]) {
+  const countsBySignature = new Map<string, number>()
+  for (let index = 0; index < messages.length; index += 1) {
+    const chain = getAssistantChainSignature(messages, index)
+    if (!chain?.signature) {
+      continue
+    }
+    countsBySignature.set(chain.signature, (countsBySignature.get(chain.signature) ?? 0) + 1)
+    index += chain.messageCount - 1
+  }
+  return countsBySignature
+}
+
+function consumeAssistantSignatureCount(
   countsBySignature: Map<string, number>,
-  message: UIMessage,
+  signature: string | null,
 ) {
-  const signature = getComparableAssistantSignature(message)
   if (!signature) {
     return false
   }
@@ -78,6 +98,16 @@ function consumeAssistantMessageSignatureCount(
   }
   countsBySignature.set(signature, count - 1)
   return true
+}
+
+function consumeAssistantMessageSignatureCount(
+  countsBySignature: Map<string, number>,
+  message: UIMessage,
+) {
+  return consumeAssistantSignatureCount(
+    countsBySignature,
+    getComparableAssistantSignature(message),
+  )
 }
 
 function mergeTextContent(snapshotContent: string, currentContent: string) {
@@ -208,6 +238,86 @@ function mergeAssistantParts(
   return mergedParts
 }
 
+function collectToolCallIds(parts: readonly UIMessagePart[]) {
+  const toolCallIds = new Set<string>()
+  for (const part of parts) {
+    if (part.type === 'tool-call') {
+      toolCallIds.add(part.id)
+    }
+  }
+  return toolCallIds
+}
+
+function isContinuationPartForToolCalls(part: UIMessagePart, activeToolCallIds: ReadonlySet<string>) {
+  return matchBy(part, 'type')
+    .with('text', 'thinking', () => true)
+    .with('tool-call', (value) => activeToolCallIds.has(value.id))
+    .with('tool-result', (value) => activeToolCallIds.has(value.toolCallId))
+    .otherwise(() => false)
+}
+
+function isAssistantContinuationMessage(
+  message: UIMessage,
+  activeToolCallIds: ReadonlySet<string>,
+) {
+  if (!isAssistantMessage(message) || activeToolCallIds.size === 0) {
+    return false
+  }
+
+  let matchedActiveTool = false
+  for (const part of message.parts) {
+    const isToolLinked =
+      (part.type === 'tool-call' && activeToolCallIds.has(part.id)) ||
+      (part.type === 'tool-result' && activeToolCallIds.has(part.toolCallId))
+    if (isToolLinked) {
+      matchedActiveTool = true
+    }
+    if (!isContinuationPartForToolCalls(part, activeToolCallIds)) {
+      return false
+    }
+  }
+
+  return matchedActiveTool
+}
+
+function getAssistantChainSignature(
+  messages: readonly UIMessage[],
+  startIndex: number,
+): { signature: string | null; messageCount: number } | null {
+  const startMessage = messages[startIndex]
+  if (!startMessage || !isAssistantMessage(startMessage)) {
+    return null
+  }
+
+  let mergedParts = [...startMessage.parts]
+  const activeToolCallIds = collectToolCallIds(mergedParts)
+  if (activeToolCallIds.size === 0) {
+    return null
+  }
+
+  let messageCount = 1
+  for (let index = startIndex + 1; index < messages.length; index += 1) {
+    const candidate = messages[index]
+    if (!candidate || !isAssistantContinuationMessage(candidate, activeToolCallIds)) {
+      break
+    }
+    mergedParts = mergeAssistantParts(mergedParts, candidate.parts)
+    for (const toolCallId of collectToolCallIds(candidate.parts)) {
+      activeToolCallIds.add(toolCallId)
+    }
+    messageCount += 1
+  }
+
+  if (messageCount === 1) {
+    return null
+  }
+
+  return {
+    signature: getComparableAssistantSignature({ ...startMessage, parts: mergedParts }),
+    messageCount,
+  }
+}
+
 export function mergeBackgroundReconnectMessages(
   reconnectMessages: UIMessage[],
   currentMessages: UIMessage[],
@@ -216,6 +326,7 @@ export function mergeBackgroundReconnectMessages(
   const reconnectMessageIds = new Set(reconnectMessages.map((message) => message.id))
   const reconnectUserCountsByText = countUserMessagesByText(reconnectMessages)
   const reconnectAssistantCountsBySignature = countAssistantMessagesBySignature(reconnectMessages)
+  const reconnectAssistantChainCountsBySignature = countAssistantChainsBySignature(reconnectMessages)
   const mergedMessages = reconnectMessages.map((message) => {
     const currentMessage = currentMessagesById.get(message.id)
     return match(currentMessage)
@@ -236,7 +347,11 @@ export function mergeBackgroundReconnectMessages(
       .otherwise((value) => value)
   })
 
-  for (const currentMessage of currentMessages) {
+  for (let index = 0; index < currentMessages.length; index += 1) {
+    const currentMessage = currentMessages[index]
+    if (!currentMessage) {
+      continue
+    }
     if (!reconnectMessageIds.has(currentMessage.id)) {
       const currentUserText = getNonEmptyUserMessageText(currentMessage)
       if (
@@ -245,9 +360,34 @@ export function mergeBackgroundReconnectMessages(
       ) {
         continue
       }
-      if (consumeAssistantMessageSignatureCount(reconnectAssistantCountsBySignature, currentMessage)) {
+
+      const assistantChain = getAssistantChainSignature(currentMessages, index)
+      if (
+        assistantChain &&
+        consumeAssistantSignatureCount(reconnectAssistantCountsBySignature, assistantChain.signature)
+      ) {
+        index += assistantChain.messageCount - 1
         continue
       }
+
+      const assistantWasConsumed = consumeAssistantMessageSignatureCount(
+        reconnectAssistantCountsBySignature,
+        currentMessage,
+      )
+      if (assistantWasConsumed) {
+        continue
+      }
+
+      const mergedAssistantWasConsumed =
+        isAssistantMessage(currentMessage) &&
+        consumeAssistantSignatureCount(
+          reconnectAssistantChainCountsBySignature,
+          getComparableAssistantSignature(currentMessage),
+        )
+      if (mergedAssistantWasConsumed) {
+        continue
+      }
+
       mergedMessages.push(currentMessage)
     }
   }

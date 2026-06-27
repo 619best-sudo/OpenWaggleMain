@@ -1,6 +1,7 @@
 import { MessageId, SessionBranchId, SessionId, SessionNodeId } from '@shared/types/brand'
 import type { SessionNode } from '@shared/types/session'
 import { describe, expect, it } from 'vitest'
+import { mergeBackgroundReconnectMessages } from '../chat-reconnect-merge'
 import { resolveTranscriptMessages } from '../session-workspace-transcript'
 
 const SESSION_ID = SessionId('session-1')
@@ -209,5 +210,77 @@ describe('resolveTranscriptMessages', () => {
       'snapshot-user',
       'snapshot-assistant',
     ])
+  })
+
+  it('does not append a stale live assistant duplicate after reconnect when only the thinking step id differs', () => {
+    const user = sessionNode('1c141f11', null, 'user', 'hello', 0)
+    const persistedAssistant = {
+      ...sessionNode('assistant-node', '1c141f11', 'assistant', 'Implemented the landing page.', 1),
+      message: {
+        id: MessageId('fc0f92fb'),
+        role: 'assistant' as const,
+        parts: [
+          { type: 'reasoning' as const, text: 'Planning the answer.' },
+          { type: 'text' as const, text: 'Implemented the landing page.' },
+        ],
+        createdAt: 2,
+      },
+      contentJson: JSON.stringify({
+        parts: [
+          { type: 'reasoning', text: 'Planning the answer.' },
+          { type: 'text', text: 'Implemented the landing page.' },
+        ],
+        model: null,
+      }),
+    }
+
+    const mergedMessages = mergeBackgroundReconnectMessages(
+      [
+        {
+          id: '1c141f11',
+          role: 'user',
+          parts: [{ type: 'text', content: 'hello' }],
+          createdAt: new Date('2026-06-26T14:18:55.301Z'),
+        },
+        {
+          id: 'fc0f92fb',
+          role: 'assistant',
+          parts: [
+            { type: 'thinking', content: 'Planning the answer.' },
+            { type: 'text', content: 'Implemented the landing page.' },
+          ],
+          createdAt: new Date('2026-06-26T14:19:02.687Z'),
+        },
+      ],
+      [
+        {
+          id: '1c141f11',
+          role: 'user',
+          parts: [{ type: 'text', content: 'hello' }],
+          createdAt: new Date('2026-06-26T14:18:55.301Z'),
+        },
+        {
+          id: '17a7444c-bedf-48f9-81c3-c8c49062dfc2',
+          role: 'assistant',
+          parts: [
+            {
+              type: 'thinking',
+              content: 'Planning the answer.',
+              stepId: '17a7444c-bedf-48f9-81c3-c8c49062dfc2:thinking:0',
+            },
+            { type: 'text', content: 'Implemented the landing page.' },
+          ],
+          createdAt: new Date('2026-06-26T14:18:58.991Z'),
+        },
+      ],
+    )
+
+    const resolved = resolveTranscriptMessages({
+      activeSessionId: SESSION_DETAIL_ID,
+      activeWorkspace: workspaceWithPath([user, persistedAssistant], persistedAssistant.id, persistedAssistant.id),
+      messages: mergedMessages,
+    })
+
+    expect(resolved.map((message) => message.id)).toEqual(['1c141f11', 'fc0f92fb'])
   })
 })

@@ -1,6 +1,11 @@
+import { env } from '@/env'
+
 export interface AppAuthUser {
+  readonly id: string
   readonly name: string
   readonly email: string
+  readonly accessToken: string
+  readonly refreshToken: string
 }
 
 export interface LoginWithPasswordInput {
@@ -14,10 +19,26 @@ export interface SignupWithPasswordInput {
   readonly password: string
 }
 
-const AUTH_DELAY_MS = 700
+interface GreatxAuthResponse {
+  readonly user: {
+    readonly id: string
+    readonly email: string | null
+    readonly displayName: string | null
+  }
+  readonly tokens: {
+    readonly accessToken: string
+    readonly refreshToken: string
+  }
+}
 
-function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+interface LogoutInput {
+  readonly refreshToken: string
+}
+
+interface RefreshSessionInput {
+  readonly refreshToken: string
+  readonly fallbackName: string
+  readonly fallbackEmail: string
 }
 
 function normalizeEmail(email: string) {
@@ -34,27 +55,129 @@ function inferDisplayName(email: string) {
   return words.join(' ') || 'OpenWaggle User'
 }
 
-// Placeholder auth request until the real backend contract is wired in.
-export async function loginWithPassword({
-  email,
-}: LoginWithPasswordInput): Promise<AppAuthUser> {
-  await wait(AUTH_DELAY_MS)
+function getAuthBaseUrl() {
+  if (env.appAuthBaseUrl) {
+    return env.appAuthBaseUrl
+  }
+
+  throw new Error('Auth backend is not configured. Set VITE_APP_AUTH_BASE_URL to continue.')
+}
+
+function resolveAuthUrl(pathname: string) {
+  return new URL(pathname, `${getAuthBaseUrl()}/`).toString()
+}
+
+function getErrorMessage(payload: unknown, fallback: string) {
+  if (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'message' in payload &&
+    Array.isArray(payload.message)
+  ) {
+    const messages = payload.message.filter((value): value is string => typeof value === 'string')
+    if (messages.length > 0) {
+      return messages.join(', ')
+    }
+  }
+
+  if (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'message' in payload &&
+    typeof payload.message === 'string'
+  ) {
+    return payload.message
+  }
+
+  return fallback
+}
+
+async function postJson<TResponse>(pathname: string, body: Record<string, unknown>) {
+  let response: Response
+
+  try {
+    response = await fetch(resolveAuthUrl(pathname), {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    throw new Error('Unable to reach the auth server. Check that the backend is running.')
+  }
+
+  const payload = (await response.json().catch(() => null)) as TResponse | { message?: string | string[] } | null
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Authentication request failed.'))
+  }
+
+  if (!payload) {
+    throw new Error('Auth server returned an empty response.')
+  }
+
+  return payload as TResponse
+}
+
+function toAppAuthUser(
+  response: GreatxAuthResponse,
+  fallbackName: string,
+  fallbackEmail: string,
+): AppAuthUser {
+  const email = response.user.email ? normalizeEmail(response.user.email) : normalizeEmail(fallbackEmail)
+  const displayName = response.user.displayName?.trim() || fallbackName.trim() || inferDisplayName(email)
 
   return {
-    email: normalizeEmail(email),
-    name: inferDisplayName(email),
+    id: response.user.id,
+    name: displayName,
+    email,
+    accessToken: response.tokens.accessToken,
+    refreshToken: response.tokens.refreshToken,
   }
 }
 
-// Placeholder auth request until the real backend contract is wired in.
+export async function loginWithPassword({
+  email,
+  password,
+}: LoginWithPasswordInput): Promise<AppAuthUser> {
+  const normalizedEmail = normalizeEmail(email)
+  const response = await postJson<GreatxAuthResponse>('/auth/email', {
+    email: normalizedEmail,
+    password,
+  })
+
+  return toAppAuthUser(response, inferDisplayName(normalizedEmail), normalizedEmail)
+}
+
 export async function signupWithPassword({
   name,
   email,
+  password,
 }: SignupWithPasswordInput): Promise<AppAuthUser> {
-  await wait(AUTH_DELAY_MS)
+  const normalizedEmail = normalizeEmail(email)
+  const trimmedName = name.trim()
+  const response = await postJson<GreatxAuthResponse>('/auth/email', {
+    email: normalizedEmail,
+    password,
+  })
 
-  return {
-    email: normalizeEmail(email),
-    name: name.trim(),
-  }
+  return toAppAuthUser(response, trimmedName, normalizedEmail)
+}
+
+export async function refreshSession({
+  refreshToken,
+  fallbackName,
+  fallbackEmail,
+}: RefreshSessionInput): Promise<AppAuthUser> {
+  const normalizedEmail = normalizeEmail(fallbackEmail)
+  const response = await postJson<GreatxAuthResponse>('/auth/refresh', {
+    refreshToken,
+  })
+
+  return toAppAuthUser(response, fallbackName, normalizedEmail)
+}
+
+export async function logoutFromBackend({ refreshToken }: LogoutInput): Promise<void> {
+  await postJson<{ readonly ok: true }>('/auth/logout', { refreshToken })
 }

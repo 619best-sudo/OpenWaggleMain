@@ -90,6 +90,34 @@ function ollamaProviderModels(): ProviderInfo[] {
   ]
 }
 
+function turingMachineProviderModels(): ProviderInfo[] {
+  return [
+    {
+      provider: 'turing-machine',
+      displayName: 'GreatX Turing Machine',
+      auth: {
+        configured: true,
+        source: 'environment-or-custom',
+        apiKeyConfigured: true,
+        apiKeySource: 'environment-or-custom',
+        oauthConnected: false,
+        supportsApiKey: true,
+        supportsOAuth: false,
+      },
+      models: [
+        {
+          id: SupportedModelId('turing-machine/greatx-backend'),
+          modelId: 'greatx-backend',
+          name: 'GreatX Backend',
+          provider: 'turing-machine',
+          available: true,
+          availableThinkingLevels: ['off', 'minimal', 'low', 'medium', 'high'],
+        },
+      ],
+    },
+  ]
+}
+
 describe('provider-store integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -138,6 +166,23 @@ describe('provider-store integration', () => {
         availableThinkingLevels: ['off'],
       },
     ])
+  })
+
+  it('auto-enables turing-machine models so they appear in the picker', async () => {
+    apiMock.getSettings.mockResolvedValue(DEFAULT_SETTINGS)
+    apiMock.getProviderModels.mockResolvedValue(turingMachineProviderModels())
+
+    const updatedSettings = await useProviderStore.getState().loadProviderModels()
+
+    expect(apiMock.updateSettings).toHaveBeenCalledWith({
+      enabledModels: [SupportedModelId('turing-machine/greatx-backend')],
+      selectedModel: SupportedModelId('turing-machine/greatx-backend'),
+    })
+    expect(updatedSettings).toEqual({
+      ...DEFAULT_SETTINGS,
+      enabledModels: [SupportedModelId('turing-machine/greatx-backend')],
+      selectedModel: SupportedModelId('turing-machine/greatx-backend'),
+    })
   })
 
   it('updates API key through Pi auth storage and reloads the Pi catalog', async () => {

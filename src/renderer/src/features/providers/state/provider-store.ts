@@ -6,6 +6,7 @@ import { api } from '@/shared/lib/ipc'
 import { createRendererLogger } from '@/shared/lib/logger'
 
 const logger = createRendererLogger('provider-store')
+const AUTO_ENABLED_PROVIDER_IDS = new Set(['turing-machine'])
 
 /**
  * Build a set of canonical "provider/modelId" refs from the current Pi model catalog.
@@ -60,6 +61,37 @@ export function pruneStaleEnabledModels(
   }
 
   return changed ? pruned : null
+}
+
+function autoEnableProviderModels(
+  enabledModels: readonly string[],
+  providerModels: readonly ProviderInfo[],
+): SupportedModelId[] | null {
+  const existing = new Set(enabledModels)
+  const additions: SupportedModelId[] = []
+
+  for (const group of providerModels) {
+    if (!AUTO_ENABLED_PROVIDER_IDS.has(group.provider)) {
+      continue
+    }
+
+    const alreadyEnabledForProvider = enabledModels.some((modelRef) =>
+      modelRef.startsWith(`${group.provider}/`),
+    )
+    if (alreadyEnabledForProvider) {
+      continue
+    }
+
+    for (const model of group.models) {
+      if (!model.available || existing.has(model.id)) {
+        continue
+      }
+      existing.add(model.id)
+      additions.push(model.id)
+    }
+  }
+
+  return additions.length > 0 ? [...enabledModels, ...additions].map(SupportedModelId) : null
 }
 
 function dedupeProviderModels(
@@ -134,7 +166,10 @@ export const useProviderStore = create<ProviderState>((set) => ({
       const catalog = buildModelCatalogSet(baseProviderModels)
       const available = buildAvailableModelSet(baseProviderModels)
       const pruned = pruneStaleEnabledModels(currentSettings.enabledModels, catalog)
-      const enabledModels = pruned ?? currentSettings.enabledModels
+      const normalizedEnabledModels = pruned ?? currentSettings.enabledModels
+      const autoEnabledModels =
+        autoEnableProviderModels(normalizedEnabledModels, baseProviderModels) ?? normalizedEnabledModels
+      const enabledModels = autoEnabledModels
       const selectedModel =
         currentSettings.selectedModel &&
         enabledModels.includes(currentSettings.selectedModel) &&
@@ -143,7 +178,11 @@ export const useProviderStore = create<ProviderState>((set) => ({
           : (enabledModels.find((modelRef) => available.has(modelRef)) ??
             DEFAULT_SETTINGS.selectedModel)
 
-      if (pruned !== null || selectedModel !== currentSettings.selectedModel) {
+      if (
+        pruned !== null ||
+        autoEnabledModels !== normalizedEnabledModels ||
+        selectedModel !== currentSettings.selectedModel
+      ) {
         const modelSettings = { enabledModels, selectedModel }
         await api.updateSettings(modelSettings)
         return { ...currentSettings, ...modelSettings }
