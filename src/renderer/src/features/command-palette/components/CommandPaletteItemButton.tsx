@@ -25,8 +25,8 @@ export function CommandPaletteItemButton({
       className={cn(
         'flex h-10 w-full items-center gap-2.5 px-3.5 text-left transition-colors',
         highlighted
-          ? 'bg-[#1e2229] text-text-primary'
-          : 'text-text-secondary hover:bg-[#1e2229]/50',
+          ? 'bg-[var(--theme-command-palette-item-hover)] text-text-primary'
+          : 'text-text-secondary hover:bg-[color:color-mix(in_srgb,var(--theme-command-palette-item-hover)_70%,transparent)]',
       )}
     >
       <span className={cn('shrink-0', highlighted ? 'text-text-primary' : 'text-text-muted')}>
@@ -51,7 +51,7 @@ function CommandPaletteTrailingContent({ item }: CommandPaletteTrailingContentPr
   return (
     <span className="ml-auto flex shrink-0 items-center gap-2">
       {item.trailingBadge ? (
-        <span className="rounded-full bg-[#1e2229] px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
+        <span className="rounded-full bg-[var(--theme-command-palette-badge-bg)] px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
           {item.trailingBadge}
         </span>
       ) : null}

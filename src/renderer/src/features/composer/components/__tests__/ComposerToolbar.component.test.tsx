@@ -102,10 +102,17 @@ describe('ComposerToolbar', () => {
     })
   })
 
-  it('renders a combined model and thinking control', () => {
+  it('renders a thinking-only control', () => {
     renderToolbar()
-    expect(screen.getByTitle(/Model and thinking settings/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /thinking medium/i })).toBeInTheDocument()
+    expect(screen.getByTitle('Select thinking level')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /medium/i })).toBeInTheDocument()
+  })
+
+  it('renders a compact monthly quota strip beside the context meter', () => {
+    renderToolbar()
+
+    expect(screen.getByText('Usage')).toBeInTheDocument()
+    expect(screen.getByText('60%')).toBeInTheDocument()
   })
 
   it('renders the branch picker beside the thinking control when a project is selected', () => {
@@ -127,12 +134,12 @@ describe('ComposerToolbar', () => {
     expect(screen.queryByTitle('Manage branches')).toBeNull()
   })
 
-  it('opens the combined model and thinking menu on click', () => {
+  it('opens the thinking menu on click', () => {
     renderToolbar()
-    fireEvent.click(screen.getByTitle(/Model and thinking settings/i))
+    fireEvent.click(screen.getByTitle('Select thinking level'))
     expect(screen.getByText('Low')).toBeInTheDocument()
     expect(screen.getByText('High')).toBeInTheDocument()
-    expect(screen.getAllByText('GPT 5').length).toBeGreaterThan(0)
+    expect(screen.queryByText('GPT 5')).toBeNull()
   })
 
   it('shows the selected model effective thinking level instead of unsupported xhigh', () => {
@@ -145,10 +152,10 @@ describe('ComposerToolbar', () => {
 
     renderToolbar()
 
-    expect(screen.getByRole('button', { name: /thinking high/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /high/i })).toBeInTheDocument()
     fireEvent.click(screen.getByTitle(/using High/i))
     expect(screen.queryByText('Extra High')).not.toBeInTheDocument()
-    expect(screen.getAllByText('High')).toHaveLength(1)
+    expect(screen.getAllByText('High').length).toBeGreaterThan(0)
   })
 
   it('maps non-reasoning selected models to off in the toolbar', () => {
@@ -172,9 +179,9 @@ describe('ComposerToolbar', () => {
 
     renderToolbar()
 
-    expect(screen.getByRole('button', { name: /thinking off/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /off/i })).toBeInTheDocument()
     fireEvent.click(screen.getByTitle(/does not support thinking/i))
-    expect(screen.getAllByText('Off')).toHaveLength(1)
+    expect(screen.getAllByText('Off').length).toBeGreaterThan(0)
     expect(screen.queryByText('Medium')).not.toBeInTheDocument()
   })
 

@@ -95,10 +95,10 @@ export function AuthScreen() {
   }
 
   return (
-    <div className="relative flex size-full overflow-hidden bg-[#efebe3]">
+    <div className="relative flex size-full overflow-hidden bg-[var(--theme-auth-bg)]">
       <div className="pointer-events-none absolute inset-0 opacity-90">
-        <div className="absolute left-[-8%] top-[-12%] size-[28rem] rounded-full bg-[#c8d4e4]/30 blur-3xl" />
-        <div className="absolute bottom-[-16%] right-[-10%] size-[32rem] rounded-full bg-[#d7e0ec]/60 blur-3xl" />
+        <div className="absolute left-[-8%] top-[-12%] size-[28rem] rounded-full bg-[var(--theme-auth-glow-a)] blur-3xl" />
+        <div className="absolute bottom-[-16%] right-[-10%] size-[32rem] rounded-full bg-[var(--theme-auth-glow-b)] blur-3xl" />
       </div>
 
       <div className="relative grid size-full lg:grid-cols-2">
@@ -108,12 +108,12 @@ export function AuthScreen() {
             alt="OpenWaggle authentication illustration"
             className="absolute inset-0 size-full object-cover"
           />
-          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-r from-transparent via-[#efebe3]/60 to-[#efebe3]" />
+          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-r from-transparent via-[var(--theme-auth-illustration-fade)] to-[var(--theme-auth-bg)]" />
         </section>
 
-        <section className="relative flex min-h-0 items-center justify-center bg-[linear-gradient(180deg,rgba(239,235,227,0.88)_0%,rgba(239,235,227,0.98)_100%)] p-6 sm:p-8 lg:p-10 xl:p-14">
-          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-40 bg-gradient-to-r from-[#efebe3] via-[#efebe3]/90 to-transparent lg:block" />
-          <div className="flex min-h-[540px] w-full max-w-[30rem] flex-col justify-center rounded-2xl border border-[color:color-mix(in_srgb,var(--theme-dark-accent)_16%,transparent)] bg-[var(--theme-dark-tint)] p-8 shadow-[0_30px_80px_rgba(46,31,28,0.28)] backdrop-blur-md sm:p-10">
+        <section className="relative flex min-h-0 items-center justify-center bg-[var(--theme-auth-content-gradient)] p-6 sm:p-8 lg:p-10 xl:p-14">
+          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-40 bg-gradient-to-r from-[var(--theme-auth-bg)] via-[var(--theme-auth-side-fade)] to-transparent lg:block" />
+          <div className="flex min-h-[540px] w-full max-w-[30rem] flex-col justify-center rounded-2xl border border-[var(--theme-auth-panel-border)] bg-[var(--theme-auth-panel-bg)] p-8 shadow-[0_30px_80px_var(--theme-auth-panel-shadow)] backdrop-blur-md sm:p-10">
             <div className="mb-10 space-y-5">
               <div className="inline-flex items-center gap-2 rounded-full border border-border bg-bg-secondary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
                 <Sparkles className="size-3.5 text-info" />

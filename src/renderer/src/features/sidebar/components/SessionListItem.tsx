@@ -51,7 +51,9 @@ function SessionTitleButton({
       <span
         className={cn(
           'truncate text-[12.5px] transition-colors',
-          isActive ? 'font-semibold text-text-primary' : 'font-medium text-text-tertiary group-hover:text-text-secondary',
+          isActive
+            ? 'font-medium text-text-primary'
+            : 'text-text-secondary group-hover:text-text-primary/90',
         )}
       >
         {truncate(session.title, TITLE_TRUNCATE_LENGTH)}
@@ -75,8 +77,8 @@ function SessionActionsTrigger({
     <div className="relative ml-2 flex items-center justify-end">
       <span
         className={cn(
-          'text-[10.5px] font-medium whitespace-nowrap',
-          isActive ? 'text-text-secondary' : 'text-text-tertiary',
+          'text-[10.5px] font-medium whitespace-nowrap transition-colors',
+          isActive ? 'text-text-secondary' : 'text-text-tertiary group-hover:text-text-secondary',
         )}
       >
         {formatRelativeTime(session.updatedAt)}
@@ -120,8 +122,8 @@ export function SessionListItem({ session, isActive, actions }: SessionListItemP
     <li
       aria-current={isActive ? 'true' : undefined}
       className={cn(
-        'group mx-4 flex h-9 items-center rounded-md transition-colors pl-8 pr-3',
-        isActive ? 'bg-accent/10' : 'hover:bg-bg-hover',
+        'group mx-3 flex h-9 items-center rounded-lg transition-colors pl-8 pr-2',
+        isActive ? 'bg-bg-active' : 'hover:bg-bg-hover',
       )}
       onContextMenu={handleContextMenu}
     >

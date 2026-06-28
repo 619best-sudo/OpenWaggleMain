@@ -24,6 +24,9 @@ vi.mock('@/shell/useFullscreen', () => ({
 }))
 
 vi.mock('../sections/GeneralSection', () => ({ GeneralSection: () => <div>General settings</div> }))
+vi.mock('../sections/AboutUpdatesSection', () => ({
+  AboutUpdatesSection: () => <div>About & Updates settings</div>,
+}))
 vi.mock('../sections/ProfileSection', () => ({ ProfileSection: () => <div>Profile settings</div> }))
 vi.mock('../sections/ConnectionsSection', () => ({
   ConnectionsSection: () => <div>Connections settings</div>,
@@ -43,26 +46,35 @@ describe('settings shell components', () => {
     render(<SettingsNav activeTab="profile" />)
 
     fireEvent.click(screen.getByRole('button', { name: /Profile/ }))
-    fireEvent.click(screen.getByRole('button', { name: /Connections/ }))
     fireEvent.click(screen.getByRole('button', { name: /General/ }))
+    fireEvent.click(screen.getByRole('button', { name: /About & updates/ }))
 
     expect(screen.queryByRole('button', { name: /Waggle Mode/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^MCP$/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Git/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Worktrees/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Personalization/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Connections/ })).not.toBeInTheDocument()
     expect(navigateMock).toHaveBeenNthCalledWith(1, {
       to: '/settings/$tab',
       params: { tab: 'profile' },
     })
     expect(navigateMock).toHaveBeenNthCalledWith(2, {
       to: '/settings/$tab',
-      params: { tab: 'connections' },
+      params: { tab: 'general' },
     })
     expect(navigateMock).toHaveBeenNthCalledWith(3, {
       to: '/settings/$tab',
-      params: { tab: 'general' },
+      params: { tab: 'about' },
     })
+  })
+
+  it('renders settings nav items as full-width touch targets', () => {
+    render(<SettingsNav activeTab="profile" />)
+
+    const aboutButton = screen.getByRole('button', { name: /About & updates/i })
+
+    expect(aboutButton).toHaveClass('flex', 'w-full', 'min-h-11', 'px-3.5', 'py-2.5')
   })
 
   it('routes back to the active session from the settings page header', () => {
@@ -89,5 +101,11 @@ describe('settings shell components', () => {
     render(<SettingsPage activeTab="profile" />)
 
     expect(screen.getByText('Profile settings')).toBeInTheDocument()
+  })
+
+  it('renders the dedicated about and updates section when the about tab is active', () => {
+    render(<SettingsPage activeTab="about" />)
+
+    expect(screen.getByText('About & Updates settings')).toBeInTheDocument()
   })
 })

@@ -67,6 +67,7 @@ const settingsUpdateSchema = Schema.Struct({
   thinkingLevel: Schema.optional(Schema.Literal(...THINKING_LEVELS)),
   themeMode: Schema.optional(Schema.Literal(...THEME_MODES)),
   recentProjects: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
+  showCustomExecutionTeam: Schema.optional(Schema.Boolean),
   skillTogglesByProject: Schema.optional(
     Schema.mutable(
       Schema.Record({

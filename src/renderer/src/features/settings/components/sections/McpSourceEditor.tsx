@@ -7,6 +7,33 @@ import { Textarea } from '@/shared/ui/Textarea'
 
 const RAW_EDITOR_ROWS = 16
 
+const ADVANCED_SOURCE_LABELS: Record<McpConfigSourceId, { label: string; helper: string }> = {
+  'global-standard': {
+    label: 'All Projects On This Computer',
+    helper: 'Primary shared MCP settings used across all projects on this device.',
+  },
+  'global-pi': {
+    label: 'Shared Backup Settings',
+    helper: 'An additional shared MCP config file used by the app in some setups.',
+  },
+  'project-standard': {
+    label: 'This Project Only',
+    helper: 'Primary MCP settings used only for the current project.',
+  },
+  'project-agents': {
+    label: 'Project Backup Settings A',
+    helper: 'An additional project MCP config file kept inside the project folder.',
+  },
+  'project-pi': {
+    label: 'Project Backup Settings B',
+    helper: 'Another project MCP config file that may exist in some setups.',
+  },
+  'project-openwaggle': {
+    label: 'Recommended Project Settings',
+    helper: 'Recommended. This is usually the best project-specific MCP config to edit.',
+  },
+}
+
 interface McpSourceEditorProps {
   readonly sources?: readonly McpConfigSourceSummary[]
   readonly selectedSource: McpConfigSourceSummary | null
@@ -27,35 +54,40 @@ export function McpSourceEditor({
   onRawJsonChange,
 }: McpSourceEditorProps) {
   const { settings } = usePreferences()
+  const selectedSourceDetails = selectedSource ? ADVANCED_SOURCE_LABELS[selectedSource.id] : null
 
   return (
     <div className="flex flex-col h-full">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="mb-5 max-w-[560px] text-[13px] leading-5 text-text-tertiary">
-            Advanced config is preserved as JSON so every `pi-mcp-adapter` server and settings field
-            remains available.
+            Advanced setup lets you edit the raw MCP JSON directly when you need full control.
           </p>
 
           {sources.length > 0 && onSelectSource && (
-            <label className="mb-4 flex items-center gap-2">
-              <span className="text-[12px] font-medium text-text-secondary">Source:</span>
-              <Select
-                value={selectedSource?.id ?? ''}
-                disabled={busy}
-                onChange={(e) => onSelectSource(e.target.value as McpConfigSourceId)}
-                className="h-8 w-full max-w-[320px] pr-8 text-[12px]"
-              >
-                <option value="" disabled>
-                  Select source to edit...
-                </option>
-                {sources.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
+            <div className="mb-4 space-y-2">
+              <label className="flex items-center gap-2">
+                <span className="text-[12px] font-medium text-text-secondary">Edit:</span>
+                <Select
+                  value={selectedSource?.id ?? ''}
+                  disabled={busy}
+                  onChange={(e) => onSelectSource(e.target.value as McpConfigSourceId)}
+                  className="h-8 w-full max-w-[320px] pr-8 text-[12px]"
+                >
+                  <option value="" disabled>
+                    Choose config to edit...
                   </option>
-                ))}
-              </Select>
-            </label>
+                  {sources.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {ADVANCED_SOURCE_LABELS[s.id]?.label ?? s.label}
+                    </option>
+                  ))}
+                </Select>
+              </label>
+              {selectedSourceDetails ? (
+                <p className="text-[11px] leading-5 text-text-muted">{selectedSourceDetails.helper}</p>
+              ) : null}
+            </div>
           )}
 
           {selectedSource?.parseError && (

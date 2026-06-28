@@ -39,7 +39,11 @@ function McpDialogShell({
       aria-modal="true"
       aria-label={title}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-[var(--theme-overlay-scrim-60)] backdrop-blur-sm"
+        aria-hidden="true"
+        onClick={onClose}
+      />
       <div
         className={`relative flex max-h-full w-full flex-col overflow-hidden rounded-2xl border border-border-light bg-bg shadow-2xl ${maxWidthClassName}`}
       >
@@ -98,7 +102,7 @@ export function McpSection({ showHeading = true }: { readonly showHeading?: bool
         onToggle={() => void controller.toggleAdapter()}
       />
 
-      <div className="overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+      <div className="overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-[inset_0_1px_0_var(--theme-panel-shadow-highlight)]">
         <div className="flex items-center justify-between border-b border-border bg-bg-secondary px-4 py-3">
           <div className="flex items-center gap-2">
             <h3 className="text-[13px] font-medium text-text-primary">Connected Servers</h3>

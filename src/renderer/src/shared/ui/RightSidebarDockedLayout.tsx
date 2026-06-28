@@ -60,7 +60,7 @@ export function RightSidebarDockedLayout({
         {shouldRenderSidebar ? (
           <div
             ref={capturePanel}
-            className="absolute inset-y-0 right-0 h-full min-w-0 overflow-hidden bg-bg"
+            className="home-divider-l absolute inset-y-0 right-0 h-full min-w-0 overflow-hidden bg-diff-bg"
             data-right-sidebar-panel="true"
             style={sidebarPanelStyle()}
           >

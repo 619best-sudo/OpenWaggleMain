@@ -1,4 +1,4 @@
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/shared/ui/Button'
 import { Textarea } from '@/shared/ui/Textarea'
@@ -35,45 +35,61 @@ export function InlineComment({
   }
 
   return (
-    <div className="flex flex-col gap-2 w-full bg-diff-header-bg py-2 px-3 border-y border-border">
-      {/* Comment Meta */}
-      <div className="flex items-center gap-1.5 h-[18px]">
-        <MessageSquare className="size-[11px] text-text-tertiary shrink-0" />
-        <span className="text-[11px] font-medium text-text-secondary">Comment on {lineLabel}</span>
-      </div>
+    <div className="max-w-full w-[min(100%,680px)] border-y border-border bg-diff-header-bg px-3 py-2">
+      <div className="flex min-w-0 w-full flex-col gap-2">
+        {/* Comment Meta */}
+        <div className="flex h-[18px] items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <MessageSquare className="size-[11px] shrink-0 text-text-tertiary" />
+            <span className="truncate text-[11px] font-medium text-text-secondary">
+              Comment on {lineLabel}
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            radius="full"
+            onClick={onCancel}
+            aria-label="Dismiss comment"
+            className="h-5 w-5 shrink-0 text-text-tertiary hover:bg-bg-hover hover:text-text-secondary"
+          >
+            <X className="size-3" />
+          </Button>
+        </div>
 
-      {/* Comment Editor */}
-      <Textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') onCancel()
-        }}
-        placeholder="Leave feedback on this change…"
-        resize="none"
-        className="h-[58px] rounded-md border-button-border bg-diff-bg px-2.5 text-[12px] text-text-primary placeholder:text-text-tertiary focus:border-accent/50"
-      />
+        {/* Comment Editor */}
+        <Textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') onCancel()
+          }}
+          placeholder="Leave feedback on this change…"
+          resize="none"
+          className="h-[58px] w-full min-w-0 rounded-md border-button-border bg-diff-bg px-2.5 text-[12px] text-text-primary placeholder:text-text-tertiary focus:border-accent/50"
+        />
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-2 h-[26px]">
-        <Button
-          variant="primary"
-          size="xs"
-          onClick={handleAddSingle}
-          disabled={!content.trim()}
-          className="h-[26px]"
-        >
-          Add single comment
-        </Button>
-        <Button
-          variant="secondary"
-          size="xs"
-          onClick={handleAddToReview}
-          disabled={!content.trim()}
-          className="h-[26px]"
-        >
-          Add to review
-        </Button>
+        {/* Actions */}
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+          <Button
+            variant="primary"
+            size="xs"
+            onClick={handleAddSingle}
+            disabled={!content.trim()}
+            className="h-[26px]"
+          >
+            Add single comment
+          </Button>
+          <Button
+            variant="secondary"
+            size="xs"
+            onClick={handleAddToReview}
+            disabled={!content.trim()}
+            className="h-[26px]"
+          >
+            Add to review
+          </Button>
+        </div>
       </div>
     </div>
   )

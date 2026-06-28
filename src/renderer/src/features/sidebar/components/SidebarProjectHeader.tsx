@@ -174,6 +174,7 @@ function ProjectTitleArea({
   readonly state: {
     readonly collapsed: boolean
     readonly DisclosureIcon: typeof ChevronDown
+    readonly isCurrentProject: boolean
     readonly projectLabel: string
     readonly renaming: boolean
     readonly renameInputRef: React.RefObject<HTMLInputElement | null>
@@ -183,8 +184,8 @@ function ProjectTitleArea({
   if (state.renaming) {
     return (
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
-        <state.DisclosureIcon className="size-3 shrink-0 text-text-secondary" />
-        <Folder className="size-3.5 shrink-0 text-text-secondary" />
+        <state.DisclosureIcon className="size-3 shrink-0 text-text-tertiary/60" />
+        <Folder className="size-3.5 shrink-0 text-text-tertiary/60" />
         <ProjectRenameInput
           value={state.renameValue}
           inputRef={state.renameInputRef}
@@ -203,10 +204,20 @@ function ProjectTitleArea({
       aria-label={`${state.collapsed ? 'Expand' : 'Collapse'} ${state.projectLabel}`}
       aria-expanded={!state.collapsed}
       onClick={actions.toggle}
-      className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+      className="group flex min-w-0 flex-1 items-center gap-2.5 text-left"
     >
-      <Folder className="size-3.5 shrink-0 text-text-secondary" />
-      <span className="min-w-0 flex-1 truncate text-[12.5px] font-medium tracking-[-0.01em] text-text-primary/82">
+      <Folder
+        className={cn(
+          'size-3.5 shrink-0 transition-colors',
+          state.isCurrentProject ? 'text-text-secondary' : 'text-text-secondary/70',
+        )}
+      />
+      <span
+        className={cn(
+          'min-w-0 flex-1 truncate text-[12px] font-medium tracking-[-0.01em] transition-colors',
+          state.isCurrentProject ? 'text-text-primary/90' : 'text-text-secondary',
+        )}
+      >
         {state.projectLabel}
       </span>
     </Button>
@@ -216,6 +227,7 @@ function ProjectTitleArea({
 export function SidebarProjectHeader({
   group,
   projectLabel,
+  isCurrentProject,
   collapsed,
   actions,
 }: ProjectHeaderProps) {
@@ -241,7 +253,8 @@ export function SidebarProjectHeader({
   return (
     <div
       className={cn(
-        'group mx-4 flex h-9 items-center gap-1.5 rounded-md px-3 transition-colors hover:bg-bg-hover',
+        'group mx-3 flex h-8 items-center rounded-lg px-3 transition-colors',
+        isCurrentProject ? 'bg-bg-secondary/40' : 'hover:bg-bg-hover',
       )}
       title={group.projectPath}
     >
@@ -249,6 +262,7 @@ export function SidebarProjectHeader({
         state={{
           collapsed,
           DisclosureIcon,
+          isCurrentProject,
           projectLabel,
           renaming,
           renameInputRef,

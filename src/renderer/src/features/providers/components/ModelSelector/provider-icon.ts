@@ -17,17 +17,17 @@ export function ProviderModelIcon({
 }
 
 const PROVIDER_COLOR: Partial<Record<Provider, string>> = {
-  anthropic: '#d4a27f',
-  openai: '#10a37f',
-  'openai-codex': '#7A9DFF',
-  'github-copilot': '#7A9DFF',
-  google: '#3186FF',
-  'google-gemini-cli': '#3186FF',
-  'google-antigravity': '#3186FF',
-  'google-vertex': '#3186FF',
-  deepseek: '#4d6bfe',
+  anthropic: 'var(--theme-provider-anthropic)',
+  openai: 'var(--theme-provider-openai)',
+  'openai-codex': 'var(--theme-provider-google)',
+  'github-copilot': 'var(--theme-provider-google)',
+  google: 'var(--theme-provider-google)',
+  'google-gemini-cli': 'var(--theme-provider-google)',
+  'google-antigravity': 'var(--theme-provider-google)',
+  'google-vertex': 'var(--theme-provider-google)',
+  deepseek: 'var(--theme-provider-deepseek)',
   xai: 'currentColor',
-  openrouter: '#7c5cfc',
+  openrouter: 'var(--theme-provider-openrouter)',
   ollama: 'currentColor',
 }
 

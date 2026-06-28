@@ -211,7 +211,7 @@ describe('Sidebar project actions', () => {
     })
     const draftRow = screen.getByRole('button', { name: /draft session in openwaggle/i })
     expect(draftRow).toBeInTheDocument()
-    expect(draftRow).toHaveClass('rounded-xl', 'bg-[#101712]')
+    expect(draftRow).toHaveClass('rounded-xl', 'home-panel-frame-soft', 'bg-bg-active')
     expect(draftRow).not.toHaveClass('mx-2')
   })
 

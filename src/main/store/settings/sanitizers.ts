@@ -154,3 +154,7 @@ export function sanitizeProjectDisplayNames(raw: unknown) {
   }
   return result
 }
+
+export function resolveShowCustomExecutionTeam(raw: unknown) {
+  return typeof raw === 'boolean' ? raw : DEFAULT_SETTINGS.showCustomExecutionTeam
+}

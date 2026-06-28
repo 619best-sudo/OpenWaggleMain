@@ -23,13 +23,11 @@ function gitStatus() {
 }
 
 describe('HeaderControls', () => {
-  it('renders the collapsed-sidebar header affordance and project label', () => {
+  it('renders the collapsed-sidebar header affordance and title', () => {
     const onToggleSidebar = vi.fn()
 
     render(
       <HeaderLeft
-        activeBranchName="feature/test"
-        projectPath="/Users/demo/OpenWaggle"
         sidebarOpen={false}
         title="Working session"
         onToggleSidebar={onToggleSidebar}
@@ -39,9 +37,6 @@ describe('HeaderControls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Show sidebar' }))
 
     expect(screen.getByText('Working session')).toBeInTheDocument()
-    expect(screen.getByText('/ feature/test')).toBeInTheDocument()
-    expect(screen.getByText('OpenWaggle')).toBeInTheDocument()
-    expect(screen.queryByText('···')).toBeNull()
     expect(onToggleSidebar).toHaveBeenCalledOnce()
   })
 

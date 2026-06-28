@@ -181,8 +181,8 @@ export function createDefaultTeamBuilderDraft(): TeamBuilderDraft {
   const firstAgent = createDefaultAgentDraft()
   return {
     id: createDraftId('custom-team'),
-    name: 'Custom Team',
-    description: 'A custom teammate built from your own set of agents.',
+    name: 'Custom Execution Team',
+    description: 'A custom team for end-to-end execution of long-running tasks.',
     launchPromptPlaceholder: 'Describe the task this team should execute.',
     launchButtonLabel: 'Launch Custom Team',
     requiredMcps: [],
@@ -372,7 +372,7 @@ export function buildTeammateFromDraft(draft: TeamBuilderDraft): TeammateDefinit
 
   return {
     id: draft.id,
-    name: draft.name.trim() || 'Custom Team',
+    name: draft.name.trim() || 'Custom Execution Team',
     description: draft.description.trim() || 'A custom teammate built in Team(New).',
     launchPromptPlaceholder:
       draft.launchPromptPlaceholder.trim() || 'Describe the task this custom team should run.',

@@ -6,6 +6,7 @@ import {
   SETTINGS_KEY_PROJECT_DISPLAY_NAMES,
   SETTINGS_KEY_PROJECT_PATH,
   SETTINGS_KEY_RECENT_PROJECTS,
+  SETTINGS_KEY_SHOW_CUSTOM_EXECUTION_TEAM,
   SETTINGS_KEY_SKILL_TOGGLES_BY_PROJECT,
   SETTINGS_KEY_THINKING_LEVEL,
   SETTINGS_KEY_THEME_MODE,
@@ -17,6 +18,7 @@ import {
   resolveProjectPath,
   resolveRecentProjects,
   resolveSelectedModel,
+  resolveShowCustomExecutionTeam,
   resolveSkillTogglesByProject,
   resolveThinkingLevel,
   sanitizeEnabledModels,
@@ -73,6 +75,9 @@ export function buildSettingsSnapshot(storedSettings: Readonly<Record<string, un
       recentProjects,
       skillTogglesByProject,
       projectDisplayNames,
+      showCustomExecutionTeam: resolveShowCustomExecutionTeam(
+        getStoredValue(storedSettings, SETTINGS_KEY_SHOW_CUSTOM_EXECUTION_TEAM),
+      ),
     } satisfies Settings,
   }
 }
@@ -110,6 +115,10 @@ export function buildNextSettingsSnapshot(current: Settings, partial: Partial<Se
   const themeMode = partial.themeMode !== undefined && isThemeMode(partial.themeMode)
     ? partial.themeMode
     : current.themeMode
+  const showCustomExecutionTeam =
+    partial.showCustomExecutionTeam !== undefined
+      ? partial.showCustomExecutionTeam
+      : current.showCustomExecutionTeam
 
   return {
     ...current,
@@ -122,5 +131,6 @@ export function buildNextSettingsSnapshot(current: Settings, partial: Partial<Se
     recentProjects,
     skillTogglesByProject,
     projectDisplayNames,
+    showCustomExecutionTeam,
   } satisfies Settings
 }

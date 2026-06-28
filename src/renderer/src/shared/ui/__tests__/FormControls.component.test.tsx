@@ -21,6 +21,12 @@ describe('shared form controls', () => {
     const onChange = vi.fn()
 
     render(<Checkbox label="Include logs" checked={false} onChange={onChange} />)
+    expect(screen.getByRole('checkbox', { name: 'Include logs' })).toHaveClass(
+      'appearance-none',
+      'border-border',
+      'bg-bg-secondary',
+      'checked:bg-accent',
+    )
     fireEvent.click(screen.getByRole('checkbox', { name: 'Include logs' }))
 
     expect(onChange).toHaveBeenCalledTimes(1)

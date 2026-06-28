@@ -156,8 +156,8 @@ export function TerminalPanel({ projectPath, onClose }: TerminalPanelProps) {
   }
 
   return (
-    <div className="home-divider-t flex h-full shrink-0 flex-col bg-black">
-      <div className="home-divider-b flex h-11 items-center justify-between gap-2 bg-bg-tertiary pr-2">
+    <div className="home-panel-frame-soft flex h-full shrink-0 flex-col bg-diff-bg">
+      <div className="home-divider-b flex h-12 items-center justify-between gap-2 px-4">
         <div className="flex h-full min-w-0 flex-1 items-center overflow-x-auto" role="tablist">
           {tabs.map((tab, index) => {
             const isActive = tab.key === activeTab?.key
@@ -175,7 +175,7 @@ export function TerminalPanel({ projectPath, onClose }: TerminalPanelProps) {
             variant="unstyled"
             type="button"
             onClick={handleAddTerminal}
-            className="ml-1 flex size-7 items-center justify-center rounded text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary"
+            className="ml-2 flex size-7 items-center justify-center rounded text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary"
             title="New terminal"
             aria-label="New terminal"
           >
@@ -186,7 +186,7 @@ export function TerminalPanel({ projectPath, onClose }: TerminalPanelProps) {
           variant="unstyled"
           type="button"
           onClick={onClose}
-          className="flex size-7 items-center justify-center rounded text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-colors"
+          className="flex size-7 items-center justify-center rounded text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-primary"
           title="Close terminal panel"
           aria-label="Close terminal panel"
         >
@@ -194,7 +194,7 @@ export function TerminalPanel({ projectPath, onClose }: TerminalPanelProps) {
         </Button>
       </div>
 
-      <div className="relative flex-1 bg-black">
+      <div className="relative flex-1 overflow-hidden bg-black">
         {tabs.map((tab, index) => (
           <div
             key={tab.key}

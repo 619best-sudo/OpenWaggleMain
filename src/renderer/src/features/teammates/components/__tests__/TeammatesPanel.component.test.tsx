@@ -11,13 +11,17 @@ const {
   generateTeamAgentMock,
   navigateMock,
   sendTeamMessageMock,
+  showConfirmMock,
   showToastMock,
+  updateSettingsMock,
 } = vi.hoisted(() => ({
   createSessionMock: vi.fn(),
   generateTeamAgentMock: vi.fn(),
   navigateMock: vi.fn(),
   sendTeamMessageMock: vi.fn(),
+  showConfirmMock: vi.fn(),
   showToastMock: vi.fn(),
+  updateSettingsMock: vi.fn(),
 }))
 
 vi.mock('@tanstack/react-router', () => ({
@@ -36,6 +40,8 @@ vi.mock('@/shared/lib/ipc', () => ({
   api: {
     generateTeamAgent: generateTeamAgentMock,
     sendTeamMessage: sendTeamMessageMock,
+    showConfirm: showConfirmMock,
+    updateSettings: updateSettingsMock,
   },
 }))
 
@@ -58,6 +64,8 @@ describe('TeammatesPanel', () => {
       suggestedNextAgentIfSuccess: 'agent-1',
     })
     sendTeamMessageMock.mockResolvedValue(undefined)
+    showConfirmMock.mockResolvedValue(true)
+    updateSettingsMock.mockResolvedValue({ ok: true })
     usePreferencesStore.setState({
       ...usePreferencesStore.getInitialState(),
       settings: {
@@ -175,6 +183,13 @@ describe('TeammatesPanel', () => {
   it('renders the expanded built-in teammate catalog', () => {
     render(<TeammatesPanel />)
 
+    expect(screen.getByText('Execution Teams')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Prebuilt and custom teams for end-to-end execution of long-running tasks. Open a card to inspect agents, loop policy, prompt, and launch settings.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Custom Execution Team' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Web Executor' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Code Reviewer' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Robust QA' })).toBeInTheDocument()
@@ -316,6 +331,30 @@ describe('TeammatesPanel', () => {
       )
       expect(showToastMock).toHaveBeenCalledWith('"Review Squad" launched in Team(New).', 'success')
     })
+  })
+
+  it('deletes the custom team and lets you create a new one', async () => {
+    render(<TeammatesPanel />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => {
+      expect(showConfirmMock).toHaveBeenCalledWith(
+        'Delete custom team?',
+        'This removes the custom execution team from the storefront. You can create a new one later.',
+      )
+      expect(updateSettingsMock).toHaveBeenCalledWith({ showCustomExecutionTeam: false })
+      expect(screen.queryByRole('heading', { name: 'Custom Execution Team' })).not.toBeInTheDocument()
+      expect(showToastMock).toHaveBeenCalledWith('Custom execution team deleted.', 'success')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Team' }))
+
+    await waitFor(() => {
+      expect(updateSettingsMock).toHaveBeenCalledWith({ showCustomExecutionTeam: true })
+    })
+    expect(screen.getAllByText('Custom Execution Team').length).toBeGreaterThan(0)
+    expect(screen.getByLabelText('Team name')).toHaveValue('Custom Execution Team')
   })
 
   it('generates agent setup from instructions using the Team API', async () => {

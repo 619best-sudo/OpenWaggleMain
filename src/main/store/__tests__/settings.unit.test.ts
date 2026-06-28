@@ -272,6 +272,15 @@ describe('settings store', () => {
     })
   })
 
+  it('falls back to the default custom execution team visibility when persisted value is invalid', async () => {
+    await writeRawSetting('showCustomExecutionTeam', 'nope')
+
+    const { getSettings } = await loadSettingsModule()
+    const settings = getSettings()
+
+    expect(settings.showCustomExecutionTeam).toBe(true)
+  })
+
   it('roundtrips valid thinkingLevel through updateSettings', async () => {
     const { getSettings, updateSettings } = await loadSettingsModule()
     updateSettings({ thinkingLevel: 'high' })
@@ -322,5 +331,11 @@ describe('settings store', () => {
     expect(getSettings().skillTogglesByProject).toEqual({
       '/tmp/repo': { 'code-review': true, 'frontend-design': false },
     })
+  })
+
+  it('roundtrips custom execution team visibility through updateSettings', async () => {
+    const { getSettings, updateSettings } = await loadSettingsModule()
+    updateSettings({ showCustomExecutionTeam: false })
+    expect(getSettings().showCustomExecutionTeam).toBe(false)
   })
 })

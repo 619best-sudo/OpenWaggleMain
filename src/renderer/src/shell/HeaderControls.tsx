@@ -179,19 +179,21 @@ export function DiffToggleButton({
       onClick={onToggle}
       disabled={disabled}
       className={cn(
-        'no-drag gap-1 hover:bg-white/5 px-2 h-7 rounded-md transition-colors',
+        'no-drag h-7 gap-1 rounded-md px-2 transition-colors hover:bg-[var(--theme-header-hover-surface)]',
         disabled && 'pointer-events-none opacity-30',
-        open && 'bg-white/10',
+        open && 'bg-[var(--theme-header-active-surface)]',
       )}
       title="Toggle diff panel"
     >
       {status ? (
         <>
-          <span className="text-[13px] font-medium text-[#8ba57b]">+{status.additions}</span>
+          <span className="text-[13px] font-medium text-[var(--theme-header-diff-addition)]">
+            +{status.additions}
+          </span>
           <span className="text-[13px] font-medium text-red-400">-{status.deletions}</span>
         </>
       ) : (
-        <span className="text-[13px] font-medium text-[#71717a]">
+        <span className="text-[13px] font-medium text-[var(--theme-header-diff-neutral)]">
           {diffStatusText(error, isLoading)}
         </span>
       )}

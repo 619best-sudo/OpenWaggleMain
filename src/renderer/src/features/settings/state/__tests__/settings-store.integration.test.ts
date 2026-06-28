@@ -1,5 +1,5 @@
 import { SupportedModelId } from '@shared/types/brand'
-import { DEFAULT_SETTINGS } from '@shared/types/settings'
+import { DEFAULT_SETTINGS, GREATX_BACKEND_MODEL_REF } from '@shared/types/settings'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { apiMock } = vi.hoisted(() => ({
@@ -53,6 +53,13 @@ describe('preferences-store integration', () => {
 
     expect(apiMock.updateSettings).toHaveBeenCalledWith({ thinkingLevel: 'high' })
     expect(usePreferencesStore.getState().settings.thinkingLevel).toBe('high')
+  })
+
+  it('persists custom execution team visibility updates', async () => {
+    await usePreferencesStore.getState().setShowCustomExecutionTeam(false)
+
+    expect(apiMock.updateSettings).toHaveBeenCalledWith({ showCustomExecutionTeam: false })
+    expect(usePreferencesStore.getState().settings.showCustomExecutionTeam).toBe(false)
   })
 
   it('tracks recent projects in first-added order with dedupe and max size', async () => {
@@ -117,10 +124,22 @@ describe('preferences-store integration', () => {
     ])
   })
 
-  it('sets default model through preferences store', async () => {
+  it('forces GreatX backend as the selected model through preferences store', async () => {
     await usePreferencesStore.getState().setSelectedModel(SupportedModelId('openai/gpt-4.1-mini'))
 
-    expect(apiMock.updateSettings).toHaveBeenCalledWith({ selectedModel: 'openai/gpt-4.1-mini' })
-    expect(usePreferencesStore.getState().settings.selectedModel).toBe('openai/gpt-4.1-mini')
+    expect(apiMock.updateSettings).toHaveBeenCalledWith({ selectedModel: GREATX_BACKEND_MODEL_REF })
+    expect(usePreferencesStore.getState().settings.selectedModel).toBe(GREATX_BACKEND_MODEL_REF)
+  })
+
+  it('keeps only GreatX backend in enabled models', async () => {
+    await usePreferencesStore.getState().setEnabledModels([
+      SupportedModelId('openai/gpt-4.1-mini'),
+      GREATX_BACKEND_MODEL_REF,
+    ])
+
+    expect(apiMock.setEnabledModels).toHaveBeenCalledWith([GREATX_BACKEND_MODEL_REF])
+    expect(apiMock.updateSettings).toHaveBeenCalledWith({ selectedModel: GREATX_BACKEND_MODEL_REF })
+    expect(usePreferencesStore.getState().settings.enabledModels).toEqual([GREATX_BACKEND_MODEL_REF])
+    expect(usePreferencesStore.getState().settings.selectedModel).toBe(GREATX_BACKEND_MODEL_REF)
   })
 })

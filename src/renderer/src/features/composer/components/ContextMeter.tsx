@@ -2,13 +2,55 @@ import { useChatStore } from '@/features/chat/state'
 import { useProviderStore } from '@/features/providers/state'
 import { usePreferencesStore } from '@/features/settings/state'
 import { formatContextWindow } from '@/shared/lib/format-tokens'
+import { CONTEXT_METER } from '../constants/context-meter'
 import { useContextUsageSnapshot } from '../hooks/useContextUsageSnapshot'
 import {
   buildContextMeterValue,
   buildContextUsageRequestKey,
   findContextWindow,
 } from '../lib/context-meter-view'
-import { ContextMeterRing } from './ContextMeterRing'
+
+const MONTHLY_QUOTA = {
+  used: 72,
+  total: 120,
+} as const
+
+function getMonthlyQuotaPercent(used: number, total: number) {
+  if (total <= 0) return 0
+  return Math.max(0, Math.min(100, (used / total) * 100))
+}
+
+function getMonthlyQuotaTone(percent: number) {
+  if (percent >= CONTEXT_METER.THRESHOLDS.ERROR_PERCENT) return 'var(--color-error)'
+  if (percent >= CONTEXT_METER.THRESHOLDS.WARNING_PERCENT) return 'var(--color-warning)'
+  return 'var(--color-success)'
+}
+
+function MonthlyQuotaStrip() {
+  const percent = getMonthlyQuotaPercent(MONTHLY_QUOTA.used, MONTHLY_QUOTA.total)
+  const tone = getMonthlyQuotaTone(percent)
+  const roundedPercent = Math.round(percent)
+
+  return (
+    <div
+      className="home-panel-frame-soft hidden h-6 min-w-0 shrink-0 items-center gap-1.5 rounded-[5px] px-2 text-[12px] text-text-secondary sm:flex"
+      title={`Monthly usage: ${String(roundedPercent)}% used (${String(MONTHLY_QUOTA.used)} of ${String(MONTHLY_QUOTA.total)})`}
+    >
+      <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-text-tertiary">
+        Usage
+      </span>
+      <div className="h-1 w-10 overflow-hidden rounded-full bg-bg-tertiary">
+        <div
+          className="h-full rounded-full transition-[width] duration-300 ease-out"
+          style={{ width: `${String(percent)}%`, backgroundColor: tone }}
+        />
+      </div>
+      <span className="font-mono text-[10px] font-semibold leading-none text-text-secondary tabular-nums">
+        {roundedPercent}%
+      </span>
+    </div>
+  )
+}
 
 export function ContextMeter() {
   const activeSessionId = useChatStore((s) => s.activeSessionId)
@@ -33,17 +75,20 @@ export function ContextMeter() {
 
   return (
     <div className="flex items-center gap-1.5" title={meter.title}>
-      <ContextMeterRing
-        displayValue={meter.displayValue}
-        strokeColor={meter.strokeColor}
-        dashOffset={meter.dashOffset}
-        failed={usage.failed}
-      />
-      {meter.contextWindow ? (
-        <span className="hidden font-mono text-[11px] text-text-muted sm:inline">
-          / {formatContextWindow(meter.contextWindow)}
+      <MonthlyQuotaStrip />
+      <div className="home-panel-frame-soft flex h-6 min-w-0 shrink-0 items-center gap-1.5 rounded-[5px] px-2 text-[12px] text-text-secondary">
+        <span
+          className="font-mono text-[10px] font-semibold leading-none tabular-nums"
+          style={{ color: meter.strokeColor }}
+        >
+          {meter.displayValue}
         </span>
-      ) : null}
+        {meter.contextWindow ? (
+          <span className="font-mono text-[10px] font-semibold leading-none text-text-secondary tabular-nums">
+            / {formatContextWindow(meter.contextWindow)}
+          </span>
+        ) : null}
+      </div>
     </div>
   )
 }

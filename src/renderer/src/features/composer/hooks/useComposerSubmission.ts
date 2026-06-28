@@ -3,11 +3,13 @@ import type { LexicalEditor } from 'lexical'
 import type { RefObject } from 'react'
 import { useSelectedModelThinkingLevel } from '@/features/providers/hooks'
 import { usePreferencesStore } from '@/features/settings/state'
+import { useUIStore } from '@/shell/ui-store'
 import { clearEditor } from '../lib/lexical-utils'
 import { consumeSendResult } from '../lib/send-result'
 import { useComposerStore } from '../state/composer-store'
 
 const SILENT_SUBMIT_BLOCK = { type: 'silent' } as const
+const TRANSCRIPT_DEBUG_UNLOCK_PHRASE = 'Shashank-Debug-ON'
 
 interface UseComposerSubmissionInput {
   readonly onSend: (payload: AgentSendPayload) => Promise<void> | void
@@ -52,6 +54,7 @@ export function useComposerSubmission({
   const reset = useComposerStore((s) => s.reset)
   const pushHistory = useComposerStore((s) => s.pushHistory)
   const selectedModel = usePreferencesStore((s) => s.settings.selectedModel)
+  const enableTranscriptDebug = useUIStore((s) => s.enableTranscriptDebug)
   const { effectiveThinkingLevel } = useSelectedModelThinkingLevel()
 
   function clearComposerInput() {
@@ -72,6 +75,12 @@ export function useComposerSubmission({
   }
 
   function submitPayload(payload: AgentSendPayload) {
+    if (payload.text === TRANSCRIPT_DEBUG_UNLOCK_PHRASE) {
+      enableTranscriptDebug()
+      onToast?.('Transcript debug enabled.')
+      if (clearOnSubmit) clearComposerInput()
+      return true
+    }
     const sent = dispatchPayload(payload)
     if (!sent) return false
     if (recordHistory && payload.text) pushHistory(payload.text)

@@ -1,6 +1,7 @@
 import type { UIMessage } from '@shared/types/chat-ui'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { useUIStore } from '@/shell/ui-store'
 import type { ChatTranscriptSectionState } from '../../model'
 
 const REQUEST_ANIMATION_FRAME_DELAY_MS = 16
@@ -135,6 +136,7 @@ describe('ChatTranscript t3-style scroll behavior', () => {
     }
 
     vi.useFakeTimers()
+    useUIStore.setState(useUIStore.getInitialState())
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) =>
       window.setTimeout(() => callback(performance.now()), REQUEST_ANIMATION_FRAME_DELAY_MS),
     )
@@ -276,6 +278,7 @@ describe('ChatTranscript t3-style scroll behavior', () => {
   })
 
   it('opens a floating transcript debug payload panel for copy/paste debugging', async () => {
+    useUIStore.getState().enableTranscriptDebug()
     const repeatedAutoPrompt = createTextMessage(
       'team-auto-user-2',
       'user',
@@ -313,6 +316,16 @@ describe('ChatTranscript t3-style scroll behavior', () => {
     expect(debugPayload.value).toContain('"teamAutoPromptMessageCount": 2')
     expect(debugPayload.value).toContain('"duplicateMessageGroups"')
     expect(container.querySelector('#transcript-debug-panel')).not.toBeNull()
+  })
+
+  it('hides the transcript debug button by default', async () => {
+    render(<ChatTranscript section={createSection()} />)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(REQUEST_ANIMATION_FRAME_DELAY_MS)
+    })
+
+    expect(screen.queryByRole('button', { name: 'Transcript Debug' })).toBeNull()
   })
 
   it('does not scroll when lastUserMessageId is null', async () => {

@@ -9,6 +9,7 @@ import {
   Play,
   Plus,
   Sparkles,
+  Trash2,
   WandSparkles,
   X,
   ChevronDown,
@@ -46,6 +47,10 @@ import {
 type AgentEditorMode = 'manual' | 'generate'
 const TEAM_DEFAULT_MODEL_VALUE = '__team-default-model__'
 const logger = createRendererLogger('teammates-panel')
+
+function buildAgentEditorModes(draft: TeamBuilderDraft) {
+  return Object.fromEntries(draft.agents.map((agent) => [agent.id, 'manual' as const]))
+}
 
 interface TeamModelOption {
   readonly id: string
@@ -193,6 +198,7 @@ function TeamVisitingCard({
   agentLabels,
   dependencyLabels,
   onEdit,
+  onDelete,
 }: {
   readonly icon: ReactNode
   readonly eyebrow: string
@@ -202,6 +208,7 @@ function TeamVisitingCard({
   readonly agentLabels: readonly string[]
   readonly dependencyLabels: readonly string[]
   readonly onEdit: () => void
+  readonly onDelete?: () => void
 }) {
   return (
     <div className="group relative flex h-full flex-col overflow-hidden rounded-[16px] border border-border bg-bg-secondary p-5 shadow-sm transition-all duration-300 cursor-pointer hover:bg-bg-hover hover:border-white/20 hover:shadow-lg hover:-translate-y-0.5" onClick={onEdit}>
@@ -239,9 +246,32 @@ function TeamVisitingCard({
 
         <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
           <span className="text-[12px] font-medium text-text-tertiary">View team configuration</span>
-          <Button variant="secondary" size="sm" className="h-8 border-border bg-bg-tertiary hover:bg-bg-hover" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
-            Edit
-          </Button>
+          <div className="flex items-center gap-2">
+            {onDelete ? (
+              <Button
+                variant="danger"
+                size="sm"
+                className="h-8"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete()
+                }}
+              >
+                Delete
+              </Button>
+            ) : null}
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-8 border-border bg-bg-tertiary hover:bg-bg-hover"
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit()
+              }}
+            >
+              Edit
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -249,7 +279,7 @@ function TeamVisitingCard({
 }
 
 function summarizeRole(agentLabels: readonly string[]) {
-  return agentLabels.slice(0, 2).join(' • ') || 'Custom Team'
+  return agentLabels.slice(0, 2).join(' • ') || 'Custom Execution Team'
 }
 
 function summarizeDescription(text: string, fallback: string) {
@@ -321,6 +351,8 @@ export function TeammatesPanel() {
   const projectPath = usePreferencesStore((state) => state.settings.projectPath)
   const selectedModel = usePreferencesStore((state) => state.settings.selectedModel)
   const thinkingLevel = usePreferencesStore((state) => state.settings.thinkingLevel)
+  const hasCustomTeam = usePreferencesStore((state) => state.settings.showCustomExecutionTeam)
+  const setShowCustomExecutionTeam = usePreferencesStore((state) => state.setShowCustomExecutionTeam)
   const providerModels = useProviderStore((state) => state.providerModels)
   const { activeSession, activeSessionId, createSession } = useChat()
   const showToast = useUIStore((state) => state.showToast)
@@ -332,7 +364,7 @@ export function TeammatesPanel() {
   )
   const [customTeam, setCustomTeam] = useState<TeamBuilderDraft>(() => createDefaultTeamBuilderDraft())
   const [agentEditorModes, setAgentEditorModes] = useState<Record<string, AgentEditorMode>>(() =>
-    Object.fromEntries(customTeam.agents.map((agent) => [agent.id, 'manual' as const])),
+    buildAgentEditorModes(customTeam),
   )
   const [isCustomEditorOpen, setIsCustomEditorOpen] = useState(false)
   const [activeBuiltInEditorId, setActiveBuiltInEditorId] = useState<string | null>(null)
@@ -393,6 +425,35 @@ export function TeammatesPanel() {
 
   function updateCustomTeam(patch: Partial<TeamBuilderDraft>) {
     setCustomTeam((current) => ({ ...current, ...patch }))
+  }
+
+  async function createFreshCustomTeam(openEditor = true) {
+    const nextDraft = createDefaultTeamBuilderDraft()
+    setCustomTeam(nextDraft)
+    setAgentEditorModes(buildAgentEditorModes(nextDraft))
+    setIsCustomEditorOpen(openEditor)
+    await setShowCustomExecutionTeam(true)
+  }
+
+  async function handleDeleteCustomTeam() {
+    try {
+      const confirmed = await api.showConfirm(
+        'Delete custom team?',
+        'This removes the custom execution team from the storefront. You can create a new one later.',
+      )
+      if (!confirmed) return
+      const nextDraft = createDefaultTeamBuilderDraft()
+      setCustomTeam(nextDraft)
+      setAgentEditorModes(buildAgentEditorModes(nextDraft))
+      setIsCustomEditorOpen(false)
+      await setShowCustomExecutionTeam(false)
+      showToast('Custom execution team deleted.', 'success')
+    } catch (error) {
+      logger.error('Failed to open delete custom team confirmation.', {
+        message: error instanceof Error ? error.message : String(error),
+      })
+      showToast('Failed to open delete confirmation.', 'error')
+    }
   }
 
   function updateAgent(agentId: string, updater: (agent: TeamAgentDraft) => TeamAgentDraft) {
@@ -687,7 +748,13 @@ export function TeammatesPanel() {
             radius="full"
             className="shrink-0 px-6 shadow-lg transition-transform hover:scale-105 active:scale-95"
             leftIcon={<WandSparkles className="size-5" />}
-            onClick={() => setIsCustomEditorOpen(true)}
+            onClick={() => {
+              if (!hasCustomTeam) {
+                void createFreshCustomTeam(true)
+                return
+              }
+              setIsCustomEditorOpen(true)
+            }}
           >
             Create Team
           </Button>
@@ -695,34 +762,29 @@ export function TeammatesPanel() {
 
         <section className="space-y-4">
           <StoreSectionHeader
-            title="Custom Team"
-            count={1}
-            description="Your editable team card. Open it to manage every agent, prompt rule, and launch setting."
-          />
-          <div className="grid grid-cols-1 gap-5">
-            <TeamVisitingCard
-              icon={<WandSparkles className="size-7" />}
-              eyebrow="Custom"
-              title={customTeam.name.trim() || 'Custom Team'}
-              role={summarizeRole(customTeam.agents.map((agent) => agent.label || agent.id))}
-              description={summarizeDescription(
-                customTeam.description,
-                'Build your own team with specialists, a decision maker, and auto-generated handoffs.',
-              )}
-              agentLabels={customTeam.agents.map((agent) => agent.label || agent.id)}
-              dependencyLabels={customDependencyLabels}
-              onEdit={() => setIsCustomEditorOpen(true)}
-            />
-          </div>
-        </section>
-
-        <section className="space-y-4">
-          <StoreSectionHeader
-            title="Built-In Teams"
-            count={builtInTeammates.length}
-            description="Beautiful quick-start cards. Open a card to inspect all agents, loop policy, prompt, and launch settings."
+            title="Execution Teams"
+            count={builtInTeammates.length + (hasCustomTeam ? 1 : 0)}
+            description="Prebuilt and custom teams for end-to-end execution of long-running tasks. Open a card to inspect agents, loop policy, prompt, and launch settings."
           />
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {hasCustomTeam ? (
+              <TeamVisitingCard
+                icon={<WandSparkles className="size-7" />}
+                eyebrow="Custom"
+                title={customTeam.name.trim() || 'Custom Execution Team'}
+                role={summarizeRole(customTeam.agents.map((agent) => agent.label || agent.id))}
+                description={summarizeDescription(
+                  customTeam.description,
+                  'Build your own team for end-to-end execution of long-running tasks.',
+                )}
+                agentLabels={customTeam.agents.map((agent) => agent.label || agent.id)}
+                dependencyLabels={customDependencyLabels}
+                onEdit={() => setIsCustomEditorOpen(true)}
+                onDelete={() => {
+                  void handleDeleteCustomTeam()
+                }}
+              />
+            ) : null}
             {builtInTeammates.map((teammate) => (
               <TeamVisitingCard
                 key={teammate.id}
@@ -749,9 +811,9 @@ export function TeammatesPanel() {
         </section>
       </div>
 
-      {isCustomEditorOpen ? (
+      {isCustomEditorOpen && hasCustomTeam ? (
         <TeamEditorDialog
-          title={customTeam.name.trim() || 'Custom Team'}
+          title={customTeam.name.trim() || 'Custom Execution Team'}
           description="Edit the full team: top-level launch settings, every agent, AI generation instructions, and decision-maker behavior."
           onClose={() => setIsCustomEditorOpen(false)}
         >
@@ -760,9 +822,21 @@ export function TeammatesPanel() {
               <div className="text-[13px] leading-5 text-text-secondary">
                 Build your team below. Use the AI generator to auto-fill agents from a simple prompt.
               </div>
-              <Button variant="secondary" size="sm" leftIcon={<Plus className="size-4" />} onClick={addAgent}>
-                Add Agent
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="danger"
+                  size="sm"
+                  leftIcon={<Trash2 className="size-4" />}
+                  onClick={() => {
+                    void handleDeleteCustomTeam()
+                  }}
+                >
+                  Delete Team
+                </Button>
+                <Button variant="secondary" size="sm" leftIcon={<Plus className="size-4" />} onClick={addAgent}>
+                  Add Agent
+                </Button>
+              </div>
             </div>
 
             <CollapsibleSection 

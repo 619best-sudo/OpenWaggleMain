@@ -143,39 +143,33 @@ function SkillsList({
   readonly selectSkill: (skillId: string) => void
   readonly toggleSkill: (skillId: string, enabled: boolean) => Promise<void>
 }) {
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-10 text-text-tertiary/40">
-        <Spinner />
-      </div>
-    )
-  }
-
-  if ((catalog?.skills.length ?? 0) === 0) {
-    return (
-      <div className="px-2">
-        <EmptySkillsState />
-      </div>
-    )
-  }
+  const skills = catalog?.skills ?? []
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] mb-4 mt-2">
+    <div className="mb-4 mt-2 overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-[inset_0_1px_0_var(--theme-panel-shadow-highlight)]">
       <div className="flex items-center justify-between border-b border-border bg-bg-secondary px-4 py-3">
         <div className="flex items-center gap-2">
           <h3 className="text-[12px] font-semibold text-text-secondary uppercase tracking-wider">Discovered Skills</h3>
         </div>
       </div>
       <div className="flex flex-col bg-bg-primary">
-        {catalog?.skills.map((skill) => (
-          <SkillListItem
-            key={skill.id}
-            skill={skill}
-            selected={selectedSkillId === skill.id}
-            onSelect={() => selectSkill(skill.id)}
-            onToggle={(enabled) => void toggleSkill(skill.id, enabled)}
-          />
-        ))}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-10 text-text-tertiary/40">
+            <Spinner />
+          </div>
+        ) : skills.length === 0 ? (
+          <EmptySkillsState />
+        ) : (
+          skills.map((skill) => (
+            <SkillListItem
+              key={skill.id}
+              skill={skill}
+              selected={selectedSkillId === skill.id}
+              onSelect={() => selectSkill(skill.id)}
+              onToggle={(enabled) => void toggleSkill(skill.id, enabled)}
+            />
+          ))
+        )}
       </div>
     </div>
   )

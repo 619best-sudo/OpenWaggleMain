@@ -6,6 +6,7 @@ import {
   SETTINGS_KEY_PROJECT_DISPLAY_NAMES,
   SETTINGS_KEY_PROJECT_PATH,
   SETTINGS_KEY_RECENT_PROJECTS,
+  SETTINGS_KEY_SHOW_CUSTOM_EXECUTION_TEAM,
   SETTINGS_KEY_SKILL_TOGGLES_BY_PROJECT,
   SETTINGS_KEY_THINKING_LEVEL,
   SETTINGS_KEY_THEME_MODE,
@@ -94,6 +95,12 @@ export function collectSettingsPatchWrites(partial: Partial<Settings>, next: Set
     partial.projectDisplayNames !== undefined,
     SETTINGS_KEY_PROJECT_DISPLAY_NAMES,
     next.projectDisplayNames,
+  )
+  appendChangedSetting(
+    writes,
+    partial.showCustomExecutionTeam !== undefined,
+    SETTINGS_KEY_SHOW_CUSTOM_EXECUTION_TEAM,
+    next.showCustomExecutionTeam,
   )
 
   return writes

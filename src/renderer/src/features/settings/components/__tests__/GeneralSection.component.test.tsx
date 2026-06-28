@@ -1,29 +1,15 @@
-import type { UpdateStatus } from '@shared/types/updater'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { DEFAULT_SETTINGS } from '@shared/types/settings'
+import { usePreferencesStore } from '@/features/settings/state/preferences-store'
 
-// --- Hoisted mock handles ---
-const {
-  getAppVersionMock,
-  getUpdateStatusMock,
-  onUpdateStatusMock,
-  checkForUpdatesMock,
-  installUpdateMock,
-} = vi.hoisted(() => ({
-  getAppVersionMock: vi.fn(),
-  getUpdateStatusMock: vi.fn(),
-  onUpdateStatusMock: vi.fn(),
-  checkForUpdatesMock: vi.fn(),
-  installUpdateMock: vi.fn(),
+const { updateSettingsMock } = vi.hoisted(() => ({
+  updateSettingsMock: vi.fn(),
 }))
 
 vi.mock('@/shared/lib/ipc', () => ({
   api: {
-    getAppVersion: getAppVersionMock,
-    getUpdateStatus: getUpdateStatusMock,
-    onUpdateStatus: onUpdateStatusMock,
-    checkForUpdates: checkForUpdatesMock,
-    installUpdate: installUpdateMock,
+    updateSettings: updateSettingsMock,
   },
 }))
 
@@ -31,130 +17,38 @@ import { GeneralSection } from '../sections/GeneralSection'
 
 describe('GeneralSection', () => {
   beforeEach(() => {
-    getAppVersionMock.mockReset()
-    getUpdateStatusMock.mockReset()
-    onUpdateStatusMock.mockReset()
-    checkForUpdatesMock.mockReset()
-    installUpdateMock.mockReset()
-
-    getAppVersionMock.mockResolvedValue('0.2.0')
-    getUpdateStatusMock.mockResolvedValue({ type: 'idle' } satisfies UpdateStatus)
-    onUpdateStatusMock.mockReturnValue(() => {})
-    checkForUpdatesMock.mockResolvedValue(undefined)
-    installUpdateMock.mockResolvedValue(undefined)
-  })
-
-  it('renders the app version after it resolves', async () => {
-    render(<GeneralSection />)
-
-    await waitFor(() => {
-      expect(screen.getByText(/OpenWaggle v0\.2\.0/)).toBeInTheDocument()
+    updateSettingsMock.mockReset()
+    updateSettingsMock.mockResolvedValue(undefined)
+    usePreferencesStore.setState({
+      ...usePreferencesStore.getInitialState(),
+      settings: DEFAULT_SETTINGS,
+      isLoaded: true,
+      loadError: null,
     })
   })
 
-  it('renders the "About & Updates" section heading', () => {
+  it('renders the theme picker options', () => {
     render(<GeneralSection />)
-    expect(screen.getByText('About & Updates')).toBeInTheDocument()
+
+    expect(screen.getByRole('button', { name: /Light theme/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Dark theme/i })).toBeInTheDocument()
+    expect(screen.getByText(/Active now:/i)).toBeInTheDocument()
   })
 
-  it('renders the "Check now" button when status is idle', async () => {
+  it('renders the general settings heading', () => {
     render(<GeneralSection />)
-
-    // The idle status is set synchronously via the initial useState, so the
-    // button should be present immediately (before the async getUpdateStatus resolves)
-    expect(screen.getByRole('button', { name: /check now/i })).toBeInTheDocument()
+    expect(screen.getByText('General')).toBeInTheDocument()
+    expect(screen.getByText(/Manage workspace-wide preferences/i)).toBeInTheDocument()
   })
 
-  it('calls api.checkForUpdates when "Check now" is clicked', async () => {
+  it('updates the selected theme when the user picks a different option', async () => {
     render(<GeneralSection />)
 
-    fireEvent.click(screen.getByRole('button', { name: /check now/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Light theme/i }))
 
     await waitFor(() => {
-      expect(checkForUpdatesMock).toHaveBeenCalledOnce()
+      expect(updateSettingsMock).toHaveBeenCalledWith({ themeMode: 'light' })
+      expect(usePreferencesStore.getState().settings.themeMode).toBe('light')
     })
-  })
-
-  it('shows "Restart to update" button when status is downloaded', async () => {
-    getUpdateStatusMock.mockResolvedValue({
-      type: 'downloaded',
-      version: '0.3.0',
-    } satisfies UpdateStatus)
-
-    render(<GeneralSection />)
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /restart to update/i })).toBeInTheDocument()
-    })
-    expect(screen.queryByRole('button', { name: /check now/i })).not.toBeInTheDocument()
-  })
-
-  it('calls api.installUpdate when "Restart to update" is clicked', async () => {
-    getUpdateStatusMock.mockResolvedValue({
-      type: 'downloaded',
-      version: '0.3.0',
-    } satisfies UpdateStatus)
-
-    render(<GeneralSection />)
-
-    fireEvent.click(await screen.findByRole('button', { name: /restart to update/i }))
-
-    await waitFor(() => {
-      expect(installUpdateMock).toHaveBeenCalledOnce()
-    })
-  })
-
-  it('shows "Check now" button when status is not-available', async () => {
-    getUpdateStatusMock.mockResolvedValue({ type: 'not-available' } satisfies UpdateStatus)
-
-    render(<GeneralSection />)
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /check now/i })).toBeInTheDocument()
-    })
-  })
-
-  it('shows "Check now" button when status is error', async () => {
-    getUpdateStatusMock.mockResolvedValue({
-      type: 'error',
-      message: 'network timeout',
-    } satisfies UpdateStatus)
-
-    render(<GeneralSection />)
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /check now/i })).toBeInTheDocument()
-    })
-  })
-
-  it('hides action buttons while checking or downloading', async () => {
-    getUpdateStatusMock.mockResolvedValue({ type: 'checking' } satisfies UpdateStatus)
-
-    render(<GeneralSection />)
-
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /check now/i })).not.toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: /restart to update/i })).not.toBeInTheDocument()
-    })
-  })
-
-  it('renders the "Latest version" label in the status row', () => {
-    render(<GeneralSection />)
-    expect(screen.getByText('Latest version')).toBeInTheDocument()
-  })
-
-  it('subscribes to live update status events via onUpdateStatus', () => {
-    render(<GeneralSection />)
-    expect(onUpdateStatusMock).toHaveBeenCalledOnce()
-  })
-
-  it('calls the unsubscribe function returned by onUpdateStatus on unmount', () => {
-    const unsubscribe = vi.fn()
-    onUpdateStatusMock.mockReturnValue(unsubscribe)
-
-    const { unmount } = render(<GeneralSection />)
-    unmount()
-
-    expect(unsubscribe).toHaveBeenCalledOnce()
   })
 })

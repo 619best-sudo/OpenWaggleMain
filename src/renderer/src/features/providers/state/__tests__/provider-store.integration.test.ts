@@ -1,6 +1,6 @@
 import { SupportedModelId } from '@shared/types/brand'
 import type { ProviderInfo } from '@shared/types/llm'
-import { DEFAULT_SETTINGS } from '@shared/types/settings'
+import { DEFAULT_SETTINGS, GREATX_BACKEND_MODEL_REF } from '@shared/types/settings'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '../auth-store'
 import { useProviderStore } from '../provider-store'
@@ -175,13 +175,37 @@ describe('provider-store integration', () => {
     const updatedSettings = await useProviderStore.getState().loadProviderModels()
 
     expect(apiMock.updateSettings).toHaveBeenCalledWith({
-      enabledModels: [SupportedModelId('turing-machine/greatx-backend')],
-      selectedModel: SupportedModelId('turing-machine/greatx-backend'),
+      enabledModels: [GREATX_BACKEND_MODEL_REF],
+      selectedModel: GREATX_BACKEND_MODEL_REF,
     })
     expect(updatedSettings).toEqual({
       ...DEFAULT_SETTINGS,
-      enabledModels: [SupportedModelId('turing-machine/greatx-backend')],
-      selectedModel: SupportedModelId('turing-machine/greatx-backend'),
+      enabledModels: [GREATX_BACKEND_MODEL_REF],
+      selectedModel: GREATX_BACKEND_MODEL_REF,
+    })
+  })
+
+  it('forces GreatX backend as the only enabled model when other providers are present', async () => {
+    apiMock.getSettings.mockResolvedValue({
+      ...DEFAULT_SETTINGS,
+      enabledModels: [SupportedModelId('openai/gpt-4.1-mini')],
+      selectedModel: SupportedModelId('openai/gpt-4.1-mini'),
+    })
+    apiMock.getProviderModels.mockResolvedValue([
+      ...openAiProviderModels(),
+      ...turingMachineProviderModels(),
+    ])
+
+    const updatedSettings = await useProviderStore.getState().loadProviderModels()
+
+    expect(apiMock.updateSettings).toHaveBeenCalledWith({
+      enabledModels: [GREATX_BACKEND_MODEL_REF],
+      selectedModel: GREATX_BACKEND_MODEL_REF,
+    })
+    expect(updatedSettings).toEqual({
+      ...DEFAULT_SETTINGS,
+      enabledModels: [GREATX_BACKEND_MODEL_REF],
+      selectedModel: GREATX_BACKEND_MODEL_REF,
     })
   })
 

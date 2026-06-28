@@ -201,7 +201,7 @@ export function DiffPanel({ projectPath, onSendMessage }: DiffPanelProps) {
     // Future: implement git add -A via IPC
   }
 
-  const [isTreeExpanded, setIsTreeExpanded] = useState(true)
+  const [isTreeExpanded, setIsTreeExpanded] = useState(false)
 
   return (
     <div className="flex flex-col size-full bg-diff-bg">

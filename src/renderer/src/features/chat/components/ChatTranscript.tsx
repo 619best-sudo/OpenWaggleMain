@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 import { useChatScrollBehaviour } from '../hooks/useChatScrollBehaviour'
 import type { ChatRow } from '../lib/types-chat-row'
 import type { ChatTranscriptSectionState } from '../model'
+import { useUIStore } from '@/shell/ui-store'
 import { Button } from '@/shared/ui/Button'
 import { ChatRowRenderer } from './ChatRowRenderer'
 import { ScrollToBottomButton } from './ScrollToBottomButton'
@@ -236,6 +237,7 @@ function buildTranscriptDebugPayload(section: ChatTranscriptSectionState) {
 
 export function ChatTranscript({ section }: ChatTranscriptProps) {
   const [isDebugPanelOpen, setIsDebugPanelOpen] = useState(false)
+  const transcriptDebugEnabled = useUIStore((s) => s.transcriptDebugEnabled)
   const {
     messages,
     isLoading,
@@ -338,7 +340,7 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
           />
         </div>
       </div>
-      {messages.length > 0 ? (
+      {messages.length > 0 && transcriptDebugEnabled ? (
         <>
           {isDebugPanelOpen ? (
             <div

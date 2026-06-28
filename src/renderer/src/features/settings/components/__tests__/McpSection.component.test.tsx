@@ -163,7 +163,7 @@ describe('McpSection', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Advanced' }))
 
     // Select the project standard source
-    const sourceSelect = screen.getByRole('combobox', { name: /Source/i })
+    const sourceSelect = screen.getByRole('combobox', { name: /Edit/i })
     fireEvent.change(sourceSelect, { target: { value: 'project-standard' } })
 
     const textboxes = screen.getAllByRole('textbox')
@@ -195,8 +195,8 @@ describe('McpSection', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Add Server' }))
 
-    const sourceSelect = screen.getByRole('combobox', { name: /Save to/i })
-    fireEvent.change(sourceSelect, { target: { value: 'project-standard' } })
+    const sourceSelect = screen.getByRole('combobox', { name: /Install for/i })
+    fireEvent.change(sourceSelect, { target: { value: 'project-openwaggle' } })
 
     fireEvent.change(screen.getByPlaceholderText('playwright'), {
       target: { value: 'filesystem' },
@@ -214,12 +214,12 @@ describe('McpSection', () => {
     await waitFor(() => {
       expect(writeMcpSourceConfigMock).toHaveBeenCalledWith({
         projectPath: PROJECT_PATH,
-        sourceId: 'project-standard',
+        sourceId: 'project-openwaggle',
         rawJson:
           '{\n' +
           '  "mcpServers": {\n' +
-          '    "playwright": {\n' +
-          '      "command": "npx"\n' +
+          '    "alpha": {\n' +
+          '      "command": "alpha"\n' +
           '    },\n' +
           '    "filesystem": {\n' +
           '      "command": "npx",\n' +
@@ -235,6 +235,44 @@ describe('McpSection', () => {
     })
   })
 
+  it('quick-adds a GitHub MCP server into the selected MCP source', async () => {
+    render(<McpSection />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Add Server' }))
+
+    const sourceSelect = screen.getByRole('combobox', { name: /Install for/i })
+    fireEvent.change(sourceSelect, { target: { value: 'project-openwaggle' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'GitHub URL' }))
+    fireEvent.change(screen.getByPlaceholderText('https://github.com/owner/repo'), {
+      target: { value: 'https://github.com/example/browser-tools-mcp' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add From GitHub' }))
+
+    await waitFor(() => {
+      expect(writeMcpSourceConfigMock).toHaveBeenCalledWith({
+        projectPath: PROJECT_PATH,
+        sourceId: 'project-openwaggle',
+        rawJson:
+          '{\n' +
+          '  "mcpServers": {\n' +
+          '    "alpha": {\n' +
+          '      "command": "alpha"\n' +
+          '    },\n' +
+          '    "browser-tools-mcp": {\n' +
+          '      "command": "npx",\n' +
+          '      "args": [\n' +
+          '        "-y",\n' +
+          '        "github:example/browser-tools-mcp"\n' +
+          '      ]\n' +
+          '    }\n' +
+          '  }\n' +
+          '}\n',
+      })
+    })
+  })
+
   it('notifies when saving raw JSON fails', async () => {
     writeMcpSourceConfigMock.mockRejectedValueOnce(new Error('Invalid JSON'))
 
@@ -242,7 +280,7 @@ describe('McpSection', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Advanced' }))
 
-    const sourceSelect = screen.getByRole('combobox', { name: /Source/i })
+    const sourceSelect = screen.getByRole('combobox', { name: /Edit/i })
     fireEvent.change(sourceSelect, { target: { value: 'project-standard' } })
 
     fireEvent.click(screen.getByRole('button', { name: 'Save JSON' }))

@@ -30,7 +30,7 @@ export function SessionForkSelector({
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[var(--theme-overlay-scrim-45)] p-4">
       <section className="home-panel-frame w-full max-w-[520px] rounded-xl bg-bg-secondary p-4 shadow-2xl">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">

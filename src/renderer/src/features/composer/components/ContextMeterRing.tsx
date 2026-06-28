@@ -36,7 +36,7 @@ export function ContextMeterRing({
           cy={CONTEXT_METER.GEOMETRY.CENTER}
           r={CONTEXT_METER.GEOMETRY.RADIUS}
           fill="none"
-          stroke="rgba(255,255,255,0.05)"
+          stroke="var(--theme-context-meter-track)"
           strokeWidth={CONTEXT_METER.GEOMETRY.STROKE_WIDTH}
         />
         <circle

@@ -8,7 +8,7 @@ import { SkillsRouteSurface } from '../-skills-route-surface'
 import { TeammatesRouteSurface } from '../-teammates-route-surface'
 import { WaggleRouteSurface } from '../-waggle-route-surface'
 
-type SettingsTab = 'profile' | 'general' | 'archived' | 'connections'
+type SettingsTab = 'profile' | 'general' | 'about' | 'archived' | 'connections'
 type RightSidebarPanel = 'diff' | 'session-tree'
 interface RouterState {
   readonly location: {

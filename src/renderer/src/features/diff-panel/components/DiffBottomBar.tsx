@@ -19,7 +19,7 @@ export function DiffBottomBar({
   const PanelIcon = isTreeExpanded ? PanelLeftClose : PanelLeftOpen
 
   return (
-    <div className="flex items-center justify-between h-10 px-4 bg-diff-header-bg border-t border-border shrink-0">
+    <div className="home-divider-t flex h-10 shrink-0 items-center justify-between px-4 bg-diff-bg">
       <Button
         variant="unstyled"
         type="button"

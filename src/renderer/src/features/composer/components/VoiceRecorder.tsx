@@ -91,11 +91,11 @@ function buildInlineVisualizerProps(controls: VoiceCaptureController['visualizer
     isProgressIndicatorShown: false,
     isProgressIndicatorTimeOnHoverShown: false,
     isProgressIndicatorTimeShown: false,
-    mainBarColor: '#FFFFFF',
+    mainBarColor: 'var(--theme-waveform-main)',
     mainContainerClassName: '!m-0 !h-full !w-full !bg-transparent !border-0 !p-0 !shadow-none',
     onlyRecording: false,
     rounded: INLINE_WAVEFORM_BAR_RADIUS_PX,
-    secondaryBarColor: '#5e5e5e',
+    secondaryBarColor: 'var(--theme-waveform-secondary)',
     speed: VISUALIZER_SPEED,
     width: '100%',
   }

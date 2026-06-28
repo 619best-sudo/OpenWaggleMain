@@ -32,18 +32,18 @@ export function SidebarBrandArea({ isFullscreen }: { readonly isFullscreen: bool
         className="drag-region shrink-0 transition-[height] duration-200 ease-out"
         style={{ height: isFullscreen ? 0 : SIDEBAR_LAYOUT.DRAG_REGION_HEIGHT }}
       />
-      <div className="drag-region shrink-0 px-6 pt-6">
+      <div className="drag-region shrink-0 px-6 pb-2 pt-5">
         <div className="flex items-center gap-3">
           <div className="home-panel-frame-soft overflow-hidden rounded-2xl bg-white shadow-sm">
             <img
               src={appLogo}
-              alt="TuringMachine logo"
+              alt="Turing Machine logo"
               className="size-11 object-cover"
             />
           </div>
           <div className="min-w-0">
             <p className="no-drag truncate text-[15px] font-semibold tracking-[-0.015em] text-text-primary">
-              TuringMachine
+              Turing Machine
             </p>
           </div>
         </div>
@@ -117,7 +117,7 @@ export function SidebarPrimaryActions({
   readonly onOpenWaggle: () => void
 }) {
   return (
-    <div className="shrink-0 px-6 mt-12">
+    <div className="mt-9 shrink-0 px-6">
       <Button
         variant="unstyled"
         aria-label="New thread"
@@ -128,7 +128,7 @@ export function SidebarPrimaryActions({
         <span className="text-[13px] font-semibold tracking-[-0.01em]">New thread</span>
       </Button>
 
-      <div className="mt-10 space-y-1">
+      <div className="mt-7 space-y-1">
         <SidebarShortcut
           active={activeView === 'teammates'}
           icon={Users}
@@ -172,7 +172,7 @@ export function SidebarProjectsHeader({
   readonly onSetSortMode: (mode: SidebarSessionSortMode) => void
 }) {
   return (
-    <div className="no-drag flex shrink-0 items-center justify-between px-6 pb-4 pt-10">
+    <div className="no-drag flex shrink-0 items-center justify-between px-6 pb-4 pt-6">
       <span className="text-[10.5px] font-semibold tracking-[0.22em] text-text-tertiary">
         THREADS
       </span>

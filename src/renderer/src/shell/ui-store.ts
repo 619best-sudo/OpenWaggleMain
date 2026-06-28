@@ -20,7 +20,7 @@ export interface ToastData {
   action?: { label: string; url?: string; onClick?: () => void }
 }
 
-export type SettingsTab = 'profile' | 'general' | 'archived' | 'connections'
+export type SettingsTab = 'profile' | 'general' | 'about' | 'archived' | 'connections'
 
 interface UIState {
   sidebarOpen: boolean
@@ -28,6 +28,7 @@ interface UIState {
   activeView: 'chat' | 'skills' | 'settings'
   activeSettingsTab: SettingsTab
   diffRefreshKey: number
+  transcriptDebugEnabled: boolean
   toastMessage: string | null
   toastData: ToastData | null
   commandPaletteOpen: boolean
@@ -41,6 +42,7 @@ interface UIState {
   setActiveView: (view: 'chat' | 'skills' | 'settings') => void
   setActiveSettingsTab: (tab: SettingsTab) => void
   bumpDiffRefreshKey: () => void
+  enableTranscriptDebug: () => void
   closeTerminal: () => void
   showToast: (message: string, variant?: ToastData['variant']) => void
   showPersistentToast: (data: ToastData) => void
@@ -63,6 +65,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   activeView: 'chat',
   activeSettingsTab: 'general',
   diffRefreshKey: 0,
+  transcriptDebugEnabled: false,
   toastMessage: null,
   toastData: null,
   commandPaletteOpen: false,
@@ -89,6 +92,10 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   bumpDiffRefreshKey() {
     set((state) => ({ diffRefreshKey: state.diffRefreshKey + 1 }))
+  },
+
+  enableTranscriptDebug() {
+    set({ transcriptDebugEnabled: true })
   },
 
   closeTerminal() {
