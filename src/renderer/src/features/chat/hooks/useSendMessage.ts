@@ -5,6 +5,7 @@ import type { ThinkingLevel } from '@shared/types/settings'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleConfig } from '@shared/types/waggle'
 import { createOptimisticUserMessage } from '@/features/chat/lib/useAgentChat.utils'
+import type { UIMessage } from '@shared/types/chat-ui'
 import { useBackgroundRunStore } from '@/features/chat/state/background-run-store'
 import { useOptimisticUserMessageStore } from '@/features/chat/state/optimistic-user-message-store'
 import { api } from '@/shared/lib/ipc'
@@ -46,6 +47,26 @@ interface SendMessageHandlers {
     teammate: TeammateDefinition,
     targetSessionId?: SessionId | null,
   ) => Promise<void>
+}
+
+export async function seedOptimisticSendForSession(input: {
+  readonly sessionId: SessionId
+  readonly payload: AgentSendPayload
+  readonly baseMessages?: readonly UIMessage[]
+  readonly source: string
+}) {
+  const optimisticUserMessage = createOptimisticUserMessage(input.payload)
+  const baseMessages = input.baseMessages ? [...input.baseMessages] : []
+  useOptimisticUserMessageStore.getState().add(input.sessionId, optimisticUserMessage)
+  useBackgroundRunStore
+    .getState()
+    .setRunRenderMessages(input.sessionId, [...baseMessages, optimisticUserMessage])
+  logger.debug('Seeded optimistic send render state', {
+    sessionId: String(input.sessionId),
+    source: input.source,
+    promptText: input.payload.text,
+    baseMessageCount: baseMessages.length,
+  })
 }
 
 /** Pure factory — testable without React. */
@@ -146,9 +167,11 @@ export function useSendMessage(options: UseSendMessageOptions): SendMessageHandl
       | { readonly kind: 'waggle'; readonly config: WaggleConfig }
       | { readonly kind: 'team'; readonly teammate: TeammateDefinition },
   ) {
-    const optimisticUserMessage = createOptimisticUserMessage(payload)
-    useOptimisticUserMessageStore.getState().add(sessionId, optimisticUserMessage)
-    useBackgroundRunStore.getState().setRunRenderMessages(sessionId, [optimisticUserMessage])
+    await seedOptimisticSendForSession({
+      sessionId,
+      payload,
+      source: `first-message:${mode.kind}`,
+    })
 
     try {
       if (mode.kind === 'waggle') {

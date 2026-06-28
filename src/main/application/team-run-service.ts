@@ -6,11 +6,13 @@ import type { AgentTransportEvent } from '@shared/types/stream'
 import type { TeammateAgentDefinition, TeammateDefinition } from '@shared/types/teammate'
 import * as Effect from 'effect/Effect'
 import { createLogger } from '../logger'
+import type { AgentKernelPromptDelivery } from '../ports/agent-kernel-service'
 import { ProviderProbeService } from '../ports/provider-probe-service'
 import { ProviderService } from '../ports/provider-service'
 import { executeAgentRun } from './agent-run-service'
 
 const logger = createLogger('team-run-service')
+const OPENWAGGLE_TEAM_INTERNAL_TURN_CUSTOM_TYPE = 'openwaggle.team-internal-turn'
 
 interface ExecuteTeamRunInput {
   readonly sessionId: SessionId
@@ -51,6 +53,7 @@ interface TeamRoutingResult {
   readonly nextAgentId: string
   readonly nextPrompt: string
   readonly visiblePrompt?: string
+  readonly promptSource?: TeamPromptSource
   readonly stop: boolean
 }
 
@@ -66,6 +69,25 @@ interface TeamRouterDecision {
   readonly finalDecision?: 'complete' | 'continue' | 'blocked'
   readonly nextAgentId?: string
   readonly nextUserPrompt?: string
+}
+
+type TeamPromptSource =
+  | 'router-next-user-prompt'
+  | 'parsed-next-user-prompt'
+  | 'user-original'
+  | 'fallback'
+
+interface RejectedPromptCandidate {
+  readonly source: TeamPromptSource
+  readonly reason: string
+  readonly text: string
+}
+
+interface ResolvedTeamPrompt {
+  readonly text: string
+  readonly visiblePrompt?: string
+  readonly source: TeamPromptSource
+  readonly rejectedCandidates: readonly RejectedPromptCandidate[]
 }
 
 const teamRouterDecisionSchema = Schema.Struct({
@@ -108,6 +130,7 @@ export function executeTeamRun(input: ExecuteTeamRunInput) {
 
     let currentAgent = initialAgent
     let currentPayload = input.payload
+    let currentPromptDelivery: AgentKernelPromptDelivery | undefined
     const rootUserPrompt = input.payload.text
     const agentRunCounts: Record<string, number> = {}
     let decisionMakerCalls = 0
@@ -116,11 +139,19 @@ export function executeTeamRun(input: ExecuteTeamRunInput) {
     while (!input.signal.aborted) {
       const subRunId = `${input.runId}-${currentAgent.id}-${randomUUID()}`
       const currentAgentModel = resolveAgentModel(currentAgent, input.model)
+      logger.debug('Team(New) dispatching agent run payload', {
+        sessionId: input.sessionId,
+        teammateId: input.teammate.id,
+        agentId: currentAgent.id,
+        agentLabel: currentAgent.label,
+        payloadText: currentPayload.text,
+      })
       const result = yield* executeAgentRun({
         sessionId: input.sessionId,
         runId: subRunId,
         payload: currentPayload,
         model: currentAgentModel,
+        ...(currentPromptDelivery ? { promptDelivery: currentPromptDelivery } : {}),
         signal: input.signal,
         onEvent: input.onEvent,
         onTitleAssigned: input.onTitleAssigned,
@@ -172,6 +203,7 @@ export function executeTeamRun(input: ExecuteTeamRunInput) {
       )
 
       if (currentAgent.id === decisionMaker.id) {
+        const previousAgent = currentAgent
         decisionMakerCalls += 1
         const decisionRouting = routeFromDecisionMaker({
           teammate: input.teammate,
@@ -194,8 +226,22 @@ export function executeTeamRun(input: ExecuteTeamRunInput) {
           attachments: [],
           thinkingLevel: input.payload.thinkingLevel,
         }
+        currentPromptDelivery = promptDeliveryForTeamPromptSource(
+          decisionRouting.promptSource,
+          currentAgent,
+        )
         nextVisiblePrompt = decisionRouting.visiblePrompt
+        logSelectedPrompt({
+          sessionId: input.sessionId,
+          teammateId: input.teammate.id,
+          nextAgent: currentAgent,
+          currentAgent: previousAgent,
+          parsedSections,
+          routerDecision,
+          routing: decisionRouting,
+        })
       } else {
+        const previousAgent = currentAgent
         const workerRouting = routeFromWorker({
           teammate: input.teammate,
           agents: allAgents,
@@ -212,7 +258,20 @@ export function executeTeamRun(input: ExecuteTeamRunInput) {
           attachments: [],
           thinkingLevel: input.payload.thinkingLevel,
         }
+        currentPromptDelivery = promptDeliveryForTeamPromptSource(
+          workerRouting.promptSource,
+          currentAgent,
+        )
         nextVisiblePrompt = workerRouting.visiblePrompt
+        logSelectedPrompt({
+          sessionId: input.sessionId,
+          teammateId: input.teammate.id,
+          nextAgent: currentAgent,
+          currentAgent: previousAgent,
+          parsedSections,
+          routerDecision,
+          routing: workerRouting,
+        })
       }
 
       autoSubmittedPromptCount += 1
@@ -278,7 +337,8 @@ function routeFromWorker(input: {
   return {
     nextAgentId,
     nextPrompt: nextPrompt.text,
-    ...(nextPrompt.visiblePrompt ? { visiblePrompt: nextPrompt.visiblePrompt } : {}),
+    visiblePrompt: nextPrompt.visiblePrompt,
+    promptSource: nextPrompt.source,
     stop: false,
   }
 }
@@ -340,7 +400,8 @@ function routeFromDecisionMaker(input: {
     return {
       nextAgentId,
       nextPrompt: nextPrompt.text,
-      ...(nextPrompt.visiblePrompt ? { visiblePrompt: nextPrompt.visiblePrompt } : {}),
+      visiblePrompt: nextPrompt.visiblePrompt,
+      promptSource: nextPrompt.source,
       stop: false,
     }
   }
@@ -369,7 +430,8 @@ function routeFromDecisionMaker(input: {
   return {
     nextAgentId,
     nextPrompt: nextPrompt.text,
-    ...(nextPrompt.visiblePrompt ? { visiblePrompt: nextPrompt.visiblePrompt } : {}),
+    visiblePrompt: nextPrompt.visiblePrompt,
+    promptSource: nextPrompt.source,
     stop: false,
   }
 }
@@ -425,27 +487,51 @@ function buildNextPrompt(input: {
   readonly parsedSections: ParsedTeamSections
   readonly routerDecision: TeamRouterDecision
   readonly rootUserPrompt: string
-}) {
-  if (input.nextAgent.createPrompt === 'user-original') {
-    return { text: input.rootUserPrompt }
-  }
+}): ResolvedTeamPrompt {
+  const rejectedCandidates: RejectedPromptCandidate[] = []
+  const explicitCandidates: readonly [TeamPromptSource, string | undefined][] = [
+    ['router-next-user-prompt', input.routerDecision.nextUserPrompt],
+    ['parsed-next-user-prompt', input.parsedSections.nextUserPrompt],
+  ]
 
-  const explicitNextPrompt =
-    input.routerDecision.nextUserPrompt?.trim() ?? input.parsedSections.nextUserPrompt?.trim()
-  if (explicitNextPrompt) {
-    return {
-      text: explicitNextPrompt,
-      visiblePrompt: explicitNextPrompt,
+  for (const [source, candidate] of explicitCandidates) {
+    const normalizedCandidate = normalizeNextPromptCandidate(candidate)
+    if (normalizedCandidate.ok) {
+      return {
+        text: normalizedCandidate.text,
+        visiblePrompt: normalizedCandidate.text,
+        source,
+        rejectedCandidates,
+      }
+    }
+    if (candidate?.trim()) {
+      rejectedCandidates.push({
+        source,
+        reason: normalizedCandidate.reason,
+        text: candidate.trim(),
+      })
     }
   }
 
+  if (input.nextAgent.createPrompt === 'user-original') {
+    const nextPrompt = input.rootUserPrompt.trim()
+    return {
+      text: nextPrompt,
+      source: 'user-original',
+      rejectedCandidates,
+    }
+  }
+
+  const fallbackPrompt = buildFallbackPrompt({
+    teammate: input.teammate,
+    nextAgent: input.nextAgent,
+    latestAssistantText: input.latestAssistantText,
+    exactNextLoopInstructions: input.parsedSections.exactNextLoopInstructions,
+  })
   return {
-    text: buildFallbackPrompt({
-      teammate: input.teammate,
-      nextAgent: input.nextAgent,
-      latestAssistantText: input.latestAssistantText,
-      exactNextLoopInstructions: input.parsedSections.exactNextLoopInstructions,
-    }),
+    text: fallbackPrompt,
+    source: 'fallback',
+    rejectedCandidates,
   }
 }
 
@@ -495,6 +581,31 @@ function buildFallbackPrompt(input: {
     .filter((line) => line !== null)
     .join('\n')
     .trim()
+}
+
+function promptDeliveryForTeamPromptSource(
+  promptSource: TeamPromptSource | undefined,
+  targetAgent: TeammateAgentDefinition,
+): AgentKernelPromptDelivery | undefined {
+  if (
+    promptSource === 'router-next-user-prompt' ||
+    promptSource === 'parsed-next-user-prompt' ||
+    !promptSource
+  ) {
+    return undefined
+  }
+
+  return {
+    mode: 'hidden-custom-message',
+    customType: OPENWAGGLE_TEAM_INTERNAL_TURN_CUSTOM_TYPE,
+    details: {
+      source: 'openwaggle',
+      kind: 'team-internal-turn',
+      promptSource,
+      targetAgentId: targetAgent.id,
+      targetAgentLabel: targetAgent.label,
+    },
+  }
 }
 
 function getAgentsRequiringRuns(
@@ -573,6 +684,59 @@ function readSectionValue(text: string, label: string): string | null {
   return match[1]?.trim() ?? null
 }
 
+function normalizeNextPromptCandidate(candidate: string | undefined) {
+  const trimmed = candidate?.trim()
+  if (!trimmed) {
+    return { ok: false as const, reason: 'empty' }
+  }
+
+  const withoutAssistantChatter = stripTrailingAssistantChatter(trimmed)
+  if (containsPromptSectionLabels(withoutAssistantChatter)) {
+    return { ok: false as const, reason: 'contains-structured-sections' }
+  }
+  if (containsOrchestrationBoilerplate(withoutAssistantChatter)) {
+    return { ok: false as const, reason: 'contains-orchestration-boilerplate' }
+  }
+
+  return { ok: true as const, text: withoutAssistantChatter }
+}
+
+function stripTrailingAssistantChatter(text: string) {
+  const paragraphs = text
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph.length > 0)
+  if (paragraphs.length <= 1) {
+    return text.trim()
+  }
+
+  const [firstParagraph, ...rest] = paragraphs
+  if (firstParagraph && rest.every((paragraph) => looksLikeAssistantChatter(paragraph))) {
+    return firstParagraph
+  }
+  return text.trim()
+}
+
+function looksLikeAssistantChatter(paragraph: string) {
+  return /^(got it|okay|ok|sure|i need to|i should|i can|i will|i'll|let me|first,|wait,)/i.test(
+    paragraph.trim(),
+  )
+}
+
+function containsPromptSectionLabels(text: string) {
+  return /(?:^|\n)\s*-?\s*(Execution Summary|Next Agent|Unresolved Blockers|Final Decision|Website Open Check|Playwright Evidence Reviewed|Biggest Blocker or Confirmation|Exact Next Loop Instructions)\s*:/i.test(
+    text,
+  )
+}
+
+function containsOrchestrationBoilerplate(text: string) {
+  return (
+    /continue the .* task as /i.test(text) ||
+    /use the latest chat transcript as context/i.test(text) ||
+    /end with these exact sections/i.test(text)
+  )
+}
+
 function emitAutoSubmittedPrompt(
   onEvent: (event: AgentTransportEvent) => void,
   input: {
@@ -581,6 +745,11 @@ function emitAutoSubmittedPrompt(
     readonly generated: boolean
   },
 ) {
+  logger.debug('Team(New) emitting auto-submitted prompt', {
+    agentLabel: input.agentLabel,
+    promptText: input.text,
+    generated: input.generated,
+  })
   onEvent({
     type: 'custom',
     name: 'team:auto-user-prompt',
@@ -745,4 +914,27 @@ function extractJsonBlock(text: string) {
     return fencedMatch[1].trim()
   }
   return text.trim()
+}
+
+function logSelectedPrompt(input: {
+  readonly sessionId: SessionId
+  readonly teammateId: string
+  readonly currentAgent: TeammateAgentDefinition
+  readonly nextAgent: TeammateAgentDefinition
+  readonly parsedSections: ParsedTeamSections
+  readonly routerDecision: TeamRouterDecision
+  readonly routing: TeamRoutingResult
+}) {
+  logger.debug('Team(New) selected next prompt', {
+    sessionId: input.sessionId,
+    teammateId: input.teammateId,
+    currentAgentId: input.currentAgent.id,
+    nextAgentId: input.nextAgent.id,
+    nextAgentLabel: input.nextAgent.label,
+    promptSource: input.routing.promptSource ?? 'unknown',
+    submittedPromptText: input.routing.nextPrompt,
+    visiblePromptText: input.routing.visiblePrompt ?? null,
+    routerNextUserPrompt: input.routerDecision.nextUserPrompt ?? null,
+    parsedNextUserPrompt: input.parsedSections.nextUserPrompt ?? null,
+  })
 }

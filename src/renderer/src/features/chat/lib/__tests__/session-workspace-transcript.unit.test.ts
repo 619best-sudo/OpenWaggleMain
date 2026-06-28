@@ -193,6 +193,107 @@ describe('resolveTranscriptMessages', () => {
     ])
   })
 
+  it('keeps persisted user turns visible when the workspace transcript path lags behind the live cache', () => {
+    const user = sessionNode('user-head', null, 'user', 'Head user', 0)
+    const assistant = sessionNode('assistant-head', 'user-head', 'assistant', 'Head answer', 1)
+    const persistedNextUser = sessionNode('persisted-next-user', 'assistant-head', 'user', 'Keep refining the landing page.', 2)
+
+    const resolved = resolveTranscriptMessages({
+      activeSessionId: SESSION_DETAIL_ID,
+      activeWorkspace: {
+        tree: {
+          session: {
+            id: SESSION_ID,
+            title: 'Branch test',
+            projectPath: '/tmp/project',
+            createdAt: 1,
+            updatedAt: 4,
+            lastActiveNodeId: assistant.id,
+            lastActiveBranchId: MAIN_BRANCH_ID,
+          },
+          nodes: [user, assistant, persistedNextUser],
+          branches: [
+            {
+              id: MAIN_BRANCH_ID,
+              sessionId: SESSION_ID,
+              sourceNodeId: null,
+              headNodeId: assistant.id,
+              name: 'main',
+              isMain: true,
+              createdAt: 1,
+              updatedAt: 4,
+            },
+          ],
+          branchStates: [],
+          uiState: null,
+        },
+        activeBranchId: MAIN_BRANCH_ID,
+        activeNodeId: assistant.id,
+        transcriptPath: [
+          { node: user, branchId: user.branchId, isActive: false },
+          { node: assistant, branchId: assistant.branchId, isActive: true },
+        ],
+      },
+      messages: [
+        uiMessage('user-head', 'user', 'Head user'),
+        uiMessage('assistant-head', 'assistant', 'Head answer'),
+        uiMessage('persisted-next-user', 'user', 'Keep refining the landing page.'),
+        uiMessage('live-assistant', 'assistant', 'On it.'),
+      ],
+    })
+
+    expect(resolved.map((message) => message.id)).toEqual([
+      'user-head',
+      'assistant-head',
+      'persisted-next-user',
+      'live-assistant',
+    ])
+  })
+
+  it('filters persisted internal Team(New) fallback prompts from the visible transcript', () => {
+    const user = sessionNode('user-head', null, 'user', 'Head user', 0)
+    const assistant = sessionNode('assistant-head', 'user-head', 'assistant', 'Head answer', 1)
+    const internalPrompt = sessionNode(
+      'internal-team-prompt',
+      'assistant-head',
+      'user',
+      `Continue the Code Reviewer task as Standards Auditor.
+
+Use the latest chat transcript as context and continue from the current state.
+
+End with these exact sections:
+- Execution Summary:
+- Next Agent:
+- Next User Prompt:
+- Unresolved Blockers:`,
+      2,
+    )
+
+    const resolved = resolveTranscriptMessages({
+      activeSessionId: SESSION_DETAIL_ID,
+      activeWorkspace: workspaceWithPath([user, assistant, internalPrompt], internalPrompt.id, internalPrompt.id),
+      messages: [
+        uiMessage('user-head', 'user', 'Head user'),
+        uiMessage('assistant-head', 'assistant', 'Head answer'),
+        uiMessage(
+          'internal-team-prompt',
+          'user',
+          `Continue the Code Reviewer task as Standards Auditor.
+
+Use the latest chat transcript as context and continue from the current state.
+
+End with these exact sections:
+- Execution Summary:
+- Next Agent:
+- Next User Prompt:
+- Unresolved Blockers:`,
+        ),
+      ],
+    })
+
+    expect(resolved.map((message) => message.id)).toEqual(['user-head', 'assistant-head'])
+  })
+
   it('preserves an unsaved tail even when the workspace path and cached messages have no overlap yet', () => {
     const persistedUser = sessionNode('persisted-user', null, 'user', 'Persisted user', 0)
 

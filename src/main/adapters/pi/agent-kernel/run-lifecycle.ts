@@ -7,13 +7,18 @@ import type {
 import type { HydratedAgentSendPayload, Message } from '@shared/types/agent'
 import type { ThinkingLevel } from '@shared/types/settings'
 import { clampThinkingLevel } from '@shared/utils/thinking-levels'
-import type { AgentKernelRunInput, AgentKernelRunResult } from '../../../ports/agent-kernel-service'
+import type {
+  AgentKernelRunInput,
+  AgentKernelRunResult,
+  HiddenCustomPromptDelivery,
+} from '../../../ports/agent-kernel-service'
 import {
   createPiProjectModelRuntime,
   getPiModelAvailableThinkingLevels,
   type PiModel,
 } from '../pi-provider-catalog'
 import {
+  buildPiRunAssistantMessages,
   buildPiRunNewMessages,
   extractPiAssistantTerminalError,
   getPiAssistantStopReason,
@@ -32,6 +37,13 @@ export interface PiRunSessionRuntime {
   readonly model: PiModel
   readonly session: AgentSession
 }
+
+type PiCustomContent =
+  | string
+  | (
+      | { readonly type: 'text'; readonly text: string }
+      | { readonly type: 'image'; readonly data: string; readonly mimeType: string }
+    )[]
 
 function resolvePiRuntimeThinkingLevel(model: PiModel, requestedThinkingLevel: ThinkingLevel) {
   return clampThinkingLevel(requestedThinkingLevel, getPiModelAvailableThinkingLevels(model))
@@ -111,6 +123,7 @@ function describeError(error: unknown) {
 function buildSuccessfulRunResult(input: {
   readonly session: AgentSession
   readonly payload: HydratedAgentSendPayload
+  readonly promptDelivery?: AgentKernelRunInput['promptDelivery']
   readonly appended: readonly unknown[]
   readonly aborted: boolean
 }): AgentKernelRunResult {
@@ -118,7 +131,10 @@ function buildSuccessfulRunResult(input: {
   const stopReason = getPiAssistantStopReason(input.appended)
 
   return {
-    newMessages: buildPiRunNewMessages(input.payload, input.appended),
+    newMessages:
+      input.promptDelivery?.mode === 'hidden-custom-message'
+        ? buildPiRunAssistantMessages(input.appended)
+        : buildPiRunNewMessages(input.payload, input.appended),
     piSessionId: input.session.sessionId,
     piSessionFile: input.session.sessionFile,
     sessionSnapshot: projectPiSessionSnapshot(input.session),
@@ -244,42 +260,53 @@ export async function promptPiSession(
   session: AgentSession,
   model: PiModel,
   payload: HydratedAgentSendPayload,
+  promptDelivery?: AgentKernelRunInput['promptDelivery'],
 ) {
   const promptInput = buildPiPromptInput(model, payload)
-  // #region debug-point C:prompt-tools
-  await (async () => {
-    let debugServerUrl = 'http://127.0.0.1:7777/event'
-    let debugSessionId = 'pi-mcp-browser'
-    try {
-      const { readFileSync } = await import('node:fs')
-      const envFile = readFileSync('.dbg/pi-mcp-browser.env', 'utf8')
-      debugServerUrl = envFile.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? debugServerUrl
-      debugSessionId = envFile.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? debugSessionId
-    } catch {}
-    void fetch(debugServerUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: debugSessionId,
-        runId: 'pre-fix',
-        hypothesisId: 'C',
-        location: 'src/main/adapters/pi/agent-kernel/run-lifecycle.ts:promptPiSession',
-        msg: '[DEBUG] Prompting Pi session',
-        data: {
-          sessionId: session.sessionId,
-          model: `${model.provider}/${model.id}`,
-          toolNames: session.agent.state.tools.map((tool) => tool.name),
-          toolCount: session.agent.state.tools.length,
-          textPreview: promptInput.text.slice(0, 200),
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
-  })()
-  // #endregion
+  if (promptDelivery?.mode === 'hidden-custom-message') {
+    await sendHiddenPromptCustomMessage(
+      session,
+      promptInputToCustomContent(promptInput),
+      promptDelivery,
+    )
+    return
+  }
+
   await session.prompt(
     promptInput.text,
     promptInput.images.length > 0 ? { images: [...promptInput.images] } : undefined,
+  )
+}
+
+function promptInputToCustomContent(input: ReturnType<typeof buildPiPromptInput>): PiCustomContent {
+  if (input.images.length === 0) {
+    return input.text
+  }
+
+  const imageBlocks = input.images.map((image) => ({
+    type: 'image' as const,
+    data: image.data,
+    mimeType: image.mimeType,
+  }))
+
+  return input.text
+    ? [{ type: 'text' as const, text: input.text }, ...imageBlocks]
+    : imageBlocks
+}
+
+async function sendHiddenPromptCustomMessage(
+  session: AgentSession,
+  content: PiCustomContent,
+  promptDelivery: HiddenCustomPromptDelivery,
+) {
+  await session.sendCustomMessage(
+    {
+      customType: promptDelivery.customType,
+      content,
+      display: false,
+      details: promptDelivery.details,
+    },
+    { triggerTurn: true },
   )
 }
 
@@ -333,6 +360,7 @@ export async function runSubscribedPiOperation(input: {
     return buildSuccessfulRunResult({
       session: input.session,
       payload: input.runInput.payload,
+      promptDelivery: input.runInput.promptDelivery,
       appended,
       aborted: operationAborted,
     })

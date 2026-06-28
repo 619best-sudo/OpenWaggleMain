@@ -29,14 +29,16 @@ function appendTeamAutoPromptMessage(
     return messages.slice()
   }
 
+  const teamAutoPromptMessage: UIMessage = {
+    id: `team-auto-user-${event.timestamp}`,
+    role: 'user',
+    parts: [{ type: 'text', content: text }],
+    createdAt: new Date(event.timestamp),
+  }
+
   return [
     ...messages,
-    {
-      id: `team-auto-user-${event.timestamp}`,
-      role: 'user',
-      parts: [{ type: 'text', content: text }],
-      createdAt: new Date(event.timestamp),
-    },
+    teamAutoPromptMessage,
   ]
 }
 

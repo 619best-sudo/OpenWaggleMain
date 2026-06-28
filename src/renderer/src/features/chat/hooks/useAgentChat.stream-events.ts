@@ -4,8 +4,12 @@ import {
   setLastAgentErrorInfo,
 } from '@/features/chat/lib/agent-error-store'
 import { applyAgentTransportEvent } from '@/features/chat/lib/chat-stream-state'
+import { getUIMessageText } from '@/features/chat/lib/useAgentChat.utils'
+import { createRendererLogger } from '@/shared/lib/logger'
 import { updateMessagesForSession } from './useAgentChat.message-cache'
 import type { AgentEventPayload, AgentStreamEventContext } from './useAgentChat.types'
+
+const logger = createRendererLogger('use-agent-chat-stream')
 
 function signalStreamChange(context: AgentStreamEventContext) {
   context.streamSignalVersionRef.current += 1
@@ -134,6 +138,25 @@ export function handleAgentStreamPayload(
     return
   }
 
+  if (
+    (payload.event.type === 'custom' && payload.event.name === 'team:auto-user-prompt') ||
+    (payload.event.type === 'message_start' && payload.event.role === 'user') ||
+    (payload.event.type === 'message_end' && payload.event.role === 'user')
+  ) {
+    logger.debug('Received Team(New) live user-related stream event', {
+      sessionId: String(payload.sessionId),
+      eventType: payload.event.type,
+      event:
+        payload.event.type === 'custom'
+          ? payload.event
+          : {
+              type: payload.event.type,
+              messageId: payload.event.messageId,
+              role: payload.event.role,
+            },
+    })
+  }
+
   handleAgentStateEvent(payload.event, context)
 
   if (context.foregroundStreamActiveRef.current || context.backgroundStreamingRef.current) {
@@ -143,8 +166,28 @@ export function handleAgentStreamPayload(
       context.setMessagesBySessionId,
       context.setRunRenderMessages,
       context.subscribedSessionId,
-      (currentMessages) => applyAgentTransportEvent(currentMessages, payload.event),
-      { cacheRunSnapshot: true },
+      (currentMessages) => {
+        const nextMessages = applyAgentTransportEvent(currentMessages, payload.event)
+        if (
+          payload.event.type === 'custom' &&
+          payload.event.name === 'team:auto-user-prompt'
+        ) {
+          const appendedMessage =
+            nextMessages.length > currentMessages.length
+              ? nextMessages[nextMessages.length - 1]
+              : undefined
+          logger.debug('Applied Team(New) prompt stream event to live cache', {
+            sessionId: String(context.subscribedSessionId),
+            previousCount: currentMessages.length,
+            nextCount: nextMessages.length,
+            appendedMessageId: appendedMessage?.id ?? null,
+            appendedMessageRole: appendedMessage?.role ?? null,
+            appendedMessageText: appendedMessage ? getUIMessageText(appendedMessage) : null,
+          })
+        }
+        return nextMessages
+      },
+      { cacheRunSnapshot: true, reason: `stream:${payload.event.type}` },
     )
   }
 }

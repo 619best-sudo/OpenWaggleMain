@@ -11,6 +11,23 @@ export function getUIMessageText(message: UIMessage) {
     .join('\n\n')
 }
 
+export function isInternalTeamOrchestrationPromptText(text: string) {
+  const normalized = text.replace(/\s+/g, ' ').trim()
+  if (!normalized) {
+    return false
+  }
+
+  return (
+    (/^Continue the .+ task as .+/i.test(normalized) &&
+      normalized.includes('Use the latest chat transcript as context and continue from the current state.') &&
+      normalized.includes('End with these exact sections:')) ||
+    (/^Review the latest chat transcript, verify the website if possible, and decide whether the task is complete\./i.test(
+      normalized,
+    ) &&
+      normalized.includes('Use Playwright whenever the app can run, then end with these exact sections:'))
+  )
+}
+
 export function getNonEmptyUserMessageText(message: UIMessage) {
   if (message.role !== 'user') {
     return null

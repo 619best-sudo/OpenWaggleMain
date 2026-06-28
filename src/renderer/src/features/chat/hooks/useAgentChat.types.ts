@@ -51,6 +51,7 @@ export interface AgentRunActions {
 
 export interface UpdateMessagesOptions {
   readonly cacheRunSnapshot?: boolean
+  readonly reason?: string
 }
 
 export interface MutableValueRef<T> {

@@ -1,6 +1,8 @@
 import type { SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { SessionDetail } from '@shared/types/session'
+import { createRendererLogger } from '@/shared/lib/logger'
+import { getUIMessageText } from '../lib/useAgentChat.utils'
 import { appendMissingOptimisticUserMessages, sessionToUIMessages } from '../lib/useAgentChat.utils'
 import type {
   MutableValueRef,
@@ -11,6 +13,7 @@ import type {
 } from './useAgentChat.types'
 
 export const EMPTY_UI_MESSAGES: UIMessage[] = []
+const logger = createRendererLogger('use-agent-chat-cache')
 
 export function createPendingRunWaiter() {
   let resolveRun = () => {}
@@ -63,6 +66,21 @@ export function setMessagesForSession(
   nextMessagesBySessionId.set(targetSessionId, nextMessages)
   messagesBySessionIdRef.current = nextMessagesBySessionId
   setMessagesBySessionId(nextMessagesBySessionId)
+
+  const lastMessage = nextMessages[nextMessages.length - 1]
+  const lastUserMessage = [...nextMessages].reverse().find((message) => message.role === 'user')
+
+  logger.debug('Updated cached session messages', {
+    sessionId: String(targetSessionId),
+    reason: options.reason ?? 'unspecified',
+    messageCount: nextMessages.length,
+    lastMessageId: lastMessage?.id ?? null,
+    lastMessageRole: lastMessage?.role ?? null,
+    lastMessageText: lastMessage ? getUIMessageText(lastMessage) : null,
+    lastUserMessageId: lastUserMessage?.id ?? null,
+    lastUserMessageText: lastUserMessage ? getUIMessageText(lastUserMessage) : null,
+    cacheRunSnapshot: options.cacheRunSnapshot ?? false,
+  })
 
   if (options.cacheRunSnapshot) {
     setRunRenderMessages(targetSessionId, nextMessages)

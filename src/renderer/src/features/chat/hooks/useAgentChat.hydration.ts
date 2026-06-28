@@ -2,6 +2,7 @@ import type { SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { SessionDetail } from '@shared/types/session'
 import { api } from '@/shared/lib/ipc'
+import { createRendererLogger } from '@/shared/lib/logger'
 import {
   appendMissingOptimisticUserMessages,
   buildPartialAssistantMessage,
@@ -22,6 +23,18 @@ import type {
   SessionHydrationInput,
   SessionHydrationKeys,
 } from './useAgentChat.types'
+
+const logger = createRendererLogger('use-agent-chat-hydration')
+
+function getLastUserMessage(messages: readonly UIMessage[]) {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index]
+    if (message?.role === 'user') {
+      return message
+    }
+  }
+  return null
+}
 
 function resolvePendingForegroundRun(context: SessionHydrationContext) {
   const pending = context.pendingRunWaiterRef.current
@@ -123,13 +136,23 @@ function handleActiveRunReconnectResult(
   ) {
     return
   }
+  logger.debug('Applying active-run reconnect result', {
+    sessionId: String(capturedSessionId),
+    reconnectMessageCount: nextMessages.length,
+    reconnectLastUserMessageId: getLastUserMessage(nextMessages)?.id ?? null,
+    cachedRenderMessageCount:
+      context.messagesBySessionIdRef.current.get(capturedSessionId)?.length ?? 0,
+    cachedLastUserMessageId:
+      getLastUserMessage(context.messagesBySessionIdRef.current.get(capturedSessionId) ?? [])?.id ??
+      null,
+  })
   updateMessagesForSession(
     context.messagesBySessionIdRef,
     context.setMessagesBySessionId,
     context.setRunRenderMessages,
     capturedSessionId,
     (currentMessages) => mergeBackgroundReconnectMessages(nextMessages, currentMessages),
-    { cacheRunSnapshot: true },
+    { cacheRunSnapshot: true, reason: 'hydrate:background-reconnect' },
   )
 }
 
@@ -162,19 +185,28 @@ function hydrateActiveRunSession(
     input.session,
     input.optimisticUserMessages,
   )
+  const existingMessages = getMessagesForSession(context.messagesBySessionIdRef, input.sessionId)
   const nextMessages = input.cachedRenderMessages
     ? mergeBackgroundReconnectMessages([...persistedMessages], [...input.cachedRenderMessages])
-    : reconcileSnapshotUserMessages(
-        persistedMessages,
-        getMessagesForSession(context.messagesBySessionIdRef, input.sessionId),
-      )
+    : reconcileSnapshotUserMessages(persistedMessages, existingMessages)
+  logger.debug('Hydrating active run session messages', {
+    sessionId: String(input.sessionId),
+    persistedMessageCount: persistedMessages.length,
+    cachedRenderMessageCount: input.cachedRenderMessages?.length ?? 0,
+    existingLiveCacheCount: existingMessages.length,
+    finalMergedMessageCount: nextMessages.length,
+    persistedLastUserMessageId: getLastUserMessage(persistedMessages)?.id ?? null,
+    cachedLastUserMessageId: getLastUserMessage(input.cachedRenderMessages ?? [])?.id ?? null,
+    existingLastUserMessageId: getLastUserMessage(existingMessages)?.id ?? null,
+    finalLastUserMessageId: getLastUserMessage(nextMessages)?.id ?? null,
+  })
   setMessagesForSession(
     context.messagesBySessionIdRef,
     context.setMessagesBySessionId,
     context.setRunRenderMessages,
     input.sessionId,
     nextMessages,
-    { cacheRunSnapshot: true },
+    { cacheRunSnapshot: true, reason: 'hydrate:active-run-session' },
   )
   updateHydrationKeys(input.sessionId, keys, context)
   context.backgroundStreamingRef.current = true
@@ -213,12 +245,24 @@ function hydrateIdleSession(
     ? mergeBackgroundReconnectMessages(reconciledMessages, [...input.cachedRenderMessages])
     : reconciledMessages
   const finalMessages = mergeBackgroundReconnectMessages(withCachedRenderMessages, existingMessages)
+  logger.debug('Hydrating idle session messages', {
+    sessionId: String(input.sessionId),
+    snapshotMessageCount: snapshotMessages.length,
+    cachedRenderMessageCount: input.cachedRenderMessages?.length ?? 0,
+    existingLiveCacheCount: existingMessages.length,
+    finalMergedMessageCount: finalMessages.length,
+    snapshotLastUserMessageId: getLastUserMessage(snapshotMessages)?.id ?? null,
+    cachedLastUserMessageId: getLastUserMessage(input.cachedRenderMessages ?? [])?.id ?? null,
+    existingLastUserMessageId: getLastUserMessage(existingMessages)?.id ?? null,
+    finalLastUserMessageId: getLastUserMessage(finalMessages)?.id ?? null,
+  })
   setMessagesForSession(
     context.messagesBySessionIdRef,
     context.setMessagesBySessionId,
     context.setRunRenderMessages,
     input.sessionId,
     finalMessages,
+    { reason: 'hydrate:idle-session' },
   )
   updateHydrationKeys(input.sessionId, keys, context)
 

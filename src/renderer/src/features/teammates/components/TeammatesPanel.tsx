@@ -19,7 +19,10 @@ import { useEscapeHotkey } from '@/shared/hooks/useEscapeHotkey'
 import { useChat } from '@/features/chat/hooks/useChat'
 import { useProviderStore } from '@/features/providers/state/provider-store'
 import { usePreferencesStore } from '@/features/settings/state'
+import { sessionToUIMessages } from '@/features/chat/lib/useAgentChat.utils'
+import { seedOptimisticSendForSession } from '@/features/chat/hooks/useSendMessage'
 import { api } from '@/shared/lib/ipc'
+import { createRendererLogger } from '@/shared/lib/logger'
 import { Button } from '@/shared/ui/Button'
 import { Select } from '@/shared/ui/Select'
 import { TextInput } from '@/shared/ui/TextInput'
@@ -42,6 +45,7 @@ import {
 
 type AgentEditorMode = 'manual' | 'generate'
 const TEAM_DEFAULT_MODEL_VALUE = '__team-default-model__'
+const logger = createRendererLogger('teammates-panel')
 
 interface TeamModelOption {
   readonly id: string
@@ -574,9 +578,24 @@ export function TeammatesPanel() {
 
     try {
       const targetSessionId = await resolveTargetSessionId()
+      const baseMessages =
+        activeSessionId === targetSessionId && activeSession
+          ? sessionToUIMessages(activeSession)
+          : []
       void navigate({
         to: '/sessions/$sessionId',
         params: { sessionId: String(targetSessionId) },
+      })
+
+      await seedOptimisticSendForSession({
+        sessionId: targetSessionId,
+        payload: {
+          text: prompt,
+          attachments: [],
+          thinkingLevel,
+        },
+        baseMessages,
+        source: 'teammates-panel:launch-team',
       })
 
       await api.sendTeamMessage(
@@ -593,6 +612,10 @@ export function TeammatesPanel() {
       showToast(`"${teammate.name}" launched in Team(New).`, 'success')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
+      logger.error('Failed to launch Team(New)', {
+        teammateId: teammate.id,
+        error: message,
+      })
       showToast(`Failed to launch Team(New): ${message}`, 'error')
     } finally {
       setLaunchingId(null)

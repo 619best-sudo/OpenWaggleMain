@@ -1,7 +1,11 @@
 import type { SessionId, SessionNodeId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { SessionWorkspace } from '@shared/types/session'
+import { createRendererLogger } from '@/shared/lib/logger'
 import { messagePartToUIParts } from '@/features/chat/lib/useAgentChat.utils'
+import { getUIMessageText, isInternalTeamOrchestrationPromptText } from './chat-message-text'
+
+const logger = createRendererLogger('session-workspace-transcript')
 
 interface ResolveTranscriptMessagesInput {
   readonly activeSessionId: SessionId | null
@@ -92,18 +96,16 @@ function isViewingDraftBranchSource(
   )
 }
 
-function unsavedLiveTail(
-  workspace: SessionWorkspace,
+function liveTailOutsideWorkspacePath(
+  workspaceMessages: UIMessage[],
   messages: UIMessage[],
   lastWorkspaceMessageIndex: number,
 ) {
-  const persistedMessageIds = new Set(
-    workspace.tree.nodes.flatMap((node) => (node.message ? [String(node.message.id)] : [])),
-  )
+  const workspacePathMessageIds = new Set(workspaceMessages.map((message) => message.id))
 
   return messages
     .slice(lastWorkspaceMessageIndex + 1)
-    .filter((message) => !persistedMessageIds.has(message.id))
+    .filter((message) => !workspacePathMessageIds.has(message.id))
 }
 
 function appendLiveTailWhenViewingHeadOrDraftSource(
@@ -123,8 +125,41 @@ function appendLiveTailWhenViewingHeadOrDraftSource(
     return workspaceMessages
   }
 
-  const tail = unsavedLiveTail(workspace, messages, lastWorkspaceMessageIndex)
+  const tail = liveTailOutsideWorkspacePath(workspaceMessages, messages, lastWorkspaceMessageIndex)
+  logger.debug('Resolved transcript live tail against workspace path', {
+    workspaceMessageCount: workspaceMessages.length,
+    rawMessageCount: messages.length,
+    lastWorkspaceMessageId: workspaceMessages[workspaceMessages.length - 1]?.id ?? null,
+    appendedTail: tail.map((message) => ({
+      id: message.id,
+      role: message.role,
+    })),
+  })
   return tail.length > 0 ? [...workspaceMessages, ...tail] : workspaceMessages
+}
+
+function filterHiddenInternalTeamMessages(messages: UIMessage[]) {
+  const filteredMessages = messages.filter((message) => {
+    if (message.role !== 'user') {
+      return true
+    }
+    return !isInternalTeamOrchestrationPromptText(getUIMessageText(message))
+  })
+
+  if (filteredMessages.length !== messages.length) {
+    logger.debug('Filtered internal Team(New) orchestration prompts from transcript', {
+      removedMessages: messages
+        .filter((message) =>
+          message.role === 'user' && isInternalTeamOrchestrationPromptText(getUIMessageText(message)),
+        )
+        .map((message) => ({
+          id: message.id,
+          role: message.role,
+        })),
+    })
+  }
+
+  return filteredMessages
 }
 
 export function resolveTranscriptMessages({
@@ -146,10 +181,23 @@ export function resolveTranscriptMessages({
     return messages
   }
 
-  return appendLiveTailWhenViewingHeadOrDraftSource(
+  const transcriptMessages = filterHiddenInternalTeamMessages(
+    appendLiveTailWhenViewingHeadOrDraftSource(
     activeWorkspace,
     workspaceMessages,
     messages,
     draftBranchSourceNodeId,
+    ),
   )
+  logger.debug('Resolved transcript messages', {
+    sessionId: String(activeSessionId),
+    rawMessageCount: messages.length,
+    workspaceMessageCount: workspaceMessages.length,
+    lastWorkspaceMessageId: workspaceMessages[workspaceMessages.length - 1]?.id ?? null,
+    transcriptMessages: transcriptMessages.map((message) => ({
+      id: message.id,
+      role: message.role,
+    })),
+  })
+  return transcriptMessages
 }

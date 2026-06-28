@@ -181,7 +181,7 @@ export function createAgentRunControls(params: AgentRunControlParams) {
       params.setRunRenderMessages,
       sessionId,
       (currentMessages) => [...currentMessages, optimisticUserMessage],
-      { cacheRunSnapshot: true },
+      { cacheRunSnapshot: true, reason: 'send-user-payload:optimistic-user' },
     )
     await dispatchAgentSend(payload, waggleConfig)
   }
