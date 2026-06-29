@@ -33,10 +33,10 @@ function MonthlyQuotaStrip() {
 
   return (
     <div
-      className="home-panel-frame-soft hidden h-6 min-w-0 shrink-0 items-center gap-1.5 rounded-[5px] px-2 text-[12px] text-text-secondary sm:flex"
+      className="flex hidden h-6 min-w-0 shrink-0 items-center gap-1.5 rounded-[5px] bg-bg-secondary/40 px-2 text-[12px] text-text-secondary sm:flex"
       title={`Monthly usage: ${String(roundedPercent)}% used (${String(MONTHLY_QUOTA.used)} of ${String(MONTHLY_QUOTA.total)})`}
     >
-      <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-text-tertiary">
+      <span className="text-[10px] font-medium text-text-tertiary">
         Usage
       </span>
       <div className="h-1 w-10 overflow-hidden rounded-full bg-bg-tertiary">
@@ -76,7 +76,7 @@ export function ContextMeter() {
   return (
     <div className="flex items-center gap-1.5" title={meter.title}>
       <MonthlyQuotaStrip />
-      <div className="home-panel-frame-soft flex h-6 min-w-0 shrink-0 items-center gap-1.5 rounded-[5px] px-2 text-[12px] text-text-secondary">
+      <div className="flex h-6 min-w-0 shrink-0 items-center gap-1.5 rounded-[5px] bg-bg-secondary/40 px-2 text-[12px] text-text-secondary">
         <span
           className="font-mono text-[10px] font-semibold leading-none tabular-nums"
           style={{ color: meter.strokeColor }}
