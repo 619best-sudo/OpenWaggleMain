@@ -40,58 +40,6 @@ interface PresetGuidance {
   readonly next?: string
 }
 
-const VISIBLE_PAIR_PRESET_IDS: ReadonlySet<string> = new Set(['debate', 'red-team'])
-
-const PRODUCT_LIFECYCLE_PRESET_ORDER = [
-  'turing',
-  'product-planning',
-  'design-asset-direction',
-  'web-build',
-  'mobile-build',
-  'backend-build',
-  'qa-repair-loop',
-  'release-readiness',
-  'deployment',
-] as const
-
-const PRODUCT_LIFECYCLE_PRESET_IDS: ReadonlySet<string> = new Set(PRODUCT_LIFECYCLE_PRESET_ORDER)
-const MOBILE_LIFECYCLE_PRESET_ORDER = [
-  'turing',
-  'product-planning',
-  'design-asset-direction',
-  'mobile-build',
-  'qa-repair-loop',
-  'quality-assurance-engineer',
-  'release-readiness',
-  'deployment',
-] as const
-const MOBILE_LIFECYCLE_PRESET_IDS: ReadonlySet<string> = new Set(MOBILE_LIFECYCLE_PRESET_ORDER)
-
-const CORE_LAUNCH_PRESET_IDS = new Set([
-  'product-planning',
-  'product-ui',
-  'web-engineer',
-  'mobile-engineer',
-  'backend-systems',
-  'backend-engineer',
-  'qa-debug',
-  'launch-readiness',
-])
-
-const QUALITY_PRESET_IDS = new Set([
-  'development-qa',
-  'quality-assurance-engineer',
-  'security-audit',
-  'performance-inspector',
-])
-
-const UI_SPECIALIST_PRESET_IDS = new Set([
-  'frontend-ui-audit',
-  'reference-image-replication',
-  'design-system-compliance',
-  'responsive-qa',
-])
-
 const PRESET_GUIDANCE: Readonly<Record<string, PresetGuidance>> = {
   turing: {
     stage: 'Routing',
@@ -202,97 +150,24 @@ function sortPresetsByPreferredOrder(
 }
 
 function createPresetSections(presets: readonly WagglePreset[]): readonly PresetSection[] {
-  const builtInLifecycle: WagglePreset[] = []
-  const builtInMobileLifecycle: WagglePreset[] = []
-  const builtInCore: WagglePreset[] = []
-  const builtInQuality: WagglePreset[] = []
-  const builtInUi: WagglePreset[] = []
-  const builtInOther: WagglePreset[] = []
   const custom: WagglePreset[] = []
+  const builtIn: WagglePreset[] = []
 
   for (const preset of presets) {
     if (!preset.isBuiltIn) {
       custom.push(preset)
-      continue
+    } else {
+      builtIn.push(preset)
     }
-
-    let assignedToLifecycle = false
-    if (PRODUCT_LIFECYCLE_PRESET_IDS.has(String(preset.id))) {
-      builtInLifecycle.push(preset)
-      assignedToLifecycle = true
-    }
-    if (MOBILE_LIFECYCLE_PRESET_IDS.has(String(preset.id))) {
-      builtInMobileLifecycle.push(preset)
-      assignedToLifecycle = true
-    }
-    if (CORE_LAUNCH_PRESET_IDS.has(String(preset.id))) {
-      builtInCore.push(preset)
-      continue
-    }
-    if (QUALITY_PRESET_IDS.has(String(preset.id))) {
-      builtInQuality.push(preset)
-      continue
-    }
-    if (UI_SPECIALIST_PRESET_IDS.has(String(preset.id))) {
-      builtInUi.push(preset)
-      continue
-    }
-    if (assignedToLifecycle) {
-      continue
-    }
-
-    builtInOther.push(preset)
   }
 
   return [
     {
-      id: 'product-tech-lifecycle',
-      title: 'Product And Tech Lifecycle',
+      id: 'panels',
+      title: 'Panels',
       description:
-        'Run the end-to-end chain in order: Turing -> Product Planning -> Design And Asset Direction -> Web or Mobile or Backend Build -> QA Repair Loop -> Release Readiness -> Deployment. Install auto-adds recipe-backed MCPs and skills into the active project.',
-      presets: sortPresetsByPreferredOrder(builtInLifecycle, PRODUCT_LIFECYCLE_PRESET_ORDER),
-    },
-    {
-      id: 'mobile-product-lifecycle',
-      title: 'Mobile Lifecycle',
-      description:
-        'Use this curated mobile path when the request is app-first: Turing -> Product Planning -> Design And Asset Direction -> Mobile Build -> QA Repair Loop or Quality Assurance Engineer -> Release Readiness -> Deployment.',
-      presets: sortPresetsByPreferredOrder(builtInMobileLifecycle, MOBILE_LIFECYCLE_PRESET_ORDER),
-    },
-    {
-      id: 'core-launch-set',
-      title: 'Core Launch Set',
-      description:
-        'Start here for the minimum product lifecycle: plan, build UI, build systems, verify quality, and decide whether to ship.',
-      presets: sortPresetsByPreferredOrder(builtInCore, [...CORE_LAUNCH_PRESET_IDS]),
-    },
-    {
-      id: 'quality-and-inspection',
-      title: 'Quality And Inspection',
-      description:
-        'Run broader QA, security review, or performance investigation when the product needs deeper evidence before release.',
-      presets: sortPresetsByPreferredOrder(builtInQuality, [...QUALITY_PRESET_IDS]),
-    },
-    {
-      id: 'ui-specialists',
-      title: 'UI Specialists',
-      description:
-        'Use these when you need focused UI fidelity, design-system consistency, or responsive polish beyond the core lifecycle set.',
-      presets: sortPresetsByPreferredOrder(builtInUi, [...UI_SPECIALIST_PRESET_IDS]),
-    },
-    {
-      id: 'other-built-ins',
-      title: 'Available Panels',
-      description:
-        'The Panel list now keeps only the core collaboration presets that should stay easy to reach.',
-      presets: sortPresetsByPreferredOrder(builtInOther, []),
-    },
-    {
-      id: 'custom-waggles',
-      title: 'Custom Panels',
-      description:
-        'Saved project-specific Panels you created or customized for your own workflow.',
-      presets: sortPresetsByPreferredOrder(custom, []),
+        'Choose a Panel to launch, or create your own custom Panel for a repeatable workflow.',
+      presets: [...sortPresetsByPreferredOrder(custom, []), ...sortPresetsByPreferredOrder(builtIn, [])],
     },
   ].filter((section) => section.presets.length > 0)
 }
@@ -309,10 +184,7 @@ export function WagglePresetsPanel({
   onLaunchPreset,
   installingPresetId,
 }: WagglePresetsPanelProps) {
-  const visiblePresets = presets.filter((preset) =>
-    VISIBLE_PAIR_PRESET_IDS.has(String(preset.id)),
-  )
-  const presetSections = createPresetSections(visiblePresets)
+  const presetSections = createPresetSections(presets)
 
   return (
     <div className="w-full">
@@ -337,11 +209,11 @@ export function WagglePresetsPanel({
       </div>
 
       <div className="space-y-12">
-        {visiblePresets.length === 0 ? (
+        {presets.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 px-4 py-12 text-center">
             <p className="text-[14px] font-medium text-text-primary">No Panels found</p>
             <p className="mt-2 text-[13px] text-text-tertiary">
-              No visible Panel presets are available right now.
+              No Panel presets are available right now.
             </p>
           </div>
         ) : null}

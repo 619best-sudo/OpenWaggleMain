@@ -7,6 +7,7 @@ import { createWaggleModelBinding, type WagglePreset } from '@shared/types/waggl
 
 const CREATED_AT_BUILT_IN = 0
 const UPDATED_AT_BUILT_IN = 0
+const ALLOWED_BUILT_IN_PANEL_IDS: ReadonlySet<string> = new Set(['debate', 'red-team'])
 
 function toOpenWaggleAgentModel(model: string): WagglePreset['config']['agents'][number]['model'] {
   return createWaggleModelBinding(model)
@@ -3303,4 +3304,4 @@ End every turn with:
 export const BUILT_IN_WAGGLE_PRESETS: readonly WagglePreset[] = [
   ...CORE_BUILT_IN_WAGGLE_PRESETS.map(toOpenWagglePreset),
   ...OPENWAGGLE_BUILT_IN_WAGGLE_PRESETS,
-]
+].filter((preset) => ALLOWED_BUILT_IN_PANEL_IDS.has(String(preset.id)))

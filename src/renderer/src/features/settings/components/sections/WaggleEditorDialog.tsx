@@ -13,10 +13,12 @@ interface WaggleEditorDialogProps {
   readonly description: string
   readonly primaryActionLabel: string
   readonly canSubmit: boolean
+  readonly canEditTitle: boolean
   readonly errorMessage: string | null
   readonly settings: Settings
   readonly providerModels: ProviderInfo[]
   readonly formState: {
+    readonly titleText: string
     readonly descriptionText: string
     readonly agents: readonly Parameters<typeof WaggleAgentSlotCard>[0]['agent'][]
     readonly stopCondition: Parameters<typeof CollaborationSettingsCard>[0]['stopCondition']
@@ -35,6 +37,7 @@ export function WaggleEditorDialog({
   description,
   primaryActionLabel,
   canSubmit,
+  canEditTitle,
   errorMessage,
   settings,
   providerModels,
@@ -96,6 +99,19 @@ export function WaggleEditorDialog({
           ) : null}
 
           <div className="space-y-4">
+            <label className="block space-y-1.5">
+              <span className="text-[12px] font-medium text-text-secondary">Panel Title</span>
+              <input
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
+                value={formState.titleText}
+                onChange={(event) =>
+                  dispatchForm({ type: 'set-title-text', value: event.target.value })
+                }
+                placeholder="Name this Panel."
+                disabled={!canEditTitle}
+                spellCheck={false}
+              />
+            </label>
             <label className="block space-y-1.5">
               <span className="text-[12px] font-medium text-text-secondary">Panel Description</span>
               <textarea

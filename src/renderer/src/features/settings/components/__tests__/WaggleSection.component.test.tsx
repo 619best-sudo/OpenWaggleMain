@@ -210,14 +210,15 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    expect(await screen.findByText('Teammates')).toBeInTheDocument()
+    expect(await screen.findByText('Panel Mode')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.queryByDisplayValue('Reviewer')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /create panel/i }))
 
-    expect(await screen.findByRole('dialog', { name: /create panel/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /create panel/i })).toBeInTheDocument()
+    const createDialog = await screen.findByRole('dialog', { name: /create panel/i })
+    expect(createDialog).toBeInTheDocument()
+    expect(within(createDialog).getByRole('button', { name: /create panel/i })).toBeInTheDocument()
     expect(screen.getByDisplayValue('Expert 1')).toBeInTheDocument()
   })
 
@@ -315,26 +316,19 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    expect(await screen.findByText('Product And Tech Lifecycle')).toBeInTheDocument()
-    expect(screen.getByText('Mobile Lifecycle')).toBeInTheDocument()
-    expect(screen.getByText('Core Launch Set')).toBeInTheDocument()
-    expect(screen.getByText('Quality And Inspection')).toBeInTheDocument()
-    expect(screen.getByText('UI Specialists')).toBeInTheDocument()
-    expect(screen.getByText('Other Built-Ins')).toBeInTheDocument()
-    expect(screen.getByText('Custom Panels')).toBeInTheDocument()
-    expect(screen.getAllByText('Turing')).toHaveLength(2)
-    expect(screen.getAllByText('Design And Asset Direction')).toHaveLength(2)
-    expect(screen.getAllByText('Mobile Build')).toHaveLength(2)
-    expect(screen.getAllByText('QA Repair Loop')).toHaveLength(2)
-    expect(screen.getAllByText('Release Readiness')).toHaveLength(2)
+    expect(await screen.findByText('Panels')).toBeInTheDocument()
+    expect(screen.getAllByText('Turing')).toHaveLength(1)
+    expect(screen.getAllByText('Design And Asset Direction')).toHaveLength(1)
+    expect(screen.getAllByText('Mobile Build')).toHaveLength(1)
+    expect(screen.getAllByText('QA Repair Loop')).toHaveLength(1)
+    expect(screen.getAllByText('Release Readiness')).toHaveLength(1)
     expect(screen.getAllByText('Quality Assurance Engineer').length).toBeGreaterThan(0)
     expect(screen.getByText('Person 360')).toBeInTheDocument()
     expect(screen.getByText('Person Profile With Optional Career Pass')).toBeInTheDocument()
     expect(
-      screen.getByText(/Run the end-to-end chain in order: Turing -> Product Planning -> Design And Asset Direction/i),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(/Use this curated mobile path when the request is app-first: Turing -> Product Planning -> Design And Asset Direction -> Mobile Build/i),
+      screen.getByText(
+        /Choose a Panel to launch, or create your own custom Panel for a repeatable workflow\./i,
+      ),
     ).toBeInTheDocument()
   })
 
@@ -1091,7 +1085,7 @@ describe('WaggleSection', () => {
       expect(saveWagglePresetMock).toHaveBeenCalledWith(
         expect.objectContaining({
           id: preset.id,
-          name: 'Refiner + Implementer',
+          name: 'Review Panel',
           description: 'Custom: Tightens the remediation plan.',
           app: {
             requiredMcps: ['playwright', 'figma'],
@@ -1115,7 +1109,7 @@ describe('WaggleSection', () => {
   it('creates a new custom preset from the current form values', async () => {
     const savedPreset = createPreset({
       id: WagglePresetId('preset-2'),
-      name: 'Strategist + Skeptic',
+      name: 'Launch Review Panel',
       description: 'Custom: Frames trade-offs before implementation.',
       config: {
         mode: 'sequential',
@@ -1152,6 +1146,9 @@ describe('WaggleSection', () => {
     fireEvent.change(screen.getByDisplayValue('Expert 2'), {
       target: { value: 'Skeptic' },
     })
+    fireEvent.change(screen.getByLabelText(/panel title/i), {
+      target: { value: 'Launch Review Panel' },
+    })
     fireEvent.change(elementAt(screen.getAllByPlaceholderText(/describe this expert's/i), 0), {
       target: { value: 'Frames trade-offs before implementation.' },
     })
@@ -1175,7 +1172,7 @@ describe('WaggleSection', () => {
       expect(saveWagglePresetMock).toHaveBeenCalledWith(
         expect.objectContaining({
           id: WagglePresetId(''),
-          name: 'Strategist + Skeptic',
+          name: 'Launch Review Panel',
           description: 'Custom: Frames trade-offs before implementation.',
           app: {
             requiredMcps: ['playwright', 'postgres'],
@@ -1186,6 +1183,9 @@ describe('WaggleSection', () => {
         PROJECT_PATH,
       )
     })
+    expect(await screen.findByText('Panels')).toBeInTheDocument()
+    expect(screen.getByText('Launch Review Panel')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: /create panel/i })).not.toBeInTheDocument()
     expect(listWagglePresetsMock).toHaveBeenCalledTimes(2)
   })
 

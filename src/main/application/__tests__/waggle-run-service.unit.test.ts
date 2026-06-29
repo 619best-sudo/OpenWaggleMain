@@ -40,34 +40,14 @@ function runInput(config: WaggleConfig, runId: string, model = selectedModel) {
 
 const CREATED_WAGGLE_RUNTIME_CASES = [
   {
-    presetId: WagglePresetId('turing'),
+    presetId: WagglePresetId('debate'),
     prompt:
-      'Read this repository and tell me which installed Waggle should handle adding a signup form with basic validation next.',
+      'Debate the best way to add a signup form with basic validation before implementation starts.',
   },
   {
-    presetId: WagglePresetId('web-engineer'),
+    presetId: WagglePresetId('red-team'),
     prompt:
-      'Implement and verify a landing page hero refresh with CTA polish, plus any motion that meaningfully improves the section.',
-  },
-  {
-    presetId: WagglePresetId('mobile-engineer'),
-    prompt:
-      'Implement and verify a mobile onboarding flow update, including animation polish only if it improves the real experience.',
-  },
-  {
-    presetId: WagglePresetId('backend-engineer'),
-    prompt:
-      'Plan, implement, and verify a backend projects API update that changes stored data and must be checked against the database.',
-  },
-  {
-    presetId: WagglePresetId('quality-assurance-engineer'),
-    prompt:
-      'Plan and execute a full regression QA pass for a changed checkout flow, including adjacent web, mobile, API, and SQL behaviors that might have been disturbed.',
-  },
-  {
-    presetId: WagglePresetId('qa-debug'),
-    prompt:
-      'Debug and fix a mixed regression where a profile page UI issue may actually come from stale backend data and logic drift in nearby flows.',
+      'Red-team this auth flow and find any likely security weaknesses before release.',
   },
 ] as const
 
@@ -264,31 +244,6 @@ describe('executeWaggleRun', () => {
       )
     },
   )
-
-  it('injects real Waggle readiness context into Turing before kernel execution', async () => {
-    const preset = BUILT_IN_WAGGLE_PRESETS.find((candidate) => candidate.id === WagglePresetId('turing'))
-    expect(preset).toBeDefined()
-    if (!preset) {
-      throw new Error('Expected preset turing')
-    }
-
-    const result = await Effect.runPromise(
-      executeWaggleRun({
-        ...runInput(preset.config, 'run-turing-ready-context'),
-        payload: {
-          text: 'Route this task to the right installed Waggle.',
-          thinkingLevel: 'medium',
-          attachments: [],
-        },
-      }).pipe(Effect.provide(TestLayer)),
-    )
-
-    expect(result.outcome).toBe('success')
-    const [kernelInput] = runMock.mock.calls[0] ?? []
-    expect(kernelInput.payload.text).toContain('Installed Waggle readiness snapshot:')
-    expect(kernelInput.payload.text).toContain('Web Engineer (web-engineer)')
-    expect(kernelInput.payload.text).toContain('Quality Assurance Engineer (quality-assurance-engineer)')
-  })
 
   it('persists the Waggle snapshot even when the collaboration is stopped mid-run', async () => {
     kernelRunResultMock.mockReturnValueOnce({

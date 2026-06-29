@@ -65,6 +65,19 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
     setEditorMode('closed')
   }
 
+  async function handleSubmitEditor() {
+    if (editorMode === 'create') {
+      const createdPreset = await handleCreatePreset()
+      if (createdPreset) {
+        setEditorMode('closed')
+        showToast(`Created Panel "${createdPreset.name}".`, 'success')
+      }
+      return
+    }
+
+    await handleSaveEdits()
+  }
+
   async function handleInstallDependencies(preset: (typeof presets)[number]) {
     if (!projectPath) {
       showToast('Select a project before installing Panel app dependencies.', 'error')
@@ -176,13 +189,14 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
           description={editorDescription}
           primaryActionLabel={primaryActionLabel}
           canSubmit={editorMode === 'create' || isModified}
+          canEditTitle={editorMode === 'create' || !activePreset?.isBuiltIn}
           errorMessage={displayedError}
           settings={settings}
           providerModels={providerModels}
           formState={formState}
           dispatchForm={dispatchForm}
           onClose={handleCloseEditor}
-          onSubmit={() => void (editorMode === 'create' ? handleCreatePreset() : handleSaveEdits())}
+          onSubmit={() => void handleSubmitEditor()}
         />
       ) : null}
     </div>

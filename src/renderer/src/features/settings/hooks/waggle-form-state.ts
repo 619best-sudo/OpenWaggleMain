@@ -16,6 +16,7 @@ const MAX_TURNS = 8
 const MIN_AGENT_COUNT = 2
 
 export interface WaggleFormState {
+  readonly titleText: string
   readonly descriptionText: string
   readonly agents: readonly WaggleAgentSlot[]
   readonly mode: WaggleCollaborationMode
@@ -46,6 +47,7 @@ export type WaggleFormAction =
     }
   | { readonly type: 'set-stop-condition'; readonly stopCondition: WaggleStopCondition }
   | { readonly type: 'set-max-turns'; readonly maxTurns: number }
+  | { readonly type: 'set-title-text'; readonly value: string }
   | { readonly type: 'set-description-text'; readonly value: string }
   | { readonly type: 'set-required-mcps-text'; readonly value: string }
   | { readonly type: 'set-required-skills-text'; readonly value: string }
@@ -71,6 +73,7 @@ export type WagglePresetAction =
   | { readonly type: 'set-error'; readonly error: string }
 
 export const INITIAL_WAGGLE_FORM_STATE: WaggleFormState = {
+  titleText: '',
   descriptionText: '',
   agents: [createDefaultAgent(0), createDefaultAgent(1)],
   mode: 'sequential',
@@ -125,6 +128,7 @@ export function buildWaggleAppManifest(state: WaggleFormState): WaggleAppManifes
 export function formMatchesPreset(state: WaggleFormState, preset: WagglePreset) {
   const config = buildWaggleConfig(state)
   const pc = preset.config
+  if (state.titleText.trim() !== preset.name.trim()) return false
   if (state.descriptionText.trim() !== preset.description.trim()) return false
   if (config.mode !== pc.mode) return false
   if (config.stop.primary !== pc.stop.primary) return false
@@ -178,6 +182,7 @@ export function waggleFormReducer(
 ): WaggleFormState {
   return matchBy(action, 'type')
     .with('load-preset', (value) => ({
+      titleText: value.preset.name,
       descriptionText: value.preset.description,
       agents: value.preset.config.agents,
       mode: value.preset.config.mode,
@@ -245,6 +250,7 @@ export function waggleFormReducer(
     }))
     .with('set-stop-condition', (value) => ({ ...state, stopCondition: value.stopCondition }))
     .with('set-max-turns', (value) => ({ ...state, maxTurns: value.maxTurns }))
+    .with('set-title-text', (value) => ({ ...state, titleText: value.value }))
     .with('set-description-text', (value) => ({ ...state, descriptionText: value.value }))
     .with('set-required-mcps-text', (value) => ({ ...state, requiredMcpsText: value.value }))
     .with('set-required-skills-text', (value) => ({ ...state, requiredSkillsText: value.value }))

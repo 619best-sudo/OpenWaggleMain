@@ -30,6 +30,8 @@ function describeWaggleError(error: unknown, fallback: string) {
 }
 
 function buildPresetName(formState: WaggleFormState) {
+  const explicitTitle = formState.titleText.trim()
+  if (explicitTitle) return explicitTitle
   const labels = formState.agents
     .map((agent) => agent.label.trim())
     .filter((label) => label.length > 0)
@@ -55,7 +57,7 @@ export interface WaggleFormHook {
   readonly loadPreset: (preset: WagglePreset) => void
   readonly startNewDraft: () => void
   readonly handleSaveEdits: () => Promise<void>
-  readonly handleCreatePreset: () => Promise<void>
+  readonly handleCreatePreset: () => Promise<WagglePreset | null>
   readonly handleDeletePreset: (id: string) => Promise<void>
 }
 
@@ -117,7 +119,7 @@ export function useWaggleForm(): WaggleFormHook {
     }
   }
 
-  async function handleCreatePreset() {
+  async function handleCreatePreset(): Promise<WagglePreset | null> {
     const config = buildWaggleConfig(formState)
     const saveInput = {
       id: WagglePresetId(''),
@@ -134,11 +136,13 @@ export function useWaggleForm(): WaggleFormHook {
     try {
       const saved = await saveWagglePresetMutation.mutateAsync(saveInput)
       dispatchPreset({ type: 'save-success', activePresetId: saved.id })
+      return saved
     } catch (saveError) {
       dispatchPreset({
         type: 'set-error',
         error: describeWaggleError(saveError, 'Failed to create Waggle preset.'),
       })
+      return null
     }
   }
 

@@ -96,6 +96,8 @@ describe('waggle form state reducers', () => {
   it('detects whether a form config and app manifest still match a preset exactly', () => {
     const preset = makePreset()
     const matchingState = {
+      titleText: preset.name,
+      descriptionText: preset.description,
       agents: preset.config.agents,
       mode: preset.config.mode,
       stopCondition: preset.config.stop.primary,
@@ -120,6 +122,8 @@ describe('waggle form state reducers', () => {
     const preset = makePreset()
 
     expect(waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, { type: 'load-preset', preset })).toEqual({
+      titleText: preset.name,
+      descriptionText: preset.description,
       agents: preset.config.agents,
       mode: preset.config.mode,
       stopCondition: preset.config.stop.primary,
@@ -150,6 +154,16 @@ describe('waggle form state reducers', () => {
     expect(withTurns.stopCondition).toBe('user-stop')
     expect(withTurns.maxTurns).toBe(12)
     expect(withTurns.agents).toBe(INITIAL_WAGGLE_FORM_STATE.agents)
+  })
+
+  it('updates the panel title independently from the rest of the form', () => {
+    const updated = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, {
+      type: 'set-title-text',
+      value: 'Release Control Panel',
+    })
+
+    expect(updated.titleText).toBe('Release Control Panel')
+    expect(updated.agents).toBe(INITIAL_WAGGLE_FORM_STATE.agents)
   })
 
   it('adds and removes Experts while preserving the minimum panel size', () => {
