@@ -36,6 +36,7 @@ describe('chat auxiliary cards', () => {
     render(
       <RunSummary
         totalMs={3_000}
+        completedAtMs={1_764_080_000_000}
         phases={[
           { label: 'Thinking', durationMs: 700 },
           { label: 'Thinking', durationMs: 500 },
@@ -44,9 +45,10 @@ describe('chat auxiliary cards', () => {
       />,
     )
 
-    expect(screen.getByText('Completed in 3s')).toBeInTheDocument()
-    expect(screen.getByText('Thinking')).toBeInTheDocument()
-    expect(screen.getByText('1s')).toBeInTheDocument()
+    expect(screen.getByText('Completed')).toBeInTheDocument()
+    expect(screen.getByText('in 3s')).toBeInTheDocument()
+    expect(screen.getByText(/Finished at/i)).toBeInTheDocument()
+    expect(screen.queryByText('Thinking')).not.toBeInTheDocument()
     expect(screen.queryByText('Writing')).not.toBeInTheDocument()
   })
 

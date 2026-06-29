@@ -147,7 +147,7 @@ function filterHiddenInternalTeamMessages(messages: UIMessage[]) {
   })
 
   if (filteredMessages.length !== messages.length) {
-    logger.debug('Filtered internal Team(New) orchestration prompts from transcript', {
+    logger.debug('Filtered internal Team orchestration prompts from transcript', {
       removedMessages: messages
         .filter((message) =>
           message.role === 'user' && isInternalTeamOrchestrationPromptText(getUIMessageText(message)),

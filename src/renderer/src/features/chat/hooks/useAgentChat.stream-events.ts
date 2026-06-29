@@ -143,7 +143,7 @@ export function handleAgentStreamPayload(
     (payload.event.type === 'message_start' && payload.event.role === 'user') ||
     (payload.event.type === 'message_end' && payload.event.role === 'user')
   ) {
-    logger.debug('Received Team(New) live user-related stream event', {
+    logger.debug('Received Team live user-related stream event', {
       sessionId: String(payload.sessionId),
       eventType: payload.event.type,
       event:
@@ -176,7 +176,7 @@ export function handleAgentStreamPayload(
             nextMessages.length > currentMessages.length
               ? nextMessages[nextMessages.length - 1]
               : undefined
-          logger.debug('Applied Team(New) prompt stream event to live cache', {
+          logger.debug('Applied Team prompt stream event to live cache', {
             sessionId: String(context.subscribedSessionId),
             previousCount: currentMessages.length,
             nextCount: nextMessages.length,

@@ -1,54 +1,42 @@
-import { TIME_UNIT } from '@shared/constants/time'
+import { isLightThemeMode } from '@shared/types/settings'
 import type { CompletedPhase } from '@/features/chat/hooks/useStreamingPhase'
-import { formatElapsed } from '@/features/chat/hooks/useStreamingPhase'
-import { cn } from '@/shared/lib/cn'
+import { usePreferencesStore } from '@/features/settings/state'
+import lightLogoPng from '../../../../../assets/new-logo.png'
+import darkLogoPng from '../../../../../assets/new-logo.png'
 
 interface RunSummaryProps {
   phases: readonly CompletedPhase[]
   totalMs: number
+  completedAtMs: number | null
 }
 
-function mergePhasesByLabel(phases: readonly CompletedPhase[]) {
-  const merged = new Map<string, number>()
-  const order: string[] = []
-  const seen = new Set<string>()
-  for (const p of phases) {
-    merged.set(p.label, (merged.get(p.label) ?? 0) + p.durationMs)
-    if (!seen.has(p.label)) {
-      seen.add(p.label)
-      order.push(p.label)
-    }
-  }
-  return order.map((label) => ({ label, durationMs: merged.get(label) ?? 0 }))
-}
-
-export function RunSummary({ phases, totalMs }: RunSummaryProps) {
-  const visiblePhases = mergePhasesByLabel(phases).filter(
-    (p) => p.durationMs >= TIME_UNIT.MILLISECONDS_PER_SECOND,
-  )
+export function RunSummary({
+  phases: _phases,
+  totalMs: _totalMs,
+  completedAtMs: _completedAtMs,
+}: RunSummaryProps) {
+  const themeMode = usePreferencesStore((state) => state.settings.themeMode)
+  const isLightTheme = isLightThemeMode(themeMode)
+  const completionLogoSrc = isLightTheme ? lightLogoPng : darkLogoPng
 
   return (
-    <div className="flex flex-col gap-1 py-3">
-      <div className="flex items-center gap-3 text-xs text-text-muted">
-        <div className="h-px flex-1 bg-home-border" />
-        <span>Completed in {formatElapsed(totalMs)}</span>
-        <div className="h-px flex-1 bg-home-border" />
-      </div>
-      {visiblePhases.length > 0 && (
-        <div className="flex flex-col gap-0.5 px-4 pt-1">
-          {visiblePhases.map((phase, i) => (
-            <div
-              key={`${phase.label}-${String(i)}`}
-              className="flex items-center justify-between text-xs"
-            >
-              <span className="text-text-tertiary">{phase.label}</span>
-              <span className={cn('text-text-muted tabular-nums')}>
-                {formatElapsed(phase.durationMs)}
-              </span>
-            </div>
-          ))}
+    <div className="py-0.5">
+      <div className="flex items-center py-1">
+        <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-bg-secondary/20">
+          <div
+            className={`flex size-7 items-center justify-center overflow-hidden rounded-[0.7rem] ${
+              isLightTheme ? 'bg-white' : 'bg-black'
+            }`}
+          >
+            <img
+              src={completionLogoSrc}
+              alt=""
+              aria-hidden="true"
+              className="size-7 object-contain"
+            />
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

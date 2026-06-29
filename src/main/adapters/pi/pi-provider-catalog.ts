@@ -46,7 +46,7 @@ let builtInModelProviders: ReadonlySet<string> | null = null
 const TURING_MACHINE_PROVIDER_ID = 'turing-machine'
 const TURING_MACHINE_MODEL_ID = 'greatx-backend'
 const TURING_MACHINE_MODEL_NAME = 'GreatX Backend'
-const DEFAULT_TURING_MACHINE_BASE_URL = 'http://localhost:3001/turing-machine'
+const DEFAULT_TURING_MACHINE_BASE_URL = 'http://localhost:3000/turing-machine'
 const TURING_MACHINE_PROVIDER_API_KEY_ENV = 'OPENWAGGLE_TURING_MACHINE_TOKEN'
 const TURING_MACHINE_BASE_URL_ENV_KEYS = [
   'OPENWAGGLE_TURING_MACHINE_BASE_URL',

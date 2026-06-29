@@ -11,7 +11,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react'
-import appLogo from '../../../../../assets/logo.png'
+import appLogo from '../../../../../assets/new-logo.png'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { Popover } from '@/shared/ui/Popover'
@@ -34,7 +34,7 @@ export function SidebarBrandArea({ isFullscreen }: { readonly isFullscreen: bool
       />
       <div className="drag-region shrink-0 px-6 pb-2 pt-5">
         <div className="flex items-center gap-3">
-          <div className="home-panel-frame-soft overflow-hidden rounded-2xl bg-white shadow-sm">
+          <div className="home-panel-frame-soft overflow-hidden rounded-xl bg-transparent">
             <img
               src={appLogo}
               alt="Turing Machine logo"
@@ -132,13 +132,13 @@ export function SidebarPrimaryActions({
         <SidebarShortcut
           active={activeView === 'teammates'}
           icon={Users}
-          label="Team(New)"
+          label="Team"
           onClick={onOpenTeammates}
         />
         <SidebarShortcut
           active={activeView === 'waggle'}
           icon={Users}
-          label="Team"
+          label="Panel"
           onClick={onOpenWaggle}
         />
         <SidebarShortcut

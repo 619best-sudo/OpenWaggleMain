@@ -373,7 +373,7 @@ export function buildTeammateFromDraft(draft: TeamBuilderDraft): TeammateDefinit
   return {
     id: draft.id,
     name: draft.name.trim() || 'Custom Execution Team',
-    description: draft.description.trim() || 'A custom teammate built in Team(New).',
+    description: draft.description.trim() || 'A custom teammate built in Team mode.',
     launchPromptPlaceholder:
       draft.launchPromptPlaceholder.trim() || 'Describe the task this custom team should run.',
     launchButtonLabel: draft.launchButtonLabel.trim() || 'Launch Custom Team',

@@ -101,7 +101,7 @@ function getAssistantMessageRows(
     sessionId: 'session-rows',
 
     waggleMetadataLookup,
-    phase: { current: null, completed: [], totalElapsedMs: 0 },
+    phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
   })
 
   return rows.filter((row) => row.type === 'message' && row.message.role === 'assistant')
@@ -120,7 +120,7 @@ function getWaggleTurnRows(
     sessionId: 'session-rows',
 
     waggleMetadataLookup,
-    phase: { current: null, completed: [], totalElapsedMs: 0 },
+    phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
   })
 
   return rows.filter((row) => row.type === 'waggle-turn')

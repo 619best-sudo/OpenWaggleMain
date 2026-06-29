@@ -40,6 +40,8 @@ interface PresetGuidance {
   readonly next?: string
 }
 
+const VISIBLE_PAIR_PRESET_IDS: ReadonlySet<string> = new Set(['debate', 'red-team'])
+
 const PRODUCT_LIFECYCLE_PRESET_ORDER = [
   'turing',
   'product-planning',
@@ -94,12 +96,12 @@ const PRESET_GUIDANCE: Readonly<Record<string, PresetGuidance>> = {
   turing: {
     stage: 'Routing',
     bestFor: 'Routing the next lifecycle step from repo context',
-    next: 'Usually Product Planning or a build Waggle',
+    next: 'Usually Product Planning or a build Panel',
   },
   'product-planning': {
     stage: 'Planning',
     bestFor: 'Turning a vague request into a buildable scope',
-    next: 'Design And Asset Direction or a build Waggle',
+    next: 'Design And Asset Direction or a build Panel',
   },
   'design-asset-direction': {
     stage: 'Design',
@@ -280,16 +282,16 @@ function createPresetSections(presets: readonly WagglePreset[]): readonly Preset
     },
     {
       id: 'other-built-ins',
-      title: 'Other Built-Ins',
+      title: 'Available Panels',
       description:
-        'Additional built-in Waggles that do not belong to the core launch set or specialist groups.',
+        'The Panel list now keeps only the core collaboration presets that should stay easy to reach.',
       presets: sortPresetsByPreferredOrder(builtInOther, []),
     },
     {
       id: 'custom-waggles',
-      title: 'Custom Waggles',
+      title: 'Custom Panels',
       description:
-        'Saved project-specific Waggles you created or customized for your own workflow.',
+        'Saved project-specific Panels you created or customized for your own workflow.',
       presets: sortPresetsByPreferredOrder(custom, []),
     },
   ].filter((section) => section.presets.length > 0)
@@ -307,20 +309,19 @@ export function WagglePresetsPanel({
   onLaunchPreset,
   installingPresetId,
 }: WagglePresetsPanelProps) {
-  const presetSections = createPresetSections(presets)
+  const visiblePresets = presets.filter((preset) =>
+    VISIBLE_PAIR_PRESET_IDS.has(String(preset.id)),
+  )
+  const presetSections = createPresetSections(visiblePresets)
 
   return (
     <div className="w-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-8 border-b border-white/[0.04]">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-accent/10 text-accent text-[11px] font-bold uppercase tracking-wider">
-            Storefront
-          </div>
-          <h3 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500 tracking-tight">Teammates</h3>
+          <h3 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500 tracking-tight">Panel</h3>
           <p className="max-w-[640px] text-[15px] leading-relaxed text-text-secondary">
-            Discover and manage saved Waggle apps. Open an app to configure its flow and
-            dependencies, use Install to auto-add recipe-backed MCPs and skills into this project,
-            or start a new Waggle app from scratch.
+            A Panel brings two Experts to one task. Select a Panel to review its workflow, then
+            launch it with your prompt.
           </p>
         </div>
         <Button
@@ -331,16 +332,16 @@ export function WagglePresetsPanel({
           leftIcon={<Plus className="size-5" />}
           className="shrink-0 rounded-full px-6 shadow-lg hover:scale-105 active:scale-95 transition-transform"
         >
-          Create App
+          Create Panel
         </Button>
       </div>
 
       <div className="space-y-12">
-        {presets.length === 0 ? (
+        {visiblePresets.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 px-4 py-12 text-center">
-            <p className="text-[14px] font-medium text-text-primary">No Teammates found</p>
+            <p className="text-[14px] font-medium text-text-primary">No Panels found</p>
             <p className="mt-2 text-[13px] text-text-tertiary">
-              Create your first Teammate to get started.
+              No visible Panel presets are available right now.
             </p>
           </div>
         ) : null}

@@ -105,6 +105,7 @@ function phaseHandle(current: StreamingPhaseHandle['current'] = null): Streaming
     current,
     completed: [],
     totalElapsedMs: 0,
+    completedAtMs: null,
     reset: vi.fn(),
   }
 }
@@ -115,7 +116,7 @@ function teammate(): TeammateDefinition {
     name: 'Web Executor',
     description: 'Build and verify websites.',
     launchPromptPlaceholder: 'Build a marketing site',
-    launchButtonLabel: 'Launch Team(New)',
+    launchButtonLabel: 'Launch Team',
     app: { requiredMcps: [], requiredSkills: [] },
     agents: [],
     loopPolicy: {
@@ -294,7 +295,7 @@ describe('chat orchestration hooks', () => {
     expect(params.handleSend).not.toHaveBeenCalled()
   })
 
-  it('sends through Team(New) when an armed teammate belongs to the active session', async () => {
+  it('sends through Team when an armed teammate belongs to the active session', async () => {
     const config = teammate()
     const params = sendWorkflowParams({ activeTeammate: config })
     const { result } = renderHook(() => useChatSendWorkflow(params))
@@ -321,7 +322,7 @@ describe('chat orchestration hooks', () => {
     expect(params.stop).toHaveBeenCalledOnce()
   })
 
-  it('cancels Team(New) when a team run is active for the current session', () => {
+  it('cancels Team when a team run is active for the current session', () => {
     const params = sendWorkflowParams({
       activeTeammate: teammate(),
       teamOwningId: SESSION_ID,

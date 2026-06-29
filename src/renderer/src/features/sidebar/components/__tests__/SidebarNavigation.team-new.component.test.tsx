@@ -2,8 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { SidebarPrimaryActions } from '../SidebarNavigation'
 
-describe('SidebarPrimaryActions Team(New)', () => {
-  it('renders Team(New) above Team and opens the teammate route', () => {
+describe('SidebarPrimaryActions Team', () => {
+  it('renders Team above Panel and opens the teammate route', () => {
     const onOpenTeammates = vi.fn()
     const onOpenWaggle = vi.fn()
 
@@ -19,8 +19,8 @@ describe('SidebarPrimaryActions Team(New)', () => {
     )
 
     const buttons = screen.getAllByRole('button')
-    const teamNewButton = screen.getByRole('button', { name: 'Team(New)' })
-    const teamButton = screen.getByRole('button', { name: 'Team' })
+    const teamNewButton = screen.getByRole('button', { name: 'Team' })
+    const teamButton = screen.getByRole('button', { name: 'Panel' })
 
     expect(buttons.indexOf(teamNewButton)).toBeLessThan(buttons.indexOf(teamButton))
 

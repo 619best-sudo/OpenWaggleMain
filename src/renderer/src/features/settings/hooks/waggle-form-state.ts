@@ -16,6 +16,7 @@ const MAX_TURNS = 8
 const MIN_AGENT_COUNT = 2
 
 export interface WaggleFormState {
+  readonly descriptionText: string
   readonly agents: readonly WaggleAgentSlot[]
   readonly mode: WaggleCollaborationMode
   readonly stopCondition: WaggleStopCondition
@@ -45,6 +46,7 @@ export type WaggleFormAction =
     }
   | { readonly type: 'set-stop-condition'; readonly stopCondition: WaggleStopCondition }
   | { readonly type: 'set-max-turns'; readonly maxTurns: number }
+  | { readonly type: 'set-description-text'; readonly value: string }
   | { readonly type: 'set-required-mcps-text'; readonly value: string }
   | { readonly type: 'set-required-skills-text'; readonly value: string }
 
@@ -54,7 +56,7 @@ function agentColorForIndex(index: number): WaggleAgentColor {
 
 function createDefaultAgent(index: number): WaggleAgentSlot {
   return {
-    label: `Agent ${String(index + 1)}`,
+    label: `Expert ${String(index + 1)}`,
     model: WAGGLE_INHERIT_MODEL,
     roleDescription: '',
     color: agentColorForIndex(index),
@@ -69,6 +71,7 @@ export type WagglePresetAction =
   | { readonly type: 'set-error'; readonly error: string }
 
 export const INITIAL_WAGGLE_FORM_STATE: WaggleFormState = {
+  descriptionText: '',
   agents: [createDefaultAgent(0), createDefaultAgent(1)],
   mode: 'sequential',
   stopCondition: 'consensus',
@@ -122,6 +125,7 @@ export function buildWaggleAppManifest(state: WaggleFormState): WaggleAppManifes
 export function formMatchesPreset(state: WaggleFormState, preset: WagglePreset) {
   const config = buildWaggleConfig(state)
   const pc = preset.config
+  if (state.descriptionText.trim() !== preset.description.trim()) return false
   if (config.mode !== pc.mode) return false
   if (config.stop.primary !== pc.stop.primary) return false
   if (config.stop.maxTurnsSafety !== pc.stop.maxTurnsSafety) return false
@@ -174,6 +178,7 @@ export function waggleFormReducer(
 ): WaggleFormState {
   return matchBy(action, 'type')
     .with('load-preset', (value) => ({
+      descriptionText: value.preset.description,
       agents: value.preset.config.agents,
       mode: value.preset.config.mode,
       stopCondition: value.preset.config.stop.primary,
@@ -240,6 +245,7 @@ export function waggleFormReducer(
     }))
     .with('set-stop-condition', (value) => ({ ...state, stopCondition: value.stopCondition }))
     .with('set-max-turns', (value) => ({ ...state, maxTurns: value.maxTurns }))
+    .with('set-description-text', (value) => ({ ...state, descriptionText: value.value }))
     .with('set-required-mcps-text', (value) => ({ ...state, requiredMcpsText: value.value }))
     .with('set-required-skills-text', (value) => ({ ...state, requiredSkillsText: value.value }))
     .exhaustive()

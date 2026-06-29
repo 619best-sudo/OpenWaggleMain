@@ -49,7 +49,7 @@ describe('settings shell components', () => {
     fireEvent.click(screen.getByRole('button', { name: /General/ }))
     fireEvent.click(screen.getByRole('button', { name: /About & updates/ }))
 
-    expect(screen.queryByRole('button', { name: /Waggle Mode/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Panel Mode/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^MCP$/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Git/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Worktrees/ })).not.toBeInTheDocument()

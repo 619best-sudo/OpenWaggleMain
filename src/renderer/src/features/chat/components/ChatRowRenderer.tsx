@@ -1,9 +1,12 @@
 import { matchBy } from '@diegogbrisa/ts-match'
+import { isLightThemeMode } from '@shared/types/settings'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import { formatElapsed } from '@/features/chat/hooks/useStreamingPhase'
+import { usePreferencesStore } from '@/features/settings/state'
 import { TurnDivider } from '@/features/waggle/components'
 import { cn } from '@/shared/lib/cn'
-import { Spinner } from '@/shared/ui/Spinner'
+import lightLoaderGif from '../../../../../assets/loader-light.gif'
+import loaderGif from '../../../../../assets/loader.gif'
 import type { ChatRow } from '../lib/types-chat-row'
 import { BranchSummaryCard } from './BranchSummaryCard'
 import { ChatErrorDisplay } from './ChatErrorDisplay'
@@ -33,6 +36,9 @@ export function ChatRowRenderer({
   onBranchFromMessage,
   onForkFromMessage,
 }: ChatRowRendererProps) {
+  const themeMode = usePreferencesStore((state) => state.settings.themeMode)
+  const phaseLoaderSrc = isLightThemeMode(themeMode) ? lightLoaderGif : loaderGif
+
   return matchBy(row, 'type')
     .with('interrupted-run', (value) => (
       <InterruptedRunNotice
@@ -122,7 +128,15 @@ export function ChatRowRenderer({
     ))
     .with('phase-indicator', (value) => (
       <div className="flex items-center gap-2 py-3">
-        <Spinner size="sm" className="text-accent" />
+        <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-bg-secondary/20">
+          <img
+            src={phaseLoaderSrc}
+            alt=""
+            aria-hidden="true"
+            data-phase-loader="true"
+            className="size-7 object-contain"
+          />
+        </div>
         <span className="text-sm text-text-secondary">{value.label}...</span>
         {value.elapsedMs > 0 ? (
           <span className="text-sm text-text-tertiary tabular-nums">
@@ -131,7 +145,9 @@ export function ChatRowRenderer({
         ) : null}
       </div>
     ))
-    .with('run-summary', (value) => <RunSummary phases={value.phases} totalMs={value.totalMs} />)
+    .with('run-summary', (value) => (
+      <RunSummary phases={value.phases} totalMs={value.totalMs} completedAtMs={value.completedAtMs} />
+    ))
     .with('error', (value) => (
       <ChatErrorDisplay
         error={value.error}

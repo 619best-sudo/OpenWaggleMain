@@ -88,7 +88,7 @@ export function useChatPanelSections(): ChatPanelSections {
     sendWaggleMessage,
     sendTeamMessage: async (payload, teammate) => {
       if (!activeSessionId) {
-        throw new Error('No active session for Team(New) send.')
+        throw new Error('No active session for Team send.')
       }
       await api.sendTeamMessage(activeSessionId, payload, model, teammate)
     },

@@ -131,7 +131,7 @@ describe('createSendHandlers', () => {
   })
 
   describe('handleSendTeam', () => {
-    it('sends first-message Team(New) payloads to the created session instead of plain chat', async () => {
+    it('sends first-message Team payloads to the created session instead of plain chat', async () => {
       const deps = makeDeps({ activeSessionId: null })
       const { handleSendTeam } = createSendHandlers(deps)
       const payload: AgentSendPayload = { text: 'build the site', thinkingLevel: 'medium', attachments: [] }
@@ -140,7 +140,7 @@ describe('createSendHandlers', () => {
         name: 'Web Executor',
         description: 'Build and verify websites.',
         launchPromptPlaceholder: 'Build a website',
-        launchButtonLabel: 'Launch Team(New)',
+        launchButtonLabel: 'Launch Team',
         app: { requiredMcps: [], requiredSkills: [] },
         agents: [],
         loopPolicy: {

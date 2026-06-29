@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
-import { SessionId, SupportedModelId } from '@shared/types/brand'
-import type { ProviderInfo } from '@shared/types/llm'
+import { SessionId } from '@shared/types/brand'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import { useNavigate } from '@tanstack/react-router'
 import {
@@ -18,7 +17,6 @@ import {
 import { useMemo, useState } from 'react'
 import { useEscapeHotkey } from '@/shared/hooks/useEscapeHotkey'
 import { useChat } from '@/features/chat/hooks/useChat'
-import { useProviderStore } from '@/features/providers/state/provider-store'
 import { usePreferencesStore } from '@/features/settings/state'
 import { sessionToUIMessages } from '@/features/chat/lib/useAgentChat.utils'
 import { seedOptimisticSendForSession } from '@/features/chat/hooks/useSendMessage'
@@ -45,16 +43,10 @@ import {
 } from '../lib/custom-team-builder'
 
 type AgentEditorMode = 'manual' | 'generate'
-const TEAM_DEFAULT_MODEL_VALUE = '__team-default-model__'
 const logger = createRendererLogger('teammates-panel')
 
 function buildAgentEditorModes(draft: TeamBuilderDraft) {
   return Object.fromEntries(draft.agents.map((agent) => [agent.id, 'manual' as const]))
-}
-
-interface TeamModelOption {
-  readonly id: string
-  readonly label: string
 }
 
 function AgentPill({ label }: { readonly label: string }) {
@@ -316,36 +308,6 @@ function buildDependencyLabels(app: TeammateDefinition['app']) {
   ]
 }
 
-function buildTeamModelOptions(providerModels: readonly ProviderInfo[]): readonly TeamModelOption[] {
-  const options: TeamModelOption[] = []
-  const seen = new Set<string>()
-
-  for (const provider of providerModels) {
-    for (const model of provider.models) {
-      const normalizedId = model.id.trim()
-      if (!normalizedId || !model.available || seen.has(normalizedId)) continue
-      seen.add(normalizedId)
-      options.push({
-        id: normalizedId,
-        label: `${model.name.trim() || model.modelId} (${provider.displayName})`,
-      })
-    }
-  }
-
-  return options
-}
-
-function toModelSelectValue(modelOverride?: string) {
-  return modelOverride?.trim() ? modelOverride : TEAM_DEFAULT_MODEL_VALUE
-}
-
-function summarizeAgentModel(modelOverride: string | undefined, selectedModel: string) {
-  if (modelOverride?.trim()) {
-    return `Override: ${modelOverride}`
-  }
-  return selectedModel.trim() ? `Team default: ${selectedModel}` : 'Team default: none selected'
-}
-
 export function TeammatesPanel() {
   const navigate = useNavigate()
   const projectPath = usePreferencesStore((state) => state.settings.projectPath)
@@ -353,7 +315,6 @@ export function TeammatesPanel() {
   const thinkingLevel = usePreferencesStore((state) => state.settings.thinkingLevel)
   const hasCustomTeam = usePreferencesStore((state) => state.settings.showCustomExecutionTeam)
   const setShowCustomExecutionTeam = usePreferencesStore((state) => state.setShowCustomExecutionTeam)
-  const providerModels = useProviderStore((state) => state.providerModels)
   const { activeSession, activeSessionId, createSession } = useChat()
   const showToast = useUIStore((state) => state.showToast)
   const builtInTeammates = useMemo(() => BUILT_IN_TEAMMATES, [])
@@ -386,8 +347,6 @@ export function TeammatesPanel() {
       }),
     [customTeam.optionalMcps, customTeam.optionalSkills, customTeam.requiredMcps, customTeam.requiredSkills],
   )
-  const teamModelOptions = useMemo(() => buildTeamModelOptions(providerModels), [providerModels])
-
   function updateBuiltInDraft(teammateId: string, patch: Partial<TeamBuilderDraft>) {
     setBuiltInTeamDrafts((current) => {
       const baseTeammate = builtInTeammates.find((teammate) => teammate.id === teammateId)
@@ -587,7 +546,10 @@ export function TeammatesPanel() {
         availableAgentIds: customTeam.agents.map((value) => value.id),
         availableAgentLabels: customTeam.agents.map((value) => value.label),
       })
-      const nextDraft = applyGeneratedAgentResult(agent, generated)
+      const nextDraft = {
+        ...applyGeneratedAgentResult(agent, generated),
+        modelOverride: undefined,
+      }
 
       setCustomTeam((current) => ({
         ...current,
@@ -623,15 +585,15 @@ export function TeammatesPanel() {
 
   async function launchTeam(teammate: TeammateDefinition, prompt: string) {
     if (!projectPath) {
-      showToast('Select a project before launching Team(New).', 'error')
+      showToast('Select a project before launching Team.', 'error')
       return
     }
     if (!selectedModel.trim()) {
-      showToast('Select a model before launching Team(New).', 'error')
+      showToast('Select a model before launching Team.', 'error')
       return
     }
     if (!prompt) {
-      showToast('Write the task prompt before launching Team(New).', 'error')
+      showToast('Write the task prompt before launching Team.', 'error')
       return
     }
 
@@ -670,14 +632,14 @@ export function TeammatesPanel() {
         teammate,
       )
 
-      showToast(`"${teammate.name}" launched in Team(New).`, 'success')
+      showToast(`"${teammate.name}" launched in Team.`, 'success')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      logger.error('Failed to launch Team(New)', {
+      logger.error('Failed to launch Team', {
         teammateId: teammate.id,
         error: message,
       })
-      showToast(`Failed to launch Team(New): ${message}`, 'error')
+      showToast(`Failed to launch Team: ${message}`, 'error')
     } finally {
       setLaunchingId(null)
     }
@@ -734,7 +696,7 @@ export function TeammatesPanel() {
             </div>
             <div className="space-y-2">
               <h2 className="bg-gradient-to-r from-amber-400 to-rose-500 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent">
-                Team(New)
+                Team
               </h2>
               <p className="max-w-[700px] text-[15px] leading-relaxed text-text-secondary">
                 Browse teams like a clean card store, then open the full team editor only when you
@@ -1104,7 +1066,7 @@ export function TeammatesPanel() {
                           </label>
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             <SectionHint>
-                              Team(New) will autofill the agent fields below.
+                              Team will autofill the agent fields below.
                             </SectionHint>
                             <Button
                               variant="secondary"
@@ -1120,48 +1082,6 @@ export function TeammatesPanel() {
                       ) : null}
 
                       <div className="flex flex-col gap-5">
-                        <div className="space-y-3 rounded-xl border border-border-light bg-bg-secondary px-5 py-4 shadow-sm">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <div className="text-[13px] font-semibold text-text-primary">Agent model</div>
-                              <div className="mt-1 text-[12px] text-text-tertiary">
-                                {summarizeAgentModel(agent.modelOverride, selectedModel)}
-                              </div>
-                            </div>
-                            <AgentPill label={agent.modelOverride ? 'Override' : 'Team Default'} />
-                          </div>
-                          <label className="space-y-1.5 block">
-                            <FieldLabel htmlFor={`agent-model-${agent.id}`}>Choose model</FieldLabel>
-                            <Select
-                              id={`agent-model-${agent.id}`}
-                              value={toModelSelectValue(agent.modelOverride)}
-                              onChange={(event) => {
-                                const value = event.currentTarget.value
-                                updateAgent(agent.id, (current) => ({
-                                  ...current,
-                                  modelOverride:
-                                    value === TEAM_DEFAULT_MODEL_VALUE
-                                      ? undefined
-                                      : SupportedModelId(value),
-                                }))
-                              }}
-                              selectSize="md"
-                            >
-                              <option value={TEAM_DEFAULT_MODEL_VALUE}>
-                                Use team default model ({selectedModel || 'none selected'})
-                              </option>
-                              {teamModelOptions.map((option) => (
-                                <option key={option.id} value={option.id}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </Select>
-                            <SectionHint>
-                              Set a specific model for this agent, or leave it on the team default.
-                            </SectionHint>
-                          </label>
-                        </div>
-
                         <label className="space-y-1.5">
                           <FieldLabel htmlFor={`agent-name-${agent.id}`}>Agent name</FieldLabel>
                           <TextInput
@@ -1484,8 +1404,8 @@ export function TeammatesPanel() {
 
             <div className="space-y-4">
               <div className="space-y-1">
-                <h3 className="text-[15px] font-semibold text-text-primary">Agent prompts and models</h3>
-                <SectionHint>Update each built-in agent prompt and model override before launch if this run needs different instructions.</SectionHint>
+                <h3 className="text-[15px] font-semibold text-text-primary">Agent prompts</h3>
+                <SectionHint>Update each built-in agent prompt before launch if this run needs different instructions.</SectionHint>
               </div>
               <div className="flex flex-col gap-4">
                 {activeBuiltInDraft?.agents.map((agent) => (
@@ -1502,44 +1422,6 @@ export function TeammatesPanel() {
                     {agent.whyToRun ? (
                       <p className="mt-3 text-[12px] leading-6 text-text-tertiary">{agent.whyToRun}</p>
                     ) : null}
-                    <div className="mt-4 space-y-3 rounded-xl border border-border-light bg-bg-secondary px-4 py-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-[13px] font-semibold text-text-primary">Agent model</div>
-                          <div className="mt-1 text-[12px] text-text-tertiary">
-                            {summarizeAgentModel(agent.modelOverride, selectedModel)}
-                          </div>
-                        </div>
-                        <AgentPill label={agent.modelOverride ? 'Override' : 'Team Default'} />
-                      </div>
-                      <label className="block space-y-1.5">
-                        <FieldLabel htmlFor={`built-in-agent-model-${agent.id}`}>Choose model</FieldLabel>
-                        <Select
-                          id={`built-in-agent-model-${agent.id}`}
-                          value={toModelSelectValue(agent.modelOverride)}
-                          onChange={(event) => {
-                            const value = event.currentTarget.value
-                            updateBuiltInAgent(activeBuiltInTeammate.id, agent.id, (current) => ({
-                              ...current,
-                              modelOverride:
-                                value === TEAM_DEFAULT_MODEL_VALUE
-                                  ? undefined
-                                  : SupportedModelId(value),
-                            }))
-                          }}
-                          selectSize="md"
-                        >
-                          <option value={TEAM_DEFAULT_MODEL_VALUE}>
-                            Use team default model ({selectedModel || 'none selected'})
-                          </option>
-                          {teamModelOptions.map((option) => (
-                            <option key={option.id} value={option.id}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </Select>
-                      </label>
-                    </div>
                     <label className="mt-4 block space-y-1.5">
                       <FieldLabel htmlFor={`built-in-agent-prompt-${agent.id}`}>Agent prompt</FieldLabel>
                       <Textarea

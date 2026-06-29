@@ -68,6 +68,7 @@ export function CommandPalette({
         query={query}
         onKeyDown={handleKeyDown}
         onQueryChange={handleQueryChange}
+        onClose={closeCommandPalette}
       />
       <CommandPaletteList
         items={items}

@@ -42,8 +42,8 @@ export const PROVIDER_MODELS: ProviderInfo[] = [
 
 export function createPreset(overrides?: Partial<WagglePreset>) {
   return {
-    id: WagglePresetId('preset-1'),
-    name: 'Review Pair',
+    id: WagglePresetId('debate'),
+    name: 'Review Panel',
     description: 'Custom: Finds regressions before they land.',
     config: {
       mode: 'sequential',

@@ -20,6 +20,9 @@ function sameWaggleTurn(
     current !== undefined &&
     previous !== undefined &&
     current.agentIndex === previous.agentIndex &&
+    current.agentLabel === previous.agentLabel &&
+    current.agentColor === previous.agentColor &&
+    current.agentModel === previous.agentModel &&
     current.turnNumber === previous.turnNumber &&
     (!bothHaveSessionId || current.sessionId === previous.sessionId)
   )
@@ -212,6 +215,7 @@ function appendStatusRows(rows: ChatRow[], params: BuildChatRowsParams) {
       type: 'run-summary',
       phases: params.phase.completed,
       totalMs: params.phase.totalElapsedMs,
+      completedAtMs: params.phase.completedAtMs,
     })
   }
   if (params.error && !params.isLoading) {

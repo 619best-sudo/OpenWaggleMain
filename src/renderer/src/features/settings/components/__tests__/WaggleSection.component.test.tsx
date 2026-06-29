@@ -214,11 +214,11 @@ describe('WaggleSection', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.queryByDisplayValue('Reviewer')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /create app/i }))
+    fireEvent.click(screen.getByRole('button', { name: /create panel/i }))
 
-    expect(await screen.findByRole('dialog', { name: /create waggle/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /create waggle/i })).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Agent 1')).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: /create panel/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /create panel/i })).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Expert 1')).toBeInTheDocument()
   })
 
   it('keeps model names out of the Waggle list items', async () => {
@@ -227,7 +227,7 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    await screen.findByText('Review Pair')
+    await screen.findByText('Review Panel')
 
     expect(screen.queryByText('Claude Sonnet 4.5')).not.toBeInTheDocument()
     expect(screen.queryByText('Claude Opus 4')).not.toBeInTheDocument()
@@ -321,7 +321,7 @@ describe('WaggleSection', () => {
     expect(screen.getByText('Quality And Inspection')).toBeInTheDocument()
     expect(screen.getByText('UI Specialists')).toBeInTheDocument()
     expect(screen.getByText('Other Built-Ins')).toBeInTheDocument()
-    expect(screen.getByText('Custom Waggles')).toBeInTheDocument()
+    expect(screen.getByText('Custom Panels')).toBeInTheDocument()
     expect(screen.getAllByText('Turing')).toHaveLength(2)
     expect(screen.getAllByText('Design And Asset Direction')).toHaveLength(2)
     expect(screen.getAllByText('Mobile Build')).toHaveLength(2)
@@ -417,13 +417,13 @@ describe('WaggleSection', () => {
     expect(within(elementAt(turingStage, 0)).getByText('Routing')).toBeInTheDocument()
     const turingGuidance = await screen.findAllByTestId('preset-guidance-turing')
     expect(within(elementAt(turingGuidance, 0)).getByText(/Best For: Routing the next lifecycle step from repo context/i)).toBeInTheDocument()
-    expect(within(elementAt(turingGuidance, 0)).getByText(/Recommended Next: Usually Product Planning or a build Waggle/i)).toBeInTheDocument()
+    expect(within(elementAt(turingGuidance, 0)).getByText(/Recommended Next: Usually Product Planning or a build Panel/i)).toBeInTheDocument()
 
     const planningStage = await screen.findAllByTestId('preset-stage-product-planning')
     expect(within(elementAt(planningStage, 0)).getByText('Planning')).toBeInTheDocument()
     const planningGuidance = await screen.findAllByTestId('preset-guidance-product-planning')
     expect(within(elementAt(planningGuidance, 0)).getByText(/Best For: Turning a vague request into a buildable scope/i)).toBeInTheDocument()
-    expect(within(elementAt(planningGuidance, 0)).getByText(/Recommended Next: Design And Asset Direction or a build Waggle/i)).toBeInTheDocument()
+    expect(within(elementAt(planningGuidance, 0)).getByText(/Recommended Next: Design And Asset Direction or a build Panel/i)).toBeInTheDocument()
 
     const designStage = await screen.findAllByTestId('preset-stage-design-asset-direction')
     expect(within(elementAt(designStage, 0)).getByText('Design')).toBeInTheDocument()
@@ -488,7 +488,7 @@ describe('WaggleSection', () => {
     ).not.toHaveLength(0)
   })
 
-  it('installs Waggle app dependencies from the list card', async () => {
+  it('installs Panel app dependencies from the list card', async () => {
     const preset = createPreset()
     listWagglePresetsMock.mockResolvedValueOnce([preset])
 
@@ -505,7 +505,7 @@ describe('WaggleSection', () => {
     })
   })
 
-  it('keeps launch disabled on the Waggle app surface while dependencies are missing', async () => {
+  it('keeps launch disabled on the Panel app surface while dependencies are missing', async () => {
     const preset = createPreset()
     listWagglePresetsMock.mockResolvedValueOnce([preset])
 
@@ -518,7 +518,7 @@ describe('WaggleSection', () => {
     expect(screen.queryByText('Launch')).not.toBeInTheDocument()
   })
 
-  it('launches a ready Waggle app from the Waggle app surface only', async () => {
+  it('launches a ready Panel app from the Panel app surface only', async () => {
     const preset = createPreset()
     listWagglePresetsMock.mockResolvedValueOnce([preset])
     getWaggleAppInstallStatusMock.mockResolvedValueOnce({
@@ -934,7 +934,7 @@ describe('WaggleSection', () => {
           optionalUnsupportedCount: 0,
           preflight: {
             verdict: 'blocked',
-            summary: 'Review Pair is blocked until required capabilities are installed.',
+            summary: 'Review Panel is blocked until required capabilities are installed.',
             checks: [
               {
                 id: 'required-dependencies',
@@ -983,7 +983,7 @@ describe('WaggleSection', () => {
       'overscroll-contain',
     )
     expect(screen.getByText(/Preflight blocked/i)).toBeInTheDocument()
-    expect(screen.getByText(/Review Pair is blocked until required capabilities are installed/i)).toBeInTheDocument()
+    expect(screen.getByText(/Review Panel is blocked until required capabilities are installed/i)).toBeInTheDocument()
     expect(screen.getByText('Preflight Checks')).toBeInTheDocument()
     expect(screen.getByText('Required Dependencies')).toBeInTheDocument()
     expect(screen.getByText('Optional Coverage')).toBeInTheDocument()
@@ -995,10 +995,14 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click((await screen.findAllByText('Review Pair'))[0])
+    fireEvent.click((await screen.findAllByText('Review Panel'))[0])
 
     await waitFor(() => {
-      expect(screen.getByRole('dialog', { name: /edit review pair/i })).toBeInTheDocument()
+      const dialog = screen.getByRole('dialog', { name: /edit review panel/i })
+      expect(dialog).toBeInTheDocument()
+      expect(screen.getByLabelText(/panel description/i)).toHaveValue(
+        'Custom: Finds regressions before they land.',
+      )
       expect(screen.getByDisplayValue('Reviewer')).toBeInTheDocument()
       expect(screen.getByDisplayValue('Implementer')).toBeInTheDocument()
       expect(screen.getByDisplayValue('Finds regressions before they land.')).toBeInTheDocument()
@@ -1013,9 +1017,9 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click((await screen.findAllByText('Review Pair'))[0])
+    fireEvent.click((await screen.findAllByText('Review Panel'))[0])
 
-    expect(await screen.findByRole('dialog', { name: /edit review pair/i })).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: /edit review panel/i })).toBeInTheDocument()
     expect(screen.getAllByText(/tool generation: image \/ audio \/ video/i)).toHaveLength(2)
     expect(screen.getByText(/native image input/i)).toBeInTheDocument()
     expect(screen.getByText(/text handoff only/i)).toBeInTheDocument()
@@ -1032,11 +1036,11 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click((await screen.findAllByText('Review Pair'))[0])
+    fireEvent.click((await screen.findAllByText('Review Panel'))[0])
     fireEvent.click(await screen.findByRole('button', { name: /cancel/i }))
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /edit review pair/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: /edit review panel/i })).not.toBeInTheDocument()
     })
   })
 
@@ -1063,10 +1067,13 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click((await screen.findAllByText('Review Pair'))[0])
-    await screen.findByRole('dialog', { name: /edit review pair/i })
+    fireEvent.click((await screen.findAllByText('Review Panel'))[0])
+    await screen.findByRole('dialog', { name: /edit review panel/i })
     fireEvent.change(screen.getByDisplayValue('Reviewer'), {
       target: { value: 'Refiner' },
+    })
+    fireEvent.change(screen.getByLabelText(/panel description/i), {
+      target: { value: 'Custom: Tightens the remediation plan.' },
     })
     fireEvent.change(screen.getByDisplayValue('Finds regressions before they land.'), {
       target: { value: 'Tightens the remediation plan.' },
@@ -1137,16 +1144,19 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /create app/i }))
-    await screen.findByRole('dialog', { name: /create waggle/i })
-    fireEvent.change(screen.getByDisplayValue('Agent 1'), {
+    fireEvent.click(await screen.findByRole('button', { name: /create panel/i }))
+    await screen.findByRole('dialog', { name: /create panel/i })
+    fireEvent.change(screen.getByDisplayValue('Expert 1'), {
       target: { value: 'Strategist' },
     })
-    fireEvent.change(screen.getByDisplayValue('Agent 2'), {
+    fireEvent.change(screen.getByDisplayValue('Expert 2'), {
       target: { value: 'Skeptic' },
     })
-    fireEvent.change(elementAt(screen.getAllByPlaceholderText(/describe this agent's/i), 0), {
+    fireEvent.change(elementAt(screen.getAllByPlaceholderText(/describe this expert's/i), 0), {
       target: { value: 'Frames trade-offs before implementation.' },
+    })
+    fireEvent.change(screen.getByLabelText(/panel description/i), {
+      target: { value: 'Custom: Frames trade-offs before implementation.' },
     })
     fireEvent.change(screen.getByLabelText(/required mcps/i), {
       target: { value: 'playwright\npostgres' },
@@ -1155,7 +1165,11 @@ describe('WaggleSection', () => {
       target: { value: 'ui-critic\nbackend-auditor' },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /create waggle/i }))
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: /create panel/i })).getByRole('button', {
+        name: /create panel/i,
+      }),
+    )
 
     await waitFor(() => {
       expect(saveWagglePresetMock).toHaveBeenCalledWith(
@@ -1190,7 +1204,7 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click((await screen.findAllByText('Review Pair'))[0])
+    fireEvent.click((await screen.findAllByText('Review Panel'))[0])
     fireEvent.change(screen.getByDisplayValue('Reviewer'), {
       target: { value: 'Refiner' },
     })
@@ -1224,12 +1238,12 @@ describe('WaggleSection', () => {
     fireEvent.change(screen.getByPlaceholderText('Search'), { target: { value: 'review' } })
 
     await waitFor(() => {
-      const presetButtons = screen.getAllByRole('button', { name: /review pair/i })
+      const presetButtons = screen.getAllByRole('button', { name: /review panel/i })
       expect(presetButtons.length).toBeGreaterThan(0)
     })
 
     const paletteButton = screen
-      .getAllByRole('button', { name: /review pair/i })
+      .getAllByRole('button', { name: /review panel/i })
       .find((button) => within(button).queryByText('Sequential'))
 
     expect(paletteButton).toBeTruthy()

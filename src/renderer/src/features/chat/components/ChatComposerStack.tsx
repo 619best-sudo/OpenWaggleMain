@@ -79,7 +79,7 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
         <div className="mx-auto mb-2 w-full max-w-[960px] px-5">
           <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg-secondary/50 px-4 py-3">
             <div className="text-[13px] text-text-secondary">
-              <span className="font-semibold text-text-primary">Team(New): {activeTeammate.name}</span>{' '}
+              <span className="font-semibold text-text-primary">Team: {activeTeammate.name}</span>{' '}
               {teamStatus === 'running'
                 ? 'is running in this session.'
                 : 'is armed. Send your own prompt to use it.'}

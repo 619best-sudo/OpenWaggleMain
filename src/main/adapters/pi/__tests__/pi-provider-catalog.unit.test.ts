@@ -54,7 +54,7 @@ describe('getPiModelAvailableThinkingLevels', () => {
 
 describe('resolveTuringMachineBaseUrl', () => {
   it('falls back to the local turing-machine backend when no env override is set', () => {
-    expect(resolveTuringMachineBaseUrl({})).toBe('http://localhost:3001/turing-machine')
+    expect(resolveTuringMachineBaseUrl({})).toBe('http://localhost:3000/turing-machine')
   })
 
   it('normalizes custom backend overrides from the environment', () => {

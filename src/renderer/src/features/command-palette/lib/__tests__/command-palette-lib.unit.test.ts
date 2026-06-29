@@ -1,8 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 import { BUILT_IN_TEAMMATES } from '@/features/teammates/lib/team-new-built-ins'
+import { WagglePresetId } from '@shared/types/brand'
 import type { CommandPaletteItem } from '../../model'
 import { buildCommandPaletteEntries } from '../command-palette-entries'
-import { createBaseCommands, createConfigureTeamItem, createTeamItems } from '../command-palette-items'
+import {
+  createBaseCommands,
+  createConfigureTeamItem,
+  createPresetItems,
+  createTeamItems,
+} from '../command-palette-items'
 import { normalizeCommandQuery, truncateCommandDescription } from '../command-palette-text'
 
 const {
@@ -143,6 +149,43 @@ describe('team command palette matching', () => {
     expect(createConfigureTeamItem('debug', vi.fn())).toHaveLength(1)
     expect(createConfigureTeamItem('qa', vi.fn())).toHaveLength(1)
     expect(createConfigureTeamItem('review', vi.fn())).toHaveLength(1)
+  })
+})
+
+describe('panel command palette matching', () => {
+  it('only exposes the allowed panel presets', () => {
+    const items = createPresetItems(
+      [
+        {
+          id: WagglePresetId('debate'),
+          name: 'Debate',
+          description: 'Two experts challenge the task.',
+          isBuiltIn: true,
+          config: { mode: 'sequential', agents: [], stop: { primary: 'consensus', maxTurnsSafety: 4 } },
+          app: { name: 'Debate', instructions: '', version: '1.0.0', requiredMcps: [], optionalMcps: [], requiredSkills: [], optionalSkills: [] },
+        },
+        {
+          id: WagglePresetId('product-planning'),
+          name: 'Product Planning',
+          description: 'Plans the product work.',
+          isBuiltIn: true,
+          config: { mode: 'sequential', agents: [], stop: { primary: 'consensus', maxTurnsSafety: 4 } },
+          app: { name: 'Product Planning', instructions: '', version: '1.0.0', requiredMcps: [], optionalMcps: [], requiredSkills: [], optionalSkills: [] },
+        },
+        {
+          id: WagglePresetId('red-team'),
+          name: 'Red Team',
+          description: 'Finds weaknesses.',
+          isBuiltIn: true,
+          config: { mode: 'sequential', agents: [], stop: { primary: 'consensus', maxTurnsSafety: 4 } },
+          app: { name: 'Red Team', instructions: '', version: '1.0.0', requiredMcps: [], optionalMcps: [], requiredSkills: [], optionalSkills: [] },
+        },
+      ],
+      '',
+      vi.fn(),
+    )
+
+    expect(items.map((item) => item.label)).toEqual(['Debate', 'Red Team'])
   })
 })
 

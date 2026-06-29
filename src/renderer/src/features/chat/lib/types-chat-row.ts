@@ -56,7 +56,7 @@ export type ChatRow =
   | { type: 'branch-summary'; id: string; summary: string }
   | { type: 'compaction-summary'; id: string; summary: string; tokensBefore: number }
   | { type: 'phase-indicator'; label: string; elapsedMs: number }
-  | { type: 'run-summary'; phases: readonly CompletedPhase[]; totalMs: number }
+  | { type: 'run-summary'; phases: readonly CompletedPhase[]; totalMs: number; completedAtMs: number | null }
   | {
       type: 'error'
       error: Error

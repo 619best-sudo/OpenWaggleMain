@@ -14,8 +14,8 @@ import {
 function makePreset(): WagglePreset {
   return {
     id: WagglePresetId('preset-1'),
-    name: 'Pair',
-    description: 'Two-agent workflow',
+    name: 'Panel',
+    description: 'Two-expert workflow',
     isBuiltIn: false,
     createdAt: 1,
     updatedAt: 1,
@@ -52,7 +52,7 @@ describe('waggle form state reducers', () => {
       mode: 'sequential',
       stop: { primary: 'consensus', maxTurnsSafety: 8 },
     })
-    expect(config.agents.map((agent) => agent.label)).toEqual(['Agent 1', 'Agent 2'])
+    expect(config.agents.map((agent) => agent.label)).toEqual(['Expert 1', 'Expert 2'])
     expect(config.agents.map((agent) => agent.model)).toEqual([
       WAGGLE_INHERIT_MODEL,
       WAGGLE_INHERIT_MODEL,
@@ -152,18 +152,18 @@ describe('waggle form state reducers', () => {
     expect(withTurns.agents).toBe(INITIAL_WAGGLE_FORM_STATE.agents)
   })
 
-  it('adds and removes agents while preserving the minimum pair', () => {
+  it('adds and removes Experts while preserving the minimum panel size', () => {
     const withThirdAgent = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, { type: 'add-agent' })
 
     expect(withThirdAgent.agents).toHaveLength(3)
     expect(withThirdAgent.agents[2]).toMatchObject({
-      label: 'Agent 3',
+      label: 'Expert 3',
       model: WAGGLE_INHERIT_MODEL,
       color: 'emerald',
     })
 
     const removed = waggleFormReducer(withThirdAgent, { type: 'remove-agent', index: 1 })
-    expect(removed.agents.map((agent) => agent.label)).toEqual(['Agent 1', 'Agent 3'])
+    expect(removed.agents.map((agent) => agent.label)).toEqual(['Expert 1', 'Expert 3'])
 
     const stillTwoAgents = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, {
       type: 'remove-agent',

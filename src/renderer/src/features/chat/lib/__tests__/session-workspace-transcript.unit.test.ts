@@ -250,7 +250,7 @@ describe('resolveTranscriptMessages', () => {
     ])
   })
 
-  it('filters persisted internal Team(New) fallback prompts from the visible transcript', () => {
+  it('filters persisted internal Team fallback prompts from the visible transcript', () => {
     const user = sessionNode('user-head', null, 'user', 'Head user', 0)
     const assistant = sessionNode('assistant-head', 'user-head', 'assistant', 'Head answer', 1)
     const internalPrompt = sessionNode(

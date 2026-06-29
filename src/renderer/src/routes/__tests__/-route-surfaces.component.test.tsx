@@ -195,7 +195,7 @@ describe('route surfaces', () => {
     expect(screen.getByText('Waggle panel')).toBeInTheDocument()
   })
 
-  it('wraps the Team(New) panel in its route surface', () => {
+  it('wraps the Team panel in its route surface', () => {
     render(<TeammatesRouteSurface />)
 
     expect(screen.getByText('Teammates panel')).toBeInTheDocument()

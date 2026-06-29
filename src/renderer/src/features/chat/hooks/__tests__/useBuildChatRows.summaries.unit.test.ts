@@ -30,7 +30,7 @@ describe('buildChatRows compaction summaries', () => {
       dismissedError: null,
       sessionId: 'session-compaction',
       waggleMetadataLookup: {},
-      phase: { current: null, completed: [], totalElapsedMs: 0 },
+      phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
     })
 
     expect(rows.map((row) => row.type)).toEqual(['message', 'compaction-summary'])
@@ -62,7 +62,7 @@ describe('buildChatRows compaction summaries', () => {
       dismissedError: null,
       sessionId: 'session-branch-summary',
       waggleMetadataLookup: {},
-      phase: { current: null, completed: [], totalElapsedMs: 0 },
+      phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
     })
 
     expect(rows.map((row) => row.type)).toEqual(['message', 'branch-summary'])
@@ -84,7 +84,7 @@ describe('buildChatRows interrupted runs', () => {
       dismissedError: null,
       sessionId: 'session-interrupted',
       waggleMetadataLookup: {},
-      phase: { current: null, completed: [], totalElapsedMs: 0 },
+      phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
       interruptedRun: {
         runId: 'run-interrupted-1',
         sessionId: SessionId('session-interrupted'),
@@ -123,7 +123,7 @@ describe('buildChatRows reasoning visibility', () => {
       dismissedError: null,
       sessionId: 'session-reasoning',
       waggleMetadataLookup: {},
-      phase: { current: null, completed: [], totalElapsedMs: 0 },
+      phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
     })
 
     const assistantRows = rows.filter(
@@ -164,7 +164,7 @@ describe('buildChatRows isRunActive', () => {
       dismissedError: null,
       sessionId: 'session-active',
       waggleMetadataLookup: {},
-      phase: { current: null, completed: [], totalElapsedMs: 0 },
+      phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
     })
 
     const assistantRows = rows.filter(
@@ -195,7 +195,7 @@ describe('buildChatRows isRunActive', () => {
       dismissedError: null,
       sessionId: 'session-inactive',
       waggleMetadataLookup: {},
-      phase: { current: null, completed: [], totalElapsedMs: 0 },
+      phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
     })
 
     const assistantRows = rows.filter(

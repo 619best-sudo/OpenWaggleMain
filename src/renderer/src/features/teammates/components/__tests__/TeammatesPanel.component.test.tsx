@@ -215,16 +215,13 @@ describe('TeammatesPanel', () => {
     fireEvent.change(document.getElementById('built-in-optional-skills')!, {
       target: { value: 'ui-ux-pro-max' },
     })
-    fireEvent.change(document.getElementById('built-in-agent-model-web-planner')!, {
-      target: { value: 'openrouter/anthropic/claude-sonnet-4' },
-    })
     fireEvent.change(document.getElementById('built-in-agent-prompt-web-planner')!, {
       target: { value: 'You are Web Planner. Customize the execution plan for this launch.' },
     })
     fireEvent.change(screen.getByLabelText('Task prompt'), {
       target: { value: 'Create a SaaS landing page and make sure it opens.' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Launch Team(New)' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Launch Team' }))
 
     await waitFor(() => {
       expect(createSessionMock).toHaveBeenCalledWith('/repo/openwaggle')
@@ -248,7 +245,7 @@ describe('TeammatesPanel', () => {
           agents: expect.arrayContaining([
             expect.objectContaining({
               id: 'web-planner',
-              modelOverride: SupportedModelId('openrouter/anthropic/claude-sonnet-4'),
+              modelOverride: undefined,
               roleDescription: 'You are Web Planner. Customize the execution plan for this launch.',
             }),
             expect.objectContaining({ id: 'web-architect' }),
@@ -262,7 +259,7 @@ describe('TeammatesPanel', () => {
         to: '/sessions/$sessionId',
         params: { sessionId: 'session-team-1' },
       })
-      expect(showToastMock).toHaveBeenCalledWith('"Web Executor" launched in Team(New).', 'success')
+      expect(showToastMock).toHaveBeenCalledWith('"Web Executor" launched in Team.', 'success')
     })
   })
 
@@ -294,9 +291,7 @@ describe('TeammatesPanel', () => {
     fireEvent.change(screen.getByLabelText('Decision maker'), {
       target: { value: 'agent-1' },
     })
-    fireEvent.change(document.getElementById('agent-model-agent-1')!, {
-      target: { value: 'openrouter/anthropic/claude-sonnet-4' },
-    })
+    expect(screen.queryByLabelText('Choose model')).not.toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Launch Custom Team' })[0]!)
 
     await waitFor(() => {
@@ -323,13 +318,12 @@ describe('TeammatesPanel', () => {
             expect.objectContaining({
               id: 'agent-1',
               kind: 'decision-maker',
-              modelOverride: SupportedModelId('openrouter/anthropic/claude-sonnet-4'),
               isDecisionMaker: true,
             }),
           ]),
         }),
       )
-      expect(showToastMock).toHaveBeenCalledWith('"Review Squad" launched in Team(New).', 'success')
+      expect(showToastMock).toHaveBeenCalledWith('"Review Squad" launched in Team.', 'success')
     })
   })
 

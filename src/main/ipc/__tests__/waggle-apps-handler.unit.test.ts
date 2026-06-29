@@ -24,7 +24,7 @@ import { registerWaggleAppsHandlers } from '../waggle-apps-handler'
 function samplePreset(): WagglePreset {
   return {
     id: WagglePresetId('preset-1'),
-    name: 'Review Pair',
+    name: 'Review Panel',
     description: 'Two-agent code review',
     config: {
       mode: 'sequential',

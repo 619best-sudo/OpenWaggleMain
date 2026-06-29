@@ -1,14 +1,11 @@
-import { SessionId, SupportedModelId } from '@shared/types/brand'
-import { DEFAULT_SETTINGS } from '@shared/types/settings'
+import { SessionId } from '@shared/types/brand'
 import { WAGGLE_INHERIT_MODEL, type WaggleConfig } from '@shared/types/waggle'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { usePreferencesStore } from '@/features/settings/state'
 import { useWaggleStore } from '@/features/waggle/state'
 import { WaggleCollaborationStatus } from '../CollaborationStatus'
 
 const SESSION_ID = SessionId('session-1')
-const SELECTED_MODEL = SupportedModelId('openai/gpt-5.5')
 
 function inheritedConfig(): WaggleConfig {
   return {
@@ -34,22 +31,19 @@ function inheritedConfig(): WaggleConfig {
 describe('WaggleCollaborationStatus', () => {
   beforeEach(() => {
     useWaggleStore.getState().reset()
-    usePreferencesStore.setState({
-      settings: { ...DEFAULT_SETTINGS, selectedModel: SELECTED_MODEL },
-      isLoaded: true,
-      loadError: null,
-    })
   })
 
-  it('renders inherited agent models as the selected standard model without materializing config', () => {
+  it('renders a compact ready banner with experts and mode', () => {
     const config = inheritedConfig()
     useWaggleStore.getState().setConfig(config, SESSION_ID)
 
     render(<WaggleCollaborationStatus currentSessionId={SESSION_ID} onStop={vi.fn()} />)
 
-    expect(screen.getAllByText(/GPT 5.5/)).toHaveLength(2)
-    expect(screen.queryByText(/\$inherit/)).not.toBeInTheDocument()
-    expect(screen.getByText(/Waggle ready · Sequential · 4 turns/)).toBeInTheDocument()
+    expect(screen.getByText('Panel')).toBeInTheDocument()
+    expect(screen.getByText('Architect')).toBeInTheDocument()
+    expect(screen.getByText('Reviewer')).toBeInTheDocument()
+    expect(screen.getByText('Sequential')).toBeInTheDocument()
+    expect(screen.getByText('Ready')).toBeInTheDocument()
     expect(useWaggleStore.getState().activeConfig).toBe(config)
   })
 
@@ -62,7 +56,7 @@ describe('WaggleCollaborationStatus', () => {
 
     render(<WaggleCollaborationStatus currentSessionId={SESSION_ID} onStop={vi.fn()} />)
 
-    expect(screen.getByText(/Turn 2\/4: Reviewer · GPT 5.5/)).toBeInTheDocument()
+    expect(screen.getByText('Reviewer · 2/4')).toBeInTheDocument()
   })
 
   it('shows recently registered Waggle artifacts with exact downstream file guidance', () => {

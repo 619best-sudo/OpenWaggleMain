@@ -17,6 +17,7 @@ interface WaggleEditorDialogProps {
   readonly settings: Settings
   readonly providerModels: ProviderInfo[]
   readonly formState: {
+    readonly descriptionText: string
     readonly agents: readonly Parameters<typeof WaggleAgentSlotCard>[0]['agent'][]
     readonly stopCondition: Parameters<typeof CollaborationSettingsCard>[0]['stopCondition']
     readonly maxTurns: number
@@ -95,10 +96,23 @@ export function WaggleEditorDialog({
           ) : null}
 
           <div className="space-y-4">
+            <label className="block space-y-1.5">
+              <span className="text-[12px] font-medium text-text-secondary">Panel Description</span>
+              <textarea
+                className="min-h-[88px] w-full resize-y rounded-lg border border-border bg-bg px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50"
+                value={formState.descriptionText}
+                onChange={(event) =>
+                  dispatchForm({ type: 'set-description-text', value: event.target.value })
+                }
+                placeholder="Describe what this Panel does."
+                spellCheck={false}
+              />
+            </label>
+
             <div className="flex items-center justify-between gap-3 rounded-xl border border-border-light bg-bg-secondary/35 px-4 py-3">
               <div className="text-[12px] leading-5 text-text-tertiary">
-                Configure each participant in the collaboration loop. Waggle now rotates through
-                every active agent in order, and individual slots can opt into prompt-keyword
+                Configure each Expert in the collaboration loop. The Panel rotates through every
+                active Expert in order, and individual slots can opt into prompt-keyword
                 gating when they should only join certain requests.
               </div>
               <Button
@@ -108,7 +122,7 @@ export function WaggleEditorDialog({
                 leftIcon={<Plus className="size-4" />}
                 className="shrink-0"
               >
-                Add Agent
+                Add Expert
               </Button>
             </div>
 
@@ -130,7 +144,7 @@ export function WaggleEditorDialog({
 
           <div className="mt-6">
             <div className="mb-3 rounded-xl border border-border-light bg-bg-secondary/50 px-4 py-3 text-[12px] leading-5 text-text-tertiary">
-              Waggle apps bundle agent roles with the MCPs and skills they depend on. Later turns
+              Panel apps bundle Expert roles with the MCPs and skills they depend on. Later turns
               receive a concise generation handoff, and image-capable models can additionally
               inspect discovered image outputs directly. When using MCPs, always map artifact
               starter payload values into the tool schema exactly.
@@ -138,14 +152,14 @@ export function WaggleEditorDialog({
             <div className="mb-6 grid gap-4 md:grid-cols-2">
               <DependencyEditor
                 label="Required MCPs"
-                description="One MCP id per line. These become the installable MCP dependencies for this Waggle app."
+                description="One MCP id per line. These become the installable MCP dependencies for this Panel app."
                 placeholder={'playwright\npostgres\nffmpeg'}
                 value={formState.requiredMcpsText}
                 onChange={(value) => dispatchForm({ type: 'set-required-mcps-text', value })}
               />
               <DependencyEditor
                 label="Required Skills"
-                description="One skill id per line. These become the installable skill dependencies for this Waggle app."
+                description="One skill id per line. These become the installable skill dependencies for this Panel app."
                 placeholder={'ui-critic\nbackend-auditor\nmedia-director'}
                 value={formState.requiredSkillsText}
                 onChange={(value) => dispatchForm({ type: 'set-required-skills-text', value })}
