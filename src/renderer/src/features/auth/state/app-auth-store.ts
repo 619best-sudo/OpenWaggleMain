@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import {
+  googleAuthWithIdToken,
   loginWithPassword,
   refreshSession,
   logoutFromBackend,
@@ -28,6 +29,7 @@ interface AppAuthState {
   readonly error: string | null
   setView: (view: AuthView) => void
   clearError: () => void
+  signInWithGoogle: () => Promise<void>
   signIn: (input: LoginWithPasswordInput) => Promise<void>
   signUp: (input: SignupWithPasswordInput) => Promise<void>
   signOut: () => Promise<void>
@@ -214,6 +216,21 @@ export const useAppAuthStore = create<AppAuthState>((set, get) => ({
     set({ error: null })
   },
 
+  async signInWithGoogle() {
+    set({ status: 'submitting', error: null })
+
+    try {
+      const idToken = await api.startAppGoogleOAuth()
+      const user = await googleAuthWithIdToken({ idToken })
+      await applyAuthenticatedUser(user, 'Failed to sync backend model token after Google sign-in')
+    } catch (error) {
+      set({
+        status: 'signed_out',
+        error: error instanceof Error ? error.message : 'Unable to sign in with Google right now.',
+      })
+    }
+  },
+
   async signIn(input) {
     set({ status: 'submitting', error: null })
 
@@ -271,6 +288,7 @@ export function useAppAuth() {
   const error = useAppAuthStore((state) => state.error)
   const setView = useAppAuthStore((state) => state.setView)
   const clearError = useAppAuthStore((state) => state.clearError)
+  const signInWithGoogle = useAppAuthStore((state) => state.signInWithGoogle)
   const signIn = useAppAuthStore((state) => state.signIn)
   const signUp = useAppAuthStore((state) => state.signUp)
   const signOut = useAppAuthStore((state) => state.signOut)
@@ -283,6 +301,7 @@ export function useAppAuth() {
     isAuthenticated: status === 'authenticated',
     setView,
     clearError,
+    signInWithGoogle,
     signIn,
     signUp,
     signOut,

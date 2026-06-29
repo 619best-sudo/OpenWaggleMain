@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { authClientMock, apiMock, loggerMock } = vi.hoisted(() => ({
   authClientMock: {
+    googleAuthWithIdToken: vi.fn(),
     loginWithPassword: vi.fn(),
     refreshSession: vi.fn(),
     signupWithPassword: vi.fn(),
@@ -9,6 +10,7 @@ const { authClientMock, apiMock, loggerMock } = vi.hoisted(() => ({
   },
   apiMock: {
     setProviderApiKey: vi.fn(),
+    startAppGoogleOAuth: vi.fn(),
   },
   loggerMock: {
     warn: vi.fn(),
@@ -30,12 +32,20 @@ describe('app-auth-store', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     apiMock.setProviderApiKey.mockResolvedValue(undefined)
+    apiMock.startAppGoogleOAuth.mockResolvedValue('google-id-token')
     authClientMock.loginWithPassword.mockResolvedValue({
       id: 'user-1',
       name: 'Test User',
       email: 'test@example.com',
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
+    })
+    authClientMock.googleAuthWithIdToken.mockResolvedValue({
+      id: 'user-3',
+      name: 'Google User',
+      email: 'google@example.com',
+      accessToken: 'google-access-token',
+      refreshToken: 'google-refresh-token',
     })
     authClientMock.signupWithPassword.mockResolvedValue({
       id: 'user-2',
@@ -85,6 +95,18 @@ describe('app-auth-store', () => {
     expect(apiMock.setProviderApiKey).toHaveBeenCalledWith('turing-machine', 'access-token')
     expect(useAppAuthStore.getState().status).toBe('authenticated')
     expect(useAppAuthStore.getState().user?.accessToken).toBe('access-token')
+  })
+
+  it('signs in with Google and mirrors the backend token into the provider auth store', async () => {
+    await useAppAuthStore.getState().signInWithGoogle()
+
+    expect(apiMock.startAppGoogleOAuth).toHaveBeenCalledWith()
+    expect(authClientMock.googleAuthWithIdToken).toHaveBeenCalledWith({
+      idToken: 'google-id-token',
+    })
+    expect(apiMock.setProviderApiKey).toHaveBeenCalledWith('turing-machine', 'google-access-token')
+    expect(useAppAuthStore.getState().status).toBe('authenticated')
+    expect(useAppAuthStore.getState().user?.email).toBe('google@example.com')
   })
 
   it('signs out and clears the mirrored provider token', async () => {

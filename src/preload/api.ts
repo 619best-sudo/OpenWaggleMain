@@ -168,6 +168,7 @@ export const api: OpenWaggleApi = {
   cancelTeam: send('agent:cancel-team'),
 
   // Auth
+  startAppGoogleOAuth: invoke('app-auth:start-google-oauth'),
   startOAuth: invoke('auth:start-oauth'),
   submitAuthCode: invoke('auth:submit-code'),
   cancelOAuth: invoke('auth:cancel-oauth'),

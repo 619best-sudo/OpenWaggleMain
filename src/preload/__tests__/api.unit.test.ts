@@ -117,6 +117,7 @@ describe('preload api surface contract', () => {
     'generateTeamAgent',
     'cancelTeam',
     // Auth
+    'startAppGoogleOAuth',
     'startOAuth',
     'submitAuthCode',
     'cancelOAuth',

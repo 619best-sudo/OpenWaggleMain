@@ -250,6 +250,7 @@ export interface OpenWaggleApi {
   cancelTeam(sessionId: SessionId): void
 
   // Auth
+  startAppGoogleOAuth(): Promise<string>
   startOAuth(provider: OAuthProvider): Promise<void>
   submitAuthCode(provider: OAuthProvider, code: string): Promise<void>
   cancelOAuth(provider: OAuthProvider): Promise<void>

@@ -32,8 +32,9 @@ const DEFAULT_SIGNUP_FORM: SignupFormState = {
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export function AuthScreen() {
-  const { view, status, error, setView, clearError, signIn, signUp } = useAppAuth()
+  const { view, status, error, setView, clearError, signIn, signInWithGoogle, signUp } = useAppAuth()
   const [loginForm, setLoginForm] = useState<LoginFormState>(DEFAULT_LOGIN_FORM)
   const [signupForm, setSignupForm] = useState<SignupFormState>(DEFAULT_SIGNUP_FORM)
   const [formError, setFormError] = useState<string | null>(null)
@@ -41,6 +42,29 @@ export function AuthScreen() {
   const isSubmitting = status === 'submitting'
   const visibleError = formError ?? error
   const isLoginView = view === 'login'
+
+  function GoogleGlyph() {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 shrink-0">
+        <path
+          fill="#EA4335"
+          d="M12.24 10.285V14.4h5.88c-.258 1.324-1.547 3.882-5.88 3.882-3.54 0-6.425-2.93-6.425-6.542s2.885-6.542 6.425-6.542c2.015 0 3.366.86 4.14 1.598l2.82-2.734C17.388 2.373 15.072 1.4 12.24 1.4 6.766 1.4 2.33 5.836 2.33 11.31s4.436 9.91 9.91 9.91c5.72 0 9.514-4.02 9.514-9.682 0-.65-.071-1.149-.16-1.653H12.24Z"
+        />
+        <path
+          fill="#34A853"
+          d="M2.33 11.31c0 1.766.462 3.425 1.27 4.862l3.913-3.042a6.01 6.01 0 0 1 0-3.64L3.6 6.448A9.875 9.875 0 0 0 2.33 11.31Z"
+        />
+        <path
+          fill="#FBBC05"
+          d="M12.24 21.22c2.832 0 5.148-.93 6.864-2.528l-3.34-2.59c-.895.622-2.033.997-3.524.997-2.815 0-5.2-1.9-6.05-4.46L2.28 15.66c1.703 3.382 5.208 5.56 9.96 5.56Z"
+        />
+        <path
+          fill="#4285F4"
+          d="M19.104 18.692c1.924-1.774 3.03-4.386 3.03-7.154 0-.651-.071-1.15-.16-1.654H12.24V14.4h5.88c-.282 1.45-1.15 2.675-2.356 3.5l3.34 2.591Z"
+        />
+      </svg>
+    )
+  }
 
   function switchView(nextView: 'login' | 'signup') {
     setFormError(null)
@@ -181,11 +205,6 @@ export function AuthScreen() {
                     <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-white">
                       {isLoginView ? 'Register or login' : 'Create your account'}
                     </h2>
-                    <p className="mt-3 max-w-sm text-[14px] leading-6 text-white/56">
-                      {isLoginView
-                        ? 'Continue with the email and password linked to your Turing Machine workspace.'
-                        : 'Set up your account once, then use it to keep project sessions and provider access in sync.'}
-                    </p>
                   </div>
                 </div>
 
@@ -197,6 +216,33 @@ export function AuthScreen() {
                     {visibleError}
                   </div>
                 ) : null}
+
+                <div className="mb-6 space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormError(null)
+                      clearError()
+                      void signInWithGoogle()
+                    }}
+                    disabled={isSubmitting}
+                    className={cn(
+                      'relative flex h-12 w-full items-center justify-center rounded-2xl border border-white/12 bg-white/5 px-4 text-[14px] font-semibold tracking-[-0.01em] text-white transition-colors shadow-[0_10px_24px_rgba(0,0,0,0.16)]',
+                      isSubmitting ? 'cursor-wait opacity-70' : 'hover:bg-white/[0.075]',
+                    )}
+                  >
+                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">
+                      <GoogleGlyph />
+                    </span>
+                    <span>Continue with Google</span>
+                  </button>
+
+                  <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-white/28">
+                    <div className="h-px flex-1 bg-white/10" />
+                    <span>Or continue with email</span>
+                    <div className="h-px flex-1 bg-white/10" />
+                  </div>
+                </div>
 
                 {isLoginView ? (
                   <form

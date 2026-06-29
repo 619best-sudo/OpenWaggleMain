@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  googleAuthWithIdToken,
   loginWithPassword,
   refreshSession,
   logoutFromBackend,
@@ -47,7 +48,7 @@ describe('auth-client', () => {
     })
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3001/auth/email',
+      'http://localhost:3000/auth/email',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
@@ -97,6 +98,49 @@ describe('auth-client', () => {
     expect(user.name).toBe('Alex Johnson')
   })
 
+  it('posts the Google ID token to the Google auth endpoint', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          user: {
+            id: 'user-google',
+            email: 'google@example.com',
+            displayName: 'Google User',
+          },
+          tokens: {
+            accessToken: 'google-access-token',
+            refreshToken: 'google-refresh-token',
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      ),
+    )
+
+    const user = await googleAuthWithIdToken({ idToken: 'google-id-token' })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/auth/google',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          idToken: 'google-id-token',
+        }),
+      }),
+    )
+    expect(user).toEqual({
+      id: 'user-google',
+      name: 'Google User',
+      email: 'google@example.com',
+      accessToken: 'google-access-token',
+      refreshToken: 'google-refresh-token',
+    })
+  })
+
   it('surfaces backend validation errors from auth responses', async () => {
     fetchMock.mockResolvedValue(
       new Response(
@@ -134,7 +178,7 @@ describe('auth-client', () => {
     await logoutFromBackend({ refreshToken: 'refresh-token' })
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3001/auth/logout',
+      'http://localhost:3000/auth/logout',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
@@ -174,7 +218,7 @@ describe('auth-client', () => {
     })
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3001/auth/refresh',
+      'http://localhost:3000/auth/refresh',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({

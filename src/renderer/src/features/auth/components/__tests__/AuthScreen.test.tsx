@@ -28,6 +28,7 @@ describe('AuthScreen', () => {
       error: null,
       setView: vi.fn(),
       clearError: vi.fn(),
+      signInWithGoogle: vi.fn(),
       signIn: vi.fn(),
       signUp: vi.fn(),
     })
@@ -50,6 +51,7 @@ describe('AuthScreen', () => {
       error: null,
       setView: vi.fn(),
       clearError,
+      signInWithGoogle: vi.fn(),
       signIn,
       signUp: vi.fn(),
     })
@@ -77,6 +79,7 @@ describe('AuthScreen', () => {
       error: null,
       setView: vi.fn(),
       clearError: vi.fn(),
+      signInWithGoogle: vi.fn(),
       signIn: vi.fn(),
       signUp,
     })
@@ -95,6 +98,32 @@ describe('AuthScreen', () => {
         email: 'alex@example.com',
         password: 'password123',
       })
+    })
+  })
+
+  it('renders the Google sign-in section and forwards the returned credential', async () => {
+    const signInWithGoogle = vi.fn().mockResolvedValue(undefined)
+    const clearError = vi.fn()
+
+    useAppAuthMock.mockReturnValue({
+      view: 'login',
+      status: 'signed_out',
+      error: null,
+      setView: vi.fn(),
+      clearError,
+      signInWithGoogle,
+      signIn: vi.fn(),
+      signUp: vi.fn(),
+    })
+
+    render(<AuthScreen />)
+
+    expect(screen.getByText('Or continue with email')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }))
+
+    await waitFor(() => {
+      expect(clearError).toHaveBeenCalled()
+      expect(signInWithGoogle).toHaveBeenCalledWith()
     })
   })
 })

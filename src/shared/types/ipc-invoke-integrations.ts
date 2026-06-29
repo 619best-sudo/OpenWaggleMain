@@ -189,6 +189,10 @@ export interface IpcIntegrationInvokeChannelMap {
     args: [provider: OAuthProvider]
     return: undefined
   }
+  'app-auth:start-google-oauth': {
+    args: []
+    return: string
+  }
   'auth:disconnect': {
     args: [provider: OAuthProvider]
     return: undefined

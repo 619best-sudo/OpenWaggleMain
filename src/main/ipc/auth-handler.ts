@@ -3,6 +3,7 @@ import type { OAuthFlowStatus } from '@shared/types/auth'
 import { isOAuthProvider } from '@shared/types/auth'
 import * as Effect from 'effect/Effect'
 import { BrowserWindow } from 'electron'
+import { startGoogleDesktopAuth } from '../auth/google-desktop-auth'
 import {
   cancelOAuth,
   disconnect,
@@ -71,6 +72,10 @@ function reportDebugEvent(input: {
 export function registerAuthHandlers(): void {
   if (stopAuthLifecycle) stopAuthLifecycle()
   stopAuthLifecycle = startAuthLifecycle(broadcastOAuthStatus)
+
+  typedHandle('app-auth:start-google-oauth', () =>
+    Effect.promise(() => startGoogleDesktopAuth()),
+  )
 
   typedHandle('auth:start-oauth', (_event, provider: string) =>
     Effect.gen(function* () {

@@ -19,6 +19,10 @@ export interface SignupWithPasswordInput {
   readonly password: string
 }
 
+export interface GoogleAuthInput {
+  readonly idToken: string
+}
+
 interface GreatxAuthResponse {
   readonly user: {
     readonly id: string
@@ -163,6 +167,16 @@ export async function signupWithPassword({
   })
 
   return toAppAuthUser(response, trimmedName, normalizedEmail)
+}
+
+export async function googleAuthWithIdToken({ idToken }: GoogleAuthInput): Promise<AppAuthUser> {
+  const response = await postJson<GreatxAuthResponse>('/auth/google', {
+    idToken,
+  })
+
+  const fallbackEmail = response.user.email ? normalizeEmail(response.user.email) : 'google-user@openwaggle.local'
+  const fallbackName = response.user.displayName?.trim() || inferDisplayName(fallbackEmail)
+  return toAppAuthUser(response, fallbackName, fallbackEmail)
 }
 
 export async function refreshSession({

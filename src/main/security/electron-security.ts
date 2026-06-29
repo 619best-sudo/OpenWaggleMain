@@ -14,7 +14,8 @@ const VALUE_SEPARATOR = ' '
 // Allow only that exact script hash so dev boot works without enabling broad unsafe-inline.
 const VITE_REACT_PREAMBLE_HASH = "'sha256-Z2/iFzh9VMlVkEOar1f/oSHWwQk3ve1qk/C2WdsC4Xk='" as const
 const SCRIPT_SRC_VALUES = ["'self'", VITE_REACT_PREAMBLE_HASH] as const
-const STYLE_SRC_VALUES = ["'self'", "'unsafe-inline'"] as const
+const STYLE_SRC_VALUES = ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'] as const
+const FONT_SRC_VALUES = ["'self'", 'https://fonts.gstatic.com'] as const
 const IMG_SRC_VALUES = ["'self'", 'data:'] as const
 const CONNECT_SRC_VALUES = [
   "'self'",
@@ -28,11 +29,15 @@ const CSP_DIRECTIVES = [
   ['default-src', ["'self'"]],
   ['script-src', SCRIPT_SRC_VALUES],
   ['style-src', STYLE_SRC_VALUES],
+  ['font-src', FONT_SRC_VALUES],
   ['img-src', IMG_SRC_VALUES],
   ['connect-src', CONNECT_SRC_VALUES],
 ] as const
 
 type CspResponseHeaders = Record<string, string[] | string>
+type HeadersMatcher = (url: string) => boolean
+const CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups' as const
+const REFERRER_POLICY = 'no-referrer-when-downgrade' as const
 
 export const SECURE_WEB_PREFERENCES: Readonly<
   Pick<
@@ -65,12 +70,14 @@ export function buildContentSecurityPolicy(): string {
 
 export const CONTENT_SECURITY_POLICY = buildContentSecurityPolicy()
 
-export function applyContentSecurityPolicyHeader(
+export function applySecurityHeaders(
   responseHeaders: CspResponseHeaders | undefined,
 ): CspResponseHeaders {
   return {
     ...(responseHeaders ?? {}),
     'Content-Security-Policy': [CONTENT_SECURITY_POLICY],
+    'Cross-Origin-Opener-Policy': [CROSS_ORIGIN_OPENER_POLICY],
+    'Referrer-Policy': [REFERRER_POLICY],
   }
 }
 
@@ -85,14 +92,24 @@ export function assertSecureWebPreferences(preferences: WebPreferences): void {
   }
 }
 
-export function installCspHeaders(session: SessionWithHeadersHandler): void {
+export function installCspHeaders(
+  session: SessionWithHeadersHandler,
+  shouldApplyHeaders: HeadersMatcher = () => true,
+): void {
   if (sessionCspInstallState.has(session)) {
     return
   }
 
   session.webRequest.onHeadersReceived((details, callback) => {
+    if (!shouldApplyHeaders(details.url)) {
+      callback({
+        responseHeaders: details.responseHeaders,
+      })
+      return
+    }
+
     callback({
-      responseHeaders: applyContentSecurityPolicyHeader(details.responseHeaders),
+      responseHeaders: applySecurityHeaders(details.responseHeaders),
     })
   })
   sessionCspInstallState.add(session)
