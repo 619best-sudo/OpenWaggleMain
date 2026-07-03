@@ -16,7 +16,7 @@ export function isLightThemeMode(mode: ThemeMode): boolean {
 }
 
 export const DEFAULT_MODEL_REF = SupportedModelId('')
-export const GREATX_BACKEND_MODEL_REF = SupportedModelId('turing-machine/greatx-backend')
+export const GREATX_BACKEND_MODEL_REF = SupportedModelId('turing-machine/turing-machine')
 
 export interface Settings {
   readonly selectedModel: SupportedModelId

@@ -72,7 +72,7 @@ export function useChatPanelEnvironment() {
     const sessionId = chat.activeSessionId
     if (!sessionId) return
     if (typeof api.dismissInterruptedSessionRun !== 'function') {
-      showToast('Update OpenWaggle to dismiss interrupted run notices.')
+      showToast('Update Turing Machine to dismiss interrupted run notices.')
       return
     }
     void api

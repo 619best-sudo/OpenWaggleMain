@@ -25,6 +25,16 @@ describe('makeErrorInfo', () => {
     expect(info.suggestion).toBe('Sign in again to refresh your provider session.')
     expect(info.retryable).toBe(false)
   })
+
+  it('builds subscription-required info with quota guidance', () => {
+    const info = makeErrorInfo('subscription-required', '403 "Forbidden"')
+    expect(info.code).toBe('subscription-required')
+    expect(info.userMessage).toBe('No Turing Machine quota available')
+    expect(info.suggestion).toBe(
+      'Open Profile to check your subscription tier and Turing Machine quota.',
+    )
+    expect(info.retryable).toBe(false)
+  })
 })
 
 describe('classifyErrorMessage', () => {

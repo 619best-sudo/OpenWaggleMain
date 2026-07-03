@@ -112,7 +112,9 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('release-readiness'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('deployment'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('development-qa'))
-    expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('quality-assurance-engineer'))
+    expect(presets.map((preset) => preset.id)).toContain(
+      WagglePresetId('quality-assurance-engineer'),
+    )
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('security-audit'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('performance-inspector'))
     expect(presets.map((preset) => preset.id)).toContain(WagglePresetId('frontend-ui-audit'))
@@ -313,24 +315,24 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
         },
       },
     )
-    expect(presets.find((preset) => preset.id === WagglePresetId('backend-engineer'))).toMatchObject(
-      {
-        name: 'Backend Engineer',
-        app: {
-          requiredMcps: [],
-          requiredSkills: [],
-          optionalMcps: ['postman', 'database'],
-          optionalSkills: ['backend-auditor'],
-        },
-        config: {
-          agents: [
-            { label: 'Backend Planner' },
-            { label: 'Backend Builder' },
-            { label: 'Backend Verifier' },
-          ],
-        },
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('backend-engineer')),
+    ).toMatchObject({
+      name: 'Backend Engineer',
+      app: {
+        requiredMcps: [],
+        requiredSkills: [],
+        optionalMcps: ['postman', 'database'],
+        optionalSkills: ['backend-auditor'],
       },
-    )
+      config: {
+        agents: [
+          { label: 'Backend Planner' },
+          { label: 'Backend Builder' },
+          { label: 'Backend Verifier' },
+        ],
+      },
+    })
     expect(presets.find((preset) => preset.id === WagglePresetId('qa-debug'))).toMatchObject({
       name: 'Debugger And Fix',
       app: {
@@ -606,7 +608,9 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     const backendBuild = presets.find((preset) => preset.id === WagglePresetId('backend-build'))
     const webEngineer = presets.find((preset) => preset.id === WagglePresetId('web-engineer'))
     const mobileEngineer = presets.find((preset) => preset.id === WagglePresetId('mobile-engineer'))
-    const backendEngineer = presets.find((preset) => preset.id === WagglePresetId('backend-engineer'))
+    const backendEngineer = presets.find(
+      (preset) => preset.id === WagglePresetId('backend-engineer'),
+    )
     const qaRepairLoop = presets.find((preset) => preset.id === WagglePresetId('qa-repair-loop'))
     const releaseReadiness = presets.find(
       (preset) => preset.id === WagglePresetId('release-readiness'),
@@ -625,9 +629,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(codeReview?.config.agents[1]?.roleDescription).toContain(
       'Your highest priority is to verify or refute ripple effects',
     )
-    expect(codeReview?.config.agents[1]?.roleDescription).toContain(
-      'explicitly look for:',
-    )
+    expect(codeReview?.config.agents[1]?.roleDescription).toContain('explicitly look for:')
 
     expect(turing?.config.agents.map((agent) => agent.label)).toEqual([
       'Context Reader',
@@ -637,7 +639,9 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(turing?.config.agents[0]?.roleDescription).toContain(
       'product-planning -> design-asset-direction -> web-build or mobile-build or backend-build -> qa-repair-loop -> release-readiness -> deployment',
     )
-    expect(turing?.config.agents[0]?.roleDescription).toContain('mobile-build over generic UI routes')
+    expect(turing?.config.agents[0]?.roleDescription).toContain(
+      'mobile-build over generic UI routes',
+    )
     expect(turing?.config.agents[1]?.roleDescription).toContain('Only recommend a next Waggle')
     expect(turing?.config.agents[1]?.roleDescription).toContain(
       'mobile development, QA, and release steps stay coherent',
@@ -670,7 +674,9 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       'Asset Strategist',
     ])
     expect(designAssetDirection?.config.agents[0]?.roleDescription).toContain('hero mode')
-    expect(designAssetDirection?.config.agents[0]?.roleDescription).toContain('asset source of truth')
+    expect(designAssetDirection?.config.agents[0]?.roleDescription).toContain(
+      'asset source of truth',
+    )
     expect(designAssetDirection?.config.agents[1]?.roleDescription).toContain(
       'repo assets, user-provided assets, external references, generated assets, code-only fallback',
     )
@@ -719,7 +725,9 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(webEngineer?.config.agents[1]?.roleDescription).toContain('repoAssetPath:')
     expect(webEngineer?.config.agents[1]?.roleDescription).toContain('generationPrompt:')
     expect(webEngineer?.config.agents[1]?.roleDescription).toContain('videoDeliveryMode:')
-    expect(webEngineer?.config.agents[1]?.roleDescription).toContain('Persist every generated asset inside the repository')
+    expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
+      'Persist every generated asset inside the repository',
+    )
     expect(webEngineer?.config.agents[1]?.roleDescription).toContain(
       'continue implementing the web change with the best fallback',
     )
@@ -813,9 +821,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(webEngineer?.config.agents[3]?.roleDescription).toContain('viewports checked')
     expect(webEngineer?.config.agents[3]?.roleDescription).toContain('layout and spacing checks')
     expect(webEngineer?.config.agents[3]?.roleDescription).toContain('asset loading checks')
-    expect(webEngineer?.config.agents[3]?.roleDescription).toContain(
-      'accessibility and UX checks',
-    )
+    expect(webEngineer?.config.agents[3]?.roleDescription).toContain('accessibility and UX checks')
     expect(webEngineer?.config.agents[3]?.outputContract?.requiredSections).toEqual([
       'verification verdict',
       'compile or runtime evidence',
@@ -842,7 +848,9 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('repoAssetPath:')
     expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('generationPrompt:')
     expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('videoDeliveryMode:')
-    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain('Persist every generated asset inside the repository')
+    expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain(
+      'Persist every generated asset inside the repository',
+    )
     expect(mobileEngineer?.config.agents[1]?.roleDescription).toContain(
       'prefer focused edits that preserve the surrounding file instead of rewriting the whole file',
     )
@@ -906,9 +914,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
       'device or runtime targets checked',
     )
-    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
-      'layout and spacing checks',
-    )
+    expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain('layout and spacing checks')
     expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain('asset loading checks')
     expect(mobileEngineer?.config.agents[3]?.roleDescription).toContain(
       'accessibility and ux checks',
@@ -1021,15 +1027,13 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(qaEngineer?.config.agents[0]?.roleDescription).toContain(
       'Do not collapse the full QA plan into blocked status',
     )
-    expect(qaEngineer?.config.agents[1]?.roleDescription).toContain('execute all planned test cases')
+    expect(qaEngineer?.config.agents[1]?.roleDescription).toContain(
+      'execute all planned test cases',
+    )
     expect(qaEngineer?.config.agents[1]?.roleDescription).toContain('Postman MCP')
     expect(qaEngineer?.config.agents[1]?.roleDescription).toContain('SQL evidence')
-    expect(qaEngineer?.config.agents[1]?.roleDescription).toContain(
-      'Do not derail the full QA run',
-    )
-    expect(qaEngineer?.config.agents[2]?.roleDescription).toContain(
-      'final QA judgment',
-    )
+    expect(qaEngineer?.config.agents[1]?.roleDescription).toContain('Do not derail the full QA run')
+    expect(qaEngineer?.config.agents[2]?.roleDescription).toContain('final QA judgment')
     expect(qaEngineer?.config.agents[2]?.roleDescription).toContain('ship recommendation')
     expect(qaEngineer?.config.agents[2]?.roleDescription).toContain(
       'Convert blocked areas into a targeted next QA cycle',
@@ -1099,9 +1103,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
 
     const presets = await runWithRepository((repository) => repository.list(null))
 
-    expect(presets.find((preset) => preset.id === WagglePresetId('debate'))?.name).toBe(
-      'Debate',
-    )
+    expect(presets.find((preset) => preset.id === WagglePresetId('debate'))?.name).toBe('Debate')
     expect(presets.find((preset) => preset.id === WagglePresetId('custom-debate'))?.name).toBe(
       'Custom Override',
     )

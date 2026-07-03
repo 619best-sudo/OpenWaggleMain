@@ -1,3 +1,4 @@
+import type { SupportedModelId } from '@shared/types/brand'
 import type {
   TeammateAgentDefinition,
   TeammateAgentGenerationResult,
@@ -6,7 +7,6 @@ import type {
   TeammatePromptMode,
   TeammateRunWhen,
 } from '@shared/types/teammate'
-import type { SupportedModelId } from '@shared/types/brand'
 
 export interface TeamAgentDraft {
   readonly id: string
@@ -239,22 +239,23 @@ export function inferAgentDraftFromInstructions(
   const normalized = instructions.trim()
   const lower = normalized.toLowerCase()
 
-  const kind: TeammateAgentKind = lower.includes('decision maker') ||
+  const kind: TeammateAgentKind =
+    lower.includes('decision maker') ||
     lower.includes('decide when to stop') ||
     lower.includes('stop authority')
-    ? 'decision-maker'
-    : lower.includes('review') ||
-        lower.includes('verify') ||
-        lower.includes('audit') ||
-        lower.includes('qa') ||
-        lower.includes('test')
-      ? 'reviewer'
-      : lower.includes('build') ||
-          lower.includes('implement') ||
-          lower.includes('create') ||
-          lower.includes('fix')
-        ? 'executor'
-        : 'worker'
+      ? 'decision-maker'
+      : lower.includes('review') ||
+          lower.includes('verify') ||
+          lower.includes('audit') ||
+          lower.includes('qa') ||
+          lower.includes('test')
+        ? 'reviewer'
+        : lower.includes('build') ||
+            lower.includes('implement') ||
+            lower.includes('create') ||
+            lower.includes('fix')
+          ? 'executor'
+          : 'worker'
 
   const firstSentence = normalized.split(/[.!?]/)[0]?.trim() ?? ''
   const label =
@@ -272,10 +273,7 @@ export function inferAgentDraftFromInstructions(
           ? 'Executor'
           : titleCaseWords(firstSentence.split(/\s+/).slice(0, 3).join(' ')) || fallback.label
 
-  const roleDescription = trimSentence(
-    normalized,
-    getDefaultRoleDescription(kind, label),
-  )
+  const roleDescription = trimSentence(normalized, getDefaultRoleDescription(kind, label))
 
   return {
     ...fallback,
@@ -309,7 +307,8 @@ export function applyGeneratedAgentResult(
     modelOverride: generated.modelOverride,
     roleDescription: generated.roleDescription,
     whyToRun: generated.whyToRun ?? fallback.whyToRun,
-    runWhen: generated.runWhen && generated.runWhen.length > 0 ? generated.runWhen : fallback.runWhen,
+    runWhen:
+      generated.runWhen && generated.runWhen.length > 0 ? generated.runWhen : fallback.runWhen,
     minRuns: generated.minRuns,
     maxRuns: generated.maxRuns,
     isDecisionMaker: generated.isDecisionMaker ?? generated.kind === 'decision-maker',
@@ -368,7 +367,9 @@ export function buildTeammateFromDraft(draft: TeamBuilderDraft): TeammateDefinit
     normalizedAgents.find((agent) => agent.id === draft.initialAgentId) || normalizedAgents[0]
 
   const defaultWorker =
-    normalizedAgents.find((agent) => agent.id !== decisionMaker?.id) || initialAgent || decisionMaker
+    normalizedAgents.find((agent) => agent.id !== decisionMaker?.id) ||
+    initialAgent ||
+    decisionMaker
 
   return {
     id: draft.id,
@@ -390,8 +391,7 @@ export function buildTeammateFromDraft(draft: TeamBuilderDraft): TeammateDefinit
       maxDecisionMakerCalls: draft.maxDecisionMakerCalls,
       maxAutoSubmittedPrompts: draft.maxAutoSubmittedPrompts,
       defaultWorkerAgentId: defaultWorker?.id ?? initialAgent?.id ?? '',
-      endConditionSummary:
-        'The selected decision maker is the only agent allowed to end the loop.',
+      endConditionSummary: 'The selected decision maker is the only agent allowed to end the loop.',
     },
   }
 }

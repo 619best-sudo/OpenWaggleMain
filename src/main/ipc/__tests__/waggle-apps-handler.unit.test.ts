@@ -64,7 +64,7 @@ function blankMcpSettingsView(projectPath: string): McpSettingsView {
     sources: [
       {
         id: 'project-openwaggle',
-        label: 'Project OpenWaggle',
+        label: 'Project Turing Machine',
         path: path.join(projectPath, '.openwaggle', 'agent', 'mcp.json'),
         scope: 'project' as const,
         kind: 'openwaggle' as const,

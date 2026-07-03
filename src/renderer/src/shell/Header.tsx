@@ -1,27 +1,17 @@
 import { match } from '@diegogbrisa/ts-match'
-import { useRouterState } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useChat } from '@/features/chat/hooks'
 import { useDiffRouteNavigation } from '@/features/diff-panel/hooks'
 import { CommitDialog } from '@/features/git/components'
 import { useGit } from '@/features/git/hooks'
-import { useProject, useSessions } from '@/features/sessions/hooks'
+import { useProject } from '@/features/sessions/hooks'
 import { cn } from '@/shared/lib/cn'
 import { useUIStore } from '@/shell/ui-store'
-import {
-  CommitButton,
-  DiffToggleButton,
-  HeaderLeft,
-  SessionTreeButton,
-  TerminalButton,
-} from './HeaderControls'
+import { CommitButton, DiffToggleButton, HeaderLeft, TerminalButton } from './HeaderControls'
 
 export function Header() {
   const { activeSession } = useChat()
-  const { activeSessionTree } = useSessions()
   const { projectPath } = useProject()
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
-
   const sidebarOpen = useUIStore((s) => s.sidebarOpen)
   const terminalOpen = useUIStore((s) => s.terminalOpen)
 
@@ -41,14 +31,11 @@ export function Header() {
   } = useGit()
 
   const [commitOpen, setCommitOpen] = useState(false)
-  const { closeDiff, diffOpen, isChatRoute, sessionTreeOpen, toggleDiff, toggleSessionTree } =
-    useDiffRouteNavigation()
-  const isFramedWorkspaceRoute =
-    isChatRoute ||
-    pathname.startsWith('/mcp') ||
-    pathname.startsWith('/skills') ||
-    pathname.startsWith('/teammates') ||
-    pathname.startsWith('/waggle')
+  const { closeDiff, diffOpen, isChatRoute, toggleDiff } = useDiffRouteNavigation()
+  const gitUnavailable = Boolean(projectPath && gitError && !gitLoading && !gitStatus)
+  const showCommitButton = Boolean(projectPath) && !gitUnavailable
+  const showDiffButton = Boolean(projectPath) && isChatRoute && !gitUnavailable
+  const showSeparator = showDiffButton
 
   function handleRefreshGit() {
     void refreshGitStatus(projectPath)
@@ -75,7 +62,7 @@ export function Header() {
       .exhaustive()
   }
 
-  const title = activeSessionTree?.session.title ?? activeSession?.title ?? 'New session'
+  const title = activeSession?.title ?? 'New session'
 
   useEffect(() => {
     if (diffOpen && gitError) {
@@ -90,35 +77,29 @@ export function Header() {
           'drag-region flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border/70 bg-bg px-5',
         )}
       >
-        <HeaderLeft
-          sidebarOpen={sidebarOpen}
-          title={title}
-          onToggleSidebar={toggleSidebar}
-        />
+        <HeaderLeft sidebarOpen={sidebarOpen} title={title} onToggleSidebar={toggleSidebar} />
 
         <div className="flex shrink-0 items-center gap-2">
           <TerminalButton open={terminalOpen} projectPath={projectPath} onToggle={toggleTerminal} />
-          <CommitButton
-            isCommitting={gitCommitting}
-            projectPath={projectPath}
-            onOpen={() => setCommitOpen(true)}
-          />
-          <div className="w-px h-5 bg-border/40" />
-          <SessionTreeButton
-            hasSessionTree={Boolean(activeSessionTree)}
-            isChatRoute={isChatRoute}
-            open={sessionTreeOpen}
-            onToggle={toggleSessionTree}
-          />
-          <DiffToggleButton
-            error={gitError}
-            isChatRoute={isChatRoute}
-            isLoading={gitLoading}
-            open={diffOpen}
-            projectPath={projectPath}
-            status={gitStatus}
-            onToggle={toggleDiff}
-          />
+          {showCommitButton && (
+            <CommitButton
+              isCommitting={gitCommitting}
+              projectPath={projectPath}
+              onOpen={() => setCommitOpen(true)}
+            />
+          )}
+          {showSeparator && <div className="h-5 w-px bg-border/40" />}
+          {showDiffButton && (
+            <DiffToggleButton
+              error={gitError}
+              isChatRoute={isChatRoute}
+              isLoading={gitLoading}
+              open={diffOpen}
+              projectPath={projectPath}
+              status={gitStatus}
+              onToggle={toggleDiff}
+            />
+          )}
         </div>
       </header>
 

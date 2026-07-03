@@ -43,7 +43,9 @@ function buildPresetName(formState: WaggleFormState) {
 function buildPresetDescription(formState: WaggleFormState) {
   const explicitDescription = formState.descriptionText.trim()
   if (explicitDescription) return explicitDescription
-  const firstRole = formState.agents.find((agent) => agent.roleDescription.trim())?.roleDescription.trim()
+  const firstRole = formState.agents
+    .find((agent) => agent.roleDescription.trim())
+    ?.roleDescription.trim()
   return `Custom: ${(firstRole ?? 'Multi-agent collaboration').slice(0, SLICE_ARG_2)}`
 }
 

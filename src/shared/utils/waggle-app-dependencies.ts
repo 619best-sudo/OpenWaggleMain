@@ -1,11 +1,11 @@
 import type { McpServerDefinition, McpSettingsView } from '@shared/types/mcp'
 import type { SkillCatalogResult } from '@shared/types/standards'
 import type {
-  WaggleAppPreflightCheck,
-  WaggleAppPreflightStatus,
   WaggleAppDependencyStatus,
   WaggleAppInstallStatus,
   WaggleAppManifest,
+  WaggleAppPreflightCheck,
+  WaggleAppPreflightStatus,
 } from '@shared/types/waggle'
 
 export interface WaggleAppSkillInstallRecipe {
@@ -998,11 +998,8 @@ function buildMcpDependencyStatus(
 ): WaggleAppDependencyStatus {
   const recipe = getWaggleAppMcpInstallRecipe(mcpId)
   const label = recipe?.label ?? mcpId
-  const serverNames = recipe
-    ? [recipe.serverName, ...(recipe.alternateServerNames ?? [])]
-    : [mcpId]
-  const server =
-    mcpSettings?.servers.find((entry) => serverNames.includes(entry.name)) ?? null
+  const serverNames = recipe ? [recipe.serverName, ...(recipe.alternateServerNames ?? [])] : [mcpId]
+  const server = mcpSettings?.servers.find((entry) => serverNames.includes(entry.name)) ?? null
 
   if (server?.enabled) {
     return {
@@ -1067,13 +1064,9 @@ export function buildWaggleAppInstallStatus(input: {
   )
   const dependencies = [
     ...requiredMcpIds.map((mcpId) => buildMcpDependencyStatus(mcpId, input.mcpSettings, true)),
-    ...requiredSkillIds.map((skillId) =>
-      buildSkillDependencyStatus(skillId, input.catalog, true),
-    ),
+    ...requiredSkillIds.map((skillId) => buildSkillDependencyStatus(skillId, input.catalog, true)),
     ...optionalMcpIds.map((mcpId) => buildMcpDependencyStatus(mcpId, input.mcpSettings, false)),
-    ...optionalSkillIds.map((skillId) =>
-      buildSkillDependencyStatus(skillId, input.catalog, false),
-    ),
+    ...optionalSkillIds.map((skillId) => buildSkillDependencyStatus(skillId, input.catalog, false)),
   ]
 
   const requiredDependencies = dependencies.filter((dependency) => dependency.required)
@@ -1082,7 +1075,9 @@ export function buildWaggleAppInstallStatus(input: {
   const installedCount = requiredDependencies.filter(
     (dependency) => dependency.state === 'installed',
   ).length
-  const missingCount = requiredDependencies.filter((dependency) => dependency.state === 'missing').length
+  const missingCount = requiredDependencies.filter(
+    (dependency) => dependency.state === 'missing',
+  ).length
   const unsupportedCount = requiredDependencies.filter(
     (dependency) => dependency.state === 'unsupported',
   ).length
@@ -1180,7 +1175,8 @@ function buildWaggleAppPreflightStatus(input: {
     label: 'Mobile Verification',
     capabilityIds: ['mobile-mcp'],
     supplementalIds: ['mobile-device'],
-    passDetail: 'Mobile runtime verification is available through simulator, emulator, or device tooling.',
+    passDetail:
+      'Mobile runtime verification is available through simulator, emulator, or device tooling.',
     warnDetail:
       'Mobile runtime verification has limited coverage until mobile automation tooling is installed.',
     failDetail: 'Mobile runtime verification is blocked until Mobile MCP is installed.',
@@ -1219,7 +1215,8 @@ function buildWaggleAppPreflightStatus(input: {
     label: 'Design Inputs',
     capabilityIds: ['figma'],
     passDetail: 'Design-file ingestion is available through Figma.',
-    warnDetail: 'Figma ingest is unavailable, so Waggle will rely on screenshots or verbal prompts.',
+    warnDetail:
+      'Figma ingest is unavailable, so Waggle will rely on screenshots or verbal prompts.',
     failDetail: 'Design-file ingest is blocked until Figma support is installed.',
   })
 
@@ -1240,7 +1237,8 @@ function buildWaggleAppPreflightStatus(input: {
       'gltf-mcp',
     ],
     passDetail: 'Rich media, motion, or asset-pipeline tooling is available.',
-    warnDetail: 'Rich media and motion fall back to code-first or static execution until optional tools are installed.',
+    warnDetail:
+      'Rich media and motion fall back to code-first or static execution until optional tools are installed.',
     failDetail: 'Rich media generation is blocked until the required media tooling is installed.',
   })
 
@@ -1273,88 +1271,108 @@ function addRepoAwareChecks(input: {
   if (!input.presetId) return
 
   if (isWebPresetId(input.presetId)) {
-    input.checks.push(buildSurfaceMatchCheck({
-      expectedSurface: 'web',
-      label: 'Project Surface Match',
-      repoProfile: input.repoProfile,
-      unknownDetail:
-        'The repository does not clearly identify itself as a web app yet, so web launch guidance is best-effort.',
-    }))
-    input.checks.push(buildRuntimeCheck({
-      label: 'Web Run Or Build Entry',
-      repoProfile: input.repoProfile,
-      hasRuntime: input.repoProfile?.hasLikelyWebRuntime ?? false,
-      passDetail: buildCommandDetail(
-        input.repoProfile?.webCommandCandidates ?? [],
-        'Likely web run/build entry points were found.',
-      ),
-      warnDetail:
-        'No obvious web dev/build script was found. Web Waggle can still help, but runtime verification may need manual setup.',
-    }))
-    input.checks.push(buildWorkspaceRuntimeCheck({
-      label: 'Web Workspace Runtime',
-      repoProfile: input.repoProfile,
-      commands: input.repoProfile?.webCommandCandidates ?? [],
-      relevantTools: ['node', 'pnpm', 'npm', 'yarn', 'bun'],
-      missingDependenciesDetail:
-        'Web runtime commands exist, but local JS dependencies do not appear installed yet.',
-      missingToolsDetail:
-        'Web runtime commands exist, but local Node/package-manager tools are not clearly available on this machine.',
-      passPrefix: 'Web runtime prerequisites look available.',
-    }))
-    input.checks.push(buildEntryPointCheck({
-      label: 'Web App Entry Files',
-      entries: input.repoProfile?.webEntryCandidates ?? [],
-      target: 'web',
-    }))
-    input.checks.push(buildBootProbeCheck({
-      label: 'Web Boot Probe',
-      probe: input.repoProfile?.webBootProbe ?? null,
-      missingDetail: 'No web boot probe was available for this project.',
-    }))
+    input.checks.push(
+      buildSurfaceMatchCheck({
+        expectedSurface: 'web',
+        label: 'Project Surface Match',
+        repoProfile: input.repoProfile,
+        unknownDetail:
+          'The repository does not clearly identify itself as a web app yet, so web launch guidance is best-effort.',
+      }),
+    )
+    input.checks.push(
+      buildRuntimeCheck({
+        label: 'Web Run Or Build Entry',
+        repoProfile: input.repoProfile,
+        hasRuntime: input.repoProfile?.hasLikelyWebRuntime ?? false,
+        passDetail: buildCommandDetail(
+          input.repoProfile?.webCommandCandidates ?? [],
+          'Likely web run/build entry points were found.',
+        ),
+        warnDetail:
+          'No obvious web dev/build script was found. Web Waggle can still help, but runtime verification may need manual setup.',
+      }),
+    )
+    input.checks.push(
+      buildWorkspaceRuntimeCheck({
+        label: 'Web Workspace Runtime',
+        repoProfile: input.repoProfile,
+        commands: input.repoProfile?.webCommandCandidates ?? [],
+        relevantTools: ['node', 'pnpm', 'npm', 'yarn', 'bun'],
+        missingDependenciesDetail:
+          'Web runtime commands exist, but local JS dependencies do not appear installed yet.',
+        missingToolsDetail:
+          'Web runtime commands exist, but local Node/package-manager tools are not clearly available on this machine.',
+        passPrefix: 'Web runtime prerequisites look available.',
+      }),
+    )
+    input.checks.push(
+      buildEntryPointCheck({
+        label: 'Web App Entry Files',
+        entries: input.repoProfile?.webEntryCandidates ?? [],
+        target: 'web',
+      }),
+    )
+    input.checks.push(
+      buildBootProbeCheck({
+        label: 'Web Boot Probe',
+        probe: input.repoProfile?.webBootProbe ?? null,
+        missingDetail: 'No web boot probe was available for this project.',
+      }),
+    )
     return
   }
 
   if (isMobilePresetId(input.presetId)) {
-    input.checks.push(buildSurfaceMatchCheck({
-      expectedSurface: 'mobile',
-      label: 'Project Surface Match',
-      repoProfile: input.repoProfile,
-      unknownDetail:
-        'The repository does not clearly identify itself as a mobile app yet, so mobile launch guidance is best-effort.',
-    }))
-    input.checks.push(buildRuntimeCheck({
-      label: 'Mobile Run Or Build Entry',
-      repoProfile: input.repoProfile,
-      hasRuntime: input.repoProfile?.hasLikelyMobileRuntime ?? false,
-      passDetail: buildCommandDetail(
-        input.repoProfile?.mobileCommandCandidates ?? [],
-        'Likely mobile run/build entry points were found.',
-      ),
-      warnDetail:
-        'No obvious simulator, emulator, or mobile run/build script was found. Mobile Waggle can still plan or edit code, but runtime QA may need manual setup.',
-    }))
-    input.checks.push(buildWorkspaceRuntimeCheck({
-      label: 'Mobile Workspace Runtime',
-      repoProfile: input.repoProfile,
-      commands: input.repoProfile?.mobileCommandCandidates ?? [],
-      relevantTools: ['node', 'pnpm', 'npm', 'yarn', 'bun', 'xcodebuild', 'adb', 'flutter'],
-      missingDependenciesDetail:
-        'Mobile runtime commands exist, but local app dependencies do not appear installed yet.',
-      missingToolsDetail:
-        'Mobile runtime commands exist, but simulator/emulator or CLI toolchain signals are incomplete on this machine.',
-      passPrefix: 'Mobile runtime prerequisites look available.',
-    }))
-    input.checks.push(buildEntryPointCheck({
-      label: 'Mobile App Entry Files',
-      entries: input.repoProfile?.mobileEntryCandidates ?? [],
-      target: 'mobile',
-    }))
-    input.checks.push(buildBootProbeCheck({
-      label: 'Mobile Boot Probe',
-      probe: input.repoProfile?.mobileBootProbe ?? null,
-      missingDetail: 'No mobile boot probe was available for this project.',
-    }))
+    input.checks.push(
+      buildSurfaceMatchCheck({
+        expectedSurface: 'mobile',
+        label: 'Project Surface Match',
+        repoProfile: input.repoProfile,
+        unknownDetail:
+          'The repository does not clearly identify itself as a mobile app yet, so mobile launch guidance is best-effort.',
+      }),
+    )
+    input.checks.push(
+      buildRuntimeCheck({
+        label: 'Mobile Run Or Build Entry',
+        repoProfile: input.repoProfile,
+        hasRuntime: input.repoProfile?.hasLikelyMobileRuntime ?? false,
+        passDetail: buildCommandDetail(
+          input.repoProfile?.mobileCommandCandidates ?? [],
+          'Likely mobile run/build entry points were found.',
+        ),
+        warnDetail:
+          'No obvious simulator, emulator, or mobile run/build script was found. Mobile Waggle can still plan or edit code, but runtime QA may need manual setup.',
+      }),
+    )
+    input.checks.push(
+      buildWorkspaceRuntimeCheck({
+        label: 'Mobile Workspace Runtime',
+        repoProfile: input.repoProfile,
+        commands: input.repoProfile?.mobileCommandCandidates ?? [],
+        relevantTools: ['node', 'pnpm', 'npm', 'yarn', 'bun', 'xcodebuild', 'adb', 'flutter'],
+        missingDependenciesDetail:
+          'Mobile runtime commands exist, but local app dependencies do not appear installed yet.',
+        missingToolsDetail:
+          'Mobile runtime commands exist, but simulator/emulator or CLI toolchain signals are incomplete on this machine.',
+        passPrefix: 'Mobile runtime prerequisites look available.',
+      }),
+    )
+    input.checks.push(
+      buildEntryPointCheck({
+        label: 'Mobile App Entry Files',
+        entries: input.repoProfile?.mobileEntryCandidates ?? [],
+        target: 'mobile',
+      }),
+    )
+    input.checks.push(
+      buildBootProbeCheck({
+        label: 'Mobile Boot Probe',
+        probe: input.repoProfile?.mobileBootProbe ?? null,
+        missingDetail: 'No mobile boot probe was available for this project.',
+      }),
+    )
   }
 }
 
@@ -1435,7 +1453,8 @@ function buildWorkspaceRuntimeCheck(input: {
       id: input.label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       label: input.label,
       status: 'warn',
-      detail: 'No concrete runtime command candidate was found yet, so live runtime checks remain best-effort.',
+      detail:
+        'No concrete runtime command candidate was found yet, so live runtime checks remain best-effort.',
       blocking: false,
     }
   }
@@ -1488,13 +1507,11 @@ function buildEntryPointCheck(input: {
 
 function buildBootProbeCheck(input: {
   readonly label: string
-  readonly probe:
-    | {
-        readonly status: 'pass' | 'warn'
-        readonly detail: string
-        readonly command?: string
-      }
-    | null
+  readonly probe: {
+    readonly status: 'pass' | 'warn'
+    readonly detail: string
+    readonly command?: string
+  } | null
   readonly missingDetail: string
 }): WaggleAppPreflightCheck {
   return {
@@ -1504,15 +1521,12 @@ function buildBootProbeCheck(input: {
     detail:
       input.probe?.command != null
         ? `${input.probe.detail} Command: ${input.probe.command}.`
-        : input.probe?.detail ?? input.missingDetail,
+        : (input.probe?.detail ?? input.missingDetail),
     blocking: false,
   }
 }
 
-function buildCommandDetail(
-  commands: readonly string[],
-  prefix: string,
-) {
+function buildCommandDetail(commands: readonly string[], prefix: string) {
   if (commands.length === 0) return prefix
   return `${prefix} Commands: ${commands.slice(0, 5).join(', ')}${commands.length > 5 ? ', ...' : ''}.`
 }

@@ -1,6 +1,6 @@
+import { WagglePresetId } from '@shared/types/brand'
 import { describe, expect, it, vi } from 'vitest'
 import { BUILT_IN_TEAMMATES } from '@/features/teammates/lib/team-new-built-ins'
-import { WagglePresetId } from '@shared/types/brand'
 import type { CommandPaletteItem } from '../../model'
 import { buildCommandPaletteEntries } from '../command-palette-entries'
 import {
@@ -129,18 +129,18 @@ describe('team command palette matching', () => {
     const items = createTeamItems(BUILT_IN_TEAMMATES, 'mobile', vi.fn())
 
     expect(items.map((item) => item.label)).toContain('Mobile Developer')
-    expect(createTeamItems(BUILT_IN_TEAMMATES, 'backend', vi.fn()).map((item) => item.label)).toContain(
-      'Backend Developer',
-    )
-    expect(createTeamItems(BUILT_IN_TEAMMATES, 'debug', vi.fn()).map((item) => item.label)).toContain(
-      'Debugger',
-    )
+    expect(
+      createTeamItems(BUILT_IN_TEAMMATES, 'backend', vi.fn()).map((item) => item.label),
+    ).toContain('Backend Developer')
+    expect(
+      createTeamItems(BUILT_IN_TEAMMATES, 'debug', vi.fn()).map((item) => item.label),
+    ).toContain('Debugger')
     expect(createTeamItems(BUILT_IN_TEAMMATES, 'qa', vi.fn()).map((item) => item.label)).toContain(
       'Robust QA',
     )
-    expect(createTeamItems(BUILT_IN_TEAMMATES, 'review', vi.fn()).map((item) => item.label)).toContain(
-      'Code Reviewer',
-    )
+    expect(
+      createTeamItems(BUILT_IN_TEAMMATES, 'review', vi.fn()).map((item) => item.label),
+    ).toContain('Code Reviewer')
   })
 
   it('shows the team configure item for the same alias searches', () => {
@@ -161,24 +161,60 @@ describe('panel command palette matching', () => {
           name: 'Debate',
           description: 'Two experts challenge the task.',
           isBuiltIn: true,
-          config: { mode: 'sequential', agents: [], stop: { primary: 'consensus', maxTurnsSafety: 4 } },
-          app: { name: 'Debate', instructions: '', version: '1.0.0', requiredMcps: [], optionalMcps: [], requiredSkills: [], optionalSkills: [] },
+          config: {
+            mode: 'sequential',
+            agents: [],
+            stop: { primary: 'consensus', maxTurnsSafety: 4 },
+          },
+          app: {
+            name: 'Debate',
+            instructions: '',
+            version: '1.0.0',
+            requiredMcps: [],
+            optionalMcps: [],
+            requiredSkills: [],
+            optionalSkills: [],
+          },
         },
         {
           id: WagglePresetId('product-planning'),
           name: 'Product Planning',
           description: 'Plans the product work.',
           isBuiltIn: true,
-          config: { mode: 'sequential', agents: [], stop: { primary: 'consensus', maxTurnsSafety: 4 } },
-          app: { name: 'Product Planning', instructions: '', version: '1.0.0', requiredMcps: [], optionalMcps: [], requiredSkills: [], optionalSkills: [] },
+          config: {
+            mode: 'sequential',
+            agents: [],
+            stop: { primary: 'consensus', maxTurnsSafety: 4 },
+          },
+          app: {
+            name: 'Product Planning',
+            instructions: '',
+            version: '1.0.0',
+            requiredMcps: [],
+            optionalMcps: [],
+            requiredSkills: [],
+            optionalSkills: [],
+          },
         },
         {
           id: WagglePresetId('red-team'),
           name: 'Red Team',
           description: 'Finds weaknesses.',
           isBuiltIn: true,
-          config: { mode: 'sequential', agents: [], stop: { primary: 'consensus', maxTurnsSafety: 4 } },
-          app: { name: 'Red Team', instructions: '', version: '1.0.0', requiredMcps: [], optionalMcps: [], requiredSkills: [], optionalSkills: [] },
+          config: {
+            mode: 'sequential',
+            agents: [],
+            stop: { primary: 'consensus', maxTurnsSafety: 4 },
+          },
+          app: {
+            name: 'Red Team',
+            instructions: '',
+            version: '1.0.0',
+            requiredMcps: [],
+            optionalMcps: [],
+            requiredSkills: [],
+            optionalSkills: [],
+          },
         },
       ],
       '',

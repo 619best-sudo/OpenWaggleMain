@@ -21,22 +21,23 @@ const TestProviderLayer = Layer.succeed(ProviderService, {
   get: () => Effect.succeed(undefined),
   getAll: () => Effect.succeed([]),
   getProviderForModel: (modelId) =>
-    Effect.sync(() =>
-      getProviderForModelMock(modelId) ?? {
-        id: 'openai',
-        displayName: 'OpenAI',
-        auth: {
-          configured: true,
-          source: 'environment-or-custom',
-          apiKeyConfigured: true,
-          apiKeySource: 'environment-or-custom',
-          oauthConnected: false,
-          supportsApiKey: true,
-          supportsOAuth: false,
+    Effect.sync(
+      () =>
+        getProviderForModelMock(modelId) ?? {
+          id: 'openai',
+          displayName: 'OpenAI',
+          auth: {
+            configured: true,
+            source: 'environment-or-custom',
+            apiKeyConfigured: true,
+            apiKeySource: 'environment-or-custom',
+            oauthConnected: false,
+            supportsApiKey: true,
+            supportsOAuth: false,
+          },
+          models: [],
+          testModel: modelId,
         },
-        models: [],
-        testModel: modelId,
-      },
     ),
   isKnownModel: () => Effect.succeed(true),
 })
@@ -107,7 +108,9 @@ function successResult(text: string) {
 
 function runTeamEffect(input: Parameters<typeof executeTeamRun>[0]) {
   return executeTeamRun(input) as unknown as Effect.Effect<
-    Awaited<ReturnType<typeof executeTeamRun>> extends Effect.Effect<infer A, infer _E, infer _R> ? A : never,
+    Awaited<ReturnType<typeof executeTeamRun>> extends Effect.Effect<infer A, infer _E, infer _R>
+      ? A
+      : never,
     never,
     never
   >
@@ -154,7 +157,9 @@ describe('executeTeamRun', () => {
     }
 
     executeAgentRunMock
-      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Implemented the landing page')))
+      .mockReturnValueOnce(
+        Effect.succeed(successResult('Execution Summary: Implemented the landing page')),
+      )
       .mockReturnValueOnce(
         Effect.succeed(
           successResult(`Website Open Check: Passed
@@ -410,7 +415,9 @@ Final Decision: Complete`),
     }
 
     executeAgentRunMock
-      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Implemented the first pass')))
+      .mockReturnValueOnce(
+        Effect.succeed(successResult('Execution Summary: Implemented the first pass')),
+      )
       .mockReturnValueOnce(
         Effect.succeed(
           successResult(`Website Open Check: Failed
@@ -521,7 +528,9 @@ Final Decision: Complete`),
 
   it('keeps fallback prompts internal when no valid explicit next prompt exists', async () => {
     executeAgentRunMock
-      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Implemented the hero section')))
+      .mockReturnValueOnce(
+        Effect.succeed(successResult('Execution Summary: Implemented the hero section')),
+      )
       .mockReturnValueOnce(
         Effect.succeed(
           successResult(`Website Open Check: Passed

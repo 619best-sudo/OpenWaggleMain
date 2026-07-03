@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   googleAuthWithIdToken,
   loginWithPassword,
-  refreshSession,
   logoutFromBackend,
+  refreshSession,
   signupWithPassword,
 } from '../auth-client'
 
@@ -27,6 +27,8 @@ describe('auth-client', () => {
             id: 'user-123',
             email: 'User@Example.com',
             displayName: null,
+            isSubscribed: true,
+            subscriptionTier: 'pro',
           },
           tokens: {
             accessToken: 'access-token',
@@ -48,7 +50,7 @@ describe('auth-client', () => {
     })
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/auth/email',
+      'http://127.0.0.1:3001/auth/email',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
@@ -61,6 +63,8 @@ describe('auth-client', () => {
       id: 'user-123',
       name: 'User',
       email: 'user@example.com',
+      isSubscribed: true,
+      subscriptionTier: 'pro',
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
     })
@@ -74,6 +78,8 @@ describe('auth-client', () => {
             id: 'user-456',
             email: 'new@example.com',
             displayName: null,
+            isSubscribed: false,
+            subscriptionTier: 'free',
           },
           tokens: {
             accessToken: 'access-token',
@@ -106,6 +112,8 @@ describe('auth-client', () => {
             id: 'user-google',
             email: 'google@example.com',
             displayName: 'Google User',
+            isSubscribed: true,
+            subscriptionTier: 'business',
           },
           tokens: {
             accessToken: 'google-access-token',
@@ -124,7 +132,7 @@ describe('auth-client', () => {
     const user = await googleAuthWithIdToken({ idToken: 'google-id-token' })
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/auth/google',
+      'http://127.0.0.1:3001/auth/google',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
@@ -136,6 +144,8 @@ describe('auth-client', () => {
       id: 'user-google',
       name: 'Google User',
       email: 'google@example.com',
+      isSubscribed: true,
+      subscriptionTier: 'business',
       accessToken: 'google-access-token',
       refreshToken: 'google-refresh-token',
     })
@@ -178,7 +188,7 @@ describe('auth-client', () => {
     await logoutFromBackend({ refreshToken: 'refresh-token' })
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/auth/logout',
+      'http://127.0.0.1:3001/auth/logout',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
@@ -196,6 +206,8 @@ describe('auth-client', () => {
             id: 'user-123',
             email: 'User@Example.com',
             displayName: null,
+            isSubscribed: true,
+            subscriptionTier: 'pro',
           },
           tokens: {
             accessToken: 'refreshed-access-token',
@@ -218,7 +230,7 @@ describe('auth-client', () => {
     })
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/auth/refresh',
+      'http://127.0.0.1:3001/auth/refresh',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
@@ -230,6 +242,8 @@ describe('auth-client', () => {
       id: 'user-123',
       name: 'Test User',
       email: 'user@example.com',
+      isSubscribed: true,
+      subscriptionTier: 'pro',
       accessToken: 'refreshed-access-token',
       refreshToken: 'refreshed-refresh-token',
     })

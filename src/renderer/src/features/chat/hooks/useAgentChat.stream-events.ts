@@ -168,10 +168,7 @@ export function handleAgentStreamPayload(
       context.subscribedSessionId,
       (currentMessages) => {
         const nextMessages = applyAgentTransportEvent(currentMessages, payload.event)
-        if (
-          payload.event.type === 'custom' &&
-          payload.event.name === 'team:auto-user-prompt'
-        ) {
+        if (payload.event.type === 'custom' && payload.event.name === 'team:auto-user-prompt') {
           const appendedMessage =
             nextMessages.length > currentMessages.length
               ? nextMessages[nextMessages.length - 1]

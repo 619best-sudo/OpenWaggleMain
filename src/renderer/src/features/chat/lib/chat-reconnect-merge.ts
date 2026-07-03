@@ -38,10 +38,7 @@ function getComparableAssistantSignature(message: UIMessage) {
         .with('text', (value) => `text:${normalizeComparableText(value.content)}`)
         // `stepId` is renderer-local streaming identity and is absent from persisted snapshots.
         .with('thinking', (value) => `thinking:${normalizeComparableText(value.content)}`)
-        .with(
-          'tool-call',
-          (value) => `tool-call:${value.id}:${value.name}:${value.arguments}`,
-        )
+        .with('tool-call', (value) => `tool-call:${value.id}:${value.name}:${value.arguments}`)
         .with(
           'tool-result',
           (value) =>
@@ -104,10 +101,7 @@ function consumeAssistantMessageSignatureCount(
   countsBySignature: Map<string, number>,
   message: UIMessage,
 ) {
-  return consumeAssistantSignatureCount(
-    countsBySignature,
-    getComparableAssistantSignature(message),
-  )
+  return consumeAssistantSignatureCount(countsBySignature, getComparableAssistantSignature(message))
 }
 
 function mergeTextContent(snapshotContent: string, currentContent: string) {
@@ -248,7 +242,10 @@ function collectToolCallIds(parts: readonly UIMessagePart[]) {
   return toolCallIds
 }
 
-function isContinuationPartForToolCalls(part: UIMessagePart, activeToolCallIds: ReadonlySet<string>) {
+function isContinuationPartForToolCalls(
+  part: UIMessagePart,
+  activeToolCallIds: ReadonlySet<string>,
+) {
   return matchBy(part, 'type')
     .with('text', 'thinking', () => true)
     .with('tool-call', (value) => activeToolCallIds.has(value.id))
@@ -326,7 +323,8 @@ export function mergeBackgroundReconnectMessages(
   const reconnectMessageIds = new Set(reconnectMessages.map((message) => message.id))
   const reconnectUserCountsByText = countUserMessagesByText(reconnectMessages)
   const reconnectAssistantCountsBySignature = countAssistantMessagesBySignature(reconnectMessages)
-  const reconnectAssistantChainCountsBySignature = countAssistantChainsBySignature(reconnectMessages)
+  const reconnectAssistantChainCountsBySignature =
+    countAssistantChainsBySignature(reconnectMessages)
   const mergedMessages = reconnectMessages.map((message) => {
     const currentMessage = currentMessagesById.get(message.id)
     return match(currentMessage)
@@ -364,7 +362,10 @@ export function mergeBackgroundReconnectMessages(
       const assistantChain = getAssistantChainSignature(currentMessages, index)
       if (
         assistantChain &&
-        consumeAssistantSignatureCount(reconnectAssistantCountsBySignature, assistantChain.signature)
+        consumeAssistantSignatureCount(
+          reconnectAssistantCountsBySignature,
+          assistantChain.signature,
+        )
       ) {
         index += assistantChain.messageCount - 1
         continue

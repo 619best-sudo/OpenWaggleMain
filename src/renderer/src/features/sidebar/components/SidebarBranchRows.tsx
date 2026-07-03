@@ -154,7 +154,9 @@ function SidebarBranchItem({
     <div
       className={cn(
         'group mx-4 flex h-9 items-center gap-2 rounded-md pl-8 pr-3 text-left transition-colors',
-        row.isActive ? 'bg-bg-active text-text-primary font-medium' : 'text-text-tertiary hover:bg-bg-hover hover:text-text-secondary',
+        row.isActive
+          ? 'bg-bg-active text-text-primary font-medium'
+          : 'text-text-tertiary hover:bg-bg-hover hover:text-text-secondary',
       )}
     >
       {isRenaming ? (

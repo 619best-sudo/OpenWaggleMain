@@ -289,9 +289,7 @@ function promptInputToCustomContent(input: ReturnType<typeof buildPiPromptInput>
     mimeType: image.mimeType,
   }))
 
-  return input.text
-    ? [{ type: 'text' as const, text: input.text }, ...imageBlocks]
-    : imageBlocks
+  return input.text ? [{ type: 'text' as const, text: input.text }, ...imageBlocks] : imageBlocks
 }
 
 async function sendHiddenPromptCustomMessage(

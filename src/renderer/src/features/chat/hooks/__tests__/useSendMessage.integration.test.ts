@@ -22,9 +22,9 @@ function makeDeps(overrides: Partial<SendDeps> = {}) {
     thinkingLevel: 'medium',
     createSession: vi.fn<SendDeps['createSession']>().mockResolvedValue(SessionId('new-session')),
     sendMessage: vi.fn<(p: AgentSendPayload) => Promise<void>>().mockResolvedValue(undefined),
-    sendFirstMessageToSession: vi.fn<SendDeps['sendFirstMessageToSession']>().mockResolvedValue(
-      undefined,
-    ),
+    sendFirstMessageToSession: vi
+      .fn<SendDeps['sendFirstMessageToSession']>()
+      .mockResolvedValue(undefined),
     sendTeamMessage: vi.fn<SendDeps['sendTeamMessage']>().mockResolvedValue(undefined),
     sendWaggleMessage: vi
       .fn<(payload: AgentSendPayload) => Promise<void>>()
@@ -134,7 +134,11 @@ describe('createSendHandlers', () => {
     it('sends first-message Team payloads to the created session instead of plain chat', async () => {
       const deps = makeDeps({ activeSessionId: null })
       const { handleSendTeam } = createSendHandlers(deps)
-      const payload: AgentSendPayload = { text: 'build the site', thinkingLevel: 'medium', attachments: [] }
+      const payload: AgentSendPayload = {
+        text: 'build the site',
+        thinkingLevel: 'medium',
+        attachments: [],
+      }
       const teammate: TeammateDefinition = {
         id: 'web-executor',
         name: 'Web Executor',

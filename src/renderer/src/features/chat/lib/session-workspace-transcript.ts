@@ -1,8 +1,8 @@
 import type { SessionId, SessionNodeId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { SessionWorkspace } from '@shared/types/session'
-import { createRendererLogger } from '@/shared/lib/logger'
 import { messagePartToUIParts } from '@/features/chat/lib/useAgentChat.utils'
+import { createRendererLogger } from '@/shared/lib/logger'
 import { getUIMessageText, isInternalTeamOrchestrationPromptText } from './chat-message-text'
 
 const logger = createRendererLogger('session-workspace-transcript')
@@ -149,8 +149,10 @@ function filterHiddenInternalTeamMessages(messages: UIMessage[]) {
   if (filteredMessages.length !== messages.length) {
     logger.debug('Filtered internal Team orchestration prompts from transcript', {
       removedMessages: messages
-        .filter((message) =>
-          message.role === 'user' && isInternalTeamOrchestrationPromptText(getUIMessageText(message)),
+        .filter(
+          (message) =>
+            message.role === 'user' &&
+            isInternalTeamOrchestrationPromptText(getUIMessageText(message)),
         )
         .map((message) => ({
           id: message.id,
@@ -183,10 +185,10 @@ export function resolveTranscriptMessages({
 
   const transcriptMessages = filterHiddenInternalTeamMessages(
     appendLiveTailWhenViewingHeadOrDraftSource(
-    activeWorkspace,
-    workspaceMessages,
-    messages,
-    draftBranchSourceNodeId,
+      activeWorkspace,
+      workspaceMessages,
+      messages,
+      draftBranchSourceNodeId,
     ),
   )
   logger.debug('Resolved transcript messages', {

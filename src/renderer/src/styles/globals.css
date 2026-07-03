@@ -138,7 +138,6 @@
     border-right-color: var(--color-home-border);
   }
 
-
   body.right-sidebar-resizing {
     cursor: col-resize;
     user-select: none;

@@ -128,7 +128,8 @@ function ThemeSection() {
         </div>
 
         <p className="mt-4 text-[12px] text-text-muted">
-          Active now: <span className="font-medium text-text-secondary">{isDarkTheme ? 'Dark' : 'Light'}</span>
+          Active now:{' '}
+          <span className="font-medium text-text-secondary">{isDarkTheme ? 'Dark' : 'Light'}</span>
         </p>
       </div>
     </div>

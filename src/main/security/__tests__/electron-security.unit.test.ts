@@ -68,11 +68,13 @@ describe('buildContentSecurityPolicy', () => {
     expect(CONTENT_SECURITY_POLICY).toContain(
       "script-src 'self' 'sha256-Z2/iFzh9VMlVkEOar1f/oSHWwQk3ve1qk/C2WdsC4Xk='",
     )
-    expect(CONTENT_SECURITY_POLICY).toContain("style-src 'self' 'unsafe-inline' https://fonts.googleapis.com")
+    expect(CONTENT_SECURITY_POLICY).toContain(
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    )
     expect(CONTENT_SECURITY_POLICY).toContain("font-src 'self' https://fonts.gstatic.com")
     expect(CONTENT_SECURITY_POLICY).toContain("img-src 'self' data:")
     expect(CONTENT_SECURITY_POLICY).toContain(
-      "connect-src 'self' ws://localhost:* http://localhost:* https://localhost:* wss://localhost:*",
+      "connect-src 'self' ws://localhost:* http://localhost:* https://localhost:* wss://localhost:* ws://127.0.0.1:* http://127.0.0.1:* https://127.0.0.1:* wss://127.0.0.1:*",
     )
   })
 })

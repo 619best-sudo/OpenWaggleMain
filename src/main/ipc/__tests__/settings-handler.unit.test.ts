@@ -76,7 +76,9 @@ describe('registerSettingsHandlers', () => {
 
       const result = await handler?.({}, { themeMode: 'dark' })
       expect(result).toEqual({ ok: true })
-      expect(updateSettingsMock).toHaveBeenCalledWith(expect.objectContaining({ themeMode: 'dark' }))
+      expect(updateSettingsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ themeMode: 'dark' }),
+      )
     })
 
     it('accepts the light theme mode', async () => {

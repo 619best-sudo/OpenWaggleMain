@@ -57,7 +57,12 @@ function registerCancelTeamHandler() {
 function registerGenerateTeamAgentHandler() {
   typedHandle(
     'agent:generate-team-agent',
-    (_event, projectPath: string, model: SupportedModelId, rawInput: TeammateAgentGenerationInput) =>
+    (
+      _event,
+      projectPath: string,
+      model: SupportedModelId,
+      rawInput: TeammateAgentGenerationInput,
+    ) =>
       Effect.gen(function* () {
         const normalizedProjectPath = yield* validateRequiredProjectPath(projectPath)
         const generationInput = decodeUnknownOrThrow(teamAgentGenerationInputSchema, rawInput)

@@ -1,11 +1,11 @@
 import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionId } from '@shared/types/brand'
+import type { UIMessage } from '@shared/types/chat-ui'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { ThinkingLevel } from '@shared/types/settings'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleConfig } from '@shared/types/waggle'
 import { createOptimisticUserMessage } from '@/features/chat/lib/useAgentChat.utils'
-import type { UIMessage } from '@shared/types/chat-ui'
 import { useBackgroundRunStore } from '@/features/chat/state/background-run-store'
 import { useOptimisticUserMessageStore } from '@/features/chat/state/optimistic-user-message-store'
 import { api } from '@/shared/lib/ipc'
@@ -157,7 +157,8 @@ interface UseSendMessageOptions {
 
 /** Hook wrapper — binds first-message sends to the concrete created session id. */
 export function useSendMessage(options: UseSendMessageOptions): SendMessageHandlers {
-  const { activeSessionId, model, sendMessage, sendWaggleMessage, sendTeamMessage, ...rest } = options
+  const { activeSessionId, model, sendMessage, sendWaggleMessage, sendTeamMessage, ...rest } =
+    options
 
   async function sendFirstMessageToSession(
     sessionId: SessionId,

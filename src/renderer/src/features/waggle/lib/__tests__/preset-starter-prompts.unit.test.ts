@@ -17,8 +17,12 @@ describe('preset starter prompts', () => {
       'Route full product lifecycle',
       'Route mobile feature flow',
     ])
-    expect(turingPrompts[0]?.prompt).toMatch(/product-planning, design-asset-direction, web-build, mobile-build, backend-build/i)
-    expect(turingPrompts[1]?.prompt).toMatch(/mobile-build, qa-repair-loop, or quality-assurance-engineer/i)
+    expect(turingPrompts[0]?.prompt).toMatch(
+      /product-planning, design-asset-direction, web-build, mobile-build, backend-build/i,
+    )
+    expect(turingPrompts[1]?.prompt).toMatch(
+      /mobile-build, qa-repair-loop, or quality-assurance-engineer/i,
+    )
 
     expect(planningPrompts.map((prompt) => prompt.title)).toEqual([
       'Plan MVP and lifecycle',

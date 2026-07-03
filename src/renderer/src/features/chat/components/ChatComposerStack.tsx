@@ -9,8 +9,8 @@ import {
   QueuedMessages,
 } from '@/features/composer/components'
 import { useScopedComposerDrafts } from '@/features/composer/hooks'
-import { useApplyPendingWaggleLaunchPrompt } from '@/features/waggle/hooks'
 import { WaggleCollaborationStatus as WaggleCollaborationStatusBanner } from '@/features/waggle/components'
+import { useApplyPendingWaggleLaunchPrompt } from '@/features/waggle/hooks'
 import { Button } from '@/shared/ui/Button'
 import type { ChatComposerSectionState } from '../model'
 import { SessionForkSelector } from './SessionForkSelector'

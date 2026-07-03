@@ -1,7 +1,7 @@
 import type { SessionId } from '@shared/types/brand'
 import { AlertTriangle, Loader2, Sparkles, X } from 'lucide-react'
-import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 import { AGENT_BG } from '@/features/waggle/lib/agent-colors'
+import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 import { useWaggleStore } from '@/features/waggle/state/waggle-store'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
@@ -83,9 +83,7 @@ export function WaggleCollaborationStatus({
 
   return (
     <div className="mx-auto w-full max-w-[960px] px-5 pb-2 space-y-1.5">
-      <div
-        className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg-secondary/50 px-4 py-3"
-      >
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg-secondary/50 px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="shrink-0 text-[13px] font-semibold text-text-primary">Panel</span>
           {config.agents.map((agent) => {

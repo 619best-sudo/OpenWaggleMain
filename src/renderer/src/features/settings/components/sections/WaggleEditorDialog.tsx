@@ -1,5 +1,3 @@
-import type { ProviderInfo } from '@shared/types/llm'
-import type { Settings } from '@shared/types/settings'
 import { PencilLine, Plus, Save, X } from 'lucide-react'
 import { useEscapeHotkey } from '@/shared/hooks/useEscapeHotkey'
 import { Button } from '@/shared/ui/Button'
@@ -15,8 +13,6 @@ interface WaggleEditorDialogProps {
   readonly canSubmit: boolean
   readonly canEditTitle: boolean
   readonly errorMessage: string | null
-  readonly settings: Settings
-  readonly providerModels: ProviderInfo[]
   readonly formState: {
     readonly titleText: string
     readonly descriptionText: string
@@ -39,8 +35,6 @@ export function WaggleEditorDialog({
   canSubmit,
   canEditTitle,
   errorMessage,
-  settings,
-  providerModels,
   formState,
   dispatchForm,
   onClose,
@@ -128,8 +122,8 @@ export function WaggleEditorDialog({
             <div className="flex items-center justify-between gap-3 rounded-xl border border-border-light bg-bg-secondary/35 px-4 py-3">
               <div className="text-[12px] leading-5 text-text-tertiary">
                 Configure each Expert in the collaboration loop. The Panel rotates through every
-                active Expert in order, and individual slots can opt into prompt-keyword
-                gating when they should only join certain requests.
+                active Expert in order, and individual slots can opt into prompt-keyword gating when
+                they should only join certain requests.
               </div>
               <Button
                 variant="secondary"
@@ -150,8 +144,6 @@ export function WaggleEditorDialog({
                   agent={agent}
                   dispatchForm={dispatchForm}
                   dotLabel={String(index + 1)}
-                  settings={settings}
-                  providerModels={providerModels}
                   canRemove={formState.agents.length > 2}
                 />
               ))}
@@ -160,10 +152,10 @@ export function WaggleEditorDialog({
 
           <div className="mt-6">
             <div className="mb-3 rounded-xl border border-border-light bg-bg-secondary/50 px-4 py-3 text-[12px] leading-5 text-text-tertiary">
-              Panel apps bundle Expert roles with the MCPs and skills they depend on. Later turns
-              receive a concise generation handoff, and image-capable models can additionally
-              inspect discovered image outputs directly. When using MCPs, always map artifact
-              starter payload values into the tool schema exactly.
+              Panel apps bundle Expert roles with the MCPs and skills they depend on. GreatX handles
+              model routing for the run, so this editor focuses on role prompts, dependencies, and
+              stop rules. When using MCPs, always map artifact starter payload values into the tool
+              schema exactly.
             </div>
             <div className="mb-6 grid gap-4 md:grid-cols-2">
               <DependencyEditor

@@ -1,12 +1,5 @@
-import {
-  getToolGenerationCapabilities,
-  modelSupportsImageInput,
-  type ProviderInfo,
-} from '@shared/types/llm'
-import type { Settings } from '@shared/types/settings'
-import { isInheritedWaggleModelBinding, type WaggleAgentSlot } from '@shared/types/waggle'
+import type { WaggleAgentSlot } from '@shared/types/waggle'
 import { Brain, Trash2 } from 'lucide-react'
-import { ModelSelector } from '@/features/providers/components'
 import { Button } from '@/shared/ui/Button'
 import { Textarea } from '@/shared/ui/Textarea'
 import { TextInput } from '@/shared/ui/TextInput'
@@ -19,8 +12,6 @@ interface WaggleAgentSlotCardProps {
   agent: WaggleAgentSlot
   dispatchForm: (action: WaggleFormAction) => void
   dotLabel: string
-  settings: Settings
-  providerModels: ProviderInfo[]
   canRemove: boolean
 }
 
@@ -29,25 +20,13 @@ export function WaggleAgentSlotCard({
   agent,
   dispatchForm,
   dotLabel,
-  settings,
-  providerModels,
   canRemove,
 }: WaggleAgentSlotCardProps) {
-  const selectedAgentModel = isInheritedWaggleModelBinding(agent.model)
-    ? settings.selectedModel
-    : agent.model
-  const selectedModelInfo =
-    providerModels
-      .flatMap((provider) => provider.models)
-      .find((model) => model.id === selectedAgentModel) ?? null
-  const supportsImageInput = selectedModelInfo ? modelSupportsImageInput(selectedModelInfo) : false
-  const toolGeneration = selectedModelInfo ? getToolGenerationCapabilities(selectedModelInfo) : []
-  const promptMatchTerms = agent.runCondition?.type === 'prompt-match' ? agent.runCondition.anyOf : []
+  const promptMatchTerms =
+    agent.runCondition?.type === 'prompt-match' ? agent.runCondition.anyOf : []
 
   return (
-    <div
-      className="relative overflow-hidden rounded-xl border border-border-light bg-bg-secondary/70 p-5 transition-all shadow-sm hover:shadow-md h-full flex flex-col"
-    >
+    <div className="relative overflow-hidden rounded-xl border border-border-light bg-bg-secondary/70 p-5 transition-all shadow-sm hover:shadow-md h-full flex flex-col">
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/[0.015] to-transparent" />
 
       <div className="relative flex flex-col flex-1 space-y-6">
@@ -91,31 +70,6 @@ export function WaggleAgentSlotCard({
               placeholder={`e.g. ${dotLabel === 'A' ? 'Strategist' : 'Critic'}`}
               className="w-full bg-bg border-border-light focus:border-accent/50 shadow-sm"
             />
-          </label>
-
-          <label className="block space-y-1.5 [&>div>button]:w-full [&>div>button]:h-8 [&>div>button]:bg-bg [&>div>button]:border-border-light [&>div>button]:shadow-sm">
-            <span className="text-[12px] font-medium text-text-secondary">Model</span>
-            <ModelSelector
-              value={selectedAgentModel}
-              onChange={(model) => dispatchForm({ type: 'set-agent-model', index, model })}
-              settings={settings}
-              providerModels={providerModels}
-            />
-            <div className="flex flex-wrap gap-2 pt-1">
-              <span className="rounded-full border border-border-light bg-bg px-2.5 py-1 text-[10px] font-medium tracking-wide text-text-secondary uppercase">
-                {supportsImageInput ? 'Native image input' : 'Text handoff only'}
-              </span>
-              {toolGeneration.length > 0 ? (
-                <span className="rounded-full border border-border-light bg-bg px-2.5 py-1 text-[10px] font-medium tracking-wide text-text-secondary uppercase">
-                  Tool generation: {toolGeneration.join(' / ')}
-                </span>
-              ) : null}
-            </div>
-            <p className="text-[11px] leading-5 text-text-tertiary">
-              {supportsImageInput
-                ? 'Can request tool-based image, audio, or video generation. Earlier image outputs can also be re-attached for direct critique.'
-                : 'Can still drive tool-based image, audio, or video generation, but later turns receive concise prompt and file handoff notes instead of direct media input.'}
-            </p>
           </label>
 
           <label className="block space-y-1.5 flex-1 flex flex-col">

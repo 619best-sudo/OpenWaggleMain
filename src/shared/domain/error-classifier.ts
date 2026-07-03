@@ -23,6 +23,11 @@ export const ERROR_CODE_META: Record<AgentErrorCode, ErrorCodeMeta> = {
     suggestion: 'Sign in again to refresh your provider session.',
     retryable: false,
   },
+  'subscription-required': {
+    userMessage: 'No Turing Machine quota available',
+    suggestion: 'Open Profile to check your subscription tier and Turing Machine quota.',
+    retryable: false,
+  },
   'insufficient-credits': {
     userMessage: 'Insufficient API credits',
     suggestion:
@@ -71,7 +76,7 @@ export const ERROR_CODE_META: Record<AgentErrorCode, ErrorCodeMeta> = {
   },
   'runtime-package-manager-unavailable': {
     userMessage: 'Runtime package manager unavailable',
-    suggestion: 'OpenWaggle could not run npm while loading Pi extensions. Check the app logs.',
+    suggestion: 'Turing Machine could not run npm while loading Pi extensions. Check the app logs.',
     retryable: false,
   },
   unknown: {

@@ -132,14 +132,15 @@ describe('preferences-store integration', () => {
   })
 
   it('keeps only GreatX backend in enabled models', async () => {
-    await usePreferencesStore.getState().setEnabledModels([
-      SupportedModelId('openai/gpt-4.1-mini'),
-      GREATX_BACKEND_MODEL_REF,
-    ])
+    await usePreferencesStore
+      .getState()
+      .setEnabledModels([SupportedModelId('openai/gpt-4.1-mini'), GREATX_BACKEND_MODEL_REF])
 
     expect(apiMock.setEnabledModels).toHaveBeenCalledWith([GREATX_BACKEND_MODEL_REF])
     expect(apiMock.updateSettings).toHaveBeenCalledWith({ selectedModel: GREATX_BACKEND_MODEL_REF })
-    expect(usePreferencesStore.getState().settings.enabledModels).toEqual([GREATX_BACKEND_MODEL_REF])
+    expect(usePreferencesStore.getState().settings.enabledModels).toEqual([
+      GREATX_BACKEND_MODEL_REF,
+    ])
     expect(usePreferencesStore.getState().settings.selectedModel).toBe(GREATX_BACKEND_MODEL_REF)
   })
 })

@@ -13,22 +13,23 @@ const TestProviderLayer = Layer.succeed(ProviderService, {
   get: () => Effect.succeed(undefined),
   getAll: () => Effect.succeed([]),
   getProviderForModel: (modelId) =>
-    Effect.sync(() =>
-      getProviderForModelMock(modelId) ?? {
-        id: 'openai',
-        displayName: 'OpenAI',
-        auth: {
-          configured: true,
-          source: 'environment-or-custom',
-          apiKeyConfigured: true,
-          apiKeySource: 'environment-or-custom',
-          oauthConnected: false,
-          supportsApiKey: true,
-          supportsOAuth: false,
+    Effect.sync(
+      () =>
+        getProviderForModelMock(modelId) ?? {
+          id: 'openai',
+          displayName: 'OpenAI',
+          auth: {
+            configured: true,
+            source: 'environment-or-custom',
+            apiKeyConfigured: true,
+            apiKeySource: 'environment-or-custom',
+            oauthConnected: false,
+            supportsApiKey: true,
+            supportsOAuth: false,
+          },
+          models: [],
+          testModel: modelId,
         },
-        models: [],
-        testModel: modelId,
-      },
     ),
   isKnownModel: () => Effect.succeed(true),
 })
@@ -36,9 +37,10 @@ const TestProviderLayer = Layer.succeed(ProviderService, {
 const TestProviderProbeLayer = Layer.succeed(ProviderProbeService, {
   probeCredentials: () => Effect.dieMessage('probeCredentials is not used'),
   generateText: (input) =>
-    Effect.sync(() =>
-      generateTextMock(input) ??
-      `\`\`\`json
+    Effect.sync(
+      () =>
+        generateTextMock(input) ??
+        `\`\`\`json
 {
   "label": "Security Reviewer",
   "kind": "reviewer",

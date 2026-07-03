@@ -149,7 +149,9 @@ function SkillsList({
     <div className="mb-4 mt-2 overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-[inset_0_1px_0_var(--theme-panel-shadow-highlight)]">
       <div className="flex items-center justify-between border-b border-border bg-bg-secondary px-4 py-3">
         <div className="flex items-center gap-2">
-          <h3 className="text-[12px] font-semibold text-text-secondary uppercase tracking-wider">Discovered Skills</h3>
+          <h3 className="text-[12px] font-semibold text-text-secondary uppercase tracking-wider">
+            Discovered Skills
+          </h3>
         </div>
       </div>
       <div className="flex flex-col bg-bg-primary">

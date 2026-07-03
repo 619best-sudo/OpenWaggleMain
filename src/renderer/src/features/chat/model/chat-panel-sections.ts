@@ -4,10 +4,10 @@ import type { UIMessage } from '@shared/types/chat-ui'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/waggle'
+import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 import type { AgentChatStatus, AgentCompactionStatus } from '../hooks/useAgentChat'
 import type { SessionForkTarget } from '../lib/session-fork-targets'
 import type { ChatRow } from '../lib/types-chat-row'
-import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 
 export interface ChatTranscriptSectionState {
   readonly messages: UIMessage[]

@@ -23,10 +23,7 @@ vi.mock('@/shared/lib/logger', () => ({
   createRendererLogger: () => loggerMock,
 }))
 
-import {
-  syncAppSessionProviderToken,
-  useAppAuthStore,
-} from '../app-auth-store'
+import { syncAppSessionProviderToken, useAppAuthStore } from '../app-auth-store'
 
 describe('app-auth-store', () => {
   beforeEach(() => {
@@ -130,5 +127,4 @@ describe('app-auth-store', () => {
     expect(useAppAuthStore.getState().status).toBe('signed_out')
     expect(useAppAuthStore.getState().user).toBeNull()
   })
-
 })

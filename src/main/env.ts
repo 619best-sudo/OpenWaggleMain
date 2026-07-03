@@ -147,6 +147,7 @@ export function getGhCliEnv(): Record<string, string | undefined> {
   const env = { ...process.env }
   delete env.GITHUB_TOKEN
   delete env.GH_TOKEN
+  env.PATH = getNpmCompatiblePath()
   return env
 }
 

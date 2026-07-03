@@ -29,7 +29,10 @@ interface GoogleTokenResponse {
 }
 
 function getGoogleDesktopClientId() {
-  return env.OPENWAGGLE_APP_AUTH_GOOGLE_DESKTOP_CLIENT_ID?.trim() || DEFAULT_APP_AUTH_GOOGLE_DESKTOP_CLIENT_ID
+  return (
+    env.OPENWAGGLE_APP_AUTH_GOOGLE_DESKTOP_CLIENT_ID?.trim() ||
+    DEFAULT_APP_AUTH_GOOGLE_DESKTOP_CLIENT_ID
+  )
 }
 
 function getGoogleDesktopClientSecret() {
@@ -108,13 +111,23 @@ async function createLoopbackServer(expectedState: string): Promise<LoopbackServ
     const redirectUri = getRedirectUri(server)
     const requestUrl = new URL(request.url ?? CALLBACK_PATH, redirectUri)
     if (requestUrl.pathname !== CALLBACK_PATH) {
-      writeHtmlResponse(response, 404, 'Not Found', 'This callback route is reserved for Google sign-in.')
+      writeHtmlResponse(
+        response,
+        404,
+        'Not Found',
+        'This callback route is reserved for Google sign-in.',
+      )
       return
     }
 
     const error = requestUrl.searchParams.get('error')
     if (error) {
-      writeHtmlResponse(response, 400, 'Google Sign-In Failed', 'Google returned an error. You can close this window.')
+      writeHtmlResponse(
+        response,
+        400,
+        'Google Sign-In Failed',
+        'Google returned an error. You can close this window.',
+      )
       rejectCallback(new Error(`Google sign-in failed: ${error}`))
       return
     }
@@ -147,7 +160,7 @@ async function createLoopbackServer(expectedState: string): Promise<LoopbackServ
       response,
       200,
       'Google Sign-In Complete',
-      'You can close this window and return to OpenWaggle.',
+      'You can close this window and return to Turing Machine.',
     )
     resolveCallback({ code })
   })
@@ -218,7 +231,8 @@ async function exchangeCodeForIdToken(input: {
 
   const payload = (await response.json().catch(() => null)) as GoogleTokenResponse | null
   if (!response.ok) {
-    const errorMessage = payload?.error_description ?? payload?.error ?? 'Google token exchange failed.'
+    const errorMessage =
+      payload?.error_description ?? payload?.error ?? 'Google token exchange failed.'
     throw new Error(errorMessage)
   }
 

@@ -270,10 +270,9 @@ function isWaggleFilter(lowerQuery: string) {
 function isTeamFilter(lowerQuery: string) {
   return (
     lowerQuery.length > 0 &&
-    [
-      ...TEAM_DISCOVERY_TERMS,
-      ...Object.values(TEAM_SEARCH_ALIASES).flat(),
-    ].some((query) => query.includes(lowerQuery) || lowerQuery.includes(query))
+    [...TEAM_DISCOVERY_TERMS, ...Object.values(TEAM_SEARCH_ALIASES).flat()].some(
+      (query) => query.includes(lowerQuery) || lowerQuery.includes(query),
+    )
   )
 }
 

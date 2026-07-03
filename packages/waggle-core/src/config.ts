@@ -193,10 +193,7 @@ function parseAgentSlot(value: unknown, path: string): WaggleValidationResult<Wa
   }
 }
 
-function parseStringArray(
-  value: unknown,
-  path: string,
-): WaggleValidationResult<readonly string[]> {
+function parseStringArray(value: unknown, path: string): WaggleValidationResult<readonly string[]> {
   if (!Array.isArray(value)) {
     return { success: false, issues: [`${path} must be an array of strings.`] }
   }
@@ -226,11 +223,7 @@ function parsePromptMatchRunCondition(
     return { success: false, issues: [`${path} must be an object.`] }
   }
 
-  const type = literalValue(
-    value.type,
-    WAGGLE_AGENT_RUN_CONDITION_TYPES,
-    `${path}.type`,
-  )
+  const type = literalValue(value.type, WAGGLE_AGENT_RUN_CONDITION_TYPES, `${path}.type`)
   const anyOf = parseStringArray(value.anyOf, `${path}.anyOf`)
   const issues = collectIssues([type, anyOf])
   if (issues.length > 0 || !type.success || !anyOf.success) {
@@ -398,7 +391,9 @@ function parseAgentList(value: unknown): WaggleValidationResult<readonly WaggleA
     }
   }
 
-  const parsedAgents = value.map((agent, index) => parseAgentSlot(agent, `agents[${String(index)}]`))
+  const parsedAgents = value.map((agent, index) =>
+    parseAgentSlot(agent, `agents[${String(index)}]`),
+  )
   const issues = collectIssues(parsedAgents)
   if (issues.length > 0 || parsedAgents.some((agent) => !agent.success)) {
     return { success: false, issues }
@@ -425,7 +420,13 @@ export function parseWaggleConfig(value: unknown): WaggleValidationResult<Waggle
   const stop = parseStopConfig(value.stop)
   const loopContract = parseLoopContract(value.loopContract)
   const issues = collectIssues([mode, agents, stop, loopContract])
-  if (issues.length > 0 || !mode.success || !agents.success || !stop.success || !loopContract.success) {
+  if (
+    issues.length > 0 ||
+    !mode.success ||
+    !agents.success ||
+    !stop.success ||
+    !loopContract.success
+  ) {
     return { success: false, issues }
   }
 
@@ -463,7 +464,10 @@ export function resolveWaggleConfigForPrompt(
   userPrompt: string,
 ): WaggleConfig {
   const activeAgents = config.agents.filter((agent) => shouldRunWaggleAgent(agent, userPrompt))
-  if (activeAgents.length < MIN_WAGGLE_AGENT_COUNT || activeAgents.length === config.agents.length) {
+  if (
+    activeAgents.length < MIN_WAGGLE_AGENT_COUNT ||
+    activeAgents.length === config.agents.length
+  ) {
     return config
   }
 

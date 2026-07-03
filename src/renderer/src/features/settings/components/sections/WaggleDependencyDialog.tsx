@@ -124,7 +124,9 @@ export function WaggleDependencyDialog({
                     className="flex flex-col gap-1 rounded-lg border border-white/6 bg-black/10 px-3 py-2"
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[12px] font-medium text-text-primary">{check.label}</span>
+                      <span className="text-[12px] font-medium text-text-primary">
+                        {check.label}
+                      </span>
                       <span
                         className={cn(
                           'rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
@@ -146,8 +148,8 @@ export function WaggleDependencyDialog({
           {status?.unsupportedCount ? (
             <div className="rounded-xl border border-warning/25 bg-warning/8 px-4 py-3 text-[12px] leading-5 text-warning">
               {status.unsupportedCount} dependency
-              {status.unsupportedCount === 1 ? '' : 'ies'} still need a recipe before this Panel
-              app can be fully app-managed.
+              {status.unsupportedCount === 1 ? '' : 'ies'} still need a recipe before this Panel app
+              can be fully app-managed.
             </div>
           ) : null}
 

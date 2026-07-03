@@ -8,8 +8,8 @@ import {
   SETTINGS_KEY_RECENT_PROJECTS,
   SETTINGS_KEY_SHOW_CUSTOM_EXECUTION_TEAM,
   SETTINGS_KEY_SKILL_TOGGLES_BY_PROJECT,
-  SETTINGS_KEY_THINKING_LEVEL,
   SETTINGS_KEY_THEME_MODE,
+  SETTINGS_KEY_THINKING_LEVEL,
 } from './keys'
 import {
   isValidThinkingLevel,
@@ -112,9 +112,10 @@ export function buildNextSettingsSnapshot(current: Settings, partial: Partial<Se
     partial.projectDisplayNames !== undefined
       ? sanitizeProjectDisplayNames(partial.projectDisplayNames)
       : current.projectDisplayNames
-  const themeMode = partial.themeMode !== undefined && isThemeMode(partial.themeMode)
-    ? partial.themeMode
-    : current.themeMode
+  const themeMode =
+    partial.themeMode !== undefined && isThemeMode(partial.themeMode)
+      ? partial.themeMode
+      : current.themeMode
   const showCustomExecutionTeam =
     partial.showCustomExecutionTeam !== undefined
       ? partial.showCustomExecutionTeam

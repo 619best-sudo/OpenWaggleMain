@@ -47,6 +47,10 @@ const apiMock = vi.hoisted(() => {
   }
 })
 
+const authStoreMock = vi.hoisted(() => ({
+  refreshUsageSnapshotsForAuthenticatedUser: vi.fn().mockResolvedValue(undefined),
+}))
+
 vi.mock('@/shared/lib/ipc', () => ({
   api: {
     cancelWaggle: apiMock.cancelWaggle,
@@ -58,6 +62,10 @@ vi.mock('@/shared/lib/ipc', () => ({
     onAgentEvent: apiMock.onAgentEvent,
     onRunCompleted: apiMock.onRunCompleted,
   },
+}))
+
+vi.mock('@/features/auth/state/app-auth-store', () => ({
+  refreshUsageSnapshotsForAuthenticatedUser: authStoreMock.refreshUsageSnapshotsForAuthenticatedUser,
 }))
 
 const SESSION_ID = SessionId('session-1')
@@ -189,6 +197,7 @@ describe('chat orchestration hooks', () => {
     apiMock.onRunCompleted.mockClear()
     apiMock.agentEventUnsubscribe.mockClear()
     apiMock.runCompletedUnsubscribe.mockClear()
+    authStoreMock.refreshUsageSnapshotsForAuthenticatedUser.mockClear()
     useBackgroundRunStore.setState({
       activeRunIds: new Set(),
       renderSnapshotsBySessionId: new Map(),
@@ -221,6 +230,9 @@ describe('chat orchestration hooks', () => {
 
     requireRunCompletedHandler()({ sessionId: SESSION_ID })
     await waitFor(() => expect(refreshSession).toHaveBeenCalledWith(SESSION_ID))
+    await waitFor(() =>
+      expect(authStoreMock.refreshUsageSnapshotsForAuthenticatedUser).toHaveBeenCalledOnce(),
+    )
     expect(useBackgroundRunStore.getState().getRunRenderSnapshot(SESSION_ID)).not.toBeNull()
 
     unmount()

@@ -36,10 +36,7 @@ function appendTeamAutoPromptMessage(
     createdAt: new Date(event.timestamp),
   }
 
-  return [
-    ...messages,
-    teamAutoPromptMessage,
-  ]
+  return [...messages, teamAutoPromptMessage]
 }
 
 export function applyAgentTransportEvent(

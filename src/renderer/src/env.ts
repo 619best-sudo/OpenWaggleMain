@@ -22,7 +22,8 @@ const isDevelopment =
     window.location.protocol !== 'openwaggle:')
 const logLevel = 'info'
 const configuredAuthBaseUrl = viteEnv?.VITE_APP_AUTH_BASE_URL?.trim() || null
-const appAuthBaseUrl = configuredAuthBaseUrl ?? (isDevelopment ? 'http://localhost:3000' : null)
+const appAuthBaseUrl =
+  configuredAuthBaseUrl ?? (isDevelopment || isElectron ? 'http://127.0.0.1:3001' : null)
 
 export const env = {
   appAuthBaseUrl,

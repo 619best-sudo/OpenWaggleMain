@@ -39,7 +39,10 @@ function createPiModel(input: readonly ('text' | 'image')[]): PiModel {
   } as unknown as PiModel
 }
 
-function createImageAttachment(id: string, name: string): HydratedAgentSendPayload['attachments'][number] {
+function createImageAttachment(
+  id: string,
+  name: string,
+): HydratedAgentSendPayload['attachments'][number] {
   return {
     id,
     kind: 'image',
@@ -56,9 +59,7 @@ function createImageAttachment(id: string, name: string): HydratedAgentSendPaylo
   }
 }
 
-function createPayload(
-  overrides?: Partial<HydratedAgentSendPayload>,
-): HydratedAgentSendPayload {
+function createPayload(overrides?: Partial<HydratedAgentSendPayload>): HydratedAgentSendPayload {
   return {
     text: 'Create and refine the visual concept',
     thinkingLevel: 'medium',
@@ -377,7 +378,9 @@ exact next loop instructions: revert the failed patch first and inspect the pare
     })
 
     expect(instructions).toContain('Compact this Pi Waggle session before the next agent handoff.')
-    expect(instructions).toContain('Prefer concise bullets. Remove repeated reasoning, raw tool logs')
+    expect(instructions).toContain(
+      'Prefer concise bullets. Remove repeated reasoning, raw tool logs',
+    )
     expect(instructions).toContain('Completed turn: 2 by Critic using openai/gpt-4.1.')
     expect(instructions).toContain('Rollback required: the previous fix attempt was rejected')
     expect(instructions).toContain('waggle-artifact-001 (image)')

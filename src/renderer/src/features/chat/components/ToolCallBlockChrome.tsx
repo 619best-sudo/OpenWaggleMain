@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import {
   Check,
   ChevronRight,
@@ -14,6 +13,7 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { ToolCallResultPayload } from '@/features/chat/lib/tool-call-block'
 import { cn } from '@/shared/lib/cn'
 import { formatDuration } from '@/shared/lib/format'
@@ -74,7 +74,7 @@ function ToolGlyph({ view }: { readonly view: ToolCallViewModel }) {
   const Icon = resolveToolIcon(view.toolName)
 
   return (
-      <span className="flex size-5 shrink-0 items-center justify-center rounded bg-bg-secondary/70 text-[color:var(--color-code-card-muted-text)]">
+    <span className="flex size-5 shrink-0 items-center justify-center rounded bg-bg-secondary/70 text-[color:var(--color-code-card-muted-text)]">
       <Icon className="size-3.5" />
     </span>
   )

@@ -44,9 +44,9 @@ export type {
 
 let builtInModelProviders: ReadonlySet<string> | null = null
 const TURING_MACHINE_PROVIDER_ID = 'turing-machine'
-const TURING_MACHINE_MODEL_ID = 'greatx-backend'
-const TURING_MACHINE_MODEL_NAME = 'GreatX Backend'
-const DEFAULT_TURING_MACHINE_BASE_URL = 'http://localhost:3000/turing-machine'
+const TURING_MACHINE_MODEL_ID = 'turing-machine'
+const TURING_MACHINE_MODEL_NAME = 'Turing Machine'
+const DEFAULT_TURING_MACHINE_BASE_URL = 'http://127.0.0.1:3001/turing-machine'
 const TURING_MACHINE_PROVIDER_API_KEY_ENV = 'OPENWAGGLE_TURING_MACHINE_TOKEN'
 const TURING_MACHINE_BASE_URL_ENV_KEYS = [
   'OPENWAGGLE_TURING_MACHINE_BASE_URL',
@@ -73,7 +73,7 @@ export function resolveTuringMachineBaseUrl(env: NodeJS.ProcessEnv = process.env
 
 function registerTuringMachineProvider(modelRegistry: ModelRegistry) {
   modelRegistry.registerProvider(TURING_MACHINE_PROVIDER_ID, {
-    // Expose GreatX as a single backend-backed option. The backend decides which upstream model to use.
+    // Expose a single backend-backed option. The backend decides which upstream model to use.
     baseUrl: resolveTuringMachineBaseUrl(),
     apiKey: TURING_MACHINE_PROVIDER_API_KEY_ENV,
     api: 'openai-completions',

@@ -19,7 +19,10 @@ function makePayload(overrides: Partial<AgentSendPayload> = {}) {
   }
 }
 
-function makeRunInput(onEvent: (event: AgentTransportEvent) => void) {
+function makeRunInput(
+  onEvent: (event: AgentTransportEvent) => void,
+  model = SupportedModelId('openai/gpt-5.4'),
+) {
   return {
     session: {
       id: SessionId('conv-tool-events'),
@@ -35,7 +38,7 @@ function makeRunInput(onEvent: (event: AgentTransportEvent) => void) {
       thinkingLevel: 'medium',
       attachments: [],
     },
-    model: SupportedModelId('openai/gpt-5.4'),
+    model,
     signal: new AbortController().signal,
     onEvent,
   }
@@ -162,6 +165,46 @@ describe('createSessionListener', () => {
           promptTokens: 11,
           completionTokens: 7,
           totalTokens: 18,
+        },
+      },
+    ])
+  })
+
+  it('maps Turing Machine 403 terminal errors to subscription-required on the first transport event', () => {
+    const emitted: AgentTransportEvent[] = []
+    const listener = createSessionListener(
+      makeRunInput(
+        (event) => emitted.push(event),
+        SupportedModelId('turing-machine/turing-machine'),
+      ),
+      'run-1',
+    )
+
+    listener({
+      type: 'agent_end',
+      messages: [
+        {
+          role: 'assistant',
+          content: [],
+          api: 'openai-completions',
+          provider: 'turing-machine',
+          model: 'turing-machine',
+          usage: { ...usage, input: 11, output: 7, totalTokens: 18 },
+          stopReason: 'error',
+          errorMessage: '403 "Forbidden"',
+          timestamp: 1,
+        },
+      ],
+    })
+
+    expect(emitted).toMatchObject([
+      {
+        type: 'agent_end',
+        runId: 'run-1',
+        reason: 'error',
+        error: {
+          message: '403 "Forbidden"',
+          code: 'subscription-required',
         },
       },
     ])

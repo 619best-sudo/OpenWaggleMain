@@ -11,10 +11,10 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react'
-import appLogo from '../../../../../assets/new-logo.png'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { Popover } from '@/shared/ui/Popover'
+import appLogo from '../../../../../assets/new-logo.png'
 import { SIDEBAR_LAYOUT } from '../constants/sidebar-layout'
 import type { SidebarSessionSortMode } from '../lib/sidebar-project-groups'
 import type { SidebarView } from '../model/sidebar-types'
@@ -35,11 +35,7 @@ export function SidebarBrandArea({ isFullscreen }: { readonly isFullscreen: bool
       <div className="drag-region shrink-0 px-6 pb-2 pt-5">
         <div className="flex items-center gap-3">
           <div className="home-panel-frame-soft overflow-hidden rounded-xl bg-transparent">
-            <img
-              src={appLogo}
-              alt="Turing Machine logo"
-              className="size-11 object-cover"
-            />
+            <img src={appLogo} alt="Turing Machine logo" className="size-11 object-cover" />
           </div>
           <div className="min-w-0">
             <p className="no-drag truncate text-[15px] font-semibold tracking-[-0.015em] text-text-primary">

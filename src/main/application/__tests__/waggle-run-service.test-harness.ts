@@ -7,8 +7,8 @@ import { Layer } from 'effect'
 import * as Effect from 'effect/Effect'
 import { type Mock, vi } from 'vitest'
 import { BUILT_IN_WAGGLE_PRESETS } from '../../adapters/settings-waggle-presets-built-ins'
-import { McpConfigService } from '../../ports/mcp-config-service'
 import { type AgentKernelRunInput, AgentKernelService } from '../../ports/agent-kernel-service'
+import { McpConfigService } from '../../ports/mcp-config-service'
 import { SessionProjectionRepository } from '../../ports/session-projection-repository'
 import { type PersistSessionSnapshotInput, SessionRepository } from '../../ports/session-repository'
 import { WagglePresetsRepository } from '../../ports/waggle-presets-repository'
@@ -152,7 +152,7 @@ const testMcpView = {
       name: 'playwright',
       enabled: true,
       sourceId: 'project-openwaggle',
-      sourceLabel: 'Project OpenWaggle',
+      sourceLabel: 'Project Turing Machine',
       sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
       command: 'npx',
       transport: 'stdio',

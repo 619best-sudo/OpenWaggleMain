@@ -104,8 +104,7 @@ export function AboutUpdatesSection() {
           About & Updates
         </h2>
         <p className="max-w-[720px] text-[13px] leading-6 text-text-tertiary">
-          Check your installed version and manage app updates from one dedicated settings
-          section.
+          Check your installed version and manage app updates from one dedicated settings section.
         </p>
       </div>
 
@@ -113,7 +112,7 @@ export function AboutUpdatesSection() {
         <div className="flex h-14 items-center justify-between border-b border-border px-5">
           <div className="flex flex-col gap-0.5">
             <span className="text-[13px] font-medium text-text-primary">Version</span>
-            <span className="text-[12px] text-text-tertiary">OpenWaggle v{version}</span>
+            <span className="text-[12px] text-text-tertiary">Turing Machine v{version}</span>
           </div>
         </div>
 

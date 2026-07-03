@@ -1,5 +1,5 @@
-import { isLightThemeMode } from '@shared/types/settings'
 import type { McpConfigSourceId, McpConfigSourceSummary } from '@shared/types/mcp'
+import { isLightThemeMode } from '@shared/types/settings'
 import { usePreferences } from '@/features/settings/hooks'
 import { Button } from '@/shared/ui/Button'
 import { Select } from '@/shared/ui/Select'
@@ -85,7 +85,9 @@ export function McpSourceEditor({
                 </Select>
               </label>
               {selectedSourceDetails ? (
-                <p className="text-[11px] leading-5 text-text-muted">{selectedSourceDetails.helper}</p>
+                <p className="text-[11px] leading-5 text-text-muted">
+                  {selectedSourceDetails.helper}
+                </p>
               ) : null}
             </div>
           )}
@@ -120,7 +122,12 @@ export function McpSourceEditor({
       </div>
 
       <div className="mt-6 flex items-center justify-end gap-4 border-t border-border pt-4">
-        <Button variant="accent" disabled={!selectedSource || busy} onClick={onSave} className="px-6">
+        <Button
+          variant="accent"
+          disabled={!selectedSource || busy}
+          onClick={onSave}
+          className="px-6"
+        >
           Save JSON
         </Button>
       </div>

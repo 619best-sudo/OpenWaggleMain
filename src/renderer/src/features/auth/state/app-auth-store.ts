@@ -1,14 +1,28 @@
 import { create } from 'zustand'
 import {
-  googleAuthWithIdToken,
-  loginWithPassword,
-  refreshSession,
-  logoutFromBackend,
-  signupWithPassword,
   type AppAuthUser,
+  googleAuthWithIdToken,
   type LoginWithPasswordInput,
+  loginWithPassword,
+  logoutFromBackend,
+  refreshSession,
   type SignupWithPasswordInput,
+  signupWithPassword,
 } from '@/features/auth/lib/auth-client'
+import {
+  createGithubRepoStats,
+  type AppLeaderboardSnapshot,
+  type AppSubscriptionSnapshot,
+  type AppTuringMachineActivitySnapshot,
+  fetchSubscriptionSnapshot,
+  fetchTuringMachineActivity,
+  fetchTuringMachineLeaderboard,
+  updateGithubRepoStats,
+} from '@/features/auth/lib/subscription-client'
+import {
+  DEFAULT_SUBSCRIPTION_PLAN_TIER,
+  normalizeSubscriptionTier,
+} from '@/features/auth/lib/subscription-plan'
 import { api } from '@/shared/lib/ipc'
 import { createRendererLogger } from '@/shared/lib/logger'
 
@@ -21,11 +35,40 @@ let sessionRefreshTimeoutId: number | null = null
 
 export type AuthView = 'login' | 'signup'
 export type AppAuthStatus = 'signed_out' | 'submitting' | 'authenticated'
+export type GithubSyncStatus =
+  | {
+      readonly state: 'idle'
+      readonly message: string
+      readonly syncedAt: null
+      readonly username: null
+    }
+  | {
+      readonly state: 'syncing'
+      readonly message: string
+      readonly syncedAt: string | null
+      readonly username: string | null
+    }
+  | {
+      readonly state: 'synced'
+      readonly message: string
+      readonly syncedAt: string
+      readonly username: string
+    }
+  | {
+      readonly state: 'not_ready' | 'error'
+      readonly message: string
+      readonly syncedAt: string | null
+      readonly username: string | null
+    }
 
 interface AppAuthState {
   readonly view: AuthView
   readonly status: AppAuthStatus
   readonly user: AppAuthUser | null
+  readonly subscriptionSnapshot: AppSubscriptionSnapshot | null
+  readonly turingMachineActivity: AppTuringMachineActivitySnapshot | null
+  readonly leaderboardSnapshot: AppLeaderboardSnapshot | null
+  readonly githubSyncStatus: GithubSyncStatus
   readonly error: string | null
   setView: (view: AuthView) => void
   clearError: () => void
@@ -33,6 +76,7 @@ interface AppAuthState {
   signIn: (input: LoginWithPasswordInput) => Promise<void>
   signUp: (input: SignupWithPasswordInput) => Promise<void>
   signOut: () => Promise<void>
+  syncGithubStats: () => Promise<void>
 }
 
 function readStoredUser(): AppAuthUser | null {
@@ -55,6 +99,12 @@ function readStoredUser(): AppAuthUser | null {
       id: parsed.id,
       name: parsed.name,
       email: parsed.email,
+      isSubscribed: typeof parsed.isSubscribed === 'boolean' ? parsed.isSubscribed : false,
+      subscriptionTier: normalizeSubscriptionTier(
+        typeof parsed.subscriptionTier === 'string'
+          ? parsed.subscriptionTier
+          : DEFAULT_SUBSCRIPTION_PLAN_TIER,
+      ),
       accessToken: parsed.accessToken,
       refreshToken: parsed.refreshToken,
     }
@@ -111,15 +161,231 @@ export async function syncAppSessionProviderToken(user: AppAuthUser | null) {
   await api.setProviderApiKey(TURING_MACHINE_PROVIDER_ID, token)
 }
 
-async function applyAuthenticatedUser(user: AppAuthUser, syncWarningMessage: string) {
+async function refreshSubscriptionSnapshotForUser(
+  user: AppAuthUser,
+  warningMessage: string,
+  options?: { readonly clearBeforeFetch?: boolean },
+) {
+  if (options?.clearBeforeFetch) {
+    useAppAuthStore.setState({ subscriptionSnapshot: null })
+  }
+
+  try {
+    const subscriptionSnapshot = await fetchSubscriptionSnapshot(user.accessToken)
+    useAppAuthStore.setState({ subscriptionSnapshot })
+  } catch (error) {
+    logger.warn(warningMessage, {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    if (options?.clearBeforeFetch) {
+      useAppAuthStore.setState({ subscriptionSnapshot: null })
+    }
+  }
+}
+
+async function refreshTuringMachineActivityForUser(
+  user: AppAuthUser,
+  warningMessage: string,
+  options?: { readonly clearBeforeFetch?: boolean },
+) {
+  if (options?.clearBeforeFetch) {
+    useAppAuthStore.setState({ turingMachineActivity: null })
+  }
+
+  try {
+    const turingMachineActivity = await fetchTuringMachineActivity(user.accessToken)
+    useAppAuthStore.setState({ turingMachineActivity })
+  } catch (error) {
+    logger.warn(warningMessage, {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    if (options?.clearBeforeFetch) {
+      useAppAuthStore.setState({ turingMachineActivity: null })
+    }
+  }
+}
+
+async function refreshTuringMachineLeaderboardForUser(
+  user: AppAuthUser,
+  warningMessage: string,
+  options?: { readonly clearBeforeFetch?: boolean },
+) {
+  if (options?.clearBeforeFetch) {
+    useAppAuthStore.setState({ leaderboardSnapshot: null })
+  }
+
+  try {
+    const leaderboardSnapshot = await fetchTuringMachineLeaderboard(user.accessToken)
+    useAppAuthStore.setState({ leaderboardSnapshot })
+  } catch (error) {
+    logger.warn(warningMessage, {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    if (options?.clearBeforeFetch) {
+      useAppAuthStore.setState({ leaderboardSnapshot: null })
+    }
+  }
+}
+
+export async function refreshUsageSnapshotsForAuthenticatedUser(options?: {
+  readonly includeLeaderboard?: boolean
+}) {
+  const user = useAppAuthStore.getState().user
+  if (!user) return
+
+  await Promise.all([
+    refreshSubscriptionSnapshotForUser(
+      user,
+      'Failed to refresh subscription snapshot after run completion',
+      { clearBeforeFetch: false },
+    ),
+    refreshTuringMachineActivityForUser(
+      user,
+      'Failed to refresh Turing Machine activity after run completion',
+      { clearBeforeFetch: false },
+    ),
+    ...(options?.includeLeaderboard
+      ? [
+          refreshTuringMachineLeaderboardForUser(
+            user,
+            'Failed to refresh leaderboard after run completion',
+            { clearBeforeFetch: false },
+          ),
+        ]
+      : []),
+  ])
+}
+
+async function syncGithubRepoStatsForUser(user: AppAuthUser, warningMessage: string) {
+  const previousStatus = useAppAuthStore.getState().githubSyncStatus
+  useAppAuthStore.setState({
+    githubSyncStatus: {
+      state: 'syncing',
+      message: 'Syncing GitHub repo stats from your local terminal session...',
+      syncedAt: previousStatus.syncedAt,
+      username: previousStatus.username,
+    },
+  })
+
+  try {
+    const ghStatus = await api.checkGhCli()
+    if (!ghStatus.available) {
+      useAppAuthStore.setState({
+        githubSyncStatus: {
+          state: 'not_ready',
+          message: 'GitHub CLI is not installed on this device yet.',
+          syncedAt: previousStatus.syncedAt,
+          username: previousStatus.username,
+        },
+      })
+      return
+    }
+
+    if (!ghStatus.authenticated) {
+      useAppAuthStore.setState({
+        githubSyncStatus: {
+          state: 'not_ready',
+          message: 'Run `gh auth login` in terminal to enable GitHub sync.',
+          syncedAt: previousStatus.syncedAt,
+          username: previousStatus.username,
+        },
+      })
+      return
+    }
+
+    const snapshot = await api.collectGithubRepoStats()
+    if (snapshot === null) {
+      useAppAuthStore.setState({
+        githubSyncStatus: {
+          state: 'not_ready',
+          message: 'GitHub repo stats are not available from the current terminal session.',
+          syncedAt: previousStatus.syncedAt,
+          username: previousStatus.username,
+        },
+      })
+      return
+    }
+
+    let result
+    try {
+      result = await createGithubRepoStats(user.accessToken, snapshot)
+    } catch {
+      result = await updateGithubRepoStats(user.accessToken, snapshot)
+    }
+
+    useAppAuthStore.setState({
+      githubSyncStatus: {
+        state: 'synced',
+        message:
+          result.mode === 'create'
+            ? 'GitHub repo stats synced for the first time.'
+            : 'GitHub repo stats are up to date.',
+        syncedAt: result.syncedAt,
+        username: result.username,
+      },
+    })
+  } catch (error) {
+    useAppAuthStore.setState({
+      githubSyncStatus: {
+        state: 'error',
+        message: error instanceof Error ? error.message : 'GitHub sync failed.',
+        syncedAt: previousStatus.syncedAt,
+        username: previousStatus.username,
+      },
+    })
+    logger.warn(warningMessage, {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+async function applyAuthenticatedUser(
+  user: AppAuthUser,
+  syncWarningMessage: string,
+  options?: { readonly syncGithubRepoStats?: boolean },
+) {
   persistUser(user)
-  useAppAuthStore.setState({ status: 'authenticated', user, error: null })
+  useAppAuthStore.setState({
+    status: 'authenticated',
+    user,
+    subscriptionSnapshot: null,
+    turingMachineActivity: null,
+    leaderboardSnapshot: null,
+    githubSyncStatus: {
+      state: 'idle',
+      message: 'Run a sync to pull GitHub repo stats into your profile.',
+      syncedAt: null,
+      username: null,
+    },
+    error: null,
+  })
   scheduleSessionRefresh(user)
   await syncAppSessionProviderToken(user).catch((error) => {
     logger.warn(syncWarningMessage, {
       error: error instanceof Error ? error.message : String(error),
     })
   })
+  if (options?.syncGithubRepoStats) {
+    await syncGithubRepoStatsForUser(
+      user,
+      'Failed to sync GitHub repo stats from the local gh CLI session',
+    )
+  }
+  await refreshSubscriptionSnapshotForUser(
+    user,
+    'Failed to load subscription snapshot after authenticating',
+    { clearBeforeFetch: true },
+  )
+  await refreshTuringMachineActivityForUser(
+    user,
+    'Failed to load Turing Machine activity after authenticating',
+    { clearBeforeFetch: true },
+  )
+  await refreshTuringMachineLeaderboardForUser(
+    user,
+    'Failed to load leaderboard after authenticating',
+    { clearBeforeFetch: true },
+  )
 }
 
 function scheduleSessionRefresh(user: AppAuthUser | null) {
@@ -148,6 +414,15 @@ async function clearAuthenticatedSession(error: string | null) {
   useAppAuthStore.setState({
     status: 'signed_out',
     user: null,
+    subscriptionSnapshot: null,
+    turingMachineActivity: null,
+    leaderboardSnapshot: null,
+    githubSyncStatus: {
+      state: 'idle',
+      message: 'Run a sync to pull GitHub repo stats into your profile.',
+      syncedAt: null,
+      username: null,
+    },
     error,
     view: 'login',
   })
@@ -168,10 +443,13 @@ async function refreshAuthenticatedSession(reason: 'restore' | 'scheduled') {
       reason === 'restore'
         ? 'Failed to sync backend model token after restoring session'
         : 'Failed to sync backend model token after refreshing session',
+      { syncGithubRepoStats: reason === 'restore' },
     )
   } catch (error) {
     logger.warn(
-      reason === 'restore' ? 'Failed to restore app auth session' : 'Failed to refresh app auth session',
+      reason === 'restore'
+        ? 'Failed to restore app auth session'
+        : 'Failed to refresh app auth session',
       {
         error: error instanceof Error ? error.message : String(error),
       },
@@ -198,6 +476,25 @@ async function initializeStoredSession(user: AppAuthUser) {
       error: error instanceof Error ? error.message : String(error),
     })
   })
+  await syncGithubRepoStatsForUser(
+    user,
+    'Failed to sync GitHub repo stats while restoring the local app session',
+  )
+  await refreshSubscriptionSnapshotForUser(
+    user,
+    'Failed to restore subscription snapshot from local auth state',
+    { clearBeforeFetch: true },
+  )
+  await refreshTuringMachineActivityForUser(
+    user,
+    'Failed to restore Turing Machine activity from local auth state',
+    { clearBeforeFetch: true },
+  )
+  await refreshTuringMachineLeaderboardForUser(
+    user,
+    'Failed to restore leaderboard from local auth state',
+    { clearBeforeFetch: true },
+  )
 }
 
 const initialUser = readStoredUser()
@@ -206,6 +503,15 @@ export const useAppAuthStore = create<AppAuthState>((set, get) => ({
   view: 'login',
   status: initialUser ? 'authenticated' : 'signed_out',
   user: initialUser,
+  subscriptionSnapshot: null,
+  turingMachineActivity: null,
+  leaderboardSnapshot: null,
+  githubSyncStatus: {
+    state: 'idle',
+    message: 'Run a sync to pull GitHub repo stats into your profile.',
+    syncedAt: null,
+    username: null,
+  },
   error: null,
 
   setView(view) {
@@ -222,7 +528,9 @@ export const useAppAuthStore = create<AppAuthState>((set, get) => ({
     try {
       const idToken = await api.startAppGoogleOAuth()
       const user = await googleAuthWithIdToken({ idToken })
-      await applyAuthenticatedUser(user, 'Failed to sync backend model token after Google sign-in')
+      await applyAuthenticatedUser(user, 'Failed to sync backend model token after Google sign-in', {
+        syncGithubRepoStats: true,
+      })
     } catch (error) {
       set({
         status: 'signed_out',
@@ -236,7 +544,9 @@ export const useAppAuthStore = create<AppAuthState>((set, get) => ({
 
     try {
       const user = await loginWithPassword(input)
-      await applyAuthenticatedUser(user, 'Failed to sync backend model token after sign-in')
+      await applyAuthenticatedUser(user, 'Failed to sync backend model token after sign-in', {
+        syncGithubRepoStats: true,
+      })
     } catch (error) {
       set({
         status: 'signed_out',
@@ -250,7 +560,9 @@ export const useAppAuthStore = create<AppAuthState>((set, get) => ({
 
     try {
       const user = await signupWithPassword(input)
-      await applyAuthenticatedUser(user, 'Failed to sync backend model token after sign-up')
+      await applyAuthenticatedUser(user, 'Failed to sync backend model token after sign-up', {
+        syncGithubRepoStats: true,
+      })
     } catch (error) {
       set({
         status: 'signed_out',
@@ -277,7 +589,33 @@ export const useAppAuthStore = create<AppAuthState>((set, get) => ({
       })
     })
     persistUser(null)
-    set({ status: 'signed_out', user: null, error: null, view: 'login' })
+    set({
+      status: 'signed_out',
+      user: null,
+      subscriptionSnapshot: null,
+      turingMachineActivity: null,
+      leaderboardSnapshot: null,
+      githubSyncStatus: {
+        state: 'idle',
+        message: 'Run a sync to pull GitHub repo stats into your profile.',
+        syncedAt: null,
+        username: null,
+      },
+      error: null,
+      view: 'login',
+    })
+  },
+
+  async syncGithubStats() {
+    const user = get().user
+    if (!user) return
+
+    await syncGithubRepoStatsForUser(user, 'Failed to sync GitHub repo stats from the profile page')
+    await refreshTuringMachineLeaderboardForUser(
+      user,
+      'Failed to refresh leaderboard after GitHub repo sync',
+      { clearBeforeFetch: false },
+    )
   },
 }))
 
@@ -285,6 +623,10 @@ export function useAppAuth() {
   const view = useAppAuthStore((state) => state.view)
   const status = useAppAuthStore((state) => state.status)
   const user = useAppAuthStore((state) => state.user)
+  const subscriptionSnapshot = useAppAuthStore((state) => state.subscriptionSnapshot)
+  const turingMachineActivity = useAppAuthStore((state) => state.turingMachineActivity)
+  const leaderboardSnapshot = useAppAuthStore((state) => state.leaderboardSnapshot)
+  const githubSyncStatus = useAppAuthStore((state) => state.githubSyncStatus)
   const error = useAppAuthStore((state) => state.error)
   const setView = useAppAuthStore((state) => state.setView)
   const clearError = useAppAuthStore((state) => state.clearError)
@@ -292,11 +634,16 @@ export function useAppAuth() {
   const signIn = useAppAuthStore((state) => state.signIn)
   const signUp = useAppAuthStore((state) => state.signUp)
   const signOut = useAppAuthStore((state) => state.signOut)
+  const syncGithubStats = useAppAuthStore((state) => state.syncGithubStats)
 
   return {
     view,
     status,
     user,
+    subscriptionSnapshot,
+    turingMachineActivity,
+    leaderboardSnapshot,
+    githubSyncStatus,
     error,
     isAuthenticated: status === 'authenticated',
     setView,
@@ -305,6 +652,7 @@ export function useAppAuth() {
     signIn,
     signUp,
     signOut,
+    syncGithubStats,
   }
 }
 

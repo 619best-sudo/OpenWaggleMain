@@ -157,9 +157,7 @@ export async function installWaggleAppDependencies(input: {
   }
 
   let mcpSettings = await Effect.runPromise(input.mcpConfigService.getView(input.projectPath))
-  const needsMcpInstall = mcpIds.some(
-    (mcpId) => getWaggleAppMcpInstallRecipe(mcpId) !== null,
-  )
+  const needsMcpInstall = mcpIds.some((mcpId) => getWaggleAppMcpInstallRecipe(mcpId) !== null)
   if (needsMcpInstall && !mcpSettings.adapter.enabled) {
     mcpSettings = await Effect.runPromise(
       input.mcpConfigService.setAdapterEnabled({
@@ -361,21 +359,11 @@ async function detectRepoProfile(
   const detectedFrameworks = new Set<string>()
   const detectedSurfaces = new Set<'web' | 'mobile' | 'backend'>()
 
-  if (
-    dependencyNames.has('next') ||
-    hasNextConfigJs ||
-    hasNextConfigMjs ||
-    hasNextConfigTs
-  ) {
+  if (dependencyNames.has('next') || hasNextConfigJs || hasNextConfigMjs || hasNextConfigTs) {
     detectedFrameworks.add('next')
     detectedSurfaces.add('web')
   }
-  if (
-    dependencyNames.has('vite') ||
-    hasViteConfigJs ||
-    hasViteConfigTs ||
-    hasViteConfigMjs
-  ) {
+  if (dependencyNames.has('vite') || hasViteConfigJs || hasViteConfigTs || hasViteConfigMjs) {
     detectedFrameworks.add('vite')
     detectedSurfaces.add('web')
   }
@@ -413,9 +401,8 @@ async function detectRepoProfile(
     scripts.some((script) => ['dev', 'start', 'build', 'preview'].includes(script)) &&
     (detectedSurfaces.has('web') || hasIndexHtml)
   const hasLikelyMobileRuntime =
-    scripts.some((script) =>
-      ['start', 'dev', 'android', 'ios', 'web'].includes(script),
-    ) && detectedSurfaces.has('mobile')
+    scripts.some((script) => ['start', 'dev', 'android', 'ios', 'web'].includes(script)) &&
+    detectedSurfaces.has('mobile')
   const webEntryCandidates = [
     hasIndexHtml ? 'index.html' : null,
     hasSrcMainTs ? 'src/main.ts' : null,
@@ -442,16 +429,19 @@ async function detectRepoProfile(
     hasFlutterMainDart ? 'lib/main.dart' : null,
     hasAppDir && detectedSurfaces.has('mobile') ? 'app/' : null,
   ].filter((value): value is string => value !== null)
-  const webCommandCandidates = buildCommandCandidates(
-    packageManager,
-    scripts,
-    ['dev', 'start', 'build', 'preview'],
-  )
-  const mobileCommandCandidates = buildCommandCandidates(
-    packageManager,
-    scripts,
-    ['start', 'dev', 'android', 'ios', 'web'],
-  )
+  const webCommandCandidates = buildCommandCandidates(packageManager, scripts, [
+    'dev',
+    'start',
+    'build',
+    'preview',
+  ])
+  const mobileCommandCandidates = buildCommandCandidates(packageManager, scripts, [
+    'start',
+    'dev',
+    'android',
+    'ios',
+    'web',
+  ])
   const availableLocalTools = await detectAvailableTools(
     buildRelevantToolNames({
       packageManager,
@@ -628,7 +618,11 @@ async function probeProjectRuntime(input: {
     }
   }
 
-  const localBinary = resolveProjectLocalBinary(input.projectPath, input.detectedFrameworks, input.target)
+  const localBinary = resolveProjectLocalBinary(
+    input.projectPath,
+    input.detectedFrameworks,
+    input.target,
+  )
   if (!localBinary) {
     return {
       status: 'warn',
@@ -666,8 +660,7 @@ function resolveProjectLocalBinary(
   if (!binaryName) return null
 
   const binDir = path.join(projectPath, 'node_modules', '.bin')
-  const fileName =
-    process.platform === 'win32' ? `${binaryName}.cmd` : binaryName
+  const fileName = process.platform === 'win32' ? `${binaryName}.cmd` : binaryName
   return {
     binaryName,
     filePath: path.join(binDir, fileName),
@@ -676,10 +669,7 @@ function resolveProjectLocalBinary(
   }
 }
 
-function selectProjectBinary(
-  detectedFrameworks: readonly string[],
-  target: 'web' | 'mobile',
-) {
+function selectProjectBinary(detectedFrameworks: readonly string[], target: 'web' | 'mobile') {
   if (target === 'web') {
     if (detectedFrameworks.includes('next')) return 'next'
     if (detectedFrameworks.includes('vite')) return 'vite'

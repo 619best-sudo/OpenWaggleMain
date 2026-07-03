@@ -117,7 +117,7 @@ export function ConnectionsSection() {
 
       <AuthProviderGroup
         title="OAuth Providers"
-        description="Connect with Pi OAuth. OpenWaggle starts Pi's login flow and opens your browser."
+        description="Connect with Pi OAuth. Turing Machine starts Pi's login flow and opens your browser."
         count={oauthProviders.length}
         isOpen={oauthOpen}
         icon={ShieldCheck}

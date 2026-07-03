@@ -1,5 +1,5 @@
-import type { WaggleConfig, WagglePreset } from '@shared/types/waggle'
 import type { TeammateDefinition } from '@shared/types/teammate'
+import type { WaggleConfig, WagglePreset } from '@shared/types/waggle'
 import type { ReactNode } from 'react'
 
 export interface CommandPaletteCallbacks {

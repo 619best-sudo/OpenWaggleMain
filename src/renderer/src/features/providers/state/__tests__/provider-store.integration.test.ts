@@ -94,7 +94,7 @@ function turingMachineProviderModels(): ProviderInfo[] {
   return [
     {
       provider: 'turing-machine',
-      displayName: 'GreatX Turing Machine',
+      displayName: 'Turing Machine',
       auth: {
         configured: true,
         source: 'environment-or-custom',
@@ -106,9 +106,9 @@ function turingMachineProviderModels(): ProviderInfo[] {
       },
       models: [
         {
-          id: SupportedModelId('turing-machine/greatx-backend'),
-          modelId: 'greatx-backend',
-          name: 'GreatX Backend',
+          id: SupportedModelId('turing-machine/turing-machine'),
+          modelId: 'turing-machine',
+          name: 'Turing Machine',
           provider: 'turing-machine',
           available: true,
           availableThinkingLevels: ['off', 'minimal', 'low', 'medium', 'high'],

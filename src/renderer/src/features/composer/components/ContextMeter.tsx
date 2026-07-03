@@ -1,3 +1,8 @@
+import {
+  buildSubscriptionUsageSummary,
+  formatUsdDisplay,
+} from '@/features/auth/lib/subscription-plan'
+import { useAppAuthStore } from '@/features/auth/state/app-auth-store'
 import { useChatStore } from '@/features/chat/state'
 import { useProviderStore } from '@/features/providers/state'
 import { usePreferencesStore } from '@/features/settings/state'
@@ -10,16 +15,6 @@ import {
   findContextWindow,
 } from '../lib/context-meter-view'
 
-const MONTHLY_QUOTA = {
-  used: 72,
-  total: 120,
-} as const
-
-function getMonthlyQuotaPercent(used: number, total: number) {
-  if (total <= 0) return 0
-  return Math.max(0, Math.min(100, (used / total) * 100))
-}
-
 function getMonthlyQuotaTone(percent: number) {
   if (percent >= CONTEXT_METER.THRESHOLDS.ERROR_PERCENT) return 'var(--color-error)'
   if (percent >= CONTEXT_METER.THRESHOLDS.WARNING_PERCENT) return 'var(--color-warning)'
@@ -27,24 +22,27 @@ function getMonthlyQuotaTone(percent: number) {
 }
 
 function MonthlyQuotaStrip() {
-  const percent = getMonthlyQuotaPercent(MONTHLY_QUOTA.used, MONTHLY_QUOTA.total)
+  const subscriptionSnapshot = useAppAuthStore((state) => state.subscriptionSnapshot)
+  const usage = buildSubscriptionUsageSummary(subscriptionSnapshot)
+  const percent = usage.consumedPercent
   const tone = getMonthlyQuotaTone(percent)
   const roundedPercent = Math.round(percent)
 
   return (
     <div
       className="flex hidden h-6 min-w-0 shrink-0 items-center gap-1.5 rounded-[5px] bg-bg-secondary/40 px-2 text-[12px] text-text-secondary sm:flex"
-      title={`Monthly usage: ${String(roundedPercent)}% used (${String(MONTHLY_QUOTA.used)} of ${String(MONTHLY_QUOTA.total)})`}
+      title={`Turing Machine quota: ${String(roundedPercent)}% used ($${formatUsdDisplay(usage.consumed)} of $${formatUsdDisplay(usage.totalBudget)})`}
     >
-      <span className="text-[10px] font-medium text-text-tertiary">
-        Usage
-      </span>
+      <span className="text-[10px] font-medium text-text-tertiary">Quota</span>
       <div className="h-1 w-10 overflow-hidden rounded-full bg-bg-tertiary">
         <div
           className="h-full rounded-full transition-[width] duration-300 ease-out"
           style={{ width: `${String(percent)}%`, backgroundColor: tone }}
         />
       </div>
+      <span className="font-mono text-[10px] font-semibold leading-none text-text-secondary tabular-nums">
+        ${formatUsdDisplay(usage.totalBudget)}
+      </span>
       <span className="font-mono text-[10px] font-semibold leading-none text-text-secondary tabular-nums">
         {roundedPercent}%
       </span>

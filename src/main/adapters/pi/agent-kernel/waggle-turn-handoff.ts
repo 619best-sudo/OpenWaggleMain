@@ -210,7 +210,8 @@ export function buildWaggleTurnCompactionInstructions(input: {
     }
   }
 
-  const promptSummaries = input.handoff?.promptSummaries.slice(0, MAX_COMPACTION_PROMPT_SUMMARIES) ?? []
+  const promptSummaries =
+    input.handoff?.promptSummaries.slice(0, MAX_COMPACTION_PROMPT_SUMMARIES) ?? []
   if (promptSummaries.length > 0) {
     lines.push('- Preserve these concise prompt summaries:')
     for (const promptSummary of promptSummaries) {
@@ -258,7 +259,10 @@ export function collectResponseDirectiveHandoff(
     )
   }
 
-  const exactNextLoopInstructions = readSectionValue(input.responseText, 'exact next loop instructions')
+  const exactNextLoopInstructions = readSectionValue(
+    input.responseText,
+    'exact next loop instructions',
+  )
   if (!isNoneValue(exactNextLoopInstructions)) {
     addLoopDirective(
       draft,

@@ -186,6 +186,7 @@ export const api: OpenWaggleApi = {
 
   // Feedback
   checkGhCli: invoke('feedback:check-gh'),
+  collectGithubRepoStats: invoke('github:collect-repo-stats'),
   collectDiagnostics: invoke('feedback:collect-diagnostics'),
   getRecentLogs: invoke('feedback:get-recent-logs'),
   submitFeedback: invoke('feedback:submit'),

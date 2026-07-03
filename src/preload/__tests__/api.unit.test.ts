@@ -132,6 +132,7 @@ describe('preload api surface contract', () => {
     'installWaggleAppDependencies',
     // Feedback
     'checkGhCli',
+    'collectGithubRepoStats',
     'collectDiagnostics',
     'getRecentLogs',
     'submitFeedback',

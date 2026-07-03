@@ -1,7 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { useChat } from '@/features/chat/hooks/useChat'
-import { usePreferences, useProviders } from '@/features/settings/hooks/useSettings'
 import { usePreferencesStore } from '@/features/settings/state/preferences-store'
 import { useWaggleLaunchPromptStore, useWaggleStore } from '@/features/waggle/state'
 import { useInstallWaggleAppDependenciesMutation } from '@/queries/waggle-apps'
@@ -14,8 +13,6 @@ type WaggleEditorMode = 'closed' | 'create' | 'edit'
 
 export function WaggleSection({ showHeading = true }: { readonly showHeading?: boolean }) {
   const navigate = useNavigate()
-  const { settings } = usePreferences()
-  const { providerModels } = useProviders()
   const projectPath = usePreferencesStore((state) => state.settings.projectPath)
   const showToast = useUIStore((state) => state.showToast)
   const { activeSession, activeSessionId, createSession } = useChat()
@@ -191,8 +188,6 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
           canSubmit={editorMode === 'create' || isModified}
           canEditTitle={editorMode === 'create' || !activePreset?.isBuiltIn}
           errorMessage={displayedError}
-          settings={settings}
-          providerModels={providerModels}
           formState={formState}
           dispatchForm={dispatchForm}
           onClose={handleCloseEditor}

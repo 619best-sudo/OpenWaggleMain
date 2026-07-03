@@ -1,11 +1,11 @@
-import authIllustration from '../../../../../assets/authIllustration.png'
-import appLogo from '../../../../../assets/new-logo.png'
 import { ArrowRight, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { useAppAuth } from '@/features/auth/state/app-auth-store'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { TextInput } from '@/shared/ui/TextInput'
+import authIllustration from '../../../../../assets/authIllustration.png'
+import appLogo from '../../../../../assets/new-logo.png'
 
 interface LoginFormState {
   readonly email: string
@@ -34,7 +34,8 @@ const DEFAULT_SIGNUP_FORM: SignupFormState = {
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function AuthScreen() {
-  const { view, status, error, setView, clearError, signIn, signInWithGoogle, signUp } = useAppAuth()
+  const { view, status, error, setView, clearError, signIn, signInWithGoogle, signUp } =
+    useAppAuth()
   const [loginForm, setLoginForm] = useState<LoginFormState>(DEFAULT_LOGIN_FORM)
   const [signupForm, setSignupForm] = useState<SignupFormState>(DEFAULT_SIGNUP_FORM)
   const [formError, setFormError] = useState<string | null>(null)
@@ -130,7 +131,7 @@ export function AuthScreen() {
           <section className="relative hidden min-h-0 overflow-hidden lg:flex">
             <img
               src={authIllustration}
-              alt="OpenWaggle authentication illustration"
+              alt="Turing Machine authentication illustration"
               className="absolute inset-0 size-full object-cover opacity-30 mix-blend-screen"
             />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_38%),linear-gradient(180deg,rgba(7,8,12,0.5)_0%,rgba(5,6,8,0.88)_55%,rgba(5,6,8,0.98)_100%)]" />
@@ -139,7 +140,11 @@ export function AuthScreen() {
                 <div className="space-y-5">
                   <div className="flex items-center gap-3">
                     <div className="flex size-12 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black">
-                      <img src={appLogo} alt="Turing Machine logo" className="size-9 object-contain" />
+                      <img
+                        src={appLogo}
+                        alt="Turing Machine logo"
+                        className="size-9 object-contain"
+                      />
                     </div>
                     <div>
                       <p className="text-[18px] font-semibold tracking-[-0.02em] text-white sm:text-[20px]">
@@ -150,11 +155,11 @@ export function AuthScreen() {
 
                   <div className="max-w-md space-y-3">
                     <h1 className="text-4xl font-semibold tracking-[-0.04em] text-white xl:text-[2.75rem]">
-                      Build with a calmer, more secure workspace.
+                      The universal machine for code.
                     </h1>
                     <p className="text-[14px] leading-6 text-white/64 xl:text-[15px]">
-                      Sign in to sync your provider token, keep project sessions attached, and jump back into
-                      the same focused environment across runs.
+                      Dedicated to Alan Turing's legacy. A workspace designed for the logic and
+                      computation of modern software.
                     </p>
                   </div>
                 </div>
@@ -172,7 +177,7 @@ export function AuthScreen() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">Turing Machine</p>
-                  <p className="text-[12px] text-white/48">Desktop collaboration workspace</p>
+                  <p className="text-[12px] text-white/48">Universal computation for code</p>
                 </div>
               </div>
 
@@ -203,7 +208,7 @@ export function AuthScreen() {
 
                   <div>
                     <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-white">
-                      {isLoginView ? 'Register or login' : 'Create your account'}
+                      {isLoginView ? 'Welcome back' : 'Create account'}
                     </h2>
                   </div>
                 </div>
@@ -261,7 +266,9 @@ export function AuthScreen() {
                         autoComplete="email"
                         placeholder="name@company.com"
                         value={loginForm.email}
-                        onChange={(event) => setLoginForm((state) => ({ ...state, email: event.target.value }))}
+                        onChange={(event) =>
+                          setLoginForm((state) => ({ ...state, email: event.target.value }))
+                        }
                         disabled={isSubmitting}
                         className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[14px] text-white placeholder:text-white/28 focus:border-white/30"
                       />
@@ -282,11 +289,6 @@ export function AuthScreen() {
                         className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[14px] text-white placeholder:text-white/28 focus:border-white/30"
                       />
                     </label>
-
-                    <div className="flex items-center justify-between gap-4 text-[12px] text-white/44">
-                      <span>Your provider token syncs after sign-in.</span>
-                      <span>Min. 6 characters</span>
-                    </div>
 
                     <Button
                       variant="unstyled"
@@ -325,7 +327,9 @@ export function AuthScreen() {
                         autoComplete="name"
                         placeholder="Alex Johnson"
                         value={signupForm.name}
-                        onChange={(event) => setSignupForm((state) => ({ ...state, name: event.target.value }))}
+                        onChange={(event) =>
+                          setSignupForm((state) => ({ ...state, name: event.target.value }))
+                        }
                         disabled={isSubmitting}
                         className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[14px] text-white placeholder:text-white/28 focus:border-white/30"
                       />
@@ -382,10 +386,6 @@ export function AuthScreen() {
                           className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[14px] text-white placeholder:text-white/28 focus:border-white/30"
                         />
                       </label>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[12px] leading-5 text-white/46">
-                      Create your account once and the app keeps future sessions tied to the same workspace.
                     </div>
 
                     <Button

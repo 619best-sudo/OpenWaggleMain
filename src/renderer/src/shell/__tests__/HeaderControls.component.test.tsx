@@ -1,13 +1,7 @@
 import type { GitStatusSummary } from '@shared/types/git'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import {
-  CommitButton,
-  DiffToggleButton,
-  HeaderLeft,
-  SessionTreeButton,
-  TerminalButton,
-} from '../HeaderControls'
+import { CommitButton, DiffToggleButton, HeaderLeft, TerminalButton } from '../HeaderControls'
 
 function gitStatus() {
   return {
@@ -27,11 +21,7 @@ describe('HeaderControls', () => {
     const onToggleSidebar = vi.fn()
 
     render(
-      <HeaderLeft
-        sidebarOpen={false}
-        title="Working session"
-        onToggleSidebar={onToggleSidebar}
-      />,
+      <HeaderLeft sidebarOpen={false} title="Working session" onToggleSidebar={onToggleSidebar} />,
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Show sidebar' }))
@@ -52,15 +42,13 @@ describe('HeaderControls', () => {
     expect(screen.getByRole('button', { name: 'Open commit dialog' })).toBeDisabled()
   })
 
-  it('delegates enabled terminal, session-tree, and diff actions', () => {
+  it('delegates enabled terminal and diff actions', () => {
     const onToggleTerminal = vi.fn()
-    const onToggleTree = vi.fn()
     const onToggleDiff = vi.fn()
 
     render(
       <>
         <TerminalButton open projectPath="/repo" onToggle={onToggleTerminal} />
-        <SessionTreeButton hasSessionTree isChatRoute open={false} onToggle={onToggleTree} />
         <DiffToggleButton
           error={null}
           isChatRoute
@@ -74,13 +62,11 @@ describe('HeaderControls', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Hide terminal' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Toggle Session Tree' }))
     fireEvent.click(screen.getByRole('button', { name: 'Toggle diff panel' }))
 
     expect(screen.getByText('+12')).toBeInTheDocument()
     expect(screen.getByText('-3')).toBeInTheDocument()
     expect(onToggleTerminal).toHaveBeenCalledOnce()
-    expect(onToggleTree).toHaveBeenCalledOnce()
     expect(onToggleDiff).toHaveBeenCalledOnce()
   })
 

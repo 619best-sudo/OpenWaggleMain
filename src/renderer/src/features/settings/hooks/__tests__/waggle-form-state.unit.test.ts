@@ -24,13 +24,13 @@ function makePreset(): WagglePreset {
       agents: [
         {
           label: 'Planner',
-          model: SupportedModelId('anthropic/claude-sonnet-4-5'),
+          model: WAGGLE_INHERIT_MODEL,
           roleDescription: 'Plans the work',
           color: 'blue',
         },
         {
           label: 'Reviewer',
-          model: SupportedModelId('openai/gpt-4o'),
+          model: WAGGLE_INHERIT_MODEL,
           roleDescription: 'Reviews the result',
           color: 'amber',
         },
@@ -131,6 +131,33 @@ describe('waggle form state reducers', () => {
       requiredMcpsText: 'playwright',
       requiredSkillsText: 'ui-critic',
     })
+  })
+
+  it('normalizes agent model bindings to inherit when building config or loading presets', () => {
+    const preset = {
+      ...makePreset(),
+      config: {
+        ...makePreset().config,
+        agents: [
+          {
+            ...makePreset().config.agents[0],
+            model: SupportedModelId('anthropic/claude-sonnet-4-5'),
+          },
+          { ...makePreset().config.agents[1], model: SupportedModelId('openai/gpt-4o') },
+        ],
+      },
+    }
+
+    const loaded = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, { type: 'load-preset', preset })
+
+    expect(loaded.agents.map((agent) => agent.model)).toEqual([
+      WAGGLE_INHERIT_MODEL,
+      WAGGLE_INHERIT_MODEL,
+    ])
+    expect(buildWaggleConfig(loaded).agents.map((agent) => agent.model)).toEqual([
+      WAGGLE_INHERIT_MODEL,
+      WAGGLE_INHERIT_MODEL,
+    ])
   })
 
   it('updates a single agent without replacing the other slot', () => {

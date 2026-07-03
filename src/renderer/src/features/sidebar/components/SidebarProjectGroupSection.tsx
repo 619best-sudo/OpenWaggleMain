@@ -1,5 +1,5 @@
-import { Edit3 } from 'lucide-react'
 import type { SessionSummary } from '@shared/types/session'
+import { Edit3 } from 'lucide-react'
 import { Button } from '@/shared/ui/Button'
 import { buildSidebarBranchRows } from '../lib/sidebar-branches'
 import type { SidebarProjectGroup } from '../lib/sidebar-project-groups'
@@ -109,7 +109,12 @@ function ProjectSessionRows({
   const showDraftSession = state.draftSessionProjectPath === group.projectPath
 
   if (group.sessions.length === 0 && !showDraftSession) {
-    return <EmptyProjectSessionsRow projectLabel={projectLabel} onSelect={() => onNewSession(group.projectPath)} />
+    return (
+      <EmptyProjectSessionsRow
+        projectLabel={projectLabel}
+        onSelect={() => onNewSession(group.projectPath)}
+      />
+    )
   }
 
   return (

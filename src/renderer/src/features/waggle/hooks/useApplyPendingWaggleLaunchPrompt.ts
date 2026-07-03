@@ -12,11 +12,17 @@ export function useApplyPendingWaggleLaunchPrompt(activeSessionId: SessionId | n
   const activeWorkspace = useSessionStore((state) => state.activeWorkspace)
   const draftBranch = useSessionStore((state) => state.draftBranch)
   const pendingPrompt = useWaggleLaunchPromptStore((launchPromptState) =>
-    activeSessionId ? launchPromptState.pendingBySessionId[String(activeSessionId)] ?? null : null,
+    activeSessionId
+      ? (launchPromptState.pendingBySessionId[String(activeSessionId)] ?? null)
+      : null,
   )
 
   useEffect(() => {
-    if (!activeSessionId || !pendingPrompt || activeWorkspace?.tree.session.id !== activeSessionId) {
+    if (
+      !activeSessionId ||
+      !pendingPrompt ||
+      activeWorkspace?.tree.session.id !== activeSessionId
+    ) {
       return
     }
 

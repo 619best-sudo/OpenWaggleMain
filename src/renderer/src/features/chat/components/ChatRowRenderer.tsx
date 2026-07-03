@@ -1,12 +1,12 @@
 import { matchBy } from '@diegogbrisa/ts-match'
-import { isLightThemeMode } from '@shared/types/settings'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
+import { isLightThemeMode } from '@shared/types/settings'
 import { formatElapsed } from '@/features/chat/hooks/useStreamingPhase'
 import { usePreferencesStore } from '@/features/settings/state'
 import { TurnDivider } from '@/features/waggle/components'
 import { cn } from '@/shared/lib/cn'
-import lightLoaderGif from '../../../../../assets/loader-light.gif'
 import loaderGif from '../../../../../assets/loader.gif'
+import lightLoaderGif from '../../../../../assets/loader-light.gif'
 import type { ChatRow } from '../lib/types-chat-row'
 import { BranchSummaryCard } from './BranchSummaryCard'
 import { ChatErrorDisplay } from './ChatErrorDisplay'
@@ -146,17 +146,18 @@ export function ChatRowRenderer({
       </div>
     ))
     .with('run-summary', (value) => (
-      <RunSummary phases={value.phases} totalMs={value.totalMs} completedAtMs={value.completedAtMs} />
+      <RunSummary
+        phases={value.phases}
+        totalMs={value.totalMs}
+        completedAtMs={value.completedAtMs}
+      />
     ))
     .with('error', (value) => (
       <ChatErrorDisplay
         error={value.error}
-        lastUserMessage={value.lastUserMessage}
         dismissedError={value.dismissedError}
         sessionId={value.sessionId}
         onDismiss={onDismissError}
-        onOpenSettings={onOpenSettings}
-        onRetry={onRetry}
       />
     ))
     .exhaustive()

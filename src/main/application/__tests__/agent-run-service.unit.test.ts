@@ -295,4 +295,59 @@ describe('executeAgentRun', () => {
       runId: 'run-recovery-1',
     })
   })
+
+  it('maps Turing Machine 403 terminal errors to subscription-required guidance', async () => {
+    const turingMachineModel = SupportedModelId('turing-machine/turing-machine')
+    const terminalError = '403 "Forbidden"'
+
+    const localAgentKernelLayer = Layer.succeed(AgentKernelService, {
+      createSession: () => Effect.fail(new Error('createSession is not used')),
+      run: () =>
+        Effect.succeed({
+          terminalError,
+          aborted: false,
+          newMessages: [],
+          piSessionId: 'pi-session-1',
+          piSessionFile: '/tmp/pi-session-1.jsonl',
+          sessionSnapshot: {
+            activeNodeId: null,
+            nodes: [],
+          },
+        }),
+      getContextUsage: () => Effect.fail(new Error('getContextUsage is not used')),
+      compact: () => Effect.fail(new Error('compact is not used')),
+      navigateTree: () => Effect.fail(new Error('navigateTree is not used')),
+      forkSession: () => Effect.fail(new Error('forkSession is not used')),
+      getSessionSnapshot: () => Effect.fail(new Error('getSessionSnapshot is not used')),
+    })
+
+    const result = await Effect.runPromise(
+      executeAgentRun({
+        sessionId,
+        runId: 'run-tm-403-1',
+        payload: { text: 'hello', thinkingLevel: 'medium', attachments: [] },
+        model: turingMachineModel,
+        signal: new AbortController().signal,
+        onEvent: () => undefined,
+      }).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            TestSessionProjectionLayer,
+            TestProviderLayer,
+            TestSettingsLayer,
+            TestSessionLayer,
+            localAgentKernelLayer,
+          ),
+        ),
+      ),
+    )
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        outcome: 'error',
+        code: 'subscription-required',
+        message: 'No Turing Machine quota available',
+      }),
+    )
+  })
 })

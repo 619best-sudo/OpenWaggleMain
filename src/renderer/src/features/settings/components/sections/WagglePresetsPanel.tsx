@@ -1,14 +1,8 @@
 import type { WagglePreset } from '@shared/types/waggle'
-import {
-  ChevronDown,
-  LoaderCircle,
-  Play,
-  Plus,
-  Trash2,
-} from 'lucide-react'
+import { ChevronDown, LoaderCircle, Play, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { useWaggleAppInstallStatus } from '@/queries/waggle-apps'
 import { getPresetStarterPrompts } from '@/features/waggle/lib'
+import { useWaggleAppInstallStatus } from '@/queries/waggle-apps'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { Popover } from '@/shared/ui/Popover'
@@ -165,9 +159,11 @@ function createPresetSections(presets: readonly WagglePreset[]): readonly Preset
     {
       id: 'panels',
       title: 'Panels',
-      description:
-        'Choose a Panel to launch, or create your own custom Panel for a repeatable workflow.',
-      presets: [...sortPresetsByPreferredOrder(custom, []), ...sortPresetsByPreferredOrder(builtIn, [])],
+      description: 'Choose a panel to run, or create one for a repeatable workflow.',
+      presets: [
+        ...sortPresetsByPreferredOrder(custom, []),
+        ...sortPresetsByPreferredOrder(builtIn, []),
+      ],
     },
   ].filter((section) => section.presets.length > 0)
 }
@@ -190,19 +186,21 @@ export function WagglePresetsPanel({
     <div className="w-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-8 border-b border-white/[0.04]">
         <div className="space-y-4">
-          <h3 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500 tracking-tight">Panel</h3>
+          <h3 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500 tracking-tight">
+            Panel
+          </h3>
           <p className="max-w-[640px] text-[15px] leading-relaxed text-text-secondary">
-            A Panel brings two Experts to one task. Select a Panel to review its workflow, then
-            launch it with your prompt.
+            A panel runs a two-agent loop designed for one clear task.
           </p>
         </div>
         <Button
           variant="accent"
           size="lg"
+          radius="full"
           type="button"
           onClick={onStartCreate}
           leftIcon={<Plus className="size-5" />}
-          className="shrink-0 rounded-full px-6 shadow-lg hover:scale-105 active:scale-95 transition-transform"
+          className="shrink-0 px-6 shadow-lg transition-transform hover:scale-105 active:scale-95"
         >
           Create Panel
         </Button>
@@ -211,9 +209,9 @@ export function WagglePresetsPanel({
       <div className="space-y-12">
         {presets.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 px-4 py-12 text-center">
-            <p className="text-[14px] font-medium text-text-primary">No Panels found</p>
+            <p className="text-[14px] font-medium text-text-primary">No panels yet</p>
             <p className="mt-2 text-[13px] text-text-tertiary">
-              No Panel presets are available right now.
+              Create a panel to save a repeatable workflow.
             </p>
           </div>
         ) : null}
@@ -285,7 +283,8 @@ function WagglePresetCard({
     (preset.app.optionalMcps?.length ?? 0) + (preset.app.optionalSkills?.length ?? 0)
   const totalDependencyCount = requiredDependencyCount + optionalDependencyCount
   const hasOptionalSetupWork =
-    (installStatus?.optionalMissingCount ?? 0) > 0 || (installStatus?.optionalUnsupportedCount ?? 0) > 0
+    (installStatus?.optionalMissingCount ?? 0) > 0 ||
+    (installStatus?.optionalUnsupportedCount ?? 0) > 0
   const starterPrompts = getPresetStarterPrompts(preset.id)
   const hasStarterPrompts = starterPrompts.length > 0
   const guidance = getPresetGuidance(preset.id)
@@ -328,7 +327,7 @@ function WagglePresetCard({
         )}
       >
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        
+
         <div className="flex items-start justify-between w-full relative z-10">
           <div className="flex gap-4 items-center flex-1 min-w-0">
             <div
@@ -404,7 +403,7 @@ function WagglePresetCard({
               ) : null}
             </div>
           </div>
-          
+
           {!preset.isBuiltIn ? (
             <button
               type="button"
@@ -433,7 +432,9 @@ function WagglePresetCard({
                   void onInstall()
                 }
               }}
-              leftIcon={isInstalling ? <LoaderCircle className="size-3.5 animate-spin" /> : undefined}
+              leftIcon={
+                isInstalling ? <LoaderCircle className="size-3.5 animate-spin" /> : undefined
+              }
             >
               {isInstalling ? 'Installing...' : 'Install'}
             </Button>
@@ -504,10 +505,15 @@ function WagglePresetCard({
               <Button
                 variant="accent"
                 size="sm"
-                disabled={isPrimaryDisabled || (requiredDependencyCount > 0 && !installStatus?.ready)}
+                disabled={
+                  isPrimaryDisabled || (requiredDependencyCount > 0 && !installStatus?.ready)
+                }
                 onClick={(event) => {
                   event.stopPropagation()
-                  if (!isPrimaryDisabled && (requiredDependencyCount === 0 || installStatus?.ready)) {
+                  if (
+                    !isPrimaryDisabled &&
+                    (requiredDependencyCount === 0 || installStatus?.ready)
+                  ) {
                     void onLaunch()
                   }
                 }}

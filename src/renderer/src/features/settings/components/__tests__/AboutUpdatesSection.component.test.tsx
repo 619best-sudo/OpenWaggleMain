@@ -47,7 +47,7 @@ describe('AboutUpdatesSection', () => {
     render(<AboutUpdatesSection />)
 
     await waitFor(() => {
-      expect(screen.getByText(/OpenWaggle v0\.2\.0/)).toBeInTheDocument()
+      expect(screen.getByText(/Turing Machine v0\.2\.0/)).toBeInTheDocument()
     })
   })
 

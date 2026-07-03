@@ -3,6 +3,7 @@ import type { ProviderInfo } from '@shared/types/llm'
 import { DEFAULT_SETTINGS } from '@shared/types/settings'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useAppAuthStore } from '@/features/auth/state/app-auth-store'
 import { useComposerActionStore } from '@/features/composer/state/composer-action-store'
 import { useComposerStore } from '@/features/composer/state/composer-store'
 import { useGitStore } from '@/features/git/state'
@@ -70,6 +71,7 @@ describe('ComposerToolbar', () => {
   beforeEach(() => {
     useComposerActionStore.setState(useComposerActionStore.getInitialState())
     useComposerStore.setState(useComposerStore.getInitialState())
+    useAppAuthStore.setState(useAppAuthStore.getInitialState())
     usePreferencesStore.setState({
       ...usePreferencesStore.getInitialState(),
       settings: {
@@ -108,11 +110,51 @@ describe('ComposerToolbar', () => {
     expect(screen.getByRole('button', { name: /medium/i })).toBeInTheDocument()
   })
 
-  it('renders a compact monthly quota strip beside the context meter', () => {
+  it('renders a compact turing machine quota strip beside the context meter', () => {
     renderToolbar()
 
-    expect(screen.getByText('Usage')).toBeInTheDocument()
-    expect(screen.getByText('60%')).toBeInTheDocument()
+    expect(screen.getByText('Quota')).toBeInTheDocument()
+    expect(screen.getByText('$0')).toBeInTheDocument()
+    expect(screen.getByText('0%')).toBeInTheDocument()
+  })
+
+  it('shows exhausted turing machine quota as 100 percent used', () => {
+    useAppAuthStore.setState({
+      subscriptionSnapshot: {
+        tier: {
+          key: 'pro',
+          name: 'Pro',
+          descriptionMarkdown: 'Pro plan',
+          turingMachineQuotaUsdCents: 3000,
+        },
+        subscription: {
+          status: 'active',
+          billingCycle: 'monthly',
+          currentPeriodStart: '2026-06-01T00:00:00.000Z',
+          currentPeriodEnd: '2026-07-01T00:00:00.000Z',
+          cancelAtPeriodEnd: false,
+        },
+        pricing: {
+          billingCycle: 'monthly',
+          originalCents: 5000,
+          discountedCents: null,
+          finalCents: 5000,
+          discountPercent: 0,
+        },
+        turingMachine: {
+          quotaUsdCents: 3000,
+          consumedUsdCents: 3000,
+          remainingUsdCents: 0,
+          percentUsed: 0,
+        },
+      },
+    })
+
+    renderToolbar()
+
+    expect(screen.getByText('Quota')).toBeInTheDocument()
+    expect(screen.getByText('$30')).toBeInTheDocument()
+    expect(screen.getByText('100%')).toBeInTheDocument()
   })
 
   it('renders the branch picker beside the thinking control when a project is selected', () => {

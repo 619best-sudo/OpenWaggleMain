@@ -9,6 +9,7 @@ import type {
   FeedbackPayload,
   FeedbackSubmitResult,
   GhCliStatus,
+  GithubRepoStatsSnapshot,
 } from './feedback'
 import type {
   GitBranchCheckoutPayload,
@@ -274,6 +275,7 @@ export interface OpenWaggleApi {
 
   // Feedback
   checkGhCli(): Promise<GhCliStatus>
+  collectGithubRepoStats(): Promise<GithubRepoStatsSnapshot | null>
   collectDiagnostics(): Promise<DiagnosticsInfo>
   getRecentLogs(lineCount: number): Promise<string>
   submitFeedback(payload: FeedbackPayload): Promise<FeedbackSubmitResult>

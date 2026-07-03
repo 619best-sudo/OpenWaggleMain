@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { decodeUnknownOrThrow, parseJsonUnknown, Schema } from '@shared/schema'
-import { getMessageText, type AgentSendPayload, type Message } from '@shared/types/agent'
+import { type AgentSendPayload, getMessageText, type Message } from '@shared/types/agent'
 import type { SessionId, SupportedModelId } from '@shared/types/brand'
 import type { AgentTransportEvent } from '@shared/types/stream'
 import type { TeammateAgentDefinition, TeammateDefinition } from '@shared/types/teammate'
@@ -355,7 +355,8 @@ function routeFromDecisionMaker(input: {
   readonly agentRunCounts: Readonly<Record<string, number>>
   readonly rootUserPrompt: string
 }): TeamRoutingResult {
-  const hardStopReached = input.decisionMakerCalls >= input.teammate.loopPolicy.maxDecisionMakerCalls
+  const hardStopReached =
+    input.decisionMakerCalls >= input.teammate.loopPolicy.maxDecisionMakerCalls
   const finalDecision = input.routerDecision.finalDecision ?? input.parsedSections.finalDecision
   const agentsRequiringRuns = getAgentsRequiringRuns(input.agents, input.agentRunCounts)
 
@@ -444,11 +445,7 @@ function resolveNextAgentId(input: {
   readonly routeReason: 'when-routed' | 'before-stop'
   readonly fallbackAgentIds: readonly string[]
 }) {
-  const candidates = [
-    input.requestedAgentId,
-    input.suggestedAgentId,
-    ...input.fallbackAgentIds,
-  ]
+  const candidates = [input.requestedAgentId, input.suggestedAgentId, ...input.fallbackAgentIds]
 
   for (const candidate of candidates) {
     const normalizedCandidate = candidate?.trim()

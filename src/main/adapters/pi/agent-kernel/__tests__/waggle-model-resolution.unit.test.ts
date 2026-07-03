@@ -1,7 +1,7 @@
 import { WAGGLE_INHERIT_MODEL, type WaggleConfig } from '@shared/types/waggle'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { runPiWaggle } from '../waggle-run'
 import { resolveWaggleRuntimeConfig } from '../waggle-model-resolution'
+import { runPiWaggle } from '../waggle-run'
 import {
   createFakePi,
   createFakeSession,

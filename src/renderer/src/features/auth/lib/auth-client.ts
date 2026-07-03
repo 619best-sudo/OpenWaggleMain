@@ -1,9 +1,12 @@
 import { env } from '@/env'
+import { DEFAULT_SUBSCRIPTION_PLAN_TIER, normalizeSubscriptionTier } from './subscription-plan'
 
 export interface AppAuthUser {
   readonly id: string
   readonly name: string
   readonly email: string
+  readonly isSubscribed: boolean
+  readonly subscriptionTier: string
   readonly accessToken: string
   readonly refreshToken: string
 }
@@ -28,6 +31,8 @@ interface GreatxAuthResponse {
     readonly id: string
     readonly email: string | null
     readonly displayName: string | null
+    readonly isSubscribed?: boolean | null
+    readonly subscriptionTier?: string | null
   }
   readonly tokens: {
     readonly accessToken: string
@@ -50,16 +55,16 @@ function normalizeEmail(email: string) {
 }
 
 function inferDisplayName(email: string) {
-  const localPart = normalizeEmail(email).split('@')[0] ?? 'OpenWaggle User'
+  const localPart = normalizeEmail(email).split('@')[0] ?? 'Turing Machine User'
   const words = localPart
     .split(/[._-]+/)
     .filter(Boolean)
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
 
-  return words.join(' ') || 'OpenWaggle User'
+  return words.join(' ') || 'Turing Machine User'
 }
 
-function getAuthBaseUrl() {
+export function getAuthBaseUrl() {
   if (env.appAuthBaseUrl) {
     return env.appAuthBaseUrl
   }
@@ -67,7 +72,7 @@ function getAuthBaseUrl() {
   throw new Error('Auth backend is not configured. Set VITE_APP_AUTH_BASE_URL to continue.')
 }
 
-function resolveAuthUrl(pathname: string) {
+export function resolveAuthUrl(pathname: string) {
   return new URL(pathname, `${getAuthBaseUrl()}/`).toString()
 }
 
@@ -97,10 +102,11 @@ function getErrorMessage(payload: unknown, fallback: string) {
 }
 
 async function postJson<TResponse>(pathname: string, body: Record<string, unknown>) {
+  const url = resolveAuthUrl(pathname)
   let response: Response
 
   try {
-    response = await fetch(resolveAuthUrl(pathname), {
+    response = await fetch(url, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -112,7 +118,10 @@ async function postJson<TResponse>(pathname: string, body: Record<string, unknow
     throw new Error('Unable to reach the auth server. Check that the backend is running.')
   }
 
-  const payload = (await response.json().catch(() => null)) as TResponse | { message?: string | string[] } | null
+  const payload = (await response.json().catch(() => null)) as
+    | TResponse
+    | { message?: string | string[] }
+    | null
   if (!response.ok) {
     throw new Error(getErrorMessage(payload, 'Authentication request failed.'))
   }
@@ -129,13 +138,20 @@ function toAppAuthUser(
   fallbackName: string,
   fallbackEmail: string,
 ): AppAuthUser {
-  const email = response.user.email ? normalizeEmail(response.user.email) : normalizeEmail(fallbackEmail)
-  const displayName = response.user.displayName?.trim() || fallbackName.trim() || inferDisplayName(email)
+  const email = response.user.email
+    ? normalizeEmail(response.user.email)
+    : normalizeEmail(fallbackEmail)
+  const displayName =
+    response.user.displayName?.trim() || fallbackName.trim() || inferDisplayName(email)
 
   return {
     id: response.user.id,
     name: displayName,
     email,
+    isSubscribed: response.user.isSubscribed ?? false,
+    subscriptionTier: normalizeSubscriptionTier(
+      response.user.subscriptionTier ?? DEFAULT_SUBSCRIPTION_PLAN_TIER,
+    ),
     accessToken: response.tokens.accessToken,
     refreshToken: response.tokens.refreshToken,
   }
@@ -174,7 +190,9 @@ export async function googleAuthWithIdToken({ idToken }: GoogleAuthInput): Promi
     idToken,
   })
 
-  const fallbackEmail = response.user.email ? normalizeEmail(response.user.email) : 'google-user@openwaggle.local'
+  const fallbackEmail = response.user.email
+    ? normalizeEmail(response.user.email)
+    : 'google-user@turingmachine.local'
   const fallbackName = response.user.displayName?.trim() || inferDisplayName(fallbackEmail)
   return toAppAuthUser(response, fallbackName, fallbackEmail)
 }

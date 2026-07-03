@@ -13,7 +13,9 @@ import { createRendererLogger } from '@/shared/lib/logger'
 const logger = createRendererLogger('provider-store')
 const AUTO_ENABLED_PROVIDER_IDS = new Set(['turing-machine'])
 
-function enforceGreatXBackendOnly(providerModels: readonly ProviderInfo[]): SupportedModelId[] | null {
+function enforceGreatXBackendOnly(
+  providerModels: readonly ProviderInfo[],
+): SupportedModelId[] | null {
   for (const group of providerModels) {
     if (group.provider !== 'turing-machine') continue
 

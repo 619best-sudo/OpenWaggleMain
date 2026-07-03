@@ -183,10 +183,10 @@ describe('TeammatesPanel', () => {
   it('renders the expanded built-in teammate catalog', () => {
     render(<TeammatesPanel />)
 
-    expect(screen.getByText('Execution Teams')).toBeInTheDocument()
+    expect(screen.getByText('Teams')).toBeInTheDocument()
     expect(
       screen.getByText(
-        'Prebuilt and custom teams for end-to-end execution of long-running tasks. Open a card to inspect agents, loop policy, prompt, and launch settings.',
+        'Prebuilt and custom teams for complex work. Open a team to review its setup, tailor the prompt, and launch.',
       ),
     ).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Custom Execution Team' })).toBeInTheDocument()
@@ -338,7 +338,9 @@ describe('TeammatesPanel', () => {
         'This removes the custom execution team from the storefront. You can create a new one later.',
       )
       expect(updateSettingsMock).toHaveBeenCalledWith({ showCustomExecutionTeam: false })
-      expect(screen.queryByRole('heading', { name: 'Custom Execution Team' })).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('heading', { name: 'Custom Execution Team' }),
+      ).not.toBeInTheDocument()
       expect(showToastMock).toHaveBeenCalledWith('Custom execution team deleted.', 'success')
     })
 

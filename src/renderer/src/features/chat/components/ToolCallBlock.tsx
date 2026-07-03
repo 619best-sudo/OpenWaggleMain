@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import { parseToolArgs } from '@/features/chat/lib/tool-args'
 import {
   buildTailPreview,
-  getToolDiffData,
   getResultError,
   getStringArg,
+  getToolDiffData,
   getToolResultText,
   INLINE_DIFF_LINE_LIMIT,
   type ToolCallResultPayload,
@@ -109,7 +109,8 @@ function buildToolCallViewModel({
     diff,
     failedOutputPreview: previewText(!expanded && isError, resultText),
     hasConcreteResult,
-    inlineDiffVisible: diff !== null && diff.lines.length > 0 && diff.lines.length <= INLINE_DIFF_LINE_LIMIT,
+    inlineDiffVisible:
+      diff !== null && diff.lines.length > 0 && diff.lines.length <= INLINE_DIFF_LINE_LIMIT,
     isError,
     isRunning,
     parsedArgs,

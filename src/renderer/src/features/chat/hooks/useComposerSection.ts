@@ -9,9 +9,9 @@ import type { useStreamingPhase } from '@/features/chat/hooks/useStreamingPhase'
 import { $createSkillMentionNode } from '@/features/composer/components'
 import { replaceComposerText } from '@/features/composer/lib/set-composer-text'
 import { useComposerStore } from '@/features/composer/state'
+import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 import type { SessionForkTarget } from '../lib/session-fork-targets'
 import type { ChatComposerSectionState } from '../model'
-import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 
 export interface ComposerSectionParams {
   readonly isLoading: boolean

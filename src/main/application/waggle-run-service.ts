@@ -7,10 +7,10 @@
  * Waggle package logic through AgentKernelService.
  */
 
+import { resolveWaggleConfigForPrompt } from '@openwaggle/waggle-core'
 import { safeDecodeUnknown } from '@shared/schema'
 import { waggleConfigSchema } from '@shared/schemas/waggle'
 import type { AgentSendPayload, HydratedAgentSendPayload } from '@shared/types/agent'
-import { resolveWaggleConfigForPrompt } from '@openwaggle/waggle-core'
 import { SessionBranchId, SessionId, SupportedModelId } from '@shared/types/brand'
 import type { SessionDetail, SessionTree } from '@shared/types/session'
 import type { AgentTransportEvent } from '@shared/types/stream'
@@ -24,10 +24,10 @@ import { formatErrorMessage } from '@shared/utils/node-error'
 import * as Effect from 'effect/Effect'
 import { makeErrorInfo } from '../agent/error-classifier'
 import { FileConflictTracker } from '../agent/file-conflict-tracker'
-import { McpConfigService } from '../ports/mcp-config-service'
 import { createLogger } from '../logger'
 import type { AgentKernelRunResult } from '../ports/agent-kernel-service'
 import { AgentKernelService } from '../ports/agent-kernel-service'
+import { McpConfigService } from '../ports/mcp-config-service'
 import { SessionProjectionRepository } from '../ports/session-projection-repository'
 import { SessionRepository } from '../ports/session-repository'
 import { WagglePresetsRepository } from '../ports/waggle-presets-repository'
@@ -141,7 +141,9 @@ async function buildTuringInstallReadinessSnapshot(input: {
       .map((dependency) => dependency.id)
 
     const detailParts = [
-      status.ready ? 'required status: ready' : `required status: blocked by ${requiredMissing.join(', ')}`,
+      status.ready
+        ? 'required status: ready'
+        : `required status: blocked by ${requiredMissing.join(', ')}`,
       optionalMissing.length > 0
         ? `optional tools still missing: ${optionalMissing.join(', ')}`
         : 'optional tools status: ready or not needed',
@@ -211,7 +213,10 @@ function prepareWaggleRun(input: WaggleRunInput) {
     if (!safeDecodeUnknown(waggleConfigSchema, input.config).success) {
       return { ok: false as const, outcome: validationErrorOutcome() }
     }
-    const activeConfig = resolveWaggleConfigForPrompt(input.config, input.payload.text) as WaggleConfig
+    const activeConfig = resolveWaggleConfigForPrompt(
+      input.config,
+      input.payload.text,
+    ) as WaggleConfig
     if (configRequiresInheritedModel(activeConfig) && !input.model.trim()) {
       return { ok: false as const, outcome: noInheritedModelOutcome() }
     }

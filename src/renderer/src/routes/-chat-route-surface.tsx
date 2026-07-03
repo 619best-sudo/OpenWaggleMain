@@ -113,10 +113,7 @@ export function ChatRouteSurface({
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-      <PanelErrorBoundary
-        name="Chat"
-        className="flex min-w-0 flex-1 overflow-hidden bg-bg"
-      >
+      <PanelErrorBoundary name="Chat" className="flex min-w-0 flex-1 overflow-hidden bg-bg">
         {shouldRenderExpandedDiff ? (
           <Suspense fallback={<DiffSidebarFallback />}>
             <LazyChatDiffPane

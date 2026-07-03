@@ -151,7 +151,7 @@ function mapLoadError(error: unknown, model: VoiceModel) {
     /sharp/i.test(message) &&
     /(cannot find module|went wrong installing|sharp-darwin|sharp-linux|sharp-win32)/i.test(message)
   ) {
-    return 'Local voice dependency is missing (sharp). Run `pnpm install` or `pnpm rebuild sharp`, then restart OpenWaggle.'
+    return 'Local voice dependency is missing (sharp). Run `pnpm install` or `pnpm rebuild sharp`, then restart Turing Machine.'
   }
   if (/(network|fetch|download|ENOTFOUND|ECONN|timed out)/i.test(message)) {
     return `Local Whisper ${label} model is not available yet. Connect once to download it, then retry.`

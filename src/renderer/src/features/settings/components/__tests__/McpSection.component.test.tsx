@@ -65,7 +65,7 @@ const MCP_VIEW = {
     },
     {
       id: 'project-openwaggle',
-      label: 'Project OpenWaggle MCP',
+      label: 'Project Turing Machine MCP',
       path: `${PROJECT_PATH}/.openwaggle/agent/mcp.json`,
       scope: 'project',
       kind: 'openwaggle',
@@ -90,7 +90,7 @@ const MCP_VIEW = {
       name: 'alpha',
       enabled: true,
       sourceId: 'project-openwaggle',
-      sourceLabel: 'Project OpenWaggle MCP',
+      sourceLabel: 'Project Turing Machine MCP',
       sourcePath: `${PROJECT_PATH}/.openwaggle/agent/mcp.json`,
       command: 'alpha',
       transport: 'stdio',
@@ -135,11 +135,13 @@ describe('McpSection', () => {
     })
   })
 
-  it('renders the effective MCP sources with the OpenWaggle project config path', async () => {
+  it('opens the advanced MCP configuration dialog', async () => {
     render(<McpSection />)
 
     expect(await screen.findByText('MCP Connection')).toBeInTheDocument()
     expect(screen.getByText('Connected Servers')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Advanced' }))
+    expect(screen.getByRole('dialog', { name: 'Advanced Configuration' })).toBeInTheDocument()
   })
 
   it('toggles only the effective source entry for a server', async () => {

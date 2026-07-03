@@ -1,5 +1,4 @@
 import { matchBy } from '@diegogbrisa/ts-match'
-import type { SupportedModelId } from '@shared/types/brand'
 import {
   WAGGLE_AGENT_COLORS,
   WAGGLE_INHERIT_MODEL,
@@ -37,7 +36,6 @@ export type WaggleFormAction =
   | { readonly type: 'add-agent' }
   | { readonly type: 'remove-agent'; readonly index: number }
   | { readonly type: 'set-agent-label'; readonly index: number; readonly label: string }
-  | { readonly type: 'set-agent-model'; readonly index: number; readonly model: SupportedModelId }
   | { readonly type: 'set-agent-role'; readonly index: number; readonly roleDescription: string }
   | { readonly type: 'set-agent-color'; readonly index: number; readonly color: WaggleAgentColor }
   | {
@@ -63,6 +61,14 @@ function createDefaultAgent(index: number): WaggleAgentSlot {
     roleDescription: '',
     color: agentColorForIndex(index),
   }
+}
+
+function normalizeAgentModel(agent: WaggleAgentSlot): WaggleAgentSlot {
+  return { ...agent, model: WAGGLE_INHERIT_MODEL }
+}
+
+function normalizeAgents(agents: readonly WaggleAgentSlot[]): readonly WaggleAgentSlot[] {
+  return agents.map(normalizeAgentModel)
 }
 
 export type WagglePresetAction =
@@ -127,7 +133,7 @@ export function buildWaggleAppManifest(state: WaggleFormState): WaggleAppManifes
 
 export function formMatchesPreset(state: WaggleFormState, preset: WagglePreset) {
   const config = buildWaggleConfig(state)
-  const pc = preset.config
+  const pc = { ...preset.config, agents: normalizeAgents(preset.config.agents) }
   if (state.titleText.trim() !== preset.name.trim()) return false
   if (state.descriptionText.trim() !== preset.description.trim()) return false
   if (config.mode !== pc.mode) return false
@@ -163,7 +169,7 @@ export function formMatchesPreset(state: WaggleFormState, preset: WagglePreset) 
 export function buildWaggleConfig(state: WaggleFormState): WaggleConfig {
   return {
     mode: state.mode,
-    agents: state.agents.map((agent) => ({ ...agent })),
+    agents: normalizeAgents(state.agents),
     stop: { primary: state.stopCondition, maxTurnsSafety: state.maxTurns },
   }
 }
@@ -184,7 +190,7 @@ export function waggleFormReducer(
     .with('load-preset', (value) => ({
       titleText: value.preset.name,
       descriptionText: value.preset.description,
-      agents: value.preset.config.agents,
+      agents: normalizeAgents(value.preset.config.agents),
       mode: value.preset.config.mode,
       stopCondition: value.preset.config.stop.primary,
       maxTurns: value.preset.config.stop.maxTurnsSafety,
@@ -208,13 +214,6 @@ export function waggleFormReducer(
       agents: updateAgentAt(state.agents, value.index, (agent) => ({
         ...agent,
         label: value.label,
-      })),
-    }))
-    .with('set-agent-model', (value) => ({
-      ...state,
-      agents: updateAgentAt(state.agents, value.index, (agent) => ({
-        ...agent,
-        model: value.model,
       })),
     }))
     .with('set-agent-role', (value) => ({

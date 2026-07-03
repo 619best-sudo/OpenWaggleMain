@@ -116,10 +116,7 @@ function ChangedFilesSelector({
     <div className="home-panel-frame-soft max-h-[220px] overflow-y-auto rounded-xl bg-bg-secondary/35">
       {changedFiles.length > 0 && (
         <div className="home-divider-b flex items-center gap-2 bg-bg-secondary/60 px-3 py-2">
-          <Checkbox
-            checked={selectedPaths.size === changedFiles.length}
-            onChange={onToggleAll}
-          />
+          <Checkbox checked={selectedPaths.size === changedFiles.length} onChange={onToggleAll} />
           <span className="text-[12px] font-medium text-text-tertiary">
             {selectedPaths.size === changedFiles.length ? 'Deselect all' : 'Select all'}
           </span>
@@ -139,7 +136,11 @@ function ChangedFilesSelector({
                   {file.path}
                 </span>
                 <span className="w-[72px] shrink-0 text-right font-mono text-[12px] tracking-tight text-text-tertiary">
-                  {file.additions > 0 ? <span className="text-diff-add-text">+{file.additions}</span> : ''}
+                  {file.additions > 0 ? (
+                    <span className="text-diff-add-text">+{file.additions}</span>
+                  ) : (
+                    ''
+                  )}
                   {file.additions > 0 && file.deletions > 0 ? ' / ' : ''}
                   {file.deletions > 0 ? (
                     <span className="text-diff-remove-text">-{file.deletions}</span>

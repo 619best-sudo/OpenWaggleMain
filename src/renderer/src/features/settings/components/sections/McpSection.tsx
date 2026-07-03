@@ -55,9 +55,7 @@ function McpDialogShell({
               </div>
               <h2 className="text-[15px] font-semibold text-text-primary">{title}</h2>
             </div>
-            <p className="max-w-[560px] text-[13px] leading-5 text-text-tertiary">
-              {description}
-            </p>
+            <p className="max-w-[560px] text-[13px] leading-5 text-text-tertiary">{description}</p>
           </div>
           <Button
             variant="unstyled"

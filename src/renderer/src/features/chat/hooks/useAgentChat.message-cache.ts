@@ -2,8 +2,11 @@ import type { SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { SessionDetail } from '@shared/types/session'
 import { createRendererLogger } from '@/shared/lib/logger'
-import { getUIMessageText } from '../lib/useAgentChat.utils'
-import { appendMissingOptimisticUserMessages, sessionToUIMessages } from '../lib/useAgentChat.utils'
+import {
+  appendMissingOptimisticUserMessages,
+  getUIMessageText,
+  sessionToUIMessages,
+} from '../lib/useAgentChat.utils'
 import type {
   MutableValueRef,
   PendingRunWaiter,

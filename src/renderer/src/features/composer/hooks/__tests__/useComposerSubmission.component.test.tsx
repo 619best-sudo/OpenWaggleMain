@@ -1,11 +1,11 @@
+import { DEFAULT_SETTINGS } from '@shared/types/settings'
 import { act, renderHook } from '@testing-library/react'
 import { createRef } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_SETTINGS } from '@shared/types/settings'
-import { useComposerSubmission } from '../useComposerSubmission'
-import { useComposerStore } from '../../state/composer-store'
 import { usePreferencesStore } from '@/features/settings/state'
 import { useUIStore } from '@/shell/ui-store'
+import { useComposerStore } from '../../state/composer-store'
+import { useComposerSubmission } from '../useComposerSubmission'
 
 vi.mock('@/features/providers/hooks', () => ({
   useSelectedModelThinkingLevel: () => ({

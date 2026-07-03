@@ -30,7 +30,7 @@ export function EmptySkillsState() {
       <div className="px-1 pb-2 pt-4">
         <p className="text-[12px] font-medium text-text-secondary">No skills discovered</p>
         <p className="mt-1 text-[11px] text-text-tertiary leading-relaxed">
-          Import a skill or add one to `.openwaggle/skills` or `.agents/skills`.
+          Import a skill or add one to your project skills folder or `.agents/skills`.
         </p>
       </div>
     </div>

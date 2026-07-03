@@ -2904,7 +2904,15 @@ End every turn with:
     app: {
       requiredMcps: ['mobile-mcp'],
       requiredSkills: ['frontend-implementer'],
-      optionalMcps: ['mobile-device', 'figma', 'multimodal-media', 'ffmpeg', 'gsap', 'remotion', 'animejs'],
+      optionalMcps: [
+        'mobile-device',
+        'figma',
+        'multimodal-media',
+        'ffmpeg',
+        'gsap',
+        'remotion',
+        'animejs',
+      ],
       optionalSkills: ['ui-screenshot-auditor', 'media-director'],
     },
     isBuiltIn: true,

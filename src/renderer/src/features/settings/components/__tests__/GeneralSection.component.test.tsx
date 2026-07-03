@@ -1,6 +1,6 @@
+import { DEFAULT_SETTINGS } from '@shared/types/settings'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_SETTINGS } from '@shared/types/settings'
 import { usePreferencesStore } from '@/features/settings/state/preferences-store'
 
 const { updateSettingsMock } = vi.hoisted(() => ({

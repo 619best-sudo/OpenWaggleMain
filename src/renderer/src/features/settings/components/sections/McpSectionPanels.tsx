@@ -27,6 +27,12 @@ function formatServerDetail(server: McpServerSummary) {
   return 'No transport configured'
 }
 
+function formatDisplayPath(path: string) {
+  return path
+    .replaceAll('.openwaggle', '.turing-machine')
+    .replaceAll('openwaggle-mcp', 'turing-machine-mcp')
+}
+
 function SourceButton({
   source,
   selected,
@@ -52,7 +58,9 @@ function SourceButton({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-[13px] font-medium">{source.label}</div>
-          <div className="mt-1 truncate text-[11px] text-text-muted">{source.path}</div>
+          <div className="mt-1 truncate text-[11px] text-text-muted">
+            {formatDisplayPath(source.path)}
+          </div>
         </div>
         <span
           className={cn(
@@ -199,7 +207,14 @@ export function McpAdapterCard({
           <McpAdapterStatus enabled={adapterEnabled} />
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="secondary" size="sm" disabled={busy} onClick={onRefresh} leftIcon={<RotateCw className="size-3" />} className="h-7 text-[11px] px-2.5">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={busy}
+            onClick={onRefresh}
+            leftIcon={<RotateCw className="size-3" />}
+            className="h-7 text-[11px] px-2.5"
+          >
             Refresh
           </Button>
           <div className="flex items-center gap-2 rounded-full border border-border bg-bg-tertiary px-2.5 py-1">
@@ -247,7 +262,10 @@ const PROJECT_SOURCE_PREFERENCE: readonly McpConfigSourceId[] = [
   'project-pi',
 ] as const
 
-const GLOBAL_SOURCE_PREFERENCE: readonly McpConfigSourceId[] = ['global-standard', 'global-pi'] as const
+const GLOBAL_SOURCE_PREFERENCE: readonly McpConfigSourceId[] = [
+  'global-standard',
+  'global-pi',
+] as const
 
 export function McpQuickInstallPanel({
   sources = [],
@@ -310,7 +328,9 @@ export function McpQuickInstallPanel({
         ? selectedSource
         : preferredProjectSource
     const activeGlobalSource =
-      selectedSource?.editable && selectedSource.scope === 'global' ? selectedSource : preferredGlobalSource
+      selectedSource?.editable && selectedSource.scope === 'global'
+        ? selectedSource
+        : preferredGlobalSource
 
     const targets: McpInstallTarget[] = []
     if (activeProjectSource) {
@@ -324,7 +344,7 @@ export function McpQuickInstallPanel({
       targets.push({
         id: activeGlobalSource.id,
         label: 'All Projects On This Computer',
-        helper: 'Makes this MCP available everywhere in OpenWaggle on this device.',
+        helper: 'Makes this MCP available everywhere in Turing Machine on this device.',
       })
     }
     return targets
@@ -364,7 +384,7 @@ export function McpQuickInstallPanel({
         <div className="space-y-1">
           <p className="max-w-[500px] text-[13px] leading-5 text-text-tertiary">
             Technical users can configure a server manually. Everyone else can paste a GitHub
-            repository URL and let OpenWaggle prepare the command for them.
+            repository URL and let Turing Machine prepare the command for them.
           </p>
         </div>
         {sources.length > 0 && (
@@ -521,7 +541,7 @@ export function McpQuickInstallPanel({
               )}
             >
               {githubValidationMessage ??
-                'OpenWaggle will save a generated npx command so the MCP is ready to run from this repository.'}
+                'Turing Machine will save a generated npx command so the MCP is ready to run from this repository.'}
             </p>
           </div>
 
@@ -699,7 +719,9 @@ export function McpServersPanel({
           />
         ))
       ) : (
-        <p className="px-4 py-6 text-[13px] text-text-muted text-center">No MCP servers configured.</p>
+        <p className="px-4 py-6 text-[13px] text-text-muted text-center">
+          No MCP servers configured.
+        </p>
       )}
     </div>
   )

@@ -1,10 +1,10 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import * as Effect from 'effect/Effect'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { McpSettingsView } from '@shared/types/mcp'
 import { DEFAULT_SETTINGS, type Settings } from '@shared/types/settings'
+import * as Effect from 'effect/Effect'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   execFileMock: vi.fn(),
@@ -44,7 +44,7 @@ const baseMcpSettings: McpSettingsView = {
       name: 'playwright',
       enabled: true,
       sourceId: 'project-openwaggle',
-      sourceLabel: 'Project OpenWaggle',
+      sourceLabel: 'Project Turing Machine',
       sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
       command: 'npx',
       transport: 'stdio',

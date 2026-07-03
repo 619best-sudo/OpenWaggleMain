@@ -196,7 +196,13 @@ describe('resolveTranscriptMessages', () => {
   it('keeps persisted user turns visible when the workspace transcript path lags behind the live cache', () => {
     const user = sessionNode('user-head', null, 'user', 'Head user', 0)
     const assistant = sessionNode('assistant-head', 'user-head', 'assistant', 'Head answer', 1)
-    const persistedNextUser = sessionNode('persisted-next-user', 'assistant-head', 'user', 'Keep refining the landing page.', 2)
+    const persistedNextUser = sessionNode(
+      'persisted-next-user',
+      'assistant-head',
+      'user',
+      'Keep refining the landing page.',
+      2,
+    )
 
     const resolved = resolveTranscriptMessages({
       activeSessionId: SESSION_DETAIL_ID,
@@ -271,7 +277,11 @@ End with these exact sections:
 
     const resolved = resolveTranscriptMessages({
       activeSessionId: SESSION_DETAIL_ID,
-      activeWorkspace: workspaceWithPath([user, assistant, internalPrompt], internalPrompt.id, internalPrompt.id),
+      activeWorkspace: workspaceWithPath(
+        [user, assistant, internalPrompt],
+        internalPrompt.id,
+        internalPrompt.id,
+      ),
       messages: [
         uiMessage('user-head', 'user', 'Head user'),
         uiMessage('assistant-head', 'assistant', 'Head answer'),
@@ -378,7 +388,11 @@ End with these exact sections:
 
     const resolved = resolveTranscriptMessages({
       activeSessionId: SESSION_DETAIL_ID,
-      activeWorkspace: workspaceWithPath([user, persistedAssistant], persistedAssistant.id, persistedAssistant.id),
+      activeWorkspace: workspaceWithPath(
+        [user, persistedAssistant],
+        persistedAssistant.id,
+        persistedAssistant.id,
+      ),
       messages: mergedMessages,
     })
 

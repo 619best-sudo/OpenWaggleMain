@@ -23,6 +23,10 @@ const CONNECT_SRC_VALUES = [
   'http://localhost:*',
   'https://localhost:*',
   'wss://localhost:*',
+  'ws://127.0.0.1:*',
+  'http://127.0.0.1:*',
+  'https://127.0.0.1:*',
+  'wss://127.0.0.1:*',
 ] as const
 
 const CSP_DIRECTIVES = [

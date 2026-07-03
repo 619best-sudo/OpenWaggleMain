@@ -1,5 +1,5 @@
 import type { GitStatusSummary } from '@shared/types/git'
-import { Hash, ListTree, PanelLeft, SquareTerminal } from 'lucide-react'
+import { Hash, PanelLeft, SquareTerminal } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 
@@ -21,13 +21,6 @@ interface CommitButtonProps {
   readonly onOpen: () => void
 }
 
-interface SessionTreeButtonProps {
-  readonly hasSessionTree: boolean
-  readonly isChatRoute: boolean
-  readonly open: boolean
-  readonly onToggle: () => void
-}
-
 interface DiffToggleButtonProps {
   readonly error: string | null
   readonly isChatRoute: boolean
@@ -38,11 +31,7 @@ interface DiffToggleButtonProps {
   readonly onToggle: () => void
 }
 
-export function HeaderLeft({
-  sidebarOpen,
-  title,
-  onToggleSidebar,
-}: HeaderLeftProps) {
+export function HeaderLeft({ sidebarOpen, title, onToggleSidebar }: HeaderLeftProps) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
       {!sidebarOpen && (
@@ -119,35 +108,6 @@ export function CommitButton({ isCommitting, projectPath, onOpen }: CommitButton
     >
       <span className="text-[13px] font-semibold">Commit</span>
       <span className="text-[9px] opacity-50">&#x2228;</span>
-    </Button>
-  )
-}
-
-export function SessionTreeButton({
-  hasSessionTree,
-  isChatRoute,
-  open,
-  onToggle,
-}: SessionTreeButtonProps) {
-  const disabled = !hasSessionTree || !isChatRoute
-
-  return (
-    <Button
-      variant={open ? 'subtle' : 'secondary'}
-      size="none"
-      radius="sm"
-      aria-label="Toggle Session Tree"
-      aria-expanded={open}
-      onClick={onToggle}
-      disabled={disabled}
-      className={cn(
-        'no-drag h-7 border border-home-border px-2 hover:bg-bg-hover',
-        open ? 'bg-bg-active' : 'bg-transparent',
-        disabled && 'pointer-events-none opacity-30',
-      )}
-      title={hasSessionTree ? 'Toggle Session Tree' : 'No session tree available'}
-    >
-      <ListTree className="size-3.5 text-text-tertiary" />
     </Button>
   )
 }
