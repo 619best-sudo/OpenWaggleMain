@@ -1,5 +1,4 @@
 import { SupportedModelId } from '@shared/types/brand'
-import type { ProviderInfo } from '@shared/types/llm'
 import { DEFAULT_SETTINGS } from '@shared/types/settings'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -7,7 +6,6 @@ import { useAppAuthStore } from '@/features/auth/state/app-auth-store'
 import { useComposerActionStore } from '@/features/composer/state/composer-action-store'
 import { useComposerStore } from '@/features/composer/state/composer-store'
 import { useGitStore } from '@/features/git/state'
-import { useProviderStore } from '@/features/providers/state'
 import { usePreferencesStore } from '@/features/settings/state'
 import { ComposerToolbar } from '../ComposerToolbar'
 
@@ -27,31 +25,6 @@ vi.mock('@/shared/lib/ipc', () => ({
 }))
 
 const SELECTED_MODEL = SupportedModelId('openai/gpt-5')
-const PROVIDER_MODELS: ProviderInfo[] = [
-  {
-    provider: 'openai',
-    displayName: 'OpenAI',
-    auth: {
-      configured: true,
-      source: 'api-key',
-      apiKeyConfigured: true,
-      apiKeySource: 'api-key',
-      oauthConnected: false,
-      supportsApiKey: true,
-      supportsOAuth: true,
-    },
-    models: [
-      {
-        id: SELECTED_MODEL,
-        modelId: 'gpt-5',
-        name: 'GPT 5',
-        provider: 'openai',
-        available: true,
-        availableThinkingLevels: ['off', 'minimal', 'low', 'medium', 'high'],
-      },
-    ],
-  },
-]
 
 function renderToolbar(overrides: Partial<Parameters<typeof ComposerToolbar>[0]> = {}) {
   const fileInputRef: React.RefObject<HTMLInputElement | null> = { current: null }
@@ -82,10 +55,6 @@ describe('ComposerToolbar', () => {
       },
       isLoaded: true,
     })
-    useProviderStore.setState({
-      ...useProviderStore.getInitialState(),
-      providerModels: PROVIDER_MODELS,
-    })
     useGitStore.setState({
       ...useGitStore.getInitialState(),
       status: {
@@ -102,12 +71,6 @@ describe('ComposerToolbar', () => {
         branches: [{ name: 'main', fullName: 'main', isCurrent: true, isRemote: false }],
       },
     })
-  })
-
-  it('renders a thinking-only control', () => {
-    renderToolbar()
-    expect(screen.getByTitle('Select thinking level')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /medium/i })).toBeInTheDocument()
   })
 
   it('renders a compact turing machine quota strip beside the context meter', () => {
@@ -157,9 +120,9 @@ describe('ComposerToolbar', () => {
     expect(screen.getByText('100%')).toBeInTheDocument()
   })
 
-  it('renders the branch picker beside the thinking control when a project is selected', () => {
+  it('renders the branch picker when a project is selected', () => {
     renderToolbar()
-    expect(screen.getByTitle('Manage branches')).toBeInTheDocument()
+    expect(screen.getByTitle(/Manage branches/)).toBeInTheDocument()
     expect(screen.getByText('main')).toBeInTheDocument()
   })
 
@@ -173,58 +136,12 @@ describe('ComposerToolbar', () => {
 
     renderToolbar()
 
-    expect(screen.queryByTitle('Manage branches')).toBeNull()
+    expect(screen.queryByTitle(/Manage branches/)).toBeNull()
   })
 
-  it('opens the thinking menu on click', () => {
+  it('does not render the thinking control in the composer toolbar', () => {
     renderToolbar()
-    fireEvent.click(screen.getByTitle('Select thinking level'))
-    expect(screen.getByText('Low')).toBeInTheDocument()
-    expect(screen.getByText('High')).toBeInTheDocument()
-    expect(screen.queryByText('GPT 5')).toBeNull()
-  })
-
-  it('shows the selected model effective thinking level instead of unsupported xhigh', () => {
-    usePreferencesStore.setState({
-      settings: {
-        ...usePreferencesStore.getState().settings,
-        thinkingLevel: 'xhigh',
-      },
-    })
-
-    renderToolbar()
-
-    expect(screen.getByRole('button', { name: /high/i })).toBeInTheDocument()
-    fireEvent.click(screen.getByTitle(/using High/i))
-    expect(screen.queryByText('Extra High')).not.toBeInTheDocument()
-    expect(screen.getAllByText('High').length).toBeGreaterThan(0)
-  })
-
-  it('maps non-reasoning selected models to off in the toolbar', () => {
-    useProviderStore.setState({
-      providerModels: [
-        {
-          ...PROVIDER_MODELS[0],
-          models: [
-            {
-              id: SELECTED_MODEL,
-              modelId: 'gpt-5',
-              name: 'GPT 5',
-              provider: 'openai',
-              available: true,
-              availableThinkingLevels: ['off'],
-            },
-          ],
-        },
-      ],
-    })
-
-    renderToolbar()
-
-    expect(screen.getByRole('button', { name: /off/i })).toBeInTheDocument()
-    fireEvent.click(screen.getByTitle(/does not support thinking/i))
-    expect(screen.getAllByText('Off').length).toBeGreaterThan(0)
-    expect(screen.queryByText('Medium')).not.toBeInTheDocument()
+    expect(screen.queryByTitle('Select thinking level')).toBeNull()
   })
 
   it('renders send button when not loading', () => {

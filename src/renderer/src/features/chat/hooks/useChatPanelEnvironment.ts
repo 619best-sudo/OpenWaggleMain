@@ -5,6 +5,7 @@ import { useGit } from '@/features/git/hooks'
 import { useProject, useSessionNav } from '@/features/sessions/hooks'
 import { useSessionStore } from '@/features/sessions/state'
 import { usePreferencesStore } from '@/features/settings/state'
+import { FORCED_SEND_THINKING_LEVEL } from '@/shared/constants/thinking'
 import { api } from '@/shared/lib/ipc'
 import { createRendererLogger } from '@/shared/lib/logger'
 import { useUIStore } from '@/shell/ui-store'
@@ -27,7 +28,6 @@ export function useChatPanelEnvironment() {
   const setActiveView = useUIStore((s) => s.setActiveView)
   const showToast = useUIStore((s) => s.showToast)
   const model = usePreferencesStore((s) => s.settings.selectedModel)
-  const thinkingLevel = usePreferencesStore((s) => s.settings.thinkingLevel)
   const recentProjects = usePreferencesStore((s) => s.settings.recentProjects)
   const project = useProject()
   const chat = useChat()
@@ -109,6 +109,6 @@ export function useChatPanelEnvironment() {
     refreshSessionWorkspace,
     setDraftBranch,
     showToast,
-    thinkingLevel,
+    thinkingLevel: FORCED_SEND_THINKING_LEVEL,
   }
 }

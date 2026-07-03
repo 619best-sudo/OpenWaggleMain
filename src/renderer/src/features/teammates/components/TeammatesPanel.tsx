@@ -20,6 +20,7 @@ import { seedOptimisticSendForSession } from '@/features/chat/hooks/useSendMessa
 import { sessionToUIMessages } from '@/features/chat/lib/useAgentChat.utils'
 import { usePreferencesStore } from '@/features/settings/state'
 import { useEscapeHotkey } from '@/shared/hooks/useEscapeHotkey'
+import { FORCED_SEND_THINKING_LEVEL } from '@/shared/constants/thinking'
 import { api } from '@/shared/lib/ipc'
 import { createRendererLogger } from '@/shared/lib/logger'
 import { Button } from '@/shared/ui/Button'
@@ -347,7 +348,6 @@ export function TeammatesPanel() {
   const navigate = useNavigate()
   const projectPath = usePreferencesStore((state) => state.settings.projectPath)
   const selectedModel = usePreferencesStore((state) => state.settings.selectedModel)
-  const thinkingLevel = usePreferencesStore((state) => state.settings.thinkingLevel)
   const hasCustomTeam = usePreferencesStore((state) => state.settings.showCustomExecutionTeam)
   const setShowCustomExecutionTeam = usePreferencesStore(
     (state) => state.setShowCustomExecutionTeam,
@@ -678,7 +678,7 @@ export function TeammatesPanel() {
         payload: {
           text: prompt,
           attachments: [],
-          thinkingLevel,
+          thinkingLevel: FORCED_SEND_THINKING_LEVEL,
         },
         baseMessages,
         source: 'teammates-panel:launch-team',
@@ -689,7 +689,7 @@ export function TeammatesPanel() {
         {
           text: prompt,
           attachments: [],
-          thinkingLevel,
+          thinkingLevel: FORCED_SEND_THINKING_LEVEL,
         },
         selectedModel,
         teammate,

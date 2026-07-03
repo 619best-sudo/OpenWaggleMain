@@ -1,8 +1,8 @@
 import type { AgentSendPayload, PreparedAttachment } from '@shared/types/agent'
 import type { LexicalEditor } from 'lexical'
 import type { RefObject } from 'react'
-import { useSelectedModelThinkingLevel } from '@/features/providers/hooks'
 import { usePreferencesStore } from '@/features/settings/state'
+import { FORCED_SEND_THINKING_LEVEL } from '@/shared/constants/thinking'
 import { useUIStore } from '@/shell/ui-store'
 import { clearEditor } from '../lib/lexical-utils'
 import { consumeSendResult } from '../lib/send-result'
@@ -55,7 +55,6 @@ export function useComposerSubmission({
   const pushHistory = useComposerStore((s) => s.pushHistory)
   const selectedModel = usePreferencesStore((s) => s.settings.selectedModel)
   const enableTranscriptDebug = useUIStore((s) => s.enableTranscriptDebug)
-  const { effectiveThinkingLevel } = useSelectedModelThinkingLevel()
 
   function clearComposerInput() {
     reset()
@@ -91,7 +90,7 @@ export function useComposerSubmission({
   function handleSubmit(text?: string) {
     submitPayload({
       text: (text ?? input).trim(),
-      thinkingLevel: effectiveThinkingLevel,
+      thinkingLevel: FORCED_SEND_THINKING_LEVEL,
       attachments,
     })
   }
@@ -99,7 +98,7 @@ export function useComposerSubmission({
   function sendComposed(text: string) {
     return submitPayload({
       text,
-      thinkingLevel: effectiveThinkingLevel,
+      thinkingLevel: FORCED_SEND_THINKING_LEVEL,
       attachments: useComposerStore.getState().attachments,
     })
   }
@@ -108,7 +107,7 @@ export function useComposerSubmission({
     const state = useComposerStore.getState()
     submitPayload({
       text: state.input.trim(),
-      thinkingLevel: effectiveThinkingLevel,
+      thinkingLevel: FORCED_SEND_THINKING_LEVEL,
       attachments: state.attachments,
     })
   }

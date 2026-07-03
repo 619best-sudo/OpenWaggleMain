@@ -229,7 +229,7 @@ describe('TeammatesPanel', () => {
         SessionId('session-team-1'),
         expect.objectContaining({
           text: 'Create a SaaS landing page and make sure it opens.',
-          thinkingLevel: DEFAULT_SETTINGS.thinkingLevel,
+          thinkingLevel: 'high',
         }),
         SupportedModelId('openai/gpt-5'),
         expect.objectContaining({
@@ -299,7 +299,7 @@ describe('TeammatesPanel', () => {
         SessionId('session-team-1'),
         expect.objectContaining({
           text: 'Review the latest code changes and decide whether the work is ready.',
-          thinkingLevel: DEFAULT_SETTINGS.thinkingLevel,
+          thinkingLevel: 'high',
         }),
         SupportedModelId('openai/gpt-5'),
         expect.objectContaining({
