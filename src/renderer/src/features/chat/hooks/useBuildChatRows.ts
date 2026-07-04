@@ -1,4 +1,5 @@
 import type { UIMessage } from '@shared/types/chat-ui'
+import type { MachineExecutionState } from '@shared/types/machine'
 import type { SessionInterruptedRun } from '@shared/types/session'
 import type { WaggleMessageMetadata } from '@shared/types/waggle'
 import type { StreamingPhaseState } from '@/features/chat/hooks/useStreamingPhase'
@@ -6,6 +7,109 @@ import type { ChatRow, MessageChatRow } from '../lib/types-chat-row'
 
 type ToolResultPart = Extract<UIMessage['parts'][number], { type: 'tool-result' }>
 type SummaryRow = Extract<ChatRow, { type: 'branch-summary' | 'compaction-summary' }>
+
+function reportMachineRowDebug(
+  hypothesisId: string,
+  location: string,
+  msg: string,
+  data: Record<string, unknown>,
+) {
+  void fetch('http://127.0.0.1:7777/event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: 'machine-no-execution',
+      runId: 'renderer',
+      hypothesisId,
+      location,
+      msg,
+      data,
+      ts: Date.now(),
+    }),
+  }).catch(() => {})
+}
+
+function summarizeMessageForRowDebug(
+  message: UIMessage,
+  machineOriginalRequest: string | null,
+  index: number,
+) {
+  const text = message.parts
+    .filter((part): part is Extract<UIMessage['parts'][number], { type: 'text' }> => part.type === 'text')
+    .map((part) => part.content)
+    .join('\n')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  return {
+    index,
+    id: message.id,
+    role: message.role,
+    partTypes: message.parts.map((part) => part.type),
+    textPreview: text.slice(0, 180),
+    matchesOriginalRequest: machineOriginalRequest !== null && text === machineOriginalRequest,
+  }
+}
+
+function summarizeChatRowForDebug(row: ChatRow, index: number) {
+  switch (row.type) {
+    case 'message':
+      return {
+        index,
+        type: row.type,
+        id: row.message.id,
+        role: row.message.role,
+        partTypes: row.message.parts.map((part) => part.type),
+      }
+    case 'waggle-turn':
+      return {
+        index,
+        type: row.type,
+        id: row.id,
+        role: 'assistant',
+        messageIds: row.messages.map((messageRow) => messageRow.message.id),
+      }
+    case 'machine-timeline':
+      return {
+        index,
+        type: row.type,
+        id: row.id,
+        phase: row.plan.phase,
+        variant: row.variant ?? 'primary',
+      }
+    case 'interrupted-run':
+      return {
+        index,
+        type: row.type,
+        runId: row.runId,
+      }
+    case 'branch-summary':
+    case 'compaction-summary':
+      return {
+        index,
+        type: row.type,
+        id: row.id,
+      }
+    case 'phase-indicator':
+      return {
+        index,
+        type: row.type,
+        label: row.label,
+      }
+    case 'run-summary':
+      return {
+        index,
+        type: row.type,
+        totalMs: row.totalMs,
+      }
+    case 'error':
+      return {
+        index,
+        type: row.type,
+        message: row.error.message,
+      }
+  }
+}
 
 function isToolResultOnlyMessage(message: UIMessage) {
   return message.parts.length > 0 && message.parts.every((part) => part.type === 'tool-result')
@@ -231,6 +335,8 @@ function appendStatusRows(rows: ChatRow[], params: BuildChatRowsParams) {
 
 interface BuildChatRowsParams {
   messages: UIMessage[]
+  allMessages: UIMessage[]
+  machinePlan: MachineExecutionState | null
   isLoading: boolean
   error: Error | undefined
   lastUserMessage: string | null
@@ -255,9 +361,41 @@ function appendInterruptedRunRow(rows: ChatRow[], params: BuildChatRowsParams) {
   })
 }
 
+function messageText(message: UIMessage) {
+  return message.parts
+    .filter((part): part is Extract<UIMessage['parts'][number], { type: 'text' }> => part.type === 'text')
+    .map((part) => part.content)
+    .join('\n')
+    .trim()
+}
+
+function createSyntheticUserMessage(id: string, text: string): UIMessage {
+  return {
+    id,
+    role: 'user',
+    parts: [{ type: 'text', content: text }],
+  }
+}
+
+function findSyntheticMachineRequestInsertIndex(rows: ChatRow[]) {
+  const firstAssistantIndex = rows.findIndex(
+    (row) => row.type === 'message' && row.message.role === 'assistant',
+  )
+
+  if (firstAssistantIndex >= 0) {
+    return firstAssistantIndex
+  }
+
+  const interruptedRunCount = rows.filter((row) => row.type === 'interrupted-run').length
+  return interruptedRunCount
+}
+
 export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
   const rows: ChatRow[] = []
   appendInterruptedRunRow(rows, params)
+  let lastUserRowIndex = -1
+  const machineOriginalRequest = params.machinePlan?.originalRequest?.replace(/\s+/g, ' ').trim() ?? null
+  let hasVisibleOriginalRequest = false
 
   const lastMessage = params.messages[params.messages.length - 1]
   const lastIsStreaming = params.isLoading && lastMessage?.role === 'assistant'
@@ -284,12 +422,106 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
         isLoading: params.isLoading,
       }),
     )
+    if (message.role === 'user') {
+      lastUserRowIndex = rows.length - 1
+      if (machineOriginalRequest && messageText(message) === machineOriginalRequest) {
+        hasVisibleOriginalRequest = true
+      }
+    }
 
     if (meta && message.role === 'assistant') {
       previousVisibleWaggleMeta = meta
     }
   }
 
+  if (params.machinePlan) {
+    // #region debug-point H:pre-machine-row-build
+    reportMachineRowDebug(
+      'H',
+      'useBuildChatRows.ts:buildChatRows:beforeMachineInsertion',
+      '[DEBUG] Machine row builder pre-insertion state',
+      {
+        machinePhase: params.machinePlan.phase,
+        machineOriginalRequest,
+        hasVisibleOriginalRequest,
+        lastUserRowIndex,
+        messages: params.messages.map((message, index) =>
+          summarizeMessageForRowDebug(message, machineOriginalRequest, index),
+        ),
+        rowsBeforeMachineInsertion: rows.map((row, index) => summarizeChatRowForDebug(row, index)),
+      },
+    )
+    // #endregion
+
+    if (machineOriginalRequest && !hasVisibleOriginalRequest) {
+      const syntheticUserRow = createMessageRow({
+        message: createSyntheticUserMessage(
+          `machine-request:${params.machinePlan.generatedAt}`,
+          machineOriginalRequest,
+        ),
+        meta: undefined,
+        previousVisibleWaggleMeta,
+        isStreaming: false,
+        isLoading: params.isLoading,
+      })
+      const syntheticInsertIndex = findSyntheticMachineRequestInsertIndex(rows)
+      rows.splice(syntheticInsertIndex, 0, syntheticUserRow)
+      lastUserRowIndex = syntheticInsertIndex
+    }
+
+    const machineTimelineRow: ChatRow = {
+      type: 'machine-timeline',
+      id: `machine-timeline:${params.machinePlan.generatedAt}`,
+      plan: params.machinePlan,
+      variant: 'primary',
+    }
+    if (lastUserRowIndex >= 0) {
+      rows.splice(lastUserRowIndex + 1, 0, machineTimelineRow)
+    } else {
+      rows.push(machineTimelineRow)
+    }
+
+    // #region debug-point I:post-machine-row-build
+    reportMachineRowDebug(
+      'I',
+      'useBuildChatRows.ts:buildChatRows:afterMachineInsertion',
+      '[DEBUG] Machine row builder post-insertion state',
+      {
+        machinePhase: params.machinePlan.phase,
+        machineOriginalRequest,
+        hasVisibleOriginalRequest,
+        lastUserRowIndex,
+        rowsAfterMachineInsertion: rows.map((row, index) => summarizeChatRowForDebug(row, index)),
+      },
+    )
+    // #endregion
+  }
+
   appendStatusRows(rows, params)
-  return groupWaggleTurnRows(rows)
+  if (
+    params.machinePlan &&
+    (params.machinePlan.phase === 'completed' || params.machinePlan.phase === 'failed')
+  ) {
+    rows.push({
+      type: 'machine-timeline',
+      id: `machine-timeline-summary:${params.machinePlan.generatedAt}`,
+      plan: params.machinePlan,
+      variant: 'summary',
+    })
+  }
+  const groupedRows = groupWaggleTurnRows(rows)
+  if (params.machinePlan) {
+    // #region debug-point J:final-machine-row-order
+    reportMachineRowDebug(
+      'J',
+      'useBuildChatRows.ts:buildChatRows:finalGroupedRows',
+      '[DEBUG] Final machine chat row order',
+      {
+        machinePhase: params.machinePlan.phase,
+        groupedRows: groupedRows.map((row, index) => summarizeChatRowForDebug(row, index)),
+      },
+    )
+    // #endregion
+  }
+  return groupedRows
 }

@@ -110,6 +110,18 @@ export interface IpcIntegrationInvokeChannelMap {
     args: [sessionId: SessionId]
     return: AgentPhaseState | null
   }
+  'agent:send-machine-message': {
+    args: [sessionId: SessionId, payload: AgentSendPayload, model: SupportedModelId]
+    return: undefined
+  }
+  'agent:approve-machine-plan': {
+    args: [sessionId: SessionId]
+    return: undefined
+  }
+  'agent:discard-machine-plan': {
+    args: [sessionId: SessionId]
+    return: undefined
+  }
   'agent:get-background-run': {
     args: [sessionId: SessionId]
     return: BackgroundRunSnapshot | null

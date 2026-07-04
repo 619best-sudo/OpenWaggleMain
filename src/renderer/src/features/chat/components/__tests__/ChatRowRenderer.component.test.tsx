@@ -44,6 +44,12 @@ vi.mock('../MessageBubble', () => ({
   ),
 }))
 
+vi.mock('../MachineTimelineBubble', () => ({
+  MachineTimelineBubble: ({ plan }: { plan: { goal: string } }) => (
+    <div data-testid="machine-timeline">{plan.goal}</div>
+  ),
+}))
+
 import { ChatRowRenderer } from '../ChatRowRenderer'
 
 function assistantMessage(id: string) {
@@ -99,5 +105,26 @@ describe('ChatRowRenderer', () => {
     expect(screen.getByTestId('turn-divider')).toHaveTextContent('Turn 1: Architect')
     expect(screen.getAllByTestId('message-bubble')).toHaveLength(2)
     expect(screen.queryByTestId('message-agent-label')).toBeNull()
+  })
+
+  it('renders the machine timeline row as a dedicated assistant-side block', () => {
+    const row: ChatRow = {
+      type: 'machine-timeline',
+      id: 'machine-timeline:1',
+      plan: {
+        goal: 'Build machine timeline UI',
+        phase: 'awaiting_approval',
+        tasks: [],
+        model: SupportedModelId('openai/gpt-5.5'),
+        thinkingLevel: 'medium',
+        generatedAt: 1,
+      },
+    }
+
+    render(
+      <ChatRowRenderer row={row} sessionId={SessionId('session-1')} onDismissError={vi.fn()} />,
+    )
+
+    expect(screen.getByTestId('machine-timeline')).toHaveTextContent('Build machine timeline UI')
   })
 })

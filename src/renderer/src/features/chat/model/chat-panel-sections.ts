@@ -1,6 +1,7 @@
 import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
+import type { MachineExecutionState } from '@shared/types/machine'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/waggle'
@@ -15,6 +16,7 @@ export interface ChatTranscriptSectionState {
   readonly projectPath: string | null
   readonly recentProjects: readonly string[]
   readonly activeSessionId: SessionId | null
+  readonly machinePlan: MachineExecutionState | null
   readonly chatRows: ChatRow[]
   /** The ID of the last user message used to identify stable session hydration for scroll restore. */
   readonly lastUserMessageId: string | null
@@ -28,6 +30,8 @@ export interface ChatTranscriptSectionState {
   onSelectProjectPath: (path: string) => void
   onRetryText: (content: string) => Promise<void>
   onOpenSettings: () => void
+  onApproveMachinePlan: () => Promise<void>
+  onDiscardMachinePlan: () => Promise<void>
   onDismissError: (errorId: string | null) => void
   onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   onBranchFromMessage: (messageId: string) => void
@@ -36,6 +40,9 @@ export interface ChatTranscriptSectionState {
 
 export interface ChatComposerSectionState {
   readonly activeSessionId: SessionId | null
+  readonly machineModeEnabled: boolean
+  readonly machineStatus: 'idle' | 'running'
+  readonly machinePlan: MachineExecutionState | null
   readonly waggleStatus: WaggleCollaborationStatus
   readonly followUpSuggestion: TuringFollowUpSuggestion | null
   readonly commandPaletteOpen: boolean
@@ -51,6 +58,9 @@ export interface ChatComposerSectionState {
   onSelectSkill: (skillId: string, skillName?: string) => void
   onStartWaggle: (config: WaggleConfig) => void
   onStartTeam: (teammate: TeammateDefinition) => void
+  onSetMachineModeEnabled: (enabled: boolean) => void
+  onApproveMachinePlan: () => Promise<void>
+  onDiscardMachinePlan: () => Promise<void>
   onClearTeamMode: () => void
   onSendWithWaggle: (payload: AgentSendPayload) => Promise<void>
   onSteer: (messageId: string) => Promise<void>

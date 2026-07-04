@@ -126,7 +126,7 @@ describe('session active run persistence', () => {
       runId: 'run-2',
       sessionId,
       branchId,
-      runMode: 'waggle',
+      runMode: 'machine',
       model: SupportedModelId('anthropic/claude-sonnet-4'),
     })
     await clearSessionActiveRun({ sessionId, runId: 'run-2' })

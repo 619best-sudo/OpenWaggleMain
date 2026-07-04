@@ -6,6 +6,9 @@ import type { UpdateStatus } from './updater'
 import type { WaggleStreamMetadata, WaggleTurnEvent } from './waggle'
 
 export interface IpcSendChannelMap {
+  'agent:cancel-machine': {
+    args: [sessionId: SessionId]
+  }
   'agent:cancel-waggle': {
     args: [sessionId: SessionId]
   }

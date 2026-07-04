@@ -1,6 +1,7 @@
 import type { RunMode } from '@shared/types/background-run'
 import type { SessionBranchId, SupportedModelId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
+import type { MachineExecutionState } from '@shared/types/machine'
 import type { WaggleAgentColor, WaggleMessageMetadata } from '@shared/types/waggle'
 import type { CompletedPhase } from '@/features/chat/hooks/useStreamingPhase'
 
@@ -40,6 +41,13 @@ export interface WaggleTurnChatRow {
   messages: MessageChatRow[]
 }
 
+export interface MachineTimelineChatRow {
+  type: 'machine-timeline'
+  id: string
+  plan: MachineExecutionState
+  variant?: 'primary' | 'summary'
+}
+
 // ─── ChatRow Discriminated Union ──────────────────────────
 
 export type ChatRow =
@@ -53,6 +61,7 @@ export type ChatRow =
     }
   | MessageChatRow
   | WaggleTurnChatRow
+  | MachineTimelineChatRow
   | { type: 'branch-summary'; id: string; summary: string }
   | { type: 'compaction-summary'; id: string; summary: string; tokensBefore: number }
   | { type: 'phase-indicator'; label: string; elapsedMs: number }

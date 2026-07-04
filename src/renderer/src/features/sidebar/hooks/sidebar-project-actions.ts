@@ -91,7 +91,21 @@ async function removeProject(deps: SidebarProjectActionDeps, path: string) {
   await Promise.all(
     activeRuns
       .filter((run) => projectSessionIds.has(String(run.sessionId)))
-      .map((run) => api.cancelAgent(run.sessionId)),
+      .map((run) => {
+        if (run.mode === 'machine') {
+          api.cancelMachine(run.sessionId)
+          return Promise.resolve()
+        }
+        if (run.mode === 'waggle') {
+          api.cancelWaggle(run.sessionId)
+          return Promise.resolve()
+        }
+        if (run.mode === 'team') {
+          api.cancelTeam(run.sessionId)
+          return Promise.resolve()
+        }
+        return api.cancelAgent(run.sessionId)
+      }),
   )
   await Promise.all(projectSessions.map((session) => api.deleteSession(session.id)))
   clearComposerDraftsForSessions(projectSessions)

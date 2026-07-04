@@ -94,6 +94,8 @@ function getAssistantMessageRows(
 ) {
   const rows = buildChatRows({
     messages,
+    allMessages: messages,
+    machinePlan: null,
     isLoading: false,
     error: undefined,
     lastUserMessage: null,
@@ -113,6 +115,8 @@ function getWaggleTurnRows(
 ) {
   const rows = buildChatRows({
     messages,
+    allMessages: messages,
+    machinePlan: null,
     isLoading: false,
     error: undefined,
     lastUserMessage: null,

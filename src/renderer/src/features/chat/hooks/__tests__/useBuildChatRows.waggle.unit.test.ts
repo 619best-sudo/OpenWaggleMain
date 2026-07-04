@@ -31,6 +31,7 @@ describe('buildChatRows waggle message metadata', () => {
 
     const rows = buildChatRows({
       messages: [createUserMessage('user-1', 'question'), advocateMsg, criticMsg],
+      machinePlan: null,
       isLoading: false,
       error: undefined,
       lastUserMessage: null,
@@ -78,6 +79,9 @@ describe('buildChatRows waggle message metadata', () => {
 
     const rows = buildChatRows({
       messages,
+      allMessages: messages,
+      machinePlan: null,
+      machinePlan: null,
       isLoading: false,
       error: undefined,
       lastUserMessage: null,
@@ -109,6 +113,9 @@ describe('buildChatRows waggle message metadata', () => {
 
     const rows = buildChatRows({
       messages,
+      allMessages: messages,
+      machinePlan: null,
+      machinePlan: null,
       isLoading: true,
       error: undefined,
       lastUserMessage: null,
@@ -146,6 +153,8 @@ describe('buildChatRows waggle message metadata', () => {
 
     const rows = buildChatRows({
       messages,
+      allMessages: messages,
+      machinePlan: null,
       isLoading: false,
       error: undefined,
       lastUserMessage: null,
@@ -188,6 +197,7 @@ describe('buildChatRows waggle message metadata', () => {
 
     const rows = buildChatRows({
       messages: [createUserMessage('user-1', 'question'), waggleMsg, postWaggleMsg],
+      machinePlan: null,
       isLoading: false,
       error: undefined,
       lastUserMessage: null,

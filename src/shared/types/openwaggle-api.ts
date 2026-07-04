@@ -71,7 +71,15 @@ export interface OpenWaggleApi {
     payload: AgentSendPayload,
     model: SupportedModelId,
   ): Promise<void>
+  sendMachineMessage(
+    sessionId: SessionId,
+    payload: AgentSendPayload,
+    model: SupportedModelId,
+  ): Promise<void>
+  approveMachinePlan(sessionId: SessionId): Promise<void>
+  discardMachinePlan(sessionId: SessionId): Promise<void>
   cancelAgent(sessionId?: SessionId): Promise<void>
+  cancelMachine(sessionId: SessionId): void
   steerAgent(sessionId: SessionId): Promise<{ preserved: boolean }>
   /** Subscribe to live Pi-shaped runtime events from the main process */
   onAgentEvent(callback: (payload: IpcEventPayload<'agent:event'>) => void): () => void

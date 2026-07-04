@@ -1,4 +1,5 @@
 import type { AgentSendPayload, Message } from '@shared/types/agent'
+import type { RunMode } from '@shared/types/background-run'
 import type { SessionId } from '@shared/types/brand'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { AgentTransportEvent } from '@shared/types/stream'
@@ -9,6 +10,7 @@ export interface AgentRunInput {
   readonly runId: string
   readonly payload: AgentSendPayload
   readonly model: SupportedModelId
+  readonly runMode?: RunMode
   readonly promptDelivery?: AgentKernelPromptDelivery
   readonly signal: AbortSignal
   readonly onEvent: (event: AgentTransportEvent) => void

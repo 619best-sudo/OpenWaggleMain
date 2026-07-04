@@ -12,6 +12,7 @@ import { useScopedComposerDrafts } from '@/features/composer/hooks'
 import { WaggleCollaborationStatus as WaggleCollaborationStatusBanner } from '@/features/waggle/components'
 import { useApplyPendingWaggleLaunchPrompt } from '@/features/waggle/hooks'
 import { Button } from '@/shared/ui/Button'
+import loaderGif from '../../../../../assets/loader.gif'
 import type { ChatComposerSectionState } from '../model'
 import { SessionForkSelector } from './SessionForkSelector'
 
@@ -22,9 +23,25 @@ interface ChatComposerStackProps {
 
 function noOp() {}
 
+function machinePhaseLabel(phase: NonNullable<ChatComposerSectionState['machinePlan']>['phase']) {
+  switch (phase) {
+    case 'awaiting_approval':
+      return 'Awaiting approval'
+    case 'running':
+      return 'Running'
+    case 'completed':
+      return 'Completed'
+    case 'failed':
+      return 'Failed'
+  }
+}
+
 export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerStackProps) {
   const {
     activeSessionId,
+    machineModeEnabled,
+    machineStatus,
+    machinePlan,
     waggleStatus,
     followUpSuggestion,
     commandPaletteOpen,
@@ -40,6 +57,7 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
     onSelectSkill,
     onStartWaggle,
     onStartTeam,
+    onSetMachineModeEnabled,
     onClearTeamMode,
     onSendWithWaggle,
     onSteer,
@@ -65,6 +83,17 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
     branchSummaryMode === 'choice' || branchSummaryMode === 'summarizing'
   const composerPlaceholder =
     branchSummaryMode === 'custom' ? 'Custom instructions for the branch summary' : undefined
+  const showMachineStrip = machineModeEnabled || machinePlan !== null
+  const machineStripMessage = machinePlan?.phase === 'awaiting_approval'
+    ? 'has a generated plan ready for review.'
+    : machineStatus === 'running'
+      ? 'is running in this session.'
+      : machinePlan?.phase === 'completed'
+        ? 'finished its plan. Review the timeline in chat.'
+        : machinePlan?.phase === 'failed'
+          ? 'stopped before the plan finished.'
+          : 'is armed. Your next prompt will generate a plan and execute tasks sequentially.'
+  const machineStripStatus = machinePlan ? machinePhaseLabel(machinePlan.phase) : 'Armed'
 
   return (
     <>
@@ -87,6 +116,43 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
             <Button variant="ghost" size="sm" onClick={onClearTeamMode}>
               Clear
             </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {showMachineStrip ? (
+        <div className="mx-auto mb-2 w-full max-w-[960px] px-5">
+          <div className="home-panel-frame-soft flex items-center justify-between gap-3 rounded-xl border border-border bg-bg-secondary/70 px-4 py-3">
+            <div className="min-w-0 flex items-center gap-3">
+              <img
+                src={loaderGif}
+                alt=""
+                aria-hidden="true"
+                className="size-7 shrink-0 rounded-sm object-contain"
+              />
+              <div className="min-w-0 text-[13px] text-text-secondary">
+                <span className="font-bold tracking-wide text-text-primary">Machine mode</span>{' '}
+                {machineStripMessage}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              <div className="text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
+                {machineStripStatus}
+              </div>
+              {machineModeEnabled ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    onSetMachineModeEnabled(false)
+                  }}
+                  disabled={machineStatus === 'running'}
+                  className="text-text-primary hover:bg-bg-hover hover:text-text-primary"
+                >
+                  Clear
+                </Button>
+              ) : null}
+            </div>
           </div>
         </div>
       ) : null}
@@ -145,6 +211,9 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
             recordHistory: branchSummaryMode !== 'custom',
             allowEnqueue: branchSummaryMode !== 'custom',
             sendTitle: branchSummaryMode === 'custom' ? 'Summarize branch' : undefined,
+            machineModeEnabled,
+            machineModeRunning: machineStatus === 'running',
+            onSetMachineModeEnabled,
           }}
           onToast={onToast}
         />

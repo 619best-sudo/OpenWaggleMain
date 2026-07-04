@@ -4,6 +4,7 @@ import { registerAuthHandlers } from './auth-handler'
 import { registerComposerHandlers } from './composer-handler'
 import { registerFeedbackHandlers } from './feedback-handler'
 import { registerGitHandlers } from './git'
+import { registerMachineHandlers } from './machine-handler'
 import { registerMcpHandlers } from './mcp-handler'
 import { registerProjectHandlers } from './project-handler'
 import { registerProvidersHandlers } from './providers-handler'
@@ -25,6 +26,7 @@ export { cleanupTerminals } from './terminal-handler'
 export function registerAllIpcHandlers(): void {
   registerAuthHandlers()
   registerAgentHandlers()
+  registerMachineHandlers()
   registerSettingsHandlers()
   registerSessionsHandlers()
   registerSessionDetailsHandlers()

@@ -1,6 +1,7 @@
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { SupportedModelId } from '@shared/types/llm'
+import type { MachineExecutionState } from '@shared/types/machine'
 import type { SessionDetail } from '@shared/types/session'
 import type { WaggleCollaborationStatus } from '@shared/types/waggle'
 import { useState } from 'react'
@@ -45,12 +46,15 @@ export interface TranscriptSectionParams {
   readonly recentProjects: readonly string[]
   readonly activeSessionId: SessionId | null
   readonly activeSession: SessionDetail | null
+  readonly machinePlan: MachineExecutionState | null
   readonly model: SupportedModelId
   readonly waggleStatus: WaggleCollaborationStatus
   readonly phase: ReturnType<typeof useStreamingPhase>
   readonly handleOpenProject: () => Promise<void>
   readonly handleSelectProjectPath: (path: string) => void
   readonly handleSendText: (content: string) => Promise<void>
+  readonly handleApproveMachinePlan: () => Promise<void>
+  readonly handleDiscardMachinePlan: () => Promise<void>
   readonly openSettings: () => void
   readonly handleDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   readonly handleBranchFromMessage: (messageId: string) => void
@@ -70,11 +74,14 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     recentProjects,
     activeSessionId,
     activeSession,
+    machinePlan,
     model,
     phase,
     handleOpenProject,
     handleSelectProjectPath,
     handleSendText,
+    handleApproveMachinePlan,
+    handleDiscardMachinePlan,
     openSettings,
     handleDismissInterruptedRun,
     handleBranchFromMessage,
@@ -98,6 +105,7 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     activeSessionId,
     activeWorkspace,
     messages,
+    machinePlan,
     draftBranchSourceNodeId,
   })
   logger.debug('Prepared transcript messages before row building', {
@@ -109,7 +117,7 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
       role: message.role,
     })),
   })
-  const waggleMetadataLookup = useWaggleMetadataLookup(activeSession, transcriptMessages)
+  const waggleMetadataLookup = useWaggleMetadataLookup(activeSession, messages)
 
   const lastUserMessage = resolveLastUserMessage(transcriptMessages)
   const interruptedRun =
@@ -120,6 +128,8 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
 
   const chatRows = useChatRows({
     messages: transcriptMessages,
+    allMessages: messages,
+    machinePlan,
     isLoading: transcriptLoading,
     error,
     lastUserMessage,
@@ -156,11 +166,14 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     projectPath,
     recentProjects,
     activeSessionId,
+    machinePlan,
     chatRows,
     onOpenProject: handleOpenProject,
     onSelectProjectPath: handleSelectProjectPath,
     onRetryText: handleSendText,
     onOpenSettings: openSettings,
+    onApproveMachinePlan: handleApproveMachinePlan,
+    onDiscardMachinePlan: handleDiscardMachinePlan,
     onDismissError: setDismissedError,
     onDismissInterruptedRun: handleDismissInterruptedRun,
     onBranchFromMessage: handleBranchFromMessage,

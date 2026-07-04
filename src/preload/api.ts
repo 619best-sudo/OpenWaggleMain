@@ -55,7 +55,11 @@ function prepareSelectedAttachments(projectPath: string, files: readonly File[])
 export const api: OpenWaggleApi = {
   // Agent
   sendMessage: invoke('agent:send-message'),
+  sendMachineMessage: invoke('agent:send-machine-message'),
+  approveMachinePlan: invoke('agent:approve-machine-plan'),
+  discardMachinePlan: invoke('agent:discard-machine-plan'),
   cancelAgent: invoke('agent:cancel'),
+  cancelMachine: send('agent:cancel-machine'),
   steerAgent: invoke('agent:steer'),
   onAgentEvent: on('agent:event'),
 

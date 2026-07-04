@@ -23,6 +23,8 @@ interface TranscriptRowProps {
   sessionId: SessionId | null
   onOpenSettings: () => void
   onRetryText: (content: string) => Promise<void>
+  onApproveMachinePlan: () => Promise<void>
+  onDiscardMachinePlan: () => Promise<void>
   onDismissError: (errorId: string | null) => void
   onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   onBranchFromMessage: (messageId: string) => void
@@ -34,6 +36,8 @@ function TranscriptRow({
   sessionId,
   onOpenSettings,
   onRetryText,
+  onApproveMachinePlan,
+  onDiscardMachinePlan,
   onDismissError,
   onDismissInterruptedRun,
   onBranchFromMessage,
@@ -47,6 +51,8 @@ function TranscriptRow({
       onRetry={(content) => {
         void onRetryText(content)
       }}
+      onApproveMachinePlan={onApproveMachinePlan}
+      onDiscardMachinePlan={onDiscardMachinePlan}
       onDismissError={onDismissError}
       onDismissInterruptedRun={onDismissInterruptedRun}
       onBranchFromMessage={onBranchFromMessage}
@@ -59,6 +65,7 @@ function getChatRowKey(row: ChatRow) {
   return matchBy(row, 'type')
     .with('message', (value) => `message:${value.message.id}`)
     .with('waggle-turn', (value) => value.id)
+    .with('machine-timeline', (value) => value.id)
     .with('interrupted-run', (value) => `interrupted-run:${value.runId}`)
     .with('branch-summary', (value) => `branch-summary:${value.id}`)
     .with('compaction-summary', (value) => `compaction:${value.id}`)
@@ -75,6 +82,8 @@ interface RenderTranscriptRowsParams {
   activeSessionId: SessionId | null
   onOpenSettings: () => void
   onRetryText: (content: string) => Promise<void>
+  onApproveMachinePlan: () => Promise<void>
+  onDiscardMachinePlan: () => Promise<void>
   onDismissError: (errorId: string | null) => void
   onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   onBranchFromMessage: (messageId: string) => void
@@ -87,6 +96,8 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
     activeSessionId,
     onOpenSettings,
     onRetryText,
+    onApproveMachinePlan,
+    onDiscardMachinePlan,
     onDismissError,
     onDismissInterruptedRun,
     onBranchFromMessage,
@@ -109,6 +120,8 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
               sessionId={activeSessionId}
               onOpenSettings={onOpenSettings}
               onRetryText={onRetryText}
+              onApproveMachinePlan={onApproveMachinePlan}
+              onDiscardMachinePlan={onDiscardMachinePlan}
               onDismissError={onDismissError}
               onDismissInterruptedRun={onDismissInterruptedRun}
               onBranchFromMessage={onBranchFromMessage}
@@ -249,6 +262,8 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
     onSelectProjectPath,
     onRetryText,
     onOpenSettings,
+    onApproveMachinePlan,
+    onDiscardMachinePlan,
     onDismissError,
     onDismissInterruptedRun,
     onBranchFromMessage,
@@ -333,6 +348,8 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
             activeSessionId={activeSessionId}
             onOpenSettings={onOpenSettings}
             onRetryText={onRetryText}
+            onApproveMachinePlan={onApproveMachinePlan}
+            onDiscardMachinePlan={onDiscardMachinePlan}
             onDismissError={onDismissError}
             onDismissInterruptedRun={onDismissInterruptedRun}
             onBranchFromMessage={onBranchFromMessage}

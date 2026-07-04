@@ -16,6 +16,10 @@ interface ChatSendWorkflowParams {
     ReturnType<typeof useBranchSummaryWorkflow>['materializeDraftBranchForSend']
   >[0]
   readonly handleSend: (payload: AgentSendPayload) => Promise<void>
+  readonly handleSendMachine: (
+    payload: AgentSendPayload,
+    targetSessionId?: SessionId | null,
+  ) => Promise<void>
   readonly handleSendWaggle: (
     payload: AgentSendPayload,
     config: WaggleConfig,
@@ -36,12 +40,19 @@ interface ChatSendWorkflowParams {
   readonly clearActiveTeammate: () => void
   readonly startTeamRun: (sessionId: SessionId, teammate: TeammateDefinition) => void
   readonly finishTeamRun: (sessionId: SessionId) => void
+  readonly setMachineModeEnabled: (enabled: boolean, sessionId: SessionId | null) => void
+  readonly startMachineRun: (sessionId: SessionId) => void
+  readonly finishMachineRun: (sessionId: SessionId) => void
+  readonly clearMachineMode: () => void
   readonly clearWaggleConfig: () => void
   readonly setWaggleConfig: (config: WaggleConfig, sessionId: SessionId | null) => void
   readonly showToast: (message: string) => void
   readonly startWaggleCollaboration: (sessionId: SessionId, config: WaggleConfig) => void
   readonly stop: () => void
   readonly stopWaggleCollaboration: () => void
+  readonly machineModeEnabled: boolean
+  readonly machineOwningId: SessionId | null
+  readonly machineStatus: 'idle' | 'running'
   readonly activeTeammate: TeammateDefinition | null
   readonly teamOwningId: SessionId | null
   readonly teamStatus: 'idle' | 'running'
@@ -106,6 +117,14 @@ function activeWaggleConfigForSend(params: ChatSendWorkflowParams): WaggleConfig
 }
 
 async function sendThroughActiveMode(params: ChatSendWorkflowParams, payload: AgentSendPayload) {
+  if (machineModeEnabledForSend(params)) {
+    const targetSessionId = params.activeSessionId ?? params.machineOwningId
+    if (targetSessionId) {
+      params.startMachineRun(targetSessionId)
+    }
+    await params.handleSendMachine(payload, targetSessionId)
+    return
+  }
   const waggleConfig = activeWaggleConfigForSend(params)
   if (waggleConfig) {
     const targetSessionId = params.activeSessionId ?? params.waggleOwningId
@@ -125,6 +144,14 @@ async function sendThroughActiveMode(params: ChatSendWorkflowParams, payload: Ag
     return
   }
   await params.handleSend(payload)
+}
+
+function machineModeEnabledForSend(params: ChatSendWorkflowParams) {
+  if (!params.machineModeEnabled) return false
+  if (params.machineOwningId && params.activeSessionId && params.machineOwningId !== params.activeSessionId) {
+    return false
+  }
+  return true
 }
 
 function activeTeammateForSend(params: ChatSendWorkflowParams): TeammateDefinition | null {
@@ -159,6 +186,14 @@ export function useChatSendWorkflow(params: ChatSendWorkflowParams) {
       }
     },
     cancelRun() {
+      if (
+        params.activeSessionId &&
+        params.machineStatus === 'running' &&
+        params.machineOwningId === params.activeSessionId
+      ) {
+        api.cancelMachine(params.activeSessionId)
+        params.finishMachineRun(params.activeSessionId)
+      }
       if (params.activeSessionId && params.waggleStatus !== 'idle') {
         api.cancelWaggle(params.activeSessionId)
         params.stopWaggleCollaboration()
@@ -174,12 +209,21 @@ export function useChatSendWorkflow(params: ChatSendWorkflowParams) {
       params.stop()
     },
     startWaggle(config: WaggleConfig) {
+      params.clearMachineMode()
       params.clearActiveTeammate()
       params.setWaggleConfig(config, params.activeSessionId)
     },
     startTeam(teammate: TeammateDefinition) {
+      params.clearMachineMode()
       params.clearWaggleConfig()
       params.armActiveTeammate(teammate, params.activeSessionId)
+    },
+    setMachineModeEnabled(enabled: boolean) {
+      if (enabled) {
+        params.clearWaggleConfig()
+        params.clearActiveTeammate()
+      }
+      params.setMachineModeEnabled(enabled, params.activeSessionId)
     },
     stopCollaboration() {
       if (params.activeSessionId) api.cancelWaggle(params.activeSessionId)

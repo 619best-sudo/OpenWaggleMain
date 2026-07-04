@@ -17,7 +17,7 @@ export function recordDurableActiveRun(input: AgentRunInput) {
       runId: input.runId,
       sessionId: input.sessionId,
       branchId,
-      runMode: 'classic',
+      runMode: input.runMode ?? 'classic',
       model: input.model,
     })
     return { sessionRepo, identity: { sessionId: input.sessionId, runId: input.runId } }

@@ -20,7 +20,11 @@ describe('preload api surface contract', () => {
   const EXPECTED_METHODS = [
     // Agent
     'sendMessage',
+    'sendMachineMessage',
+    'approveMachinePlan',
+    'discardMachinePlan',
     'cancelAgent',
+    'cancelMachine',
     'steerAgent',
     'onAgentEvent',
     'getAgentPhase',

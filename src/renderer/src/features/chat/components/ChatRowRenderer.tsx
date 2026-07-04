@@ -12,6 +12,7 @@ import { BranchSummaryCard } from './BranchSummaryCard'
 import { ChatErrorDisplay } from './ChatErrorDisplay'
 import { CompactionSummaryCard } from './CompactionSummaryCard'
 import { InterruptedRunNotice } from './InterruptedRunNotice'
+import { MachineTimelineBubble } from './MachineTimelineBubble'
 import { MessageBubble } from './MessageBubble'
 import { RunSummary } from './RunSummary'
 
@@ -22,6 +23,8 @@ interface ChatRowRendererProps {
   onRetry?: (content: string) => void
   onDismissError: (message: string) => void
   onDismissInterruptedRun?: (runId: string, branchId: SessionBranchId) => void
+  onApproveMachinePlan?: () => Promise<void>
+  onDiscardMachinePlan?: () => Promise<void>
   onBranchFromMessage?: (messageId: string) => void
   onForkFromMessage?: (messageId: string) => void
 }
@@ -29,10 +32,10 @@ interface ChatRowRendererProps {
 export function ChatRowRenderer({
   row,
   sessionId,
-  onOpenSettings,
-  onRetry,
   onDismissError,
   onDismissInterruptedRun,
+  onApproveMachinePlan,
+  onDiscardMachinePlan,
   onBranchFromMessage,
   onForkFromMessage,
 }: ChatRowRendererProps) {
@@ -110,6 +113,14 @@ export function ChatRowRenderer({
           ))}
         </div>
       </section>
+    ))
+    .with('machine-timeline', (value) => (
+      <MachineTimelineBubble
+        plan={value.plan}
+        variant={value.variant}
+        onApprove={onApproveMachinePlan ?? (async () => {})}
+        onDiscard={onDiscardMachinePlan ?? (async () => {})}
+      />
     ))
     .with('branch-summary', (value) => (
       <BranchSummaryCard

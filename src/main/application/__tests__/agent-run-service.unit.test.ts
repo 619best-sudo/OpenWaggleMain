@@ -80,6 +80,7 @@ const TestSessionLayer = Layer.succeed(SessionRepository, {
   archiveBranch: () => Effect.void,
   restoreBranch: () => Effect.void,
   updateTreeUiState: () => Effect.void,
+  updateBranchUiState: () => Effect.void,
   recordActiveRun: (input) =>
     Effect.sync(() => {
       recordActiveRunMock(input)

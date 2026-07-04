@@ -9,6 +9,7 @@ import { api } from '@/shared/lib/ipc'
 
 /** Set of session IDs that are currently in a waggle run. */
 const activeWaggleSessions = new Set<SessionId>()
+const activeMachineSessions = new Set<SessionId>()
 
 /**
  * Subscribes to agent lifecycle events and maintains per-session status
@@ -35,13 +36,14 @@ export function useSessionStatusMonitor(): void {
 
     const unsubPhase = api.onAgentPhase(({ sessionId, phase }) => {
       if (!phase) return
-      // Don't downgrade waggle-running to working
-      if (activeWaggleSessions.has(sessionId)) return
+      // Don't downgrade machine/waggle-running to working
+      if (activeWaggleSessions.has(sessionId) || activeMachineSessions.has(sessionId)) return
       setStatusWithVisitCheck(sessionId, 'working')
     })
 
     const unsubCompleted = api.onRunCompleted(({ sessionId }) => {
       activeWaggleSessions.delete(sessionId)
+      activeMachineSessions.delete(sessionId)
       setStatusWithVisitCheck(sessionId, 'completed')
     })
 
@@ -57,8 +59,18 @@ export function useSessionStatusMonitor(): void {
 
     const unsubEvent = api.onAgentEvent(({ sessionId, event }) => {
       matchBy(event, 'type')
+        .with('custom', (value) => {
+          if (value.name === 'machine:run-start') {
+            activeMachineSessions.add(sessionId)
+            setStatusWithVisitCheck(sessionId, 'machine-running')
+            return
+          }
+          if (value.name === 'machine:run-end') {
+            activeMachineSessions.delete(sessionId)
+          }
+        })
         .with('agent_start', () => {
-          if (!activeWaggleSessions.has(sessionId)) {
+          if (!activeWaggleSessions.has(sessionId) && !activeMachineSessions.has(sessionId)) {
             setStatusWithVisitCheck(sessionId, 'connecting')
           }
         })
@@ -74,14 +86,14 @@ export function useSessionStatusMonitor(): void {
         .with('message_update', (value) => {
           matchBy(value.assistantMessageEvent, 'type')
             .with('text_delta', 'toolcall_start', () => {
-              if (!activeWaggleSessions.has(sessionId)) {
+              if (!activeWaggleSessions.has(sessionId) && !activeMachineSessions.has(sessionId)) {
                 setStatusWithVisitCheck(sessionId, 'working')
               }
             })
             .otherwise(() => undefined)
         })
         .with('tool_execution_start', () => {
-          if (!activeWaggleSessions.has(sessionId)) {
+          if (!activeWaggleSessions.has(sessionId) && !activeMachineSessions.has(sessionId)) {
             setStatusWithVisitCheck(sessionId, 'working')
           }
         })

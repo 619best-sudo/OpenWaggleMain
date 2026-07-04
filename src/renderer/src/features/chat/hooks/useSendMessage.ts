@@ -19,14 +19,17 @@ interface SendMessageDeps {
   readonly thinkingLevel: ThinkingLevel
   readonly createSession: (projectPath: string) => Promise<SessionId>
   readonly sendMessage: (payload: AgentSendPayload) => Promise<void>
+  readonly sendMachineMessage: (payload: AgentSendPayload) => Promise<void>
   readonly sendFirstMessageToSession: (
     sessionId: SessionId,
     payload: AgentSendPayload,
     mode:
       | { readonly kind: 'plain' }
+      | { readonly kind: 'machine' }
       | { readonly kind: 'waggle'; readonly config: WaggleConfig }
       | { readonly kind: 'team'; readonly teammate: TeammateDefinition },
   ) => Promise<void>
+  readonly onMachineSessionResolved?: (sessionId: SessionId) => void
   readonly sendWaggleMessage: (payload: AgentSendPayload, config: WaggleConfig) => Promise<void>
   readonly sendTeamMessage: (
     payload: AgentSendPayload,
@@ -37,6 +40,10 @@ interface SendMessageDeps {
 interface SendMessageHandlers {
   readonly handleSend: (payload: AgentSendPayload) => Promise<void>
   readonly handleSendText: (content: string) => Promise<void>
+  readonly handleSendMachine: (
+    payload: AgentSendPayload,
+    targetSessionId?: SessionId | null,
+  ) => Promise<void>
   readonly handleSendWaggle: (
     payload: AgentSendPayload,
     config: WaggleConfig,
@@ -77,7 +84,9 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
     thinkingLevel,
     createSession,
     sendMessage,
+    sendMachineMessage,
     sendFirstMessageToSession,
+    onMachineSessionResolved,
     sendWaggleMessage,
     sendTeamMessage,
   } = deps
@@ -88,7 +97,7 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
         throw new Error('Select a project before sending.')
       }
       const sessionId = await createSession(projectPath)
-      void sendFirstMessageToSession(sessionId, payload, { kind: 'plain' })
+      await sendFirstMessageToSession(sessionId, payload, { kind: 'plain' })
       return
     }
     await sendMessage(payload)
@@ -98,13 +107,9 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
     await handleSend({ text: content, thinkingLevel, attachments: [] })
   }
 
-  async function handleSendWaggle(
-    payload: AgentSendPayload,
-    config: WaggleConfig,
-    targetSessionId?: SessionId | null,
-  ) {
+  async function handleSendMachine(payload: AgentSendPayload, targetSessionId?: SessionId | null) {
     if (targetSessionId) {
-      void sendFirstMessageToSession(targetSessionId, payload, { kind: 'waggle', config })
+      await sendFirstMessageToSession(targetSessionId, payload, { kind: 'machine' })
       return
     }
     if (!activeSessionId) {
@@ -112,7 +117,28 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
         throw new Error('Select a project before sending.')
       }
       const sessionId = await createSession(projectPath)
-      void sendFirstMessageToSession(sessionId, payload, { kind: 'waggle', config })
+      await sendFirstMessageToSession(sessionId, payload, { kind: 'machine' })
+      onMachineSessionResolved?.(sessionId)
+      return
+    }
+    await sendMachineMessage(payload)
+  }
+
+  async function handleSendWaggle(
+    payload: AgentSendPayload,
+    config: WaggleConfig,
+    targetSessionId?: SessionId | null,
+  ) {
+    if (targetSessionId) {
+      await sendFirstMessageToSession(targetSessionId, payload, { kind: 'waggle', config })
+      return
+    }
+    if (!activeSessionId) {
+      if (!projectPath) {
+        throw new Error('Select a project before sending.')
+      }
+      const sessionId = await createSession(projectPath)
+      await sendFirstMessageToSession(sessionId, payload, { kind: 'waggle', config })
       return
     }
     await sendWaggleMessage(payload, config)
@@ -124,7 +150,7 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
     targetSessionId?: SessionId | null,
   ) {
     if (targetSessionId) {
-      void sendFirstMessageToSession(targetSessionId, payload, { kind: 'team', teammate })
+      await sendFirstMessageToSession(targetSessionId, payload, { kind: 'team', teammate })
       return
     }
     if (!activeSessionId) {
@@ -132,13 +158,13 @@ export function createSendHandlers(deps: SendMessageDeps): SendMessageHandlers {
         throw new Error('Select a project before sending.')
       }
       const sessionId = await createSession(projectPath)
-      void sendFirstMessageToSession(sessionId, payload, { kind: 'team', teammate })
+      await sendFirstMessageToSession(sessionId, payload, { kind: 'team', teammate })
       return
     }
     await sendTeamMessage(payload, teammate)
   }
 
-  return { handleSend, handleSendText, handleSendWaggle, handleSendTeam }
+  return { handleSend, handleSendText, handleSendMachine, handleSendWaggle, handleSendTeam }
 }
 
 interface UseSendMessageOptions {
@@ -148,23 +174,33 @@ interface UseSendMessageOptions {
   readonly thinkingLevel: ThinkingLevel
   readonly createSession: (projectPath: string) => Promise<SessionId>
   readonly sendMessage: (payload: AgentSendPayload) => Promise<void>
+  readonly sendMachineMessage: (payload: AgentSendPayload) => Promise<void>
   readonly sendWaggleMessage: (payload: AgentSendPayload, config: WaggleConfig) => Promise<void>
   readonly sendTeamMessage: (
     payload: AgentSendPayload,
     teammate: TeammateDefinition,
   ) => Promise<void>
+  readonly onMachineSessionResolved?: (sessionId: SessionId) => void
 }
 
 /** Hook wrapper — binds first-message sends to the concrete created session id. */
 export function useSendMessage(options: UseSendMessageOptions): SendMessageHandlers {
-  const { activeSessionId, model, sendMessage, sendWaggleMessage, sendTeamMessage, ...rest } =
-    options
+  const {
+    activeSessionId,
+    model,
+    sendMessage,
+    sendMachineMessage,
+    sendWaggleMessage,
+    sendTeamMessage,
+    ...rest
+  } = options
 
   async function sendFirstMessageToSession(
     sessionId: SessionId,
     payload: AgentSendPayload,
     mode:
       | { readonly kind: 'plain' }
+      | { readonly kind: 'machine' }
       | { readonly kind: 'waggle'; readonly config: WaggleConfig }
       | { readonly kind: 'team'; readonly teammate: TeammateDefinition },
   ) {
@@ -175,7 +211,9 @@ export function useSendMessage(options: UseSendMessageOptions): SendMessageHandl
     })
 
     try {
-      if (mode.kind === 'waggle') {
+      if (mode.kind === 'machine') {
+        await api.sendMachineMessage(sessionId, payload, model)
+      } else if (mode.kind === 'waggle') {
         await api.sendWaggleMessage(sessionId, payload, model, mode.config)
       } else if (mode.kind === 'team') {
         await api.sendTeamMessage(sessionId, payload, model, mode.teammate)
@@ -184,10 +222,12 @@ export function useSendMessage(options: UseSendMessageOptions): SendMessageHandl
       }
     } catch (error) {
       useBackgroundRunStore.getState().clearRunRenderSnapshot(sessionId)
+      useOptimisticUserMessageStore.getState().clear(sessionId)
       logger.error('First message send failed', {
         sessionId: String(sessionId),
         error: error instanceof Error ? error.message : String(error),
       })
+      throw error
     }
   }
 
@@ -195,6 +235,7 @@ export function useSendMessage(options: UseSendMessageOptions): SendMessageHandl
     ...rest,
     activeSessionId,
     sendMessage,
+    sendMachineMessage,
     sendFirstMessageToSession,
     sendWaggleMessage,
     sendTeamMessage,

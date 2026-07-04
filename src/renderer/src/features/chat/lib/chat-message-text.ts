@@ -32,6 +32,44 @@ export function isInternalTeamOrchestrationPromptText(text: string) {
   )
 }
 
+export function isInternalMachinePlannerPromptText(text: string) {
+  const normalized = text.replace(/\s+/g, ' ').trim()
+  if (!normalized) {
+    return false
+  }
+
+  return (
+    normalized.startsWith('Machine mode is enabled.') &&
+    normalized.includes('You are the planning agent for a sequential coding workflow.') &&
+    normalized.includes('Return exactly one JSON object and no prose.') &&
+    normalized.includes('User request:')
+  )
+}
+
+export function isInternalToolHandoffAssistantText(text: string) {
+  const normalized = text.trim()
+  if (!normalized.startsWith('[TOOL_HANDOFF]')) {
+    return false
+  }
+
+  const payloadText = normalized.slice('[TOOL_HANDOFF]'.length).trim()
+  if (!payloadText.startsWith('{')) {
+    return false
+  }
+
+  try {
+    const parsed = JSON.parse(payloadText)
+    return (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      'type' in parsed &&
+      parsed.type === 'tool_handoff'
+    )
+  } catch {
+    return false
+  }
+}
+
 export function getNonEmptyUserMessageText(message: UIMessage) {
   if (message.role !== 'user') {
     return null
