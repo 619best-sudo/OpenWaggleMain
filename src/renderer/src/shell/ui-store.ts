@@ -65,7 +65,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   activeView: 'chat',
   activeSettingsTab: 'general',
   diffRefreshKey: 0,
-  transcriptDebugEnabled: false,
+  transcriptDebugEnabled: true,
   toastMessage: null,
   toastData: null,
   commandPaletteOpen: false,

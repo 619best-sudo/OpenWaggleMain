@@ -321,14 +321,14 @@ describe('ChatTranscript t3-style scroll behavior', () => {
     expect(container.querySelector('#transcript-debug-panel')).not.toBeNull()
   })
 
-  it('hides the transcript debug button by default', async () => {
+  it('shows the transcript debug button by default when transcript messages exist', async () => {
     render(<ChatTranscript section={createSection()} />)
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(REQUEST_ANIMATION_FRAME_DELAY_MS)
     })
 
-    expect(screen.queryByRole('button', { name: 'Transcript Debug' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Transcript Debug' })).toBeInTheDocument()
   })
 
   it('does not scroll when lastUserMessageId is null', async () => {

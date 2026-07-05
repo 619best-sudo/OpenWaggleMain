@@ -192,7 +192,7 @@ export function useChatSendWorkflow(params: ChatSendWorkflowParams) {
         params.machineOwningId === params.activeSessionId
       ) {
         api.cancelMachine(params.activeSessionId)
-        params.finishMachineRun(params.activeSessionId)
+        params.clearMachineMode()
       }
       if (params.activeSessionId && params.waggleStatus !== 'idle') {
         api.cancelWaggle(params.activeSessionId)

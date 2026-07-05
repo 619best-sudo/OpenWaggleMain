@@ -43,7 +43,8 @@ function registerSendMachineMessageHandler() {
 function registerCancelMachineHandler() {
   typedOn('agent:cancel-machine', (_event, sessionId: SessionId) =>
     Effect.sync(() => {
-      if (activeMachineRuns.cancel(sessionId)) finishMachineRun(sessionId)
+      const cancelled = activeMachineRuns.cancel(sessionId)
+      if (cancelled) finishMachineRun(sessionId)
     }),
   )
 }

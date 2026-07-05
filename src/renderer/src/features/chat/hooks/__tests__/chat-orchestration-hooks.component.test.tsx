@@ -370,7 +370,8 @@ describe('chat orchestration hooks', () => {
     act(() => result.current.cancelRun())
 
     expect(apiMock.cancelMachine).toHaveBeenCalledWith(SESSION_ID)
-    expect(params.finishMachineRun).toHaveBeenCalledWith(SESSION_ID)
+    expect(params.clearMachineMode).toHaveBeenCalledOnce()
+    expect(params.finishMachineRun).not.toHaveBeenCalled()
     expect(params.stop).toHaveBeenCalledOnce()
   })
 

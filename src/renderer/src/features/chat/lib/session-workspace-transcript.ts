@@ -14,47 +14,6 @@ import {
 
 const logger = createRendererLogger('session-workspace-transcript')
 
-function reportMachineTranscriptDebug(
-  hypothesisId: string,
-  location: string,
-  msg: string,
-  data: Record<string, unknown>,
-) {
-  void fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sessionId: 'machine-no-execution',
-      runId: 'renderer',
-      hypothesisId,
-      location,
-      msg,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {})
-}
-
-function summarizeTranscriptDebugMessage(
-  message: UIMessage,
-  machineOriginalRequest: string | null,
-  index: number,
-) {
-  const text = getUIMessageText(message)
-  const normalizedText = text.replace(/\s+/g, ' ').trim()
-
-  return {
-    index,
-    id: message.id,
-    role: message.role,
-    createdAt:
-      message.createdAt instanceof Date ? message.createdAt.toISOString() : message.createdAt ?? null,
-    partTypes: message.parts.map((part) => part.type),
-    textPreview: normalizedText.slice(0, 180),
-    matchesOriginalRequest: machineOriginalRequest !== null && normalizedText === machineOriginalRequest,
-  }
-}
-
 function normalizeMachineRequestText(text: string) {
   return text.replace(/\s+/g, ' ').trim()
 }
@@ -255,22 +214,6 @@ function filterHiddenInternalMachineAndTeamMessages(
   })
 
   if (filteredMessages.length !== messages.length) {
-    // #region debug-point F:transcript-filter
-    reportMachineTranscriptDebug(
-      'F',
-      'session-workspace-transcript.ts:filterHiddenInternalMachineAndTeamMessages',
-      '[DEBUG] Filtered hidden orchestration prompts from transcript',
-      {
-        rawMessageCount: messages.length,
-        filteredMessageCount: filteredMessages.length,
-        removedMessageIds: messages
-          .filter((message) => !filteredMessages.some((filteredMessage) => filteredMessage.id === message.id))
-          .map((message) => ({ id: message.id, role: message.role })),
-        machinePhase: machinePlan?.phase ?? null,
-        machineTaskStatuses: machinePlan?.tasks.map((task) => ({ id: task.id, status: task.status })) ?? [],
-      },
-    )
-    // #endregion
     logger.debug('Filtered hidden orchestration prompts from transcript', {
       removedMessages: messages
         .filter(
@@ -287,28 +230,69 @@ function filterHiddenInternalMachineAndTeamMessages(
   return filteredMessages
 }
 
+function toMessageTimestamp(message: UIMessage) {
+  if (message.createdAt instanceof Date) {
+    return message.createdAt.getTime()
+  }
+
+  if (typeof message.createdAt === 'string') {
+    const parsed = Date.parse(message.createdAt)
+    return Number.isNaN(parsed) ? null : parsed
+  }
+
+  return null
+}
+
+function hasHiddenInternalMachinePlannerPrompt(messages: UIMessage[]) {
+  return messages.some(
+    (message) =>
+      message.role === 'user' && isInternalMachinePlannerPromptText(getUIMessageText(message)),
+  )
+}
+
 function reorderMachineOriginalRequestBeforeAssistantMessages(
   messages: UIMessage[],
   machinePlan: MachineExecutionState | null,
+  hadHiddenMachinePlannerPrompt: boolean,
 ) {
   const machineOriginalRequest = machinePlan?.originalRequest
     ? normalizeMachineRequestText(machinePlan.originalRequest)
     : null
-  if (!machineOriginalRequest) {
-    return messages
-  }
 
   const firstAssistantIndex = messages.findIndex((message) => message.role === 'assistant')
   if (firstAssistantIndex < 0) {
     return messages
   }
 
-  const machineRequestIndex = messages.findIndex(
-    (message, index) =>
-      index > firstAssistantIndex &&
-      message.role === 'user' &&
-      normalizeMachineRequestText(getUIMessageText(message)) === machineOriginalRequest,
-  )
+  const machineRequestIndex =
+    machineOriginalRequest !== null
+      ? messages.findIndex(
+          (message, index) =>
+            index > firstAssistantIndex &&
+            message.role === 'user' &&
+            normalizeMachineRequestText(getUIMessageText(message)) === machineOriginalRequest,
+        )
+      : hadHiddenMachinePlannerPrompt
+        ? messages.findIndex((message, index) => {
+            if (index <= firstAssistantIndex || message.role !== 'user') {
+              return false
+            }
+
+            const firstAssistant = messages[firstAssistantIndex]
+            if (!firstAssistant) {
+              return false
+            }
+
+            const requestTimestamp = toMessageTimestamp(message)
+            const assistantTimestamp = toMessageTimestamp(firstAssistant)
+
+            if (requestTimestamp !== null && assistantTimestamp !== null) {
+              return requestTimestamp <= assistantTimestamp
+            }
+
+            return String(message.id).startsWith('optimistic-user-')
+          })
+        : -1
   if (machineRequestIndex < 0) {
     return messages
   }
@@ -333,60 +317,31 @@ export function resolveTranscriptMessages({
   machinePlan,
   draftBranchSourceNodeId,
 }: ResolveTranscriptMessagesInput): UIMessage[] {
-  if (!activeSessionId || !activeWorkspace) {
-    return messages
-  }
-
-  if (!workspaceBelongsToSession(activeWorkspace, activeSessionId)) {
-    return messages
-  }
-
-  const workspaceMessages = workspacePathToMessages(activeWorkspace, messages)
-  if (workspaceMessages.length === 0) {
-    return messages
-  }
+  const workspaceMessages =
+    activeSessionId &&
+    activeWorkspace &&
+    workspaceBelongsToSession(activeWorkspace, activeSessionId)
+      ? workspacePathToMessages(activeWorkspace, messages)
+      : []
+  const baseTranscriptMessages =
+    workspaceMessages.length > 0 && activeWorkspace
+      ? appendLiveTailWhenViewingHeadOrDraftSource(
+          activeWorkspace,
+          workspaceMessages,
+          messages,
+          draftBranchSourceNodeId,
+        )
+      : messages
+  const hadHiddenMachinePlannerPrompt = hasHiddenInternalMachinePlannerPrompt(baseTranscriptMessages)
 
   const transcriptMessages = reorderMachineOriginalRequestBeforeAssistantMessages(
     filterHiddenInternalMachineAndTeamMessages(
-      appendLiveTailWhenViewingHeadOrDraftSource(
-        activeWorkspace,
-        workspaceMessages,
-        messages,
-        draftBranchSourceNodeId,
-      ),
+      baseTranscriptMessages,
       machinePlan,
     ),
     machinePlan,
+    hadHiddenMachinePlannerPrompt,
   )
-  const machineOriginalRequest = machinePlan?.originalRequest
-    ? normalizeMachineRequestText(machinePlan.originalRequest)
-    : null
-  if (machinePlan) {
-    // #region debug-point G:resolved-transcript-order
-    reportMachineTranscriptDebug(
-      'G',
-      'session-workspace-transcript.ts:resolveTranscriptMessages',
-      '[DEBUG] Resolved machine transcript message order',
-      {
-        sessionId: String(activeSessionId),
-        rawMessageCount: messages.length,
-        workspaceMessageCount: workspaceMessages.length,
-        transcriptMessageCount: transcriptMessages.length,
-        machinePhase: machinePlan.phase,
-        machineOriginalRequest,
-        rawMessages: messages.map((message, index) =>
-          summarizeTranscriptDebugMessage(message, machineOriginalRequest, index),
-        ),
-        workspaceMessages: workspaceMessages.map((message, index) =>
-          summarizeTranscriptDebugMessage(message, machineOriginalRequest, index),
-        ),
-        transcriptMessages: transcriptMessages.map((message, index) =>
-          summarizeTranscriptDebugMessage(message, machineOriginalRequest, index),
-        ),
-      },
-    )
-    // #endregion
-  }
   logger.debug('Resolved transcript messages', {
     sessionId: String(activeSessionId),
     rawMessageCount: messages.length,

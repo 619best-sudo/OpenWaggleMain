@@ -14,7 +14,6 @@ import {
 import { isRecord } from '@shared/utils/validation'
 import { formatErrorMessage } from '@shared/utils/node-error'
 import * as Effect from 'effect/Effect'
-import { readFileSync } from 'node:fs'
 import { createLogger } from '../logger'
 import { SessionRepository } from '../ports/session-repository'
 import { executeAgentRun, type AgentRunResult } from './agent-run-service'
@@ -23,35 +22,6 @@ import type { AgentRunInput } from './agent-run/types'
 const MACHINE_INTERNAL_CUSTOM_TYPE = 'openwaggle.machine-internal-turn'
 const EMPTY_BRANCH_UI_STATE_JSON = '{}'
 const logger = createLogger('machine-run-service')
-
-function reportMachineDebug(
-  runId: string,
-  hypothesisId: string,
-  location: string,
-  msg: string,
-  data: Record<string, unknown>,
-) {
-  let url = 'http://127.0.0.1:7777/event'
-  let sessionId = 'machine-no-execution'
-  try {
-    const envFile = readFileSync('.dbg/machine-no-execution.env', 'utf8')
-    url = envFile.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? url
-    sessionId = envFile.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? sessionId
-  } catch {}
-  void fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sessionId,
-      runId,
-      hypothesisId,
-      location,
-      msg,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {})
-}
 
 interface ExecuteMachineRunInput {
   readonly sessionId: SessionId
@@ -88,11 +58,66 @@ interface MutableMachineBranchContext {
   uiStateJson: string
 }
 
+const MACHINE_SYSTEM_SPEC_LINES = [
+  'Project: Multi-Model Software Engineering System.',
+  'Goal: beat strong single-model coding workflows for website and game development by operating as an AI software company.',
+  'Core idea:',
+  '- Do not behave like one super AI.',
+  '- Behave like an AI software company where specialized roles collaborate through a central orchestrator that maintains the complete understanding of the project.',
+  'System architecture:',
+  '- User Prompt -> Executive Planner (CEO) -> Product + Architecture Design -> Dependency Graph (DPM) -> Engineering Manager -> Frontend Workers / Backend Workers / Infrastructure Workers -> Code Review Pipeline -> Build / Test / Validate -> Failure Analyzer -> Repair Task Generator -> Repeat Until Green.',
+  'Shared memory:',
+  '- Every role reads and writes the same project memory.',
+  '- Shared memory contains requirements, UI design, architecture, API contracts, database schema, folder structure, coding guidelines, dependency graph, progress, previous decisions, test results, bugs, and acceptance criteria.',
+  '- Nobody works independently; everyone works from the same source of truth.',
+  'Execution pipeline:',
+  '- Understand Request.',
+  '- Product Planning.',
+  '- Architecture Design.',
+  '- Generate Dependency Graph.',
+  '- Break into Micro Tasks.',
+  '- Route Tasks to Best Models.',
+  '- Implement.',
+  '- Review.',
+  '- Build.',
+  '- Test.',
+  '- Repair.',
+  '- Repeat until complete.',
+  'Reference planning expectations:',
+  '- For full-stack website work, cover features, pages, APIs, database, authentication, folder structure, UI theme, and acceptance tests when relevant.',
+  '- For frontend-only work, cover pages, component graph, navbar, sidebar, charts, cards, tables, notifications, settings, responsiveness, accessibility, animation smoothness, design consistency, skeleton loading, empty states, and dark mode when relevant.',
+  '- For backend-only work, cover database design, API design, business rules, authentication, middleware, permissions, stock or domain calculations, caching, audit logs, rate limiting, tests, API documentation, security scans, and performance benchmarks when relevant.',
+  'Task routing:',
+  '- Classify each task by specialty and adopt the best worker mindset for UI animation, React components, database queries, authentication, testing, security, and other domains.',
+  'Review pipeline:',
+  '- Every completed task must pass syntax review, logic review, architecture review, performance review, security review, style review, and acceptance testing.',
+  '- If review fails, generate a repair task, fix the issue, and review again.',
+  'Competitive coding:',
+  '- For critical tasks, consider multiple implementation approaches and select or combine the best parts using correctness, readability, performance, accessibility, and maintainability as the scorecard.',
+  'Integration loop:',
+  '- Merge completed work, compile, lint, run unit tests, integration tests, UI tests, and performance tests, detect bugs, generate repair tasks, and repeat until green.',
+  'Quality objective:',
+  '- Achieve high quality, consistency, and speed through tiny well-scoped tasks, specialized execution, shared memory alignment, and strong global orchestration.',
+] as const
+
 function plannerPrompt(goal: string) {
   return [
     'Machine mode is enabled.',
     'You are the planning agent for a sequential coding workflow.',
-    'Break the user request into a small ordered task plan for a single repository session.',
+    'Adopt the Multi-Model Software Engineering System below and compress it into one repository-aware machine-mode plan.',
+    ...MACHINE_SYSTEM_SPEC_LINES,
+    'Planner-specific instructions:',
+    '- Act as the Executive Planner (CEO), product planner, architect, dependency planner, and engineering manager for this session.',
+    "- Maintain the orchestrator's complete understanding of the project while planning.",
+    '- Treat the repository, current conversation, active plan state, and existing files as the shared project memory for this run.',
+    '- Before emitting tasks, internally cover requirements, UI design, architecture, API contracts, database schema, folder structure, coding guidelines, dependency graph, progress, previous decisions, test results, bugs, and acceptance criteria whenever they are relevant.',
+    '- The ideal system can execute many tiny tasks in parallel, but this machine mode executes sequentially in a single repository session.',
+    '- Therefore, produce the smallest ordered dependency-respecting plan that still captures the benefits of specialized roles, review gates, validation, failure analysis, and repair loops.',
+    '- Break the request into tiny implementation-focused micro tasks whenever practical.',
+    '- Every task should name a concrete artifact, scope, or outcome rather than a vague area of work.',
+    '- Include frontend, backend, infrastructure, review, build, test, validation, and repair work when relevant.',
+    '- Prefer concrete tasks such as creating a specific component, route, schema, API, validation rule, test, review pass, or repair step.',
+    '- Keep tasks sequential for execution, but preserve dependency intent with dependsOn so the orchestration logic remains explicit.',
     'Return exactly one JSON object and no prose.',
     'Do not explain your reasoning.',
     'Do not include any conversational text.',
@@ -110,8 +135,10 @@ function plannerPrompt(goal: string) {
     '  ]',
     '}',
     'Rules:',
-    '- Keep tasks sequential and implementation-focused.',
+    '- Keep tasks sequential, dependency-aware, and implementation-focused.',
     '- Every task prompt should be ready to send directly to the coding agent.',
+    '- Reflect the shared memory and orchestration context in the task prompts when it matters for correctness.',
+    '- Include acceptance intent and validation expectations inside task prompts whenever that improves execution quality.',
     '- Do not include markdown fences.',
     '- Do not include explanatory prose before or after the JSON.',
     '',
@@ -123,14 +150,27 @@ function plannerPrompt(goal: string) {
 function machineTaskExecutionPrompt(task: MachineExecutionTask, goal: string) {
   return [
     'Machine mode is executing a task from an approved plan.',
+    'You are acting inside the Multi-Model Software Engineering System below while executing one approved task at a time.',
+    ...MACHINE_SYSTEM_SPEC_LINES,
+    'Execution-specific instructions:',
+    "- Act as the best specialized worker for this task while preserving the central orchestrator's global understanding.",
+    '- Treat the repository, active branch, current task state, prior task outputs, decisions, tests, and visible code as shared project memory.',
     'Carry out the requested repository change now.',
     'Do not create another plan.',
     'Do not restate the prompt.',
     'Make the code or file changes directly when they are needed.',
+    '- Use the task-classifier mindset to choose the right engineering specialty for the work in front of you.',
+    '- Apply the relevant review pipeline to what you change: syntax, logic, architecture, performance, security, style, and acceptance.',
+    '- Run the relevant integration loop steps for the scope you touch: compile, lint, unit tests, integration tests, UI tests, performance checks, bug detection, repair, and re-validation when applicable.',
+    '- If a failure appears, analyze it, repair it, and continue until the task is green or you hit a real blocker.',
+    '- For critical choices, consider competing implementation approaches and choose the best tradeoff for correctness, readability, performance, accessibility, and maintainability.',
+    '- Keep the implementation aligned with requirements, UI design, architecture, API contracts, database schema, folder structure, coding guidelines, dependency graph, progress, previous decisions, test results, bugs, and acceptance criteria.',
     'If the work is already complete, verify it and continue with minimal explanation.',
     '',
     `Overall goal: ${goal}`,
     `Current task: ${task.title}`,
+    `Task id: ${task.id}`,
+    `Task dependencies: ${task.dependsOn?.length ? task.dependsOn.join(', ') : 'none'}`,
     '',
     'Task instruction:',
     task.prompt,
@@ -200,8 +240,72 @@ function extractJsonBlock(text: string) {
   return text.trim()
 }
 
-function parseMachinePlan(text: string): MachinePlan {
-  const decoded = safeDecodeUnknown(machinePlanSchema, parseJsonUnknown(extractJsonBlock(text)))
+function extractFirstJsonObject(text: string) {
+  const start = text.indexOf('{')
+  if (start === -1) {
+    return null
+  }
+
+  let depth = 0
+  let inString = false
+  let isEscaped = false
+
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index]
+
+    if (inString) {
+      if (isEscaped) {
+        isEscaped = false
+        continue
+      }
+      if (char === '\\') {
+        isEscaped = true
+        continue
+      }
+      if (char === '"') {
+        inString = false
+      }
+      continue
+    }
+
+    if (char === '"') {
+      inString = true
+      continue
+    }
+
+    if (char === '{') {
+      depth += 1
+      continue
+    }
+
+    if (char !== '}') {
+      continue
+    }
+
+    depth -= 1
+    if (depth === 0) {
+      return text.slice(start, index + 1).trim()
+    }
+  }
+
+  return null
+}
+
+export function parseMachinePlan(text: string): MachinePlan {
+  const normalized = extractJsonBlock(text)
+  let parsedPlan: unknown
+
+  try {
+    parsedPlan = parseJsonUnknown(normalized)
+  } catch (error) {
+    const recoveredJson = extractFirstJsonObject(normalized)
+    if (!recoveredJson) {
+      throw error
+    }
+    parsedPlan = parseJsonUnknown(recoveredJson)
+  }
+
+  const decoded = safeDecodeUnknown(machinePlanSchema, parsedPlan)
   if (!decoded.success) {
     throw new Error(decoded.issues.join('; '))
   }
@@ -461,24 +565,6 @@ function persistMachineState(
   return Effect.gen(function* () {
     const sessionRepo = yield* SessionRepository
     branchContext.uiStateJson = mergeMachineStateIntoUiState(branchContext.uiStateJson, machineState)
-    // #region debug-point C:machine-state-persist
-    yield* Effect.sync(() =>
-      reportMachineDebug(
-        'persist-state',
-        'C',
-        'machine-run-service.ts:persistMachineState',
-        '[DEBUG] Persisting machine state',
-        {
-          sessionId: String(sessionId),
-          branchId: String(branchContext.branchId),
-          phase: machineState?.phase ?? null,
-          currentTaskId: machineState?.currentTaskId ?? null,
-          taskStatuses: machineState?.tasks.map((task) => ({ id: task.id, status: task.status })) ?? [],
-          lastError: machineState?.lastError ?? null,
-        },
-      ),
-    )
-    // #endregion
     yield* sessionRepo.updateBranchUiState(
       sessionId,
       branchContext.branchId,
@@ -594,24 +680,6 @@ export function executeApprovedMachinePlan(input: ExecuteApprovedMachinePlanInpu
       Effect.map((value) => ({ ...value })),
     )
     let machineState = readPersistedMachineState(branchContext.uiStateJson)
-    // #region debug-point A:approved-plan-entry
-    yield* Effect.sync(() =>
-      reportMachineDebug(
-        input.runId,
-        'A',
-        'machine-run-service.ts:executeApprovedMachinePlan:entry',
-        '[DEBUG] Loaded approved machine plan state',
-        {
-          sessionId: String(input.sessionId),
-          hasMachineState: machineState !== null,
-          phase: machineState?.phase ?? null,
-          goal: machineState?.goal ?? null,
-          currentTaskId: machineState?.currentTaskId ?? null,
-          taskStatuses: machineState?.tasks.map((task) => ({ id: task.id, status: task.status })) ?? [],
-        },
-      ),
-    )
-    // #endregion
     if (!machineState || machineState.phase !== 'awaiting_approval') {
       return planValidationError('No machine plan is awaiting approval for this session.')
     }
@@ -653,26 +721,7 @@ export function executeApprovedMachinePlan(input: ExecuteApprovedMachinePlanInpu
       }
 
       machineState = markTaskRunning(machineState, nextTask.id)
-      const runningMachineState = machineState
       yield* persistMachineState(input.sessionId, branchContext, machineState)
-      // #region debug-point B:task-dispatch
-      yield* Effect.sync(() =>
-        reportMachineDebug(
-          input.runId,
-          'B',
-          'machine-run-service.ts:executeApprovedMachinePlan:beforeRunTask',
-          '[DEBUG] Dispatching machine task',
-          {
-            sessionId: String(input.sessionId),
-            taskId: nextTask.id,
-            taskTitle: nextTask.title,
-            promptPreview: nextTask.prompt.slice(0, 240),
-            phase: runningMachineState.phase,
-            currentTaskId: runningMachineState.currentTaskId ?? null,
-          },
-        ),
-      )
-      // #endregion
 
       const taskResult = yield* runTask(
         input,
@@ -681,27 +730,6 @@ export function executeApprovedMachinePlan(input: ExecuteApprovedMachinePlanInpu
         machineModel,
         machineState.thinkingLevel,
       )
-      // #region debug-point D:task-result
-      yield* Effect.sync(() =>
-        reportMachineDebug(
-          input.runId,
-          'D',
-          'machine-run-service.ts:executeApprovedMachinePlan:afterRunTask',
-          '[DEBUG] Machine task returned result',
-          {
-            sessionId: String(input.sessionId),
-            taskId: nextTask.id,
-            outcome: taskResult.outcome,
-            message: 'message' in taskResult ? taskResult.message : null,
-            newMessageCount: 'newMessages' in taskResult ? taskResult.newMessages.length : null,
-            visibleMessageIds:
-              'newMessages' in taskResult ? visibleMachineTaskMessageIds(taskResult.newMessages) : null,
-            latestAssistantText:
-              'newMessages' in taskResult ? latestAssistantText(taskResult.newMessages).slice(0, 400) : null,
-          },
-        ),
-      )
-      // #endregion
       if (taskResult.outcome !== 'success') {
         const failureMessage =
           taskResult.outcome === 'aborted'
@@ -764,21 +792,6 @@ export function executeApprovedMachinePlan(input: ExecuteApprovedMachinePlanInpu
       machineState = markPlanFailed(machineState, 'Machine run was cancelled.')
     }
     yield* persistMachineState(input.sessionId, branchContext, machineState)
-    // #region debug-point E:run-aborted
-    yield* Effect.sync(() =>
-      reportMachineDebug(
-        input.runId,
-        'E',
-        'machine-run-service.ts:executeApprovedMachinePlan:aborted',
-        '[DEBUG] Machine run exited due to abort',
-        {
-          sessionId: String(input.sessionId),
-          phase: machineState.phase,
-          currentTaskId: machineState.currentTaskId ?? null,
-        },
-      ),
-    )
-    // #endregion
     emitMachineLifecycleEvent({ model: machineModel, onEvent: input.onEvent }, 'machine:run-end', {
       outcome: 'aborted',
     })

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
   getVisibleMachineTaskMessages,
   isInternalToolHandoffAssistantText,
+  parseMachinePlan,
 } from '../machine-run-service'
 
 function assistantMessage(id: string, parts: Message['parts']): Message {
@@ -16,6 +17,36 @@ function assistantMessage(id: string, parts: Message['parts']): Message {
 }
 
 describe('machine-run-service visible task output', () => {
+  it('parses planner JSON even when the model wraps it in prose', () => {
+    expect(
+      parseMachinePlan(`The plan covers implementation, validation, and repair.
+
+{
+  "goal": "Build the requested feature",
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Create the main component",
+      "prompt": "Implement the main feature component and wire it into the page.",
+      "dependsOn": []
+    }
+  ]
+}
+
+Let me know if you want a more detailed breakdown.`),
+    ).toEqual({
+      goal: 'Build the requested feature',
+      tasks: [
+        {
+          id: 'task-1',
+          title: 'Create the main component',
+          prompt: 'Implement the main feature component and wire it into the page.',
+          dependsOn: [],
+        },
+      ],
+    })
+  })
+
   it('recognizes internal tool handoff assistant payloads', () => {
     expect(
       isInternalToolHandoffAssistantText(

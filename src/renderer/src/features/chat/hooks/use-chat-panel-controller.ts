@@ -190,6 +190,14 @@ export function useChatPanelSections(): ChatPanelSections {
         return
       }
 
+      if (event.name === 'machine:run-start') {
+        useMachineModeStore.getState().startRun(activeSessionId)
+      }
+
+      if (event.name === 'machine:run-end') {
+        useMachineModeStore.getState().finishRun(activeSessionId)
+      }
+
       void refreshSessionWorkspace(activeSessionId)
     })
   }, [activeSessionId, refreshSessionWorkspace])

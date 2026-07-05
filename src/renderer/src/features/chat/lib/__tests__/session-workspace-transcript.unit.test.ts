@@ -8,12 +8,17 @@ const SESSION_ID = SessionId('session-1')
 const SESSION_DETAIL_ID = SessionId('session-1')
 const MAIN_BRANCH_ID = SessionBranchId('session-1:main')
 
-function uiMessage(id: string, role: 'user' | 'assistant', content: string) {
+function uiMessage(
+  id: string,
+  role: 'user' | 'assistant',
+  content: string,
+  createdAt: Date = new Date(1),
+) {
   return {
     id,
     role,
     parts: [{ type: 'text', content }],
-    createdAt: new Date(1),
+    createdAt,
   }
 }
 
@@ -415,7 +420,30 @@ End with these exact sections:
       `Machine mode is enabled.
 
 You are the planning agent for a sequential coding workflow.
-Break the user request into a small ordered task plan for a single repository session.
+Adopt the Multi-Model Software Engineering System below and compress it into one repository-aware machine-mode plan.
+Project: Multi-Model Software Engineering System.
+Goal: beat strong single-model coding workflows for website and game development by operating as an AI software company.
+Core idea:
+- Do not behave like one super AI.
+- Behave like an AI software company where specialized roles collaborate through a central orchestrator that maintains the complete understanding of the project.
+System architecture:
+- User Prompt -> Executive Planner (CEO) -> Product + Architecture Design -> Dependency Graph (DPM) -> Engineering Manager -> Frontend Workers / Backend Workers / Infrastructure Workers -> Code Review Pipeline -> Build / Test / Validate -> Failure Analyzer -> Repair Task Generator -> Repeat Until Green.
+Shared memory:
+- Every role reads and writes the same project memory.
+- Shared memory contains requirements, UI design, architecture, API contracts, database schema, folder structure, coding guidelines, dependency graph, progress, previous decisions, test results, bugs, and acceptance criteria.
+Execution pipeline:
+- Understand Request.
+- Product Planning.
+- Architecture Design.
+- Generate Dependency Graph.
+- Break into Micro Tasks.
+- Route Tasks to Best Models.
+- Implement.
+- Review.
+- Build.
+- Test.
+- Repair.
+- Repeat until complete.
 Return exactly one JSON object and no prose.
 Do not explain your reasoning.
 Do not include any conversational text.
@@ -433,7 +461,7 @@ Use this JSON shape:
   ]
 }
 Rules:
-- Keep tasks sequential and implementation-focused.
+- Keep tasks sequential, dependency-aware, and implementation-focused.
 - Every task prompt should be ready to send directly to the coding agent.
 - Do not include markdown fences.
 - Do not include explanatory prose before or after the JSON.
@@ -482,7 +510,21 @@ create a single file index.html to design physics realistic solar system animati
       `Machine mode is enabled.
 
 You are the planning agent for a sequential coding workflow.
-Break the user request into a small ordered task plan for a single repository session.
+Adopt the Multi-Model Software Engineering System below and compress it into one repository-aware machine-mode plan.
+Project: Multi-Model Software Engineering System.
+Execution pipeline:
+- Understand Request.
+- Product Planning.
+- Architecture Design.
+- Generate Dependency Graph.
+- Break into Micro Tasks.
+- Route Tasks to Best Models.
+- Implement.
+- Review.
+- Build.
+- Test.
+- Repair.
+- Repeat until complete.
 Return exactly one JSON object and no prose.
 User request:
 create a beautifull sass page in single file index.html`,
@@ -517,7 +559,21 @@ create a beautifull sass page in single file index.html`,
           `Machine mode is enabled.
 
 You are the planning agent for a sequential coding workflow.
-Break the user request into a small ordered task plan for a single repository session.
+Adopt the Multi-Model Software Engineering System below and compress it into one repository-aware machine-mode plan.
+Project: Multi-Model Software Engineering System.
+Execution pipeline:
+- Understand Request.
+- Product Planning.
+- Architecture Design.
+- Generate Dependency Graph.
+- Break into Micro Tasks.
+- Route Tasks to Best Models.
+- Implement.
+- Review.
+- Build.
+- Test.
+- Repair.
+- Repeat until complete.
 Return exactly one JSON object and no prose.
 User request:
 create a beautifull sass page in single file index.html`,
@@ -557,6 +613,93 @@ create a beautifull sass page in single file index.html`,
     expect(resolved.map((message) => message.id)).toEqual([
       'optimistic-user-machine-request',
       'assistant-task',
+    ])
+  })
+
+  it('still reorders the machine original request when the workspace snapshot is unavailable', () => {
+    const resolved = resolveTranscriptMessages({
+      activeSessionId: SESSION_DETAIL_ID,
+      activeWorkspace: null,
+      messages: [
+        uiMessage('assistant-1', 'assistant', 'Started implementing the page.'),
+        uiMessage('assistant-2', 'assistant', 'Verifying the final result.'),
+        uiMessage(
+          'optimistic-user-machine-request',
+          'user',
+          'create a beautifull sass page in single file index.html',
+        ),
+      ],
+      machinePlan: {
+        goal: 'Create a single-file, responsive, beautiful webpage using SASS styling saved as index.html',
+        originalRequest: 'create a beautifull sass page in single file index.html',
+        phase: 'failed',
+        tasks: [
+          {
+            id: 'task-1',
+            title: 'Generate polished single-file SASS index.html',
+            prompt: 'Create the page in index.html.',
+            status: 'failed',
+            dependsOn: [],
+            lastError: 'Machine run was cancelled.',
+          },
+        ],
+        model: 'openai/gpt-5.5',
+        thinkingLevel: 'medium',
+        generatedAt: 1,
+        approvedAt: 2,
+        finishedAt: 3,
+        lastError: 'Machine run was cancelled.',
+      },
+    })
+
+    expect(resolved.map((message) => message.id)).toEqual([
+      'optimistic-user-machine-request',
+      'assistant-1',
+      'assistant-2',
+    ])
+  })
+
+  it('reorders the visible machine request from transcript-local signals when machine branch state is missing', () => {
+    const resolved = resolveTranscriptMessages({
+      activeSessionId: SESSION_DETAIL_ID,
+      activeWorkspace: null,
+      messages: [
+        uiMessage(
+          'hidden-machine-planner-prompt',
+          'user',
+          `Machine mode is enabled.
+You are the planning agent for a sequential coding workflow.
+Return exactly one JSON object and no prose.
+User request:
+create a beautifull sass page in single file index.html`,
+          new Date('2026-07-05T20:45:46.100Z'),
+        ),
+        uiMessage(
+          'assistant-1',
+          'assistant',
+          'Started implementing the page.',
+          new Date('2026-07-05T20:45:50.585Z'),
+        ),
+        uiMessage(
+          'assistant-2',
+          'assistant',
+          'Verifying the final result.',
+          new Date('2026-07-05T20:45:50.857Z'),
+        ),
+        uiMessage(
+          'optimistic-user-machine-request',
+          'user',
+          'create a beautifull sass page in single file index.html',
+          new Date('2026-07-05T20:45:46.326Z'),
+        ),
+      ],
+      machinePlan: null,
+    })
+
+    expect(resolved.map((message) => message.id)).toEqual([
+      'optimistic-user-machine-request',
+      'assistant-1',
+      'assistant-2',
     ])
   })
 
