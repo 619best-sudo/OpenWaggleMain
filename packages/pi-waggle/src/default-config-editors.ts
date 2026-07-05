@@ -10,8 +10,8 @@ import {
   WAGGLE_AGENT_COLORS,
   WAGGLE_INHERIT_MODEL,
   WAGGLE_STOP_CONDITIONS,
-  type WaggleConfig,
   type WaggleAgentSlot,
+  type WaggleConfig,
   type WaggleStopCondition,
 } from '@openwaggle/waggle-core'
 import { agentMenuLabel, editAgentSlot, promptAgentSlot } from './default-agent-editor'

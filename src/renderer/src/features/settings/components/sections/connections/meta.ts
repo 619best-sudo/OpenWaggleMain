@@ -19,43 +19,43 @@ export interface ProviderMeta {
 export const PROVIDER_META: Partial<Record<Provider, ProviderMeta>> = {
   openai: {
     icon: OpenAIIcon,
-    color: '#10a37f',
+    color: 'var(--theme-provider-openai)',
   },
   anthropic: {
     icon: AnthropicIcon,
-    color: '#d4a27f',
+    color: 'var(--theme-provider-anthropic)',
   },
   google: {
     icon: GeminiIcon,
-    color: '#4285f4',
+    color: 'var(--theme-provider-google)',
   },
   'google-gemini-cli': {
     icon: GeminiIcon,
-    color: '#4285f4',
+    color: 'var(--theme-provider-google)',
   },
   'google-antigravity': {
     icon: GeminiIcon,
-    color: '#4285f4',
+    color: 'var(--theme-provider-google)',
   },
   xai: {
     icon: getProviderIcon('xai'),
-    color: '#e44d26',
+    color: 'var(--theme-provider-xai)',
   },
   groq: {
     icon: GroqIcon,
-    color: '#e44d26',
+    color: 'var(--theme-provider-xai)',
   },
   deepseek: {
     icon: getProviderIcon('deepseek'),
-    color: '#4d6bfe',
+    color: 'var(--theme-provider-deepseek)',
   },
   openrouter: {
     icon: OpenRouterIcon,
-    color: '#7c5cfc',
+    color: 'var(--theme-provider-openrouter)',
   },
   ollama: {
     icon: OllamaIcon,
-    color: '#555d6e',
+    color: 'var(--theme-provider-ollama)',
   },
 }
 
@@ -63,7 +63,7 @@ export function getProviderMeta(provider: Provider): ProviderMeta {
   return (
     PROVIDER_META[provider] ?? {
       icon: getProviderIcon(provider),
-      color: '#8da2c0',
+      color: 'var(--theme-provider-default)',
     }
   )
 }

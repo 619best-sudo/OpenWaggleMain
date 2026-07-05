@@ -62,6 +62,7 @@ const PI_API_KEY_AUTH_PROVIDER_DISPLAY_NAMES: ReadonlyMap<string, string> = new 
   ['opencode-go', 'OpenCode Go'],
   ['openai', 'OpenAI'],
   ['openrouter', 'OpenRouter'],
+  ['turing-machine', 'Turing Machine'],
   ['vercel-ai-gateway', 'Vercel AI Gateway'],
   ['xai', 'xAI'],
   ['zai', 'ZAI'],

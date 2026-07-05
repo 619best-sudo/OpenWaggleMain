@@ -1,5 +1,5 @@
 import type { GitStatusSummary } from '@shared/types/git'
-import { Hash, ListTree, PanelLeft, SquareTerminal } from 'lucide-react'
+import { Hash, PanelLeft, SquareTerminal } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 
@@ -21,13 +21,6 @@ interface CommitButtonProps {
   readonly onOpen: () => void
 }
 
-interface SessionTreeButtonProps {
-  readonly hasSessionTree: boolean
-  readonly isChatRoute: boolean
-  readonly open: boolean
-  readonly onToggle: () => void
-}
-
 interface DiffToggleButtonProps {
   readonly error: string | null
   readonly isChatRoute: boolean
@@ -38,11 +31,7 @@ interface DiffToggleButtonProps {
   readonly onToggle: () => void
 }
 
-export function HeaderLeft({
-  sidebarOpen,
-  title,
-  onToggleSidebar,
-}: HeaderLeftProps) {
+export function HeaderLeft({ sidebarOpen, title, onToggleSidebar }: HeaderLeftProps) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
       {!sidebarOpen && (
@@ -123,35 +112,6 @@ export function CommitButton({ isCommitting, projectPath, onOpen }: CommitButton
   )
 }
 
-export function SessionTreeButton({
-  hasSessionTree,
-  isChatRoute,
-  open,
-  onToggle,
-}: SessionTreeButtonProps) {
-  const disabled = !hasSessionTree || !isChatRoute
-
-  return (
-    <Button
-      variant={open ? 'subtle' : 'secondary'}
-      size="none"
-      radius="sm"
-      aria-label="Toggle Session Tree"
-      aria-expanded={open}
-      onClick={onToggle}
-      disabled={disabled}
-      className={cn(
-        'no-drag h-7 border border-home-border px-2 hover:bg-bg-hover',
-        open ? 'bg-bg-active' : 'bg-transparent',
-        disabled && 'pointer-events-none opacity-30',
-      )}
-      title={hasSessionTree ? 'Toggle Session Tree' : 'No session tree available'}
-    >
-      <ListTree className="size-3.5 text-text-tertiary" />
-    </Button>
-  )
-}
-
 function diffStatusText(error: string | null, isLoading: boolean) {
   if (isLoading) {
     return 'Loading diff…'
@@ -179,19 +139,21 @@ export function DiffToggleButton({
       onClick={onToggle}
       disabled={disabled}
       className={cn(
-        'no-drag gap-1 hover:bg-white/5 px-2 h-7 rounded-md transition-colors',
+        'no-drag h-7 gap-1 rounded-md px-2 transition-colors hover:bg-[var(--theme-header-hover-surface)]',
         disabled && 'pointer-events-none opacity-30',
-        open && 'bg-white/10',
+        open && 'bg-[var(--theme-header-active-surface)]',
       )}
       title="Toggle diff panel"
     >
       {status ? (
         <>
-          <span className="text-[13px] font-medium text-[#8ba57b]">+{status.additions}</span>
+          <span className="text-[13px] font-medium text-[var(--theme-header-diff-addition)]">
+            +{status.additions}
+          </span>
           <span className="text-[13px] font-medium text-red-400">-{status.deletions}</span>
         </>
       ) : (
-        <span className="text-[13px] font-medium text-[#71717a]">
+        <span className="text-[13px] font-medium text-[var(--theme-header-diff-neutral)]">
           {diffStatusText(error, isLoading)}
         </span>
       )}

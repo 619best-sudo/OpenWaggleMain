@@ -152,7 +152,7 @@ function createWindow() {
     icon: appIconPath,
     webPreferences,
   })
-  installCspHeaders(mainWindow.webContents.session)
+  installCspHeaders(mainWindow.webContents.session, isTrustedRendererRequest)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()

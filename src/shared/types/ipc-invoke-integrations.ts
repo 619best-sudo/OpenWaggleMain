@@ -8,6 +8,7 @@ import type {
   FeedbackPayload,
   FeedbackSubmitResult,
   GhCliStatus,
+  GithubRepoStatsSnapshot,
 } from './feedback'
 import type {
   GitBranchCheckoutPayload,
@@ -30,6 +31,11 @@ import type {
   SkillCatalogResult,
   SkillImportResult,
 } from './standards'
+import type {
+  TeammateAgentGenerationInput,
+  TeammateAgentGenerationResult,
+  TeammateDefinition,
+} from './teammate'
 import type { UpdateStatus } from './updater'
 import type { VoiceTranscriptionRequest, VoiceTranscriptionResult } from './voice'
 import type {
@@ -38,11 +44,6 @@ import type {
   WaggleConfig,
   WagglePreset,
 } from './waggle'
-import type {
-  TeammateAgentGenerationInput,
-  TeammateAgentGenerationResult,
-  TeammateDefinition,
-} from './teammate'
 
 // ─── IPC Channel Map ─────────────────────────────────────────
 // Single source of truth for every IPC channel.
@@ -108,6 +109,18 @@ export interface IpcIntegrationInvokeChannelMap {
   'agent:get-phase': {
     args: [sessionId: SessionId]
     return: AgentPhaseState | null
+  }
+  'agent:send-machine-message': {
+    args: [sessionId: SessionId, payload: AgentSendPayload, model: SupportedModelId]
+    return: undefined
+  }
+  'agent:approve-machine-plan': {
+    args: [sessionId: SessionId]
+    return: undefined
+  }
+  'agent:discard-machine-plan': {
+    args: [sessionId: SessionId]
+    return: undefined
   }
   'agent:get-background-run': {
     args: [sessionId: SessionId]
@@ -177,17 +190,17 @@ export interface IpcIntegrationInvokeChannelMap {
     return: undefined
   }
   'agent:generate-team-agent': {
-    args: [
-      projectPath: string,
-      model: SupportedModelId,
-      input: TeammateAgentGenerationInput,
-    ]
+    args: [projectPath: string, model: SupportedModelId, input: TeammateAgentGenerationInput]
     return: TeammateAgentGenerationResult
   }
   // Auth
   'auth:start-oauth': {
     args: [provider: OAuthProvider]
     return: undefined
+  }
+  'app-auth:start-google-oauth': {
+    args: []
+    return: string
   }
   'auth:disconnect': {
     args: [provider: OAuthProvider]
@@ -234,6 +247,10 @@ export interface IpcIntegrationInvokeChannelMap {
   'feedback:check-gh': {
     args: []
     return: GhCliStatus
+  }
+  'github:collect-repo-stats': {
+    args: []
+    return: GithubRepoStatsSnapshot | null
   }
   'feedback:collect-diagnostics': {
     args: []

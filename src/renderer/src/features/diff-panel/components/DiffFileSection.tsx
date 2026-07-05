@@ -54,7 +54,7 @@ export function DiffFileSection({
   const ChevIcon = expanded ? ChevronDown : ChevronRight
 
   return (
-    <div className="min-w-full w-max rounded-lg border border-diff-file-border bg-diff-file-bg overflow-hidden shadow-[0_1px_3px_#00000055]">
+    <div className="min-w-full w-max overflow-hidden rounded-lg border border-diff-file-border bg-diff-file-bg shadow-[0_1px_3px_var(--theme-diff-file-shadow)]">
       {/* File Header */}
       <Button
         variant="unstyled"

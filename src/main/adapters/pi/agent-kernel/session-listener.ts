@@ -20,6 +20,24 @@ import type {
 } from './listener-types'
 import { emitEvent } from './transport-emitter'
 
+function classifyAgentEndTransportError(input: {
+  readonly model: string
+  readonly error: { readonly message: string }
+}) {
+  const normalized = input.error.message.toLowerCase()
+  if (
+    input.model === 'turing-machine/turing-machine' &&
+    normalized.includes('403') &&
+    normalized.includes('forbidden')
+  ) {
+    return {
+      ...input.error,
+      code: 'subscription-required',
+    } as const
+  }
+  return input.error
+}
+
 function emitAgentStart(state: SessionListenerState) {
   emitEvent(state.input.onEvent, {
     type: 'agent_start',
@@ -147,8 +165,11 @@ function emitAutoRetryEnd(state: SessionListenerState, event: AutoRetryEndSessio
 
 function emitAgentEnd(state: SessionListenerState, event: AgentEndSessionEvent) {
   const reason = getAgentEndReason(event.messages)
-  const error =
+  const rawError =
     reason === 'error' || reason === 'aborted' ? getAgentEndError(event.messages) : undefined
+  const error = rawError
+    ? classifyAgentEndTransportError({ model: state.input.model, error: rawError })
+    : undefined
   emitEvent(state.input.onEvent, {
     type: 'agent_end',
     runId: state.runId,

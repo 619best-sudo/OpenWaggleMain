@@ -15,6 +15,7 @@ export interface PreferencesState {
   removeRecentProject: (path: string) => Promise<void>
   setThinkingLevel: (preset: ThinkingLevel) => Promise<void>
   setThemeMode: (mode: ThemeMode) => Promise<void>
+  setShowCustomExecutionTeam: (visible: boolean) => Promise<void>
   setEnabledModels: (models: string[]) => Promise<void>
   setProjectDisplayName: (path: string, name: string) => Promise<void>
   clearProjectDisplayName: (path: string) => Promise<void>

@@ -28,6 +28,7 @@ const apiMock = vi.hoisted(() => {
   return {
     agentEventUnsubscribe,
     runCompletedUnsubscribe,
+    cancelMachine: vi.fn(),
     getAgentEventHandler: () => agentEventHandler,
     getRunCompletedHandler: () => runCompletedHandler,
     listActiveRuns: vi.fn(),
@@ -47,8 +48,13 @@ const apiMock = vi.hoisted(() => {
   }
 })
 
+const authStoreMock = vi.hoisted(() => ({
+  refreshUsageSnapshotsForAuthenticatedUser: vi.fn().mockResolvedValue(undefined),
+}))
+
 vi.mock('@/shared/lib/ipc', () => ({
   api: {
+    cancelMachine: apiMock.cancelMachine,
     cancelWaggle: apiMock.cancelWaggle,
     cancelTeam: apiMock.cancelTeam,
     cloneSessionToNew: apiMock.cloneSessionToNew,
@@ -58,6 +64,10 @@ vi.mock('@/shared/lib/ipc', () => ({
     onAgentEvent: apiMock.onAgentEvent,
     onRunCompleted: apiMock.onRunCompleted,
   },
+}))
+
+vi.mock('@/features/auth/state/app-auth-store', () => ({
+  refreshUsageSnapshotsForAuthenticatedUser: authStoreMock.refreshUsageSnapshotsForAuthenticatedUser,
 }))
 
 const SESSION_ID = SessionId('session-1')
@@ -105,6 +115,7 @@ function phaseHandle(current: StreamingPhaseHandle['current'] = null): Streaming
     current,
     completed: [],
     totalElapsedMs: 0,
+    completedAtMs: null,
     reset: vi.fn(),
   }
 }
@@ -115,7 +126,7 @@ function teammate(): TeammateDefinition {
     name: 'Web Executor',
     description: 'Build and verify websites.',
     launchPromptPlaceholder: 'Build a marketing site',
-    launchButtonLabel: 'Launch Team(New)',
+    launchButtonLabel: 'Launch Team',
     app: { requiredMcps: [], requiredSkills: [] },
     agents: [],
     loopPolicy: {
@@ -139,6 +150,7 @@ function sendWorkflowParams(overrides: Partial<Parameters<typeof useChatSendWork
     clearDraftBranchForSession: vi.fn(),
     draftBranch: null,
     handleSend: vi.fn().mockResolvedValue(undefined),
+    handleSendMachine: vi.fn().mockResolvedValue(undefined),
     handleSendTeam: vi.fn().mockResolvedValue(undefined),
     handleSendWaggle: vi.fn().mockResolvedValue(undefined),
     model: MODEL,
@@ -159,12 +171,19 @@ function sendWorkflowParams(overrides: Partial<Parameters<typeof useChatSendWork
     clearActiveTeammate: vi.fn(),
     startTeamRun: vi.fn(),
     finishTeamRun: vi.fn(),
+    setMachineModeEnabled: vi.fn(),
+    startMachineRun: vi.fn(),
+    finishMachineRun: vi.fn(),
+    clearMachineMode: vi.fn(),
     clearWaggleConfig: vi.fn(),
     setWaggleConfig: vi.fn(),
     showToast: vi.fn(),
     startWaggleCollaboration: vi.fn(),
     stop: vi.fn(),
     stopWaggleCollaboration: vi.fn(),
+    machineModeEnabled: false,
+    machineOwningId: null,
+    machineStatus: 'idle',
     activeTeammate: null,
     teamOwningId: null,
     teamStatus: 'idle',
@@ -180,6 +199,7 @@ describe('chat orchestration hooks', () => {
   beforeEach(() => {
     apiMock.listActiveRuns.mockReset()
     apiMock.compactSession.mockReset()
+    apiMock.cancelMachine.mockReset()
     apiMock.cancelWaggle.mockReset()
     apiMock.cancelTeam.mockReset()
     apiMock.cloneSessionToNew.mockReset()
@@ -188,6 +208,7 @@ describe('chat orchestration hooks', () => {
     apiMock.onRunCompleted.mockClear()
     apiMock.agentEventUnsubscribe.mockClear()
     apiMock.runCompletedUnsubscribe.mockClear()
+    authStoreMock.refreshUsageSnapshotsForAuthenticatedUser.mockClear()
     useBackgroundRunStore.setState({
       activeRunIds: new Set(),
       renderSnapshotsBySessionId: new Map(),
@@ -220,6 +241,9 @@ describe('chat orchestration hooks', () => {
 
     requireRunCompletedHandler()({ sessionId: SESSION_ID })
     await waitFor(() => expect(refreshSession).toHaveBeenCalledWith(SESSION_ID))
+    await waitFor(() =>
+      expect(authStoreMock.refreshUsageSnapshotsForAuthenticatedUser).toHaveBeenCalledOnce(),
+    )
     expect(useBackgroundRunStore.getState().getRunRenderSnapshot(SESSION_ID)).not.toBeNull()
 
     unmount()
@@ -255,6 +279,20 @@ describe('chat orchestration hooks', () => {
       SESSION_ID,
     )
     expect(params.clearDraftBranchForSession).toHaveBeenCalledWith(SESSION_ID)
+  })
+
+  it('sends through Machine mode when the composer switch is armed for the active session', async () => {
+    const params = sendWorkflowParams({ machineModeEnabled: true })
+    const { result } = renderHook(() => useChatSendWorkflow(params))
+
+    await act(() => result.current.sendWithWaggle(payload('Ship the onboarding flow')))
+
+    expect(params.startMachineRun).toHaveBeenCalledWith(SESSION_ID)
+    expect(params.handleSendMachine).toHaveBeenCalledWith(
+      payload('Ship the onboarding flow'),
+      SESSION_ID,
+    )
+    expect(params.handleSend).not.toHaveBeenCalled()
   })
 
   it('does not swallow first-message Waggle sends before a session exists', async () => {
@@ -294,7 +332,7 @@ describe('chat orchestration hooks', () => {
     expect(params.handleSend).not.toHaveBeenCalled()
   })
 
-  it('sends through Team(New) when an armed teammate belongs to the active session', async () => {
+  it('sends through Team when an armed teammate belongs to the active session', async () => {
     const config = teammate()
     const params = sendWorkflowParams({ activeTeammate: config })
     const { result } = renderHook(() => useChatSendWorkflow(params))
@@ -321,7 +359,22 @@ describe('chat orchestration hooks', () => {
     expect(params.stop).toHaveBeenCalledOnce()
   })
 
-  it('cancels Team(New) when a team run is active for the current session', () => {
+  it('cancels Machine mode when a machine run is active for the current session', () => {
+    const params = sendWorkflowParams({
+      machineModeEnabled: true,
+      machineOwningId: SESSION_ID,
+      machineStatus: 'running',
+    })
+    const { result } = renderHook(() => useChatSendWorkflow(params))
+
+    act(() => result.current.cancelRun())
+
+    expect(apiMock.cancelMachine).toHaveBeenCalledWith(SESSION_ID)
+    expect(params.finishMachineRun).toHaveBeenCalledWith(SESSION_ID)
+    expect(params.stop).toHaveBeenCalledOnce()
+  })
+
+  it('cancels Team when a team run is active for the current session', () => {
     const params = sendWorkflowParams({
       activeTeammate: teammate(),
       teamOwningId: SESSION_ID,
@@ -345,6 +398,8 @@ describe('chat orchestration hooks', () => {
         isSteering: false,
         status: 'ready',
         compactionStatus: null,
+        machineModeEnabled: false,
+        machineStatus: 'idle',
         activeTeammate: null,
         teamStatus: 'idle',
         activeSessionId: SESSION_ID,
@@ -362,6 +417,7 @@ describe('chat orchestration hooks', () => {
         handleUseFollowUpPrompt: vi.fn(),
         handleStartWaggle: startWaggle,
         handleStartTeam: vi.fn(),
+        handleSetMachineModeEnabled: vi.fn(),
         handleStopCollaboration: vi.fn(),
         handleClearTeamMode: vi.fn(),
         handleSkipBranchSummary: vi.fn(),

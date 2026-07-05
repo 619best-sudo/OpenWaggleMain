@@ -4,7 +4,7 @@ import { WorkspacePanelSurface } from './-workspace-panel-surface'
 export function WaggleRouteSurface() {
   return (
     <WorkspacePanelSurface
-      name="Waggle"
+      name="Panel"
       title=""
       description=""
       contentClassName="px-8 py-8"

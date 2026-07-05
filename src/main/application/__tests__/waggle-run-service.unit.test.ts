@@ -40,34 +40,13 @@ function runInput(config: WaggleConfig, runId: string, model = selectedModel) {
 
 const CREATED_WAGGLE_RUNTIME_CASES = [
   {
-    presetId: WagglePresetId('turing'),
+    presetId: WagglePresetId('debate'),
     prompt:
-      'Read this repository and tell me which installed Waggle should handle adding a signup form with basic validation next.',
+      'Debate the best way to add a signup form with basic validation before implementation starts.',
   },
   {
-    presetId: WagglePresetId('web-engineer'),
-    prompt:
-      'Implement and verify a landing page hero refresh with CTA polish, plus any motion that meaningfully improves the section.',
-  },
-  {
-    presetId: WagglePresetId('mobile-engineer'),
-    prompt:
-      'Implement and verify a mobile onboarding flow update, including animation polish only if it improves the real experience.',
-  },
-  {
-    presetId: WagglePresetId('backend-engineer'),
-    prompt:
-      'Plan, implement, and verify a backend projects API update that changes stored data and must be checked against the database.',
-  },
-  {
-    presetId: WagglePresetId('quality-assurance-engineer'),
-    prompt:
-      'Plan and execute a full regression QA pass for a changed checkout flow, including adjacent web, mobile, API, and SQL behaviors that might have been disturbed.',
-  },
-  {
-    presetId: WagglePresetId('qa-debug'),
-    prompt:
-      'Debug and fix a mixed regression where a profile page UI issue may actually come from stale backend data and logic drift in nearby flows.',
+    presetId: WagglePresetId('red-team'),
+    prompt: 'Red-team this auth flow and find any likely security weaknesses before release.',
   },
 ] as const
 
@@ -179,7 +158,9 @@ describe('executeWaggleRun', () => {
     })
 
     const result = await Effect.runPromise(
-      executeWaggleRun(runInput(gatedConfig, 'run-waggle-gated-first')).pipe(Effect.provide(TestLayer)),
+      executeWaggleRun(runInput(gatedConfig, 'run-waggle-gated-first')).pipe(
+        Effect.provide(TestLayer),
+      ),
     )
 
     expect(result.outcome).toBe('success')
@@ -235,59 +216,36 @@ describe('executeWaggleRun', () => {
     expect(clearActiveRunMock).toHaveBeenCalledWith({ sessionId, runId: 'run-waggle-1' })
   })
 
-  it.each(CREATED_WAGGLE_RUNTIME_CASES)(
-    'executes the built-in $presetId config through the Waggle run service',
-    async ({ presetId, prompt }) => {
-      const preset = BUILT_IN_WAGGLE_PRESETS.find((candidate) => candidate.id === presetId)
-      expect(preset).toBeDefined()
-      if (!preset) {
-        throw new Error(`Expected preset ${presetId}`)
-      }
-
-      const result = await Effect.runPromise(
-        executeWaggleRun({
-          ...runInput(preset.config, `run-${presetId}`),
-          payload: { text: prompt, thinkingLevel: 'medium', attachments: [] },
-        }).pipe(Effect.provide(TestLayer)),
-      )
-
-      expect(result.outcome).toBe('success')
-      expect(runMock).toHaveBeenCalledOnce()
-
-      const [kernelInput] = runMock.mock.calls[0] ?? []
-      expect(kernelInput).toMatchObject({
-        runId: `run-${presetId}`,
-        waggle: { config: preset.config, inheritedModel: selectedModel },
-      })
-      expect(kernelInput.waggle.config.agents.map((agent: { label: string }) => agent.label)).toEqual(
-        preset.config.agents.map((agent) => agent.label),
-      )
-    },
-  )
-
-  it('injects real Waggle readiness context into Turing before kernel execution', async () => {
-    const preset = BUILT_IN_WAGGLE_PRESETS.find((candidate) => candidate.id === WagglePresetId('turing'))
+  it.each(
+    CREATED_WAGGLE_RUNTIME_CASES,
+  )('executes the built-in $presetId config through the Waggle run service', async ({
+    presetId,
+    prompt,
+  }) => {
+    const preset = BUILT_IN_WAGGLE_PRESETS.find((candidate) => candidate.id === presetId)
     expect(preset).toBeDefined()
     if (!preset) {
-      throw new Error('Expected preset turing')
+      throw new Error(`Expected preset ${presetId}`)
     }
 
     const result = await Effect.runPromise(
       executeWaggleRun({
-        ...runInput(preset.config, 'run-turing-ready-context'),
-        payload: {
-          text: 'Route this task to the right installed Waggle.',
-          thinkingLevel: 'medium',
-          attachments: [],
-        },
+        ...runInput(preset.config, `run-${presetId}`),
+        payload: { text: prompt, thinkingLevel: 'medium', attachments: [] },
       }).pipe(Effect.provide(TestLayer)),
     )
 
     expect(result.outcome).toBe('success')
+    expect(runMock).toHaveBeenCalledOnce()
+
     const [kernelInput] = runMock.mock.calls[0] ?? []
-    expect(kernelInput.payload.text).toContain('Installed Waggle readiness snapshot:')
-    expect(kernelInput.payload.text).toContain('Web Engineer (web-engineer)')
-    expect(kernelInput.payload.text).toContain('Quality Assurance Engineer (quality-assurance-engineer)')
+    expect(kernelInput).toMatchObject({
+      runId: `run-${presetId}`,
+      waggle: { config: preset.config, inheritedModel: selectedModel },
+    })
+    expect(kernelInput.waggle.config.agents.map((agent: { label: string }) => agent.label)).toEqual(
+      preset.config.agents.map((agent) => agent.label),
+    )
   })
 
   it('persists the Waggle snapshot even when the collaboration is stopped mid-run', async () => {
@@ -323,7 +281,9 @@ describe('executeWaggleRun', () => {
     })
 
     const result = await Effect.runPromise(
-      executeWaggleRun(runInput(waggleConfig, 'run-waggle-aborted')).pipe(Effect.provide(TestLayer)),
+      executeWaggleRun(runInput(waggleConfig, 'run-waggle-aborted')).pipe(
+        Effect.provide(TestLayer),
+      ),
     )
 
     expect(result.outcome).toBe('aborted')

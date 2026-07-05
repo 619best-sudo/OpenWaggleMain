@@ -1,7 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { useChat } from '@/features/chat/hooks/useChat'
-import { usePreferences, useProviders } from '@/features/settings/hooks/useSettings'
 import { usePreferencesStore } from '@/features/settings/state/preferences-store'
 import { useWaggleLaunchPromptStore, useWaggleStore } from '@/features/waggle/state'
 import { useInstallWaggleAppDependenciesMutation } from '@/queries/waggle-apps'
@@ -14,8 +13,6 @@ type WaggleEditorMode = 'closed' | 'create' | 'edit'
 
 export function WaggleSection({ showHeading = true }: { readonly showHeading?: boolean }) {
   const navigate = useNavigate()
-  const { settings } = usePreferences()
-  const { providerModels } = useProviders()
   const projectPath = usePreferencesStore((state) => state.settings.projectPath)
   const showToast = useUIStore((state) => state.showToast)
   const { activeSession, activeSessionId, createSession } = useChat()
@@ -65,9 +62,22 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
     setEditorMode('closed')
   }
 
+  async function handleSubmitEditor() {
+    if (editorMode === 'create') {
+      const createdPreset = await handleCreatePreset()
+      if (createdPreset) {
+        setEditorMode('closed')
+        showToast(`Created Panel "${createdPreset.name}".`, 'success')
+      }
+      return
+    }
+
+    await handleSaveEdits()
+  }
+
   async function handleInstallDependencies(preset: (typeof presets)[number]) {
     if (!projectPath) {
-      showToast('Select a project before installing Waggle app dependencies.', 'error')
+      showToast('Select a project before installing Panel app dependencies.', 'error')
       return
     }
 
@@ -83,19 +93,19 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
       }
       showToast(
         changedCount > 0
-          ? `Installed Waggle app dependencies for "${preset.name}".`
+          ? `Installed Panel app dependencies for "${preset.name}".`
           : `"${preset.name}" is already ready to run.`,
         'success',
       )
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      showToast(`Failed to install Waggle app dependencies: ${message}`, 'error')
+      showToast(`Failed to install Panel app dependencies: ${message}`, 'error')
     }
   }
 
   async function handleLaunchPreset(preset: (typeof presets)[number], prompt?: string) {
     if (!projectPath) {
-      showToast('Select a project before launching a Waggle app.', 'error')
+      showToast('Select a project before launching a Panel app.', 'error')
       return
     }
 
@@ -116,32 +126,34 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
       showToast(
         prompt
           ? `"${preset.name}" is ready with a starter prompt in the composer.`
-          : `"${preset.name}" is ready. Send the first prompt in chat to start this Waggle app.`,
+          : `"${preset.name}" is ready. Send the first prompt in chat to start this Panel app.`,
         'success',
       )
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      showToast(`Failed to launch Waggle app: ${message}`, 'error')
+      showToast(`Failed to launch Panel app: ${message}`, 'error')
     }
   }
 
   const editorTitle =
     editorMode === 'create'
-      ? 'Create Waggle'
+      ? 'Create Panel'
       : activePreset
         ? `Edit ${activePreset.name}`
-        : 'Edit Waggle'
+        : 'Edit Panel'
   const editorDescription =
     editorMode === 'create'
-      ? 'Define the agent roles, app dependencies, and stop rules, then save this Waggle app when it is ready.'
-      : 'Adjust the selected Waggle app here after reviewing it from the list.'
-  const primaryActionLabel = editorMode === 'create' ? 'Create Waggle' : 'Save Changes'
+      ? 'Define the Expert roles, app dependencies, and stop rules, then save this Panel app when it is ready.'
+      : activePreset?.description?.trim()
+        ? activePreset.description
+        : 'Adjust the selected Panel app here after reviewing it from the list.'
+  const primaryActionLabel = editorMode === 'create' ? 'Create Panel' : 'Save Changes'
   const isDialogOpen = editorMode !== 'closed'
 
   return (
     <div className="space-y-6">
       {showHeading ? (
-        <h2 className="text-[20px] font-semibold text-text-primary">Waggle Mode</h2>
+        <h2 className="text-[20px] font-semibold text-text-primary">Panel Mode</h2>
       ) : null}
       {!isDialogOpen && displayedError && (
         <p
@@ -174,13 +186,12 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
           description={editorDescription}
           primaryActionLabel={primaryActionLabel}
           canSubmit={editorMode === 'create' || isModified}
+          canEditTitle={editorMode === 'create' || !activePreset?.isBuiltIn}
           errorMessage={displayedError}
-          settings={settings}
-          providerModels={providerModels}
           formState={formState}
           dispatchForm={dispatchForm}
           onClose={handleCloseEditor}
-          onSubmit={() => void (editorMode === 'create' ? handleCreatePreset() : handleSaveEdits())}
+          onSubmit={() => void handleSubmitEditor()}
         />
       ) : null}
     </div>

@@ -51,6 +51,10 @@ vi.mock('../../auth', () => ({
   }),
 }))
 
+vi.mock('../../auth/google-desktop-auth', () => ({
+  startGoogleDesktopAuth: vi.fn().mockResolvedValue('google-id-token'),
+}))
+
 function getRegisteredAuthHandler(channel: string) {
   const call = mockHandle.mock.calls.find((candidate) => candidate[0] === channel)
   const handler = call?.[1]
@@ -68,6 +72,7 @@ describe('auth-handler', () => {
     registerAuthHandlers()
 
     const registeredChannels = mockHandle.mock.calls.map((call: unknown[]) => call[0])
+    expect(registeredChannels).toContain('app-auth:start-google-oauth')
     expect(registeredChannels).toContain('auth:start-oauth')
     expect(registeredChannels).toContain('auth:submit-code')
     expect(registeredChannels).toContain('auth:cancel-oauth')
@@ -89,6 +94,22 @@ describe('auth-handler', () => {
       connected: false,
       label: 'Not connected',
     })
+  })
+
+  it('app-auth:start-google-oauth handler returns the Google ID token', async () => {
+    const { startGoogleDesktopAuth } = await import('../../auth/google-desktop-auth')
+    const { registerAuthHandlers } = await import('../auth-handler')
+    registerAuthHandlers()
+
+    const handler = mockHandle.mock.calls.find(
+      (candidate) => candidate[0] === 'app-auth:start-google-oauth',
+    )?.[1]
+
+    expect(typeof handler).toBe('function')
+
+    const result = await handler?.({})
+    expect(startGoogleDesktopAuth).toHaveBeenCalledWith()
+    expect(result).toBe('google-id-token')
   })
 
   it('auth:get-account-info handler rejects empty provider ids', async () => {

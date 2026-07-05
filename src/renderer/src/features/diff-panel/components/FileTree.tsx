@@ -85,7 +85,9 @@ function FileTreeNode({ node, depth, onFileClick }: FileTreeNodeProps) {
         )}
         style={{ paddingLeft: `${String(paddingLeft + FILE_TREE_NODE_VALUE_4)}px` }}
       >
-        {node.isChanged && <span className="shrink-0 size-[5px] rounded-full bg-[#8eab7e]" />}
+        {node.isChanged && (
+          <span className="shrink-0 size-[5px] rounded-full bg-[var(--theme-diff-file-tree-dot)]" />
+        )}
         <span
           className={cn(
             'text-[12px] truncate',
@@ -131,7 +133,7 @@ export function FileTree({ files, onFileClick, onSendReview, reviewCount }: File
   const tree = buildTree(files)
 
   return (
-    <div className="flex flex-col justify-between h-full w-[200px] bg-diff-bg border-r border-border py-3 shrink-0">
+    <div className="home-divider-r flex h-full w-[200px] shrink-0 flex-col justify-between bg-diff-bg py-3">
       {/* Tree */}
       <div className="flex-1 overflow-y-auto">
         {tree.map((node) => (
@@ -140,16 +142,16 @@ export function FileTree({ files, onFileClick, onSendReview, reviewCount }: File
       </div>
 
       {/* Send Review Dock */}
-      <div className="px-2 pt-1.5 pb-2 border-t border-border">
+      <div className="home-divider-t px-2 pb-2 pt-1.5">
         <Button
           variant="unstyled"
           type="button"
           onClick={onSendReview}
           disabled={reviewCount === 0}
           className={cn(
-            'flex items-center justify-center gap-1 w-full h-6 rounded bg-[#8eab7e] text-black border border-[#7a946b]',
+            'flex h-6 w-full items-center justify-center gap-1 rounded border border-[var(--theme-diff-review-send-border)] bg-[var(--theme-diff-review-send-bg)] text-[var(--theme-diff-review-send-text)]',
             'text-[11px] font-semibold',
-            'disabled:opacity-40 transition-opacity hover:bg-[#a3be94]',
+            'disabled:opacity-40 transition-opacity hover:bg-[var(--theme-diff-review-send-hover)]',
           )}
         >
           <Check className="size-[10px]" />

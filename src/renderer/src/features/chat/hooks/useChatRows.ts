@@ -1,5 +1,6 @@
 import type { SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
+import type { MachineExecutionState } from '@shared/types/machine'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { SessionInterruptedRun } from '@shared/types/session'
 import type { WaggleMessageMetadata } from '@shared/types/waggle'
@@ -9,6 +10,8 @@ import { buildChatRows } from './useBuildChatRows'
 
 export function useChatRows(inputs: {
   messages: UIMessage[]
+  allMessages: UIMessage[]
+  machinePlan: MachineExecutionState | null
   isLoading: boolean
   error: Error | undefined
   lastUserMessage: string | null
@@ -21,6 +24,8 @@ export function useChatRows(inputs: {
 }): ChatRow[] {
   return buildChatRows({
     messages: inputs.messages,
+    allMessages: inputs.allMessages,
+    machinePlan: inputs.machinePlan,
     isLoading: inputs.isLoading,
     error: inputs.error,
     lastUserMessage: inputs.lastUserMessage,

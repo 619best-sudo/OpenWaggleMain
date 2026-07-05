@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { WaggleConfig } from '../config'
-import {
-  parseWaggleConfig,
-  resolveWaggleConfigForPrompt,
-  WAGGLE_INHERIT_MODEL,
-} from '../config'
+import { parseWaggleConfig, resolveWaggleConfigForPrompt, WAGGLE_INHERIT_MODEL } from '../config'
 import { evaluateConsensus } from '../consensus'
 import { validateWaggleTurnOutput } from '../output-contract'
 import { BUILT_IN_WAGGLE_PRESETS, mergeWagglePresets } from '../presets'
@@ -175,10 +171,11 @@ describe('waggle-core', () => {
       ],
     }
 
-    expect(resolveWaggleConfigForPrompt(configured, 'Build the feature').agents.map((agent) => agent.label)).toEqual([
-      'Architect',
-      'Mediator',
-    ])
+    expect(
+      resolveWaggleConfigForPrompt(configured, 'Build the feature').agents.map(
+        (agent) => agent.label,
+      ),
+    ).toEqual(['Architect', 'Mediator'])
     expect(
       resolveWaggleConfigForPrompt(configured, 'Build the feature with animation').agents.map(
         (agent) => agent.label,
@@ -198,10 +195,11 @@ describe('waggle-core', () => {
       ],
     }
 
-    expect(resolveWaggleConfigForPrompt(configured, 'Build the feature').agents.map((agent) => agent.label)).toEqual([
-      'Architect',
-      'Reviewer',
-    ])
+    expect(
+      resolveWaggleConfigForPrompt(configured, 'Build the feature').agents.map(
+        (agent) => agent.label,
+      ),
+    ).toEqual(['Architect', 'Reviewer'])
   })
 
   it('builds role-aware turn prompts', () => {

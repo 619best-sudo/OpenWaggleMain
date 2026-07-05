@@ -1,7 +1,7 @@
 import { homedir } from 'node:os'
 import { delimiter, join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { getNpmCompatiblePath, getSafeChildEnv } from '../env'
+import { getGhCliEnv, getNpmCompatiblePath, getSafeChildEnv } from '../env'
 
 const MINIMAL_PATH = ['/usr/bin', '/bin'].join(delimiter)
 
@@ -47,5 +47,19 @@ describe('main process environment helpers', () => {
     expect(entries.slice(0, existingEntries.length)).toEqual(existingEntries)
     expect(entries).toContain(join(homedir(), '.local', 'bin'))
     expect(entries).toContain('/usr/local/bin')
+  })
+
+  it('uses the npm-compatible PATH for gh CLI environments', () => {
+    vi.stubEnv('PATH', MINIMAL_PATH)
+    vi.stubEnv('GH_TOKEN', 'secret-gh-token')
+    vi.stubEnv('GITHUB_TOKEN', 'secret-github-token')
+
+    const ghEnv = getGhCliEnv()
+    const entries = pathEntries(ghEnv.PATH)
+
+    expect(entries).toContain(join(homedir(), '.local', 'bin'))
+    expect(entries).toContain('/usr/local/bin')
+    expect(ghEnv.GH_TOKEN).toBeUndefined()
+    expect(ghEnv.GITHUB_TOKEN).toBeUndefined()
   })
 })

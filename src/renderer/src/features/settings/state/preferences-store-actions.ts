@@ -1,5 +1,10 @@
 import { SupportedModelId } from '@shared/types/brand'
-import { DEFAULT_SETTINGS, THINKING_LEVELS, type ThinkingLevel } from '@shared/types/settings'
+import {
+  DEFAULT_SETTINGS,
+  GREATX_BACKEND_MODEL_REF,
+  THINKING_LEVELS,
+  type ThinkingLevel,
+} from '@shared/types/settings'
 import { includes } from '@shared/utils/validation'
 import { api } from '@/shared/lib/ipc'
 import { createRendererLogger } from '@/shared/lib/logger'
@@ -64,10 +69,8 @@ async function setProjectPath(path: string | null, set: PreferencesSet, get: Pre
 
 async function setEnabledModels(models: string[], set: PreferencesSet, get: PreferencesGet) {
   const { settings } = get()
-  const enabledModels = models.map(SupportedModelId)
-  const selectedModel = enabledModels.includes(settings.selectedModel)
-    ? settings.selectedModel
-    : (enabledModels[0] ?? DEFAULT_SETTINGS.selectedModel)
+  const enabledModels = models.length > 0 ? [GREATX_BACKEND_MODEL_REF] : []
+  const selectedModel = enabledModels[0] ?? DEFAULT_SETTINGS.selectedModel
   await api.setEnabledModels(enabledModels)
   if (selectedModel !== settings.selectedModel) {
     await api.updateSettings({ selectedModel })
@@ -85,7 +88,7 @@ async function loadProjectPreferences(
   if (!prefs) return
 
   const { settings } = get()
-  const model = prefs.model ? SupportedModelId(prefs.model) : undefined
+  const model = prefs.model ? GREATX_BACKEND_MODEL_REF : undefined
   const thinkingLevel =
     prefs.thinkingLevel && includes(THINKING_LEVELS, prefs.thinkingLevel)
       ? prefs.thinkingLevel
@@ -113,9 +116,10 @@ export function createPreferencesActions(
     },
     setSelectedModel: async (model) => {
       const { settings } = get()
-      await api.updateSettings({ selectedModel: model })
-      set({ settings: { ...settings, selectedModel: model } })
-      persistProjectPreference(settings.projectPath, { model })
+      const selectedModel = model ? GREATX_BACKEND_MODEL_REF : DEFAULT_SETTINGS.selectedModel
+      await api.updateSettings({ selectedModel })
+      set({ settings: { ...settings, selectedModel } })
+      persistProjectPreference(settings.projectPath, { model: selectedModel })
     },
     toggleFavoriteModel: async (model) => {
       const trimmed = model.trim()
@@ -157,6 +161,11 @@ export function createPreferencesActions(
       const { settings } = get()
       await api.updateSettings({ themeMode: mode })
       set({ settings: { ...settings, themeMode: mode } })
+    },
+    setShowCustomExecutionTeam: async (visible) => {
+      const { settings } = get()
+      await api.updateSettings({ showCustomExecutionTeam: visible })
+      set({ settings: { ...settings, showCustomExecutionTeam: visible } })
     },
     setEnabledModels: (models) => setEnabledModels(models, set, get),
     setProjectDisplayName: async (path, name) => {

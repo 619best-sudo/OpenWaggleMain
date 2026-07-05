@@ -1,7 +1,7 @@
-import { Check } from 'lucide-react'
 import { SupportedModelId } from '@shared/types/brand'
 import type { ProviderInfo } from '@shared/types/llm'
 import type { Settings, ThinkingLevel } from '@shared/types/settings'
+import { Check } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSelectedModelThinkingLevel } from '@/features/providers/hooks'
 import { useProviderStore } from '@/features/providers/state'
@@ -10,13 +10,13 @@ import { cn } from '@/shared/lib/cn'
 import { formatContextWindow } from '@/shared/lib/format-tokens'
 import { Button } from '@/shared/ui/Button'
 import { Popover } from '@/shared/ui/Popover'
-import { THINKING_LEVEL_LABELS } from '../constants/thinking-level-labels'
 import {
-  getThinkingButtonTitle,
-  hasOnlyOffThinkingLevel,
-} from '../lib/thinking-level-view'
-import { ProviderModelIcon, resolveIconColor } from '../../providers/components/ModelSelector/provider-icon'
+  ProviderModelIcon,
+  resolveIconColor,
+} from '../../providers/components/ModelSelector/provider-icon'
 import type { FlatModel } from '../../providers/components/ModelSelector/types'
+import { THINKING_LEVEL_LABELS } from '../constants/thinking-level-labels'
+import { getThinkingButtonTitle, hasOnlyOffThinkingLevel } from '../lib/thinking-level-view'
 
 function toFlatModel(group: ProviderInfo, model: ProviderInfo['models'][number]) {
   const modelRef = model.id.trim()
@@ -140,9 +140,7 @@ export function ComposerModelPicker() {
         </div>
         <div className="max-h-[200px] overflow-y-auto">
           {flatModels.length === 0 ? (
-            <div className="px-3 py-4 text-[12px] text-text-tertiary">
-              No models configured.
-            </div>
+            <div className="px-3 py-4 text-[12px] text-text-tertiary">No models configured.</div>
           ) : (
             <div className="space-y-px">
               {flatModels.map((model) => (

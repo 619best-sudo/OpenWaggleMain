@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SkillsPanel } from '../SkillsPanel'
 
 const mockState = vi.hoisted(() => {
-  const catalog: SkillCatalogResult = {
+  const createCatalog = (): SkillCatalogResult => ({
     projectPath: '/tmp/project',
     skills: [
       {
@@ -18,11 +18,12 @@ const mockState = vi.hoisted(() => {
         loadStatus: 'ok',
       },
     ],
-  }
+  })
 
   return {
     previewMarkdown: '',
-    catalog,
+    createCatalog,
+    catalog: createCatalog(),
     importSkill: vi.fn<(_: string) => Promise<SkillImportResult>>().mockResolvedValue({
       status: 'imported',
       skillId: 'skill-one',
@@ -67,6 +68,7 @@ function renderPanel(previewMarkdown: string) {
 describe('SkillsPanel markdown safety', () => {
   beforeEach(() => {
     mockState.previewMarkdown = ''
+    mockState.catalog = mockState.createCatalog()
     mockState.importSkill.mockClear()
   })
 
@@ -158,5 +160,19 @@ describe('SkillsPanel markdown safety', () => {
     render(<SkillsPanel showHeader={false} />)
 
     expect(screen.getByRole('button', { name: 'Import Skill' })).toBeInTheDocument()
+  })
+
+  it('keeps the discovered skills header when the catalog is empty', () => {
+    mockState.catalog = { projectPath: '/tmp/project', skills: [] }
+
+    renderPanel('')
+
+    expect(screen.getByText('Discovered Skills')).toBeInTheDocument()
+    expect(screen.getByText('No skills discovered')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Import a skill or add one to your project skills folder or `.agents/skills`.',
+      ),
+    ).toBeInTheDocument()
   })
 })

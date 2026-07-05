@@ -26,7 +26,7 @@ describe('buildWaggleAppInstallStatus', () => {
             name: 'playwright',
             enabled: true,
             sourceId: 'project-openwaggle',
-            sourceLabel: 'Project OpenWaggle',
+            sourceLabel: 'Project Turing Machine',
             sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
@@ -129,7 +129,7 @@ describe('buildWaggleAppInstallStatus', () => {
             name: 'playwright',
             enabled: true,
             sourceId: 'project-openwaggle',
-            sourceLabel: 'Project OpenWaggle',
+            sourceLabel: 'Project Turing Machine',
             sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
@@ -145,7 +145,9 @@ describe('buildWaggleAppInstallStatus', () => {
     expect(status.preflight).toEqual(
       expect.objectContaining({
         verdict: 'partial',
-        summary: expect.stringMatching(/can launch with reduced confidence: 3 optional missing, 0 optional unsupported/i),
+        summary: expect.stringMatching(
+          /can launch with reduced confidence: 3 optional missing, 0 optional unsupported/i,
+        ),
       }),
     )
     expect(status.requiredDependencyCount).toBe(1)
@@ -186,7 +188,7 @@ describe('buildWaggleAppInstallStatus', () => {
             name: 'database',
             enabled: true,
             sourceId: 'project-openwaggle',
-            sourceLabel: 'Project OpenWaggle',
+            sourceLabel: 'Project Turing Machine',
             sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
@@ -230,7 +232,7 @@ describe('buildWaggleAppInstallStatus', () => {
             name: 'playwright',
             enabled: false,
             sourceId: 'project-openwaggle',
-            sourceLabel: 'Project OpenWaggle',
+            sourceLabel: 'Project Turing Machine',
             sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
@@ -315,7 +317,7 @@ describe('buildWaggleAppInstallStatus', () => {
             name: 'playwright',
             enabled: true,
             sourceId: 'project-openwaggle',
-            sourceLabel: 'Project OpenWaggle',
+            sourceLabel: 'Project Turing Machine',
             sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
@@ -325,7 +327,7 @@ describe('buildWaggleAppInstallStatus', () => {
             name: 'figma',
             enabled: true,
             sourceId: 'project-openwaggle',
-            sourceLabel: 'Project OpenWaggle',
+            sourceLabel: 'Project Turing Machine',
             sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
@@ -420,7 +422,7 @@ describe('buildWaggleAppInstallStatus', () => {
             name: 'mobile-mcp',
             enabled: true,
             sourceId: 'project-openwaggle',
-            sourceLabel: 'Project OpenWaggle',
+            sourceLabel: 'Project Turing Machine',
             sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
@@ -505,7 +507,7 @@ describe('buildWaggleAppInstallStatus', () => {
             name: 'playwright',
             enabled: true,
             sourceId: 'project-openwaggle',
-            sourceLabel: 'Project OpenWaggle',
+            sourceLabel: 'Project Turing Machine',
             sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
@@ -534,7 +536,9 @@ describe('buildWaggleAppInstallStatus', () => {
     expect(status.preflight).toEqual(
       expect.objectContaining({
         verdict: 'partial',
-        summary: expect.stringMatching(/can launch with reduced confidence: No obvious web dev\/build script was found/i),
+        summary: expect.stringMatching(
+          /can launch with reduced confidence: No obvious web dev\/build script was found/i,
+        ),
         checks: expect.arrayContaining([
           expect.objectContaining({
             id: 'web-surface-match',
@@ -603,7 +607,7 @@ describe('buildWaggleAppInstallStatus', () => {
             name: 'playwright',
             enabled: true,
             sourceId: 'project-openwaggle',
-            sourceLabel: 'Project OpenWaggle',
+            sourceLabel: 'Project Turing Machine',
             sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
@@ -632,7 +636,9 @@ describe('buildWaggleAppInstallStatus', () => {
     expect(status.preflight).toEqual(
       expect.objectContaining({
         verdict: 'partial',
-        summary: expect.stringMatching(/can launch with reduced confidence: No obvious web dev\/build script was found/i),
+        summary: expect.stringMatching(
+          /can launch with reduced confidence: No obvious web dev\/build script was found/i,
+        ),
       }),
     )
   })
@@ -681,7 +687,7 @@ describe('buildWaggleAppInstallStatus', () => {
             name: 'playwright',
             enabled: true,
             sourceId: 'project-openwaggle',
-            sourceLabel: 'Project OpenWaggle',
+            sourceLabel: 'Project Turing Machine',
             sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',

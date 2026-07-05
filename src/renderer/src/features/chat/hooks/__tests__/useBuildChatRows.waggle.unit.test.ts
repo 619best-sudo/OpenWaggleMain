@@ -15,7 +15,7 @@ describe('buildChatRows waggle message metadata', () => {
     turnNumber: 0,
   }
 
-  const DEFAULT_PHASE = { current: null, completed: [], totalElapsedMs: 0 }
+  const DEFAULT_PHASE = { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null }
 
   it('groups explicit Waggle message metadata into one row per turn', () => {
     const advocateMsg: UIMessage = {
@@ -31,6 +31,7 @@ describe('buildChatRows waggle message metadata', () => {
 
     const rows = buildChatRows({
       messages: [createUserMessage('user-1', 'question'), advocateMsg, criticMsg],
+      machinePlan: null,
       isLoading: false,
       error: undefined,
       lastUserMessage: null,
@@ -78,6 +79,9 @@ describe('buildChatRows waggle message metadata', () => {
 
     const rows = buildChatRows({
       messages,
+      allMessages: messages,
+      machinePlan: null,
+      machinePlan: null,
       isLoading: false,
       error: undefined,
       lastUserMessage: null,
@@ -109,6 +113,9 @@ describe('buildChatRows waggle message metadata', () => {
 
     const rows = buildChatRows({
       messages,
+      allMessages: messages,
+      machinePlan: null,
+      machinePlan: null,
       isLoading: true,
       error: undefined,
       lastUserMessage: null,
@@ -129,6 +136,53 @@ describe('buildChatRows waggle message metadata', () => {
     ])
   })
 
+  it('splits rows when expert identity changes even if turn number and agent index match', () => {
+    const messages = [
+      createUserMessage('user-1', 'question'),
+      {
+        id: 'attacker-msg',
+        role: 'assistant' as const,
+        parts: [{ type: 'text' as const, content: 'Attacker findings' }],
+      },
+      {
+        id: 'defender-msg',
+        role: 'assistant' as const,
+        parts: [{ type: 'text' as const, content: 'Defender fixes' }],
+      },
+    ]
+
+    const rows = buildChatRows({
+      messages,
+      allMessages: messages,
+      machinePlan: null,
+      isLoading: false,
+      error: undefined,
+      lastUserMessage: null,
+      dismissedError: null,
+      sessionId: 'session-waggle',
+      waggleMetadataLookup: {
+        'attacker-msg': {
+          agentIndex: 0,
+          agentLabel: 'Attacker',
+          agentColor: 'blue',
+          turnNumber: 0,
+        },
+        'defender-msg': {
+          agentIndex: 0,
+          agentLabel: 'Defender',
+          agentColor: 'amber',
+          turnNumber: 0,
+        },
+      },
+      phase: DEFAULT_PHASE,
+    })
+
+    const waggleRows = rows.filter((row) => row.type === 'waggle-turn')
+    expect(waggleRows).toHaveLength(2)
+    expect(waggleRows[0]?.turnDividerProps.agentLabel).toBe('Attacker')
+    expect(waggleRows[1]?.turnDividerProps.agentLabel).toBe('Defender')
+  })
+
   it('renders post-waggle messages without waggle styling', () => {
     const waggleMsg: UIMessage = {
       id: 'waggle-msg',
@@ -143,6 +197,7 @@ describe('buildChatRows waggle message metadata', () => {
 
     const rows = buildChatRows({
       messages: [createUserMessage('user-1', 'question'), waggleMsg, postWaggleMsg],
+      machinePlan: null,
       isLoading: false,
       error: undefined,
       lastUserMessage: null,

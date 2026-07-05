@@ -18,11 +18,21 @@ export function NoProjectState() {
 
 export function EmptySkillsState() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-white/5 bg-white/[0.01] p-6 text-center">
-      <p className="text-[12px] font-medium text-text-secondary">No skills discovered</p>
-      <p className="mt-1 text-[11px] text-text-tertiary leading-relaxed">
-        Add skills to `.openwaggle/skills` or import from a URL.
-      </p>
+    <div className="px-4 py-3">
+      <div className="border-b border-border/50 px-1 py-3">
+        <div className="mb-2 h-3 w-32 rounded bg-bg-tertiary/70" />
+        <div className="h-2.5 w-52 rounded bg-bg-tertiary/45" />
+      </div>
+      <div className="border-b border-border/50 px-1 py-3">
+        <div className="mb-2 h-3 w-28 rounded bg-bg-tertiary/60" />
+        <div className="h-2.5 w-44 rounded bg-bg-tertiary/40" />
+      </div>
+      <div className="px-1 pb-2 pt-4">
+        <p className="text-[12px] font-medium text-text-secondary">No skills discovered</p>
+        <p className="mt-1 text-[11px] text-text-tertiary leading-relaxed">
+          Import a skill or add one to your project skills folder or `.agents/skills`.
+        </p>
+      </div>
     </div>
   )
 }

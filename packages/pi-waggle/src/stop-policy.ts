@@ -147,7 +147,8 @@ function isNoneValue(value: string | null) {
 }
 
 function isQaRuntimeContract(config: WaggleConfig, turnNumber: number) {
-  const requiredSections = getWaggleTurn(config, turnNumber).agent.outputContract?.requiredSections ?? []
+  const requiredSections =
+    getWaggleTurn(config, turnNumber).agent.outputContract?.requiredSections ?? []
   return QA_REQUIRED_SECTIONS.every((section) => requiredSections.includes(section))
 }
 
@@ -159,12 +160,14 @@ function hasRequiredSections(
 }
 
 function isWebVerifierContract(config: WaggleConfig, turnNumber: number) {
-  const requiredSections = getWaggleTurn(config, turnNumber).agent.outputContract?.requiredSections ?? []
+  const requiredSections =
+    getWaggleTurn(config, turnNumber).agent.outputContract?.requiredSections ?? []
   return hasRequiredSections(requiredSections, WEB_VERIFIER_REQUIRED_SECTIONS)
 }
 
 function isMobileVerifierContract(config: WaggleConfig, turnNumber: number) {
-  const requiredSections = getWaggleTurn(config, turnNumber).agent.outputContract?.requiredSections ?? []
+  const requiredSections =
+    getWaggleTurn(config, turnNumber).agent.outputContract?.requiredSections ?? []
   return hasRequiredSections(requiredSections, MOBILE_VERIFIER_REQUIRED_SECTIONS)
 }
 
@@ -214,7 +217,8 @@ function validateWebVerifierTurn(
   responseText: string,
   toolCallNames: readonly string[],
 ): string | null {
-  const verdict = readSectionValue(responseText, 'verification verdict')?.trim().toLocaleLowerCase() ?? ''
+  const verdict =
+    readSectionValue(responseText, 'verification verdict')?.trim().toLocaleLowerCase() ?? ''
   if (verdict !== 'pass') {
     return null
   }
@@ -258,7 +262,8 @@ function validateMobileVerifierTurn(
   responseText: string,
   toolCallNames: readonly string[],
 ): string | null {
-  const verdict = readSectionValue(responseText, 'verification verdict')?.trim().toLocaleLowerCase() ?? ''
+  const verdict =
+    readSectionValue(responseText, 'verification verdict')?.trim().toLocaleLowerCase() ?? ''
   if (verdict !== 'pass') {
     return null
   }

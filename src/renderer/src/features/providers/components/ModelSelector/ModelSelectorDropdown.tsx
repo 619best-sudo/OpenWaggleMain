@@ -27,7 +27,7 @@ export function ModelSelectorDropdown({
       role="listbox"
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className="absolute z-[9999] flex flex-col overflow-hidden rounded-xl border border-[#1e2229] bg-[#0d0f12] p-1.5 shadow-2xl"
+      className="absolute z-[9999] flex flex-col overflow-hidden rounded-xl border border-[var(--theme-command-palette-border)] bg-[var(--theme-command-palette-bg)] p-1.5 shadow-2xl"
       style={{
         bottom: `calc(100% + ${VERTICAL_GAP}px)`,
         left: 0,

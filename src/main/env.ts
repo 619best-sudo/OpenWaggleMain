@@ -1,5 +1,6 @@
+import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { delimiter, join } from 'node:path'
+import { delimiter, join, resolve } from 'node:path'
 import { decodeUnknownOrThrow, Schema, type SchemaType } from '@shared/schema'
 
 const optionalUrlSchema = Schema.optional(
@@ -21,11 +22,13 @@ const envSchema = Schema.Struct({
   OPENWAGGLE_USER_DATA_DIR: Schema.optional(Schema.String),
   OPENWAGGLE_DISABLE_SINGLE_INSTANCE: Schema.optional(Schema.String),
   OPENWAGGLE_LOG_LEVEL: Schema.optional(Schema.Literal('debug', 'info', 'warn', 'error')),
+  OPENWAGGLE_APP_AUTH_GOOGLE_DESKTOP_CLIENT_ID: Schema.optional(Schema.String),
+  OPENWAGGLE_APP_AUTH_GOOGLE_DESKTOP_CLIENT_SECRET: Schema.optional(Schema.String),
 })
 
 export type Env = SchemaType<typeof envSchema>
 
-export const env: Env = decodeUnknownOrThrow(envSchema, process.env)
+export const env: Env = decodeUnknownOrThrow(envSchema, loadMainProcessEnv())
 
 export const logLevel = env.OPENWAGGLE_LOG_LEVEL ?? 'info'
 
@@ -50,6 +53,71 @@ const POSIX_USER_TOOL_PATH_SEGMENTS = [
 const MACOS_USER_TOOL_PATH_SEGMENTS = [['Library', 'pnpm']] as const
 
 let temporaryProcessEnvQueue: Promise<void> = Promise.resolve()
+
+function loadMainProcessEnv() {
+  const mode = process.env.NODE_ENV ?? 'development'
+  const mergedEnv = { ...process.env }
+
+  for (const filePath of getEnvFilePaths(mode)) {
+    if (!existsSync(filePath)) {
+      continue
+    }
+
+    for (const [key, value] of Object.entries(parseEnvFile(readFileSync(filePath, 'utf8')))) {
+      if (mergedEnv[key] === undefined) {
+        mergedEnv[key] = value
+      }
+    }
+  }
+
+  return mergedEnv
+}
+
+function getEnvFilePaths(mode: string) {
+  return [
+    resolve(process.cwd(), '.env'),
+    resolve(process.cwd(), `.env.${mode}`),
+    resolve(process.cwd(), '.env.local'),
+    resolve(process.cwd(), `.env.${mode}.local`),
+  ]
+}
+
+function parseEnvFile(contents: string) {
+  const result: Record<string, string> = {}
+
+  for (const rawLine of contents.split(/\r?\n/u)) {
+    const line = rawLine.trim()
+    if (!line || line.startsWith('#')) {
+      continue
+    }
+
+    const equalsIndex = line.indexOf('=')
+    if (equalsIndex <= 0) {
+      continue
+    }
+
+    const key = line.slice(0, equalsIndex).trim()
+    if (!key) {
+      continue
+    }
+
+    const rawValue = line.slice(equalsIndex + 1).trim()
+    result[key] = normalizeEnvValue(rawValue)
+  }
+
+  return result
+}
+
+function normalizeEnvValue(value: string) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1)
+  }
+
+  return value
+}
 
 /**
  * Safe environment for child processes.
@@ -79,6 +147,7 @@ export function getGhCliEnv(): Record<string, string | undefined> {
   const env = { ...process.env }
   delete env.GITHUB_TOKEN
   delete env.GH_TOKEN
+  env.PATH = getNpmCompatiblePath()
   return env
 }
 

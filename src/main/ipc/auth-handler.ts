@@ -11,6 +11,7 @@ import {
   startOAuth,
   submitCode,
 } from '../auth'
+import { startGoogleDesktopAuth } from '../auth/google-desktop-auth'
 import { ProviderAuthService } from '../ports/provider-auth-service'
 import { ProviderOAuthService } from '../ports/provider-oauth-service'
 import { typedHandle } from './typed-ipc'
@@ -71,6 +72,8 @@ function reportDebugEvent(input: {
 export function registerAuthHandlers(): void {
   if (stopAuthLifecycle) stopAuthLifecycle()
   stopAuthLifecycle = startAuthLifecycle(broadcastOAuthStatus)
+
+  typedHandle('app-auth:start-google-oauth', () => Effect.promise(() => startGoogleDesktopAuth()))
 
   typedHandle('auth:start-oauth', (_event, provider: string) =>
     Effect.gen(function* () {

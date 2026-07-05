@@ -3,10 +3,11 @@ import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import { Bug, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { Button } from '@/shared/ui/Button'
+import { useUIStore } from '@/shell/ui-store'
 import { useChatScrollBehaviour } from '../hooks/useChatScrollBehaviour'
 import type { ChatRow } from '../lib/types-chat-row'
 import type { ChatTranscriptSectionState } from '../model'
-import { Button } from '@/shared/ui/Button'
 import { ChatRowRenderer } from './ChatRowRenderer'
 import { ScrollToBottomButton } from './ScrollToBottomButton'
 import { WelcomeScreen } from './WelcomeScreen'
@@ -22,6 +23,8 @@ interface TranscriptRowProps {
   sessionId: SessionId | null
   onOpenSettings: () => void
   onRetryText: (content: string) => Promise<void>
+  onApproveMachinePlan: () => Promise<void>
+  onDiscardMachinePlan: () => Promise<void>
   onDismissError: (errorId: string | null) => void
   onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   onBranchFromMessage: (messageId: string) => void
@@ -33,6 +36,8 @@ function TranscriptRow({
   sessionId,
   onOpenSettings,
   onRetryText,
+  onApproveMachinePlan,
+  onDiscardMachinePlan,
   onDismissError,
   onDismissInterruptedRun,
   onBranchFromMessage,
@@ -46,6 +51,8 @@ function TranscriptRow({
       onRetry={(content) => {
         void onRetryText(content)
       }}
+      onApproveMachinePlan={onApproveMachinePlan}
+      onDiscardMachinePlan={onDiscardMachinePlan}
       onDismissError={onDismissError}
       onDismissInterruptedRun={onDismissInterruptedRun}
       onBranchFromMessage={onBranchFromMessage}
@@ -58,6 +65,7 @@ function getChatRowKey(row: ChatRow) {
   return matchBy(row, 'type')
     .with('message', (value) => `message:${value.message.id}`)
     .with('waggle-turn', (value) => value.id)
+    .with('machine-timeline', (value) => value.id)
     .with('interrupted-run', (value) => `interrupted-run:${value.runId}`)
     .with('branch-summary', (value) => `branch-summary:${value.id}`)
     .with('compaction-summary', (value) => `compaction:${value.id}`)
@@ -74,6 +82,8 @@ interface RenderTranscriptRowsParams {
   activeSessionId: SessionId | null
   onOpenSettings: () => void
   onRetryText: (content: string) => Promise<void>
+  onApproveMachinePlan: () => Promise<void>
+  onDiscardMachinePlan: () => Promise<void>
   onDismissError: (errorId: string | null) => void
   onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   onBranchFromMessage: (messageId: string) => void
@@ -86,6 +96,8 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
     activeSessionId,
     onOpenSettings,
     onRetryText,
+    onApproveMachinePlan,
+    onDiscardMachinePlan,
     onDismissError,
     onDismissInterruptedRun,
     onBranchFromMessage,
@@ -108,6 +120,8 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
               sessionId={activeSessionId}
               onOpenSettings={onOpenSettings}
               onRetryText={onRetryText}
+              onApproveMachinePlan={onApproveMachinePlan}
+              onDiscardMachinePlan={onDiscardMachinePlan}
               onDismissError={onDismissError}
               onDismissInterruptedRun={onDismissInterruptedRun}
               onBranchFromMessage={onBranchFromMessage}
@@ -236,6 +250,7 @@ function buildTranscriptDebugPayload(section: ChatTranscriptSectionState) {
 
 export function ChatTranscript({ section }: ChatTranscriptProps) {
   const [isDebugPanelOpen, setIsDebugPanelOpen] = useState(false)
+  const transcriptDebugEnabled = useUIStore((s) => s.transcriptDebugEnabled)
   const {
     messages,
     isLoading,
@@ -247,6 +262,8 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
     onSelectProjectPath,
     onRetryText,
     onOpenSettings,
+    onApproveMachinePlan,
+    onDiscardMachinePlan,
     onDismissError,
     onDismissInterruptedRun,
     onBranchFromMessage,
@@ -331,6 +348,8 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
             activeSessionId={activeSessionId}
             onOpenSettings={onOpenSettings}
             onRetryText={onRetryText}
+            onApproveMachinePlan={onApproveMachinePlan}
+            onDiscardMachinePlan={onDiscardMachinePlan}
             onDismissError={onDismissError}
             onDismissInterruptedRun={onDismissInterruptedRun}
             onBranchFromMessage={onBranchFromMessage}
@@ -338,7 +357,7 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
           />
         </div>
       </div>
-      {messages.length > 0 ? (
+      {messages.length > 0 && transcriptDebugEnabled ? (
         <>
           {isDebugPanelOpen ? (
             <div

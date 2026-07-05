@@ -1,13 +1,7 @@
 import type { GitStatusSummary } from '@shared/types/git'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import {
-  CommitButton,
-  DiffToggleButton,
-  HeaderLeft,
-  SessionTreeButton,
-  TerminalButton,
-} from '../HeaderControls'
+import { CommitButton, DiffToggleButton, HeaderLeft, TerminalButton } from '../HeaderControls'
 
 function gitStatus() {
   return {
@@ -23,25 +17,16 @@ function gitStatus() {
 }
 
 describe('HeaderControls', () => {
-  it('renders the collapsed-sidebar header affordance and project label', () => {
+  it('renders the collapsed-sidebar header affordance and title', () => {
     const onToggleSidebar = vi.fn()
 
     render(
-      <HeaderLeft
-        activeBranchName="feature/test"
-        projectPath="/Users/demo/OpenWaggle"
-        sidebarOpen={false}
-        title="Working session"
-        onToggleSidebar={onToggleSidebar}
-      />,
+      <HeaderLeft sidebarOpen={false} title="Working session" onToggleSidebar={onToggleSidebar} />,
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Show sidebar' }))
 
     expect(screen.getByText('Working session')).toBeInTheDocument()
-    expect(screen.getByText('/ feature/test')).toBeInTheDocument()
-    expect(screen.getByText('OpenWaggle')).toBeInTheDocument()
-    expect(screen.queryByText('···')).toBeNull()
     expect(onToggleSidebar).toHaveBeenCalledOnce()
   })
 
@@ -57,15 +42,13 @@ describe('HeaderControls', () => {
     expect(screen.getByRole('button', { name: 'Open commit dialog' })).toBeDisabled()
   })
 
-  it('delegates enabled terminal, session-tree, and diff actions', () => {
+  it('delegates enabled terminal and diff actions', () => {
     const onToggleTerminal = vi.fn()
-    const onToggleTree = vi.fn()
     const onToggleDiff = vi.fn()
 
     render(
       <>
         <TerminalButton open projectPath="/repo" onToggle={onToggleTerminal} />
-        <SessionTreeButton hasSessionTree isChatRoute open={false} onToggle={onToggleTree} />
         <DiffToggleButton
           error={null}
           isChatRoute
@@ -79,13 +62,11 @@ describe('HeaderControls', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Hide terminal' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Toggle Session Tree' }))
     fireEvent.click(screen.getByRole('button', { name: 'Toggle diff panel' }))
 
     expect(screen.getByText('+12')).toBeInTheDocument()
     expect(screen.getByText('-3')).toBeInTheDocument()
     expect(onToggleTerminal).toHaveBeenCalledOnce()
-    expect(onToggleTree).toHaveBeenCalledOnce()
     expect(onToggleDiff).toHaveBeenCalledOnce()
   })
 

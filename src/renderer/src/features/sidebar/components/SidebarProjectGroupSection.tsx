@@ -49,6 +49,33 @@ function DraftSessionRow({
   )
 }
 
+function EmptyProjectSessionsRow({
+  projectLabel,
+  onSelect,
+}: {
+  readonly projectLabel: string
+  readonly onSelect: () => void
+}) {
+  return (
+    <Button
+      variant="unstyled"
+      type="button"
+      aria-label={`Start first session in ${projectLabel}`}
+      onClick={onSelect}
+      className="group mx-3 flex min-h-9 w-[calc(100%-24px)] items-start pl-8 pr-2 pt-1.5 text-left transition-colors"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[12.5px] font-medium text-text-tertiary group-hover:text-text-secondary">
+          No sessions yet
+        </div>
+        <div className="truncate text-[11px] text-text-tertiary/80 group-hover:text-text-tertiary">
+          Start the first thread in this project
+        </div>
+      </div>
+    </Button>
+  )
+}
+
 function sessionBranchDisclosure(session: SessionSummary, state: SidebarProjectRenderState) {
   const sourceBranches =
     state.activeSessionTree?.session.id === session.id
@@ -82,7 +109,12 @@ function ProjectSessionRows({
   const showDraftSession = state.draftSessionProjectPath === group.projectPath
 
   if (group.sessions.length === 0 && !showDraftSession) {
-    return <div className="px-6 py-1.5 text-[12.5px] font-medium text-text-tertiary">No sessions</div>
+    return (
+      <EmptyProjectSessionsRow
+        projectLabel={projectLabel}
+        onSelect={() => onNewSession(group.projectPath)}
+      />
+    )
   }
 
   return (

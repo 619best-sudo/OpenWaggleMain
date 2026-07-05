@@ -9,6 +9,7 @@
 export type AgentErrorCode =
   | 'api-key-invalid'
   | 'session-expired'
+  | 'subscription-required'
   | 'insufficient-credits'
   | 'rate-limited'
   | 'provider-down'

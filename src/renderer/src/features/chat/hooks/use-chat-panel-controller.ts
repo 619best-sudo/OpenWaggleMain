@@ -9,6 +9,8 @@ import { createBranchDraftSelection } from '@/features/chat/lib/branch-from-mess
 import { maybeOpenBranchSummaryPrompt } from '@/features/chat/lib/branch-summary-prompt-controller'
 import { replaceComposerText } from '@/features/composer/lib/set-composer-text'
 import { useComposerStore } from '@/features/composer/state'
+import { parseMachineExecutionState } from '@/features/machine/lib/machine-ui-state'
+import { useMachineModeStore } from '@/features/machine/state/machine-mode-store'
 import { useSkills } from '@/features/skills/hooks'
 import { useTeamModeStore } from '@/features/teammates/state/team-mode-store'
 import { useWaggleChat } from '@/features/waggle/hooks'
@@ -78,21 +80,31 @@ export function useChatPanelSections(): ChatPanelSections {
     compactionStatus,
   } = useAgentChat(activeSessionId, activeSession, model, thinkingLevel)
 
-  const { handleSend, handleSendText, handleSendWaggle, handleSendTeam } = useSendMessage({
+  const { handleSend, handleSendText, handleSendMachine, handleSendWaggle, handleSendTeam } =
+    useSendMessage({
     activeSessionId,
     model,
     projectPath,
     thinkingLevel,
     createSession,
     sendMessage,
+    sendMachineMessage: async (payload) => {
+      if (!activeSessionId) {
+        throw new Error('No active session for Machine mode.')
+      }
+      await api.sendMachineMessage(activeSessionId, payload, model)
+    },
     sendWaggleMessage,
     sendTeamMessage: async (payload, teammate) => {
       if (!activeSessionId) {
-        throw new Error('No active session for Team(New) send.')
+        throw new Error('No active session for Team send.')
       }
       await api.sendTeamMessage(activeSessionId, payload, model, teammate)
     },
-  })
+    onMachineSessionResolved: (sessionId) => {
+      useMachineModeStore.getState().startRun(sessionId)
+    },
+    })
 
   async function handleStarterPrompt(content: string) {
     if (!model.trim()) {
@@ -130,6 +142,14 @@ export function useChatPanelSections(): ChatPanelSections {
   const clearActiveTeammate = useTeamModeStore((s) => s.clear)
   const startTeamRun = useTeamModeStore((s) => s.startRun)
   const finishTeamRun = useTeamModeStore((s) => s.finishRun)
+  const machineModeEnabled = useMachineModeStore((s) => s.enabled)
+  const machineConfigSessionId = useMachineModeStore((s) => s.configSessionId)
+  const machineRunningSessionId = useMachineModeStore((s) => s.runningSessionId)
+  const machineStoreStatus = useMachineModeStore((s) => s.status)
+  const setMachineModeEnabled = useMachineModeStore((s) => s.setEnabled)
+  const startMachineRun = useMachineModeStore((s) => s.startRun)
+  const finishMachineRun = useMachineModeStore((s) => s.finishRun)
+  const clearMachineMode = useMachineModeStore((s) => s.clear)
 
   // Scope waggle status to the active session — other sessions see 'idle'
   const waggleOwningId = waggleActiveCollaborationId ?? waggleConfigSessionId
@@ -138,12 +158,71 @@ export function useChatPanelSections(): ChatPanelSections {
   const teamOwningId = teamRunningSessionId ?? teamConfigSessionId
   const scopedActiveTeammate =
     teamOwningId && activeSessionId && teamOwningId !== activeSessionId ? null : activeTeammate
+  const machineOwningId = machineRunningSessionId ?? machineConfigSessionId
+  const scopedMachineModeEnabled =
+    machineOwningId && activeSessionId && machineOwningId !== activeSessionId
+      ? false
+      : machineModeEnabled
+  const activeBranchState = activeWorkspace?.activeBranchState
+  const machinePlan =
+    activeBranchState && activeBranchState.branchId === activeWorkspace?.activeBranchId
+      ? parseMachineExecutionState(activeBranchState.uiStateJson)
+      : null
+  const machineStatus =
+    machineOwningId && activeSessionId && machineOwningId !== activeSessionId
+      ? 'idle'
+      : machineStoreStatus
 
   useEffect(() => {
     return api.onRunCompleted(({ sessionId }) => {
       useTeamModeStore.getState().finishRun(sessionId)
+      useMachineModeStore.getState().finishRun(sessionId)
     })
   }, [])
+
+  useEffect(() => {
+    if (!activeSessionId) {
+      return
+    }
+
+    return api.onAgentEvent(({ sessionId, event }) => {
+      if (sessionId !== activeSessionId || event.type !== 'custom' || !event.name.startsWith('machine:')) {
+        return
+      }
+
+      void refreshSessionWorkspace(activeSessionId)
+    })
+  }, [activeSessionId, refreshSessionWorkspace])
+
+  async function handleApproveMachinePlan() {
+    if (!activeSessionId) {
+      showToast('No active session for machine approval.')
+      return
+    }
+
+    try {
+      startMachineRun(activeSessionId)
+      await api.approveMachinePlan(activeSessionId)
+      await refreshSessionWorkspace(activeSessionId)
+    } catch (error) {
+      finishMachineRun(activeSessionId)
+      showToast(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  async function handleDiscardMachinePlan() {
+    if (!activeSessionId) {
+      showToast('No active session for machine plan changes.')
+      return
+    }
+
+    try {
+      await api.discardMachinePlan(activeSessionId)
+      await refreshSessionWorkspace(activeSessionId)
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : String(error))
+    }
+  }
 
   const sessionCopy = useSessionCopyWorkflow({
     activeSessionId,
@@ -185,6 +264,7 @@ export function useChatPanelSections(): ChatPanelSections {
     clearDraftBranchForSession,
     draftBranch,
     handleSend,
+    handleSendMachine,
     handleSendTeam,
     handleSendWaggle,
     model,
@@ -197,12 +277,19 @@ export function useChatPanelSections(): ChatPanelSections {
     clearActiveTeammate,
     startTeamRun,
     finishTeamRun,
+    setMachineModeEnabled,
+    startMachineRun,
+    finishMachineRun,
+    clearMachineMode,
     clearWaggleConfig,
     setWaggleConfig,
     showToast,
     startWaggleCollaboration,
     stop,
     stopWaggleCollaboration,
+    machineModeEnabled: scopedMachineModeEnabled,
+    machineOwningId,
+    machineStatus,
     activeTeammate: scopedActiveTeammate,
     teamOwningId,
     teamStatus,
@@ -283,12 +370,15 @@ export function useChatPanelSections(): ChatPanelSections {
     recentProjects,
     activeSessionId,
     activeSession,
+    machinePlan,
     model,
     waggleStatus,
     phase,
     handleOpenProject,
     handleSelectProjectPath,
     handleSendText: handleStarterPrompt,
+    handleApproveMachinePlan,
+    handleDiscardMachinePlan,
     openSettings,
     handleDismissInterruptedRun,
     handleBranchFromMessage,
@@ -337,6 +427,9 @@ export function useChatPanelSections(): ChatPanelSections {
     isSteering,
     status,
     compactionStatus,
+        machineModeEnabled: scopedMachineModeEnabled,
+        machineStatus,
+    machinePlan,
     activeTeammate: scopedActiveTeammate,
     teamStatus,
     forkSelectorOpen: sessionCopy.forkSelectorOpen,
@@ -354,6 +447,9 @@ export function useChatPanelSections(): ChatPanelSections {
     handleUseFollowUpPrompt,
     handleStartWaggle: sendWorkflow.startWaggle,
     handleStartTeam: sendWorkflow.startTeam,
+        handleSetMachineModeEnabled: sendWorkflow.setMachineModeEnabled,
+    handleApproveMachinePlan,
+    handleDiscardMachinePlan,
     handleStopCollaboration: sendWorkflow.stopCollaboration,
     handleClearTeamMode: clearActiveTeammate,
     handleSkipBranchSummary: branchSummary.skipBranchSummary,

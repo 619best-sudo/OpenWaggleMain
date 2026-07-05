@@ -31,8 +31,13 @@ export function InterruptedRunNotice({
             <div className="min-w-0">
               <p className="text-sm font-medium text-text-primary">Run interrupted</p>
               <p className="mt-1 text-[13px] text-text-tertiary">
-                OpenWaggle closed before this {runMode === 'waggle' ? 'Waggle' : 'standard'} run
-                finished. The latest Pi session state was restored without auto-resuming.
+                Turing Machine closed before this{' '}
+                {runMode === 'waggle'
+                  ? 'Waggle'
+                  : runMode === 'machine'
+                    ? 'machine mode'
+                    : 'standard'}{' '}
+                run finished. The latest Pi session state was restored without auto-resuming.
               </p>
             </div>
             {onDismiss ? (

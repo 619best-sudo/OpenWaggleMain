@@ -108,6 +108,7 @@ const phase = {
   current: null,
   completed: [],
   totalElapsedMs: 0,
+  completedAtMs: null,
   reset: vi.fn(),
 }
 

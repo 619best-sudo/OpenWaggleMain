@@ -14,8 +14,8 @@ import {
 function makePreset(): WagglePreset {
   return {
     id: WagglePresetId('preset-1'),
-    name: 'Pair',
-    description: 'Two-agent workflow',
+    name: 'Panel',
+    description: 'Two-expert workflow',
     isBuiltIn: false,
     createdAt: 1,
     updatedAt: 1,
@@ -24,13 +24,13 @@ function makePreset(): WagglePreset {
       agents: [
         {
           label: 'Planner',
-          model: SupportedModelId('anthropic/claude-sonnet-4-5'),
+          model: WAGGLE_INHERIT_MODEL,
           roleDescription: 'Plans the work',
           color: 'blue',
         },
         {
           label: 'Reviewer',
-          model: SupportedModelId('openai/gpt-4o'),
+          model: WAGGLE_INHERIT_MODEL,
           roleDescription: 'Reviews the result',
           color: 'amber',
         },
@@ -52,7 +52,7 @@ describe('waggle form state reducers', () => {
       mode: 'sequential',
       stop: { primary: 'consensus', maxTurnsSafety: 8 },
     })
-    expect(config.agents.map((agent) => agent.label)).toEqual(['Agent 1', 'Agent 2'])
+    expect(config.agents.map((agent) => agent.label)).toEqual(['Expert 1', 'Expert 2'])
     expect(config.agents.map((agent) => agent.model)).toEqual([
       WAGGLE_INHERIT_MODEL,
       WAGGLE_INHERIT_MODEL,
@@ -96,6 +96,8 @@ describe('waggle form state reducers', () => {
   it('detects whether a form config and app manifest still match a preset exactly', () => {
     const preset = makePreset()
     const matchingState = {
+      titleText: preset.name,
+      descriptionText: preset.description,
       agents: preset.config.agents,
       mode: preset.config.mode,
       stopCondition: preset.config.stop.primary,
@@ -120,6 +122,8 @@ describe('waggle form state reducers', () => {
     const preset = makePreset()
 
     expect(waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, { type: 'load-preset', preset })).toEqual({
+      titleText: preset.name,
+      descriptionText: preset.description,
       agents: preset.config.agents,
       mode: preset.config.mode,
       stopCondition: preset.config.stop.primary,
@@ -127,6 +131,33 @@ describe('waggle form state reducers', () => {
       requiredMcpsText: 'playwright',
       requiredSkillsText: 'ui-critic',
     })
+  })
+
+  it('normalizes agent model bindings to inherit when building config or loading presets', () => {
+    const preset = {
+      ...makePreset(),
+      config: {
+        ...makePreset().config,
+        agents: [
+          {
+            ...makePreset().config.agents[0],
+            model: SupportedModelId('anthropic/claude-sonnet-4-5'),
+          },
+          { ...makePreset().config.agents[1], model: SupportedModelId('openai/gpt-4o') },
+        ],
+      },
+    }
+
+    const loaded = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, { type: 'load-preset', preset })
+
+    expect(loaded.agents.map((agent) => agent.model)).toEqual([
+      WAGGLE_INHERIT_MODEL,
+      WAGGLE_INHERIT_MODEL,
+    ])
+    expect(buildWaggleConfig(loaded).agents.map((agent) => agent.model)).toEqual([
+      WAGGLE_INHERIT_MODEL,
+      WAGGLE_INHERIT_MODEL,
+    ])
   })
 
   it('updates a single agent without replacing the other slot', () => {
@@ -152,18 +183,28 @@ describe('waggle form state reducers', () => {
     expect(withTurns.agents).toBe(INITIAL_WAGGLE_FORM_STATE.agents)
   })
 
-  it('adds and removes agents while preserving the minimum pair', () => {
+  it('updates the panel title independently from the rest of the form', () => {
+    const updated = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, {
+      type: 'set-title-text',
+      value: 'Release Control Panel',
+    })
+
+    expect(updated.titleText).toBe('Release Control Panel')
+    expect(updated.agents).toBe(INITIAL_WAGGLE_FORM_STATE.agents)
+  })
+
+  it('adds and removes Experts while preserving the minimum panel size', () => {
     const withThirdAgent = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, { type: 'add-agent' })
 
     expect(withThirdAgent.agents).toHaveLength(3)
     expect(withThirdAgent.agents[2]).toMatchObject({
-      label: 'Agent 3',
+      label: 'Expert 3',
       model: WAGGLE_INHERIT_MODEL,
       color: 'emerald',
     })
 
     const removed = waggleFormReducer(withThirdAgent, { type: 'remove-agent', index: 1 })
-    expect(removed.agents.map((agent) => agent.label)).toEqual(['Agent 1', 'Agent 3'])
+    expect(removed.agents.map((agent) => agent.label)).toEqual(['Expert 1', 'Expert 3'])
 
     const stillTwoAgents = waggleFormReducer(INITIAL_WAGGLE_FORM_STATE, {
       type: 'remove-agent',

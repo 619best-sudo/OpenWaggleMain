@@ -11,6 +11,9 @@ interface ComposerModeControlsProps {
   readonly isLoading: boolean
   readonly canSend: boolean
   readonly sendTitle?: string
+  readonly machineModeEnabled?: boolean
+  readonly machineModeRunning?: boolean
+  readonly onSetMachineModeEnabled?: (enabled: boolean) => void
   readonly onToast?: (message: string) => void
 }
 
@@ -22,6 +25,9 @@ export function ComposerModeControls({
   isLoading,
   canSend,
   sendTitle,
+  machineModeEnabled,
+  machineModeRunning,
+  onSetMachineModeEnabled,
   onToast,
 }: ComposerModeControlsProps) {
   if (voice.isActive) {
@@ -37,6 +43,9 @@ export function ComposerModeControls({
     voiceMode: voice.mode,
     fileInputRef,
     sendTitle,
+    machineModeEnabled,
+    machineModeRunning,
+    onSetMachineModeEnabled,
     onToast,
   }
 

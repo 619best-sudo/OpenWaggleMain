@@ -7,6 +7,7 @@ import { Button } from '@/shared/ui/Button'
 import type { SettingsTab } from '@/shell/ui-store'
 import { useFullscreen } from '@/shell/useFullscreen'
 import { SettingsNav } from './SettingsNav'
+import { AboutUpdatesSection } from './sections/AboutUpdatesSection'
 import { ArchivedSection } from './sections/ArchivedSection'
 import { ConnectionsSection } from './sections/ConnectionsSection'
 import { GeneralSection } from './sections/GeneralSection'
@@ -71,6 +72,7 @@ function SettingsTabContent({ tab }: { tab: SettingsTab }) {
   return match(tab)
     .with('profile', () => <ProfileSection />)
     .with('general', () => <GeneralSection />)
+    .with('about', () => <AboutUpdatesSection />)
     .with('connections', () => <ConnectionsSection />)
     .with('archived', () => <ArchivedSection />)
     .otherwise(() => <ProfileSection />)

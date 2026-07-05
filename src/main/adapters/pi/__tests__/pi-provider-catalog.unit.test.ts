@@ -5,6 +5,7 @@ import {
   createPiProviderCatalogSnapshot,
   createPiRuntimeServices,
   getPiModelAvailableThinkingLevels,
+  resolveTuringMachineBaseUrl,
 } from '../pi-provider-catalog'
 import {
   createTempProject,
@@ -48,6 +49,20 @@ describe('getPiModelAvailableThinkingLevels', () => {
       'high',
       'xhigh',
     ])
+  })
+})
+
+describe('resolveTuringMachineBaseUrl', () => {
+  it('falls back to the local turing-machine backend when no env override is set', () => {
+    expect(resolveTuringMachineBaseUrl({})).toBe('http://127.0.0.1:3001/turing-machine')
+  })
+
+  it('normalizes custom backend overrides from the environment', () => {
+    expect(
+      resolveTuringMachineBaseUrl({
+        OPENWAGGLE_TURING_MACHINE_BASE_URL: ' https://backend.example.com/turing-machine/ ',
+      }),
+    ).toBe('https://backend.example.com/turing-machine')
   })
 })
 
@@ -102,6 +117,26 @@ describe('createPiProviderCatalogSnapshot', () => {
 })
 
 describe('createPiRuntimeServices', () => {
+  it('keeps direct OpenRouter models and adds a single separate turing-machine option', async () => {
+    const projectPath = await createTempProject()
+
+    try {
+      const services = await createPiRuntimeServices(projectPath)
+      const openRouterModel = services.modelRegistry
+        .getAll()
+        .find((model) => model.provider === 'openrouter')
+      const turingMachineModel = services.modelRegistry.find('turing-machine', 'turing-machine')
+
+      expect(openRouterModel).toBeDefined()
+      expect(services.modelRegistry.find('openrouter', openRouterModel?.id ?? '')).toBeDefined()
+      expect(turingMachineModel).toBeDefined()
+      expect(turingMachineModel?.name).toBe('Turing Machine')
+      expect(turingMachineModel?.contextWindow).toBe(256_000)
+    } finally {
+      await fs.rm(projectPath, { recursive: true, force: true })
+    }
+  })
+
   it('prefers .openwaggle resources over Pi-native project resources on name collisions', async () => {
     const projectPath = await createTempProject()
     const openWaggleSkill = await writeSkill(projectPath, '.openwaggle', 'shared-skill')

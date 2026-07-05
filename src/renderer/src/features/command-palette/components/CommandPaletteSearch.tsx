@@ -1,5 +1,6 @@
-import { Search } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import type { KeyboardEventHandler, RefObject } from 'react'
+import { Button } from '@/shared/ui/Button'
 import { TextInput } from '@/shared/ui/TextInput'
 
 interface CommandPaletteSearchProps {
@@ -7,6 +8,7 @@ interface CommandPaletteSearchProps {
   readonly query: string
   readonly onKeyDown: KeyboardEventHandler<HTMLInputElement>
   readonly onQueryChange: (query: string) => void
+  readonly onClose: () => void
 }
 
 export function CommandPaletteSearch({
@@ -14,6 +16,7 @@ export function CommandPaletteSearch({
   query,
   onKeyDown,
   onQueryChange,
+  onClose,
 }: CommandPaletteSearchProps) {
   return (
     <div className="flex h-11 items-center gap-2 border-b border-border px-3.5">
@@ -29,6 +32,16 @@ export function CommandPaletteSearch({
         inputSize="sm"
         className="flex-1 px-0"
       />
+      <Button
+        variant="unstyled"
+        type="button"
+        onClick={onClose}
+        className="shrink-0 rounded-md p-1 text-text-muted transition-colors hover:bg-bg-hover hover:text-text-primary"
+        aria-label="Close command palette"
+        title="Close"
+      >
+        <X className="size-3.5" />
+      </Button>
     </div>
   )
 }

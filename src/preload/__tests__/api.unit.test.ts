@@ -20,7 +20,11 @@ describe('preload api surface contract', () => {
   const EXPECTED_METHODS = [
     // Agent
     'sendMessage',
+    'sendMachineMessage',
+    'approveMachinePlan',
+    'discardMachinePlan',
     'cancelAgent',
+    'cancelMachine',
     'steerAgent',
     'onAgentEvent',
     'getAgentPhase',
@@ -117,6 +121,7 @@ describe('preload api surface contract', () => {
     'generateTeamAgent',
     'cancelTeam',
     // Auth
+    'startAppGoogleOAuth',
     'startOAuth',
     'submitAuthCode',
     'cancelOAuth',
@@ -131,6 +136,7 @@ describe('preload api surface contract', () => {
     'installWaggleAppDependencies',
     // Feedback
     'checkGhCli',
+    'collectGithubRepoStats',
     'collectDiagnostics',
     'getRecentLogs',
     'submitFeedback',

@@ -48,6 +48,8 @@ export function validateWaggleTurnOutput(input: {
     return { valid: false, missingSections: requiredSections }
   }
 
-  const missingSections = requiredSections.filter((section) => !hasSectionLabel(normalizedText, section))
+  const missingSections = requiredSections.filter(
+    (section) => !hasSectionLabel(normalizedText, section),
+  )
   return { valid: missingSections.length === 0, missingSections }
 }

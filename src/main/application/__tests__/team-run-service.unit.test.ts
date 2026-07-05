@@ -21,22 +21,23 @@ const TestProviderLayer = Layer.succeed(ProviderService, {
   get: () => Effect.succeed(undefined),
   getAll: () => Effect.succeed([]),
   getProviderForModel: (modelId) =>
-    Effect.sync(() =>
-      getProviderForModelMock(modelId) ?? {
-        id: 'openai',
-        displayName: 'OpenAI',
-        auth: {
-          configured: true,
-          source: 'environment-or-custom',
-          apiKeyConfigured: true,
-          apiKeySource: 'environment-or-custom',
-          oauthConnected: false,
-          supportsApiKey: true,
-          supportsOAuth: false,
+    Effect.sync(
+      () =>
+        getProviderForModelMock(modelId) ?? {
+          id: 'openai',
+          displayName: 'OpenAI',
+          auth: {
+            configured: true,
+            source: 'environment-or-custom',
+            apiKeyConfigured: true,
+            apiKeySource: 'environment-or-custom',
+            oauthConnected: false,
+            supportsApiKey: true,
+            supportsOAuth: false,
+          },
+          models: [],
+          testModel: modelId,
         },
-        models: [],
-        testModel: modelId,
-      },
     ),
   isKnownModel: () => Effect.succeed(true),
 })
@@ -107,7 +108,9 @@ function successResult(text: string) {
 
 function runTeamEffect(input: Parameters<typeof executeTeamRun>[0]) {
   return executeTeamRun(input) as unknown as Effect.Effect<
-    Awaited<ReturnType<typeof executeTeamRun>> extends Effect.Effect<infer A, infer _E, infer _R> ? A : never,
+    Awaited<ReturnType<typeof executeTeamRun>> extends Effect.Effect<infer A, infer _E, infer _R>
+      ? A
+      : never,
     never,
     never
   >
@@ -154,7 +157,9 @@ describe('executeTeamRun', () => {
     }
 
     executeAgentRunMock
-      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Implemented the landing page')))
+      .mockReturnValueOnce(
+        Effect.succeed(successResult('Execution Summary: Implemented the landing page')),
+      )
       .mockReturnValueOnce(
         Effect.succeed(
           successResult(`Website Open Check: Passed
@@ -240,12 +245,16 @@ Final Decision: Complete`),
             'Review the latest chat transcript, verify the website if possible',
           ),
         }),
+        promptDelivery: expect.objectContaining({
+          mode: 'hidden-custom-message',
+          customType: 'openwaggle.team-internal-turn',
+        }),
       }),
     )
     const autoPromptEvents = events.filter(
       (event) => event.type === 'custom' && event.name === 'team:auto-user-prompt',
     )
-    expect(autoPromptEvents).toHaveLength(0)
+    expect(autoPromptEvents).toEqual([])
   })
 
   it('uses the decision maker next prompt when continuing back to the executor', async () => {
@@ -377,8 +386,88 @@ Final Decision: Complete`),
         payload: expect.objectContaining({
           text: 'Create a SaaS landing page.',
         }),
+        promptDelivery: expect.objectContaining({
+          mode: 'hidden-custom-message',
+          customType: 'openwaggle.team-internal-turn',
+        }),
       }),
     )
+  })
+
+  it('prefers explicit next prompts over user-original prompt reuse', async () => {
+    const teammate: TeammateDefinition = {
+      ...BASE_TEAMMATE,
+      agents: [
+        {
+          id: 'executor',
+          label: 'Executor',
+          kind: 'executor',
+          roleDescription: 'Builds and fixes the website.',
+          createPrompt: 'user-original',
+        },
+        {
+          id: 'decision-maker',
+          label: 'Decision Maker',
+          kind: 'decision-maker',
+          roleDescription: 'Verifies with Playwright and decides whether to stop.',
+        },
+      ],
+    }
+
+    executeAgentRunMock
+      .mockReturnValueOnce(
+        Effect.succeed(successResult('Execution Summary: Implemented the first pass')),
+      )
+      .mockReturnValueOnce(
+        Effect.succeed(
+          successResult(`Website Open Check: Failed
+Next Agent: executor
+Next User Prompt: Fix the production startup crash before re-testing.
+Final Decision: Continue`),
+        ),
+      )
+      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Startup fixed')))
+      .mockReturnValueOnce(
+        Effect.succeed(
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
+        ),
+      )
+    generateTextMock
+      .mockReturnValueOnce(routeJson({ nextAgentId: 'decision-maker' }))
+      .mockReturnValueOnce(
+        routeJson({
+          finalDecision: 'continue',
+          nextAgentId: 'executor',
+          nextUserPrompt: 'Fix the production startup crash before re-testing.',
+        }),
+      )
+      .mockReturnValueOnce(routeJson({ nextAgentId: 'decision-maker' }))
+      .mockReturnValueOnce(routeJson({ finalDecision: 'complete' }))
+
+    const result = await runTeam({
+      sessionId: SessionId('session-team-explicit-beats-user-original'),
+      runId: 'team-session-explicit-beats-user-original',
+      payload: {
+        text: 'Create a SaaS landing page.',
+        thinkingLevel: 'medium',
+        attachments: [],
+      },
+      model: SupportedModelId('openai/gpt-5'),
+      teammate,
+      signal: new AbortController().signal,
+      onEvent: () => undefined,
+    })
+
+    expect(result).toEqual({ outcome: 'success' })
+    expect(executeAgentRunMock.mock.calls[2]?.[0]).toEqual(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          text: 'Fix the production startup crash before re-testing.',
+        }),
+      }),
+    )
+    expect(executeAgentRunMock.mock.calls[2]?.[0]).not.toHaveProperty('promptDelivery')
   })
 
   it('keeps the executor running when the transcript clearly offers the next implementation step', async () => {
@@ -428,6 +517,130 @@ Final Decision: Complete`),
       expect.objectContaining({
         payload: expect.objectContaining({
           text: expect.stringContaining('Continue the Website Executor task as Executor.'),
+        }),
+        promptDelivery: expect.objectContaining({
+          mode: 'hidden-custom-message',
+          customType: 'openwaggle.team-internal-turn',
+        }),
+      }),
+    )
+  })
+
+  it('keeps fallback prompts internal when no valid explicit next prompt exists', async () => {
+    executeAgentRunMock
+      .mockReturnValueOnce(
+        Effect.succeed(successResult('Execution Summary: Implemented the hero section')),
+      )
+      .mockReturnValueOnce(
+        Effect.succeed(
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
+        ),
+      )
+    generateTextMock
+      .mockReturnValueOnce(routeJson({ nextAgentId: 'decision-maker' }))
+      .mockReturnValueOnce(routeJson({ finalDecision: 'complete' }))
+
+    const events: AgentTransportEvent[] = []
+    const result = await runTeam({
+      sessionId: SessionId('session-team-fallback-visible'),
+      runId: 'team-session-fallback-visible',
+      payload: {
+        text: 'Create a SaaS landing page.',
+        thinkingLevel: 'medium',
+        attachments: [],
+      },
+      model: SupportedModelId('openai/gpt-5'),
+      teammate: BASE_TEAMMATE,
+      signal: new AbortController().signal,
+      onEvent: (event) => {
+        events.push(event)
+      },
+    })
+
+    expect(result).toEqual({ outcome: 'success' })
+    const fallbackPrompt = executeAgentRunMock.mock.calls[1]?.[0]?.payload?.text
+    expect(fallbackPrompt).toContain(
+      'Review the latest chat transcript, verify the website if possible',
+    )
+    expect(executeAgentRunMock.mock.calls[1]?.[0]).toEqual(
+      expect.objectContaining({
+        promptDelivery: expect.objectContaining({
+          mode: 'hidden-custom-message',
+          customType: 'openwaggle.team-internal-turn',
+        }),
+      }),
+    )
+    expect(
+      events.filter((event) => event.type === 'custom' && event.name === 'team:auto-user-prompt'),
+    ).toEqual([])
+  })
+
+  it('rejects malformed parsed next user prompts that contain fallback boilerplate', async () => {
+    executeAgentRunMock
+      .mockReturnValueOnce(
+        Effect.succeed(
+          successResult(`Execution Summary: Implemented the landing page
+Next Agent: decision-maker`),
+        ),
+      )
+      .mockReturnValueOnce(
+        Effect.succeed(
+          successResult(`Website Open Check: Failed
+Next Agent: executor
+Next User Prompt: Continue the Website Executor task as Executor.
+
+Use the latest chat transcript as context and continue from the current state.
+
+End with these exact sections:
+- Execution Summary:
+- Next Agent:
+- Next User Prompt:
+- Unresolved Blockers:
+
+Got it, let's tackle this. First, I need to inspect the app again.
+Final Decision: Continue`),
+        ),
+      )
+      .mockReturnValueOnce(Effect.succeed(successResult('Execution Summary: Startup fixed')))
+      .mockReturnValueOnce(
+        Effect.succeed(
+          successResult(`Website Open Check: Passed
+Final Decision: Complete`),
+        ),
+      )
+    generateTextMock
+      .mockReturnValueOnce(routeJson({ nextAgentId: 'decision-maker' }))
+      .mockReturnValueOnce(routeJson({ finalDecision: 'continue', nextAgentId: 'executor' }))
+      .mockReturnValueOnce(routeJson({ nextAgentId: 'decision-maker' }))
+      .mockReturnValueOnce(routeJson({ finalDecision: 'complete' }))
+
+    const result = await runTeam({
+      sessionId: SessionId('session-team-malformed-next-prompt'),
+      runId: 'team-session-malformed-next-prompt',
+      payload: {
+        text: 'Create a SaaS landing page.',
+        thinkingLevel: 'medium',
+        attachments: [],
+      },
+      model: SupportedModelId('openai/gpt-5'),
+      teammate: BASE_TEAMMATE,
+      signal: new AbortController().signal,
+      onEvent: () => undefined,
+    })
+
+    expect(result).toEqual({ outcome: 'success' })
+    expect(executeAgentRunMock.mock.calls[2]?.[0]?.payload?.text).toContain(
+      'Continue the Website Executor task as Executor.',
+    )
+    expect(executeAgentRunMock.mock.calls[2]?.[0]?.payload?.text).not.toContain(
+      "Got it, let's tackle this.",
+    )
+    expect(executeAgentRunMock.mock.calls[2]?.[0]).toEqual(
+      expect.objectContaining({
+        promptDelivery: expect.objectContaining({
+          mode: 'hidden-custom-message',
+          customType: 'openwaggle.team-internal-turn',
         }),
       }),
     )
@@ -608,6 +821,10 @@ Final Decision: Complete`),
       expect.objectContaining({
         payload: expect.objectContaining({
           text: expect.stringContaining('Continue the Website Executor task as Reviewer.'),
+        }),
+        promptDelivery: expect.objectContaining({
+          mode: 'hidden-custom-message',
+          customType: 'openwaggle.team-internal-turn',
         }),
       }),
     )

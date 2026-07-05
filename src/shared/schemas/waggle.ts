@@ -1,14 +1,14 @@
 import {
   isProviderQualifiedWaggleModel,
-  WAGGLE_PLACEHOLDER_POLICIES,
-  WAGGLE_AGENT_RUN_CONDITION_TYPES,
-  MIN_WAGGLE_AGENT_COUNT,
   isWaggleInheritedModel,
   MAX_WAGGLE_MAX_TURNS_SAFETY,
+  MIN_WAGGLE_AGENT_COUNT,
   MIN_WAGGLE_MAX_TURNS_SAFETY,
   WAGGLE_AGENT_COLORS,
+  WAGGLE_AGENT_RUN_CONDITION_TYPES,
   WAGGLE_COLLABORATION_MODES,
   WAGGLE_INHERIT_MODEL,
+  WAGGLE_PLACEHOLDER_POLICIES,
   WAGGLE_STOP_CONDITIONS,
 } from '@openwaggle/waggle-core'
 import { Schema } from '@shared/schema'
@@ -26,23 +26,17 @@ export const waggleModelBindingSchema = Schema.String.pipe(
 export const waggleAgentRunConditionSchema = Schema.Struct({
   type: Schema.Literal(...WAGGLE_AGENT_RUN_CONDITION_TYPES),
   anyOf: Schema.Array(Schema.String).pipe(
-    Schema.filter(
-      (terms) => terms.some((term) => term.trim().length > 0),
-      {
-        message: () => 'runCondition.anyOf must contain at least one non-empty string.',
-      },
-    ),
+    Schema.filter((terms) => terms.some((term) => term.trim().length > 0), {
+      message: () => 'runCondition.anyOf must contain at least one non-empty string.',
+    }),
   ),
 })
 
 export const waggleAgentOutputContractSchema = Schema.Struct({
   requiredSections: Schema.Array(Schema.String).pipe(
-    Schema.filter(
-      (sections) => sections.some((section) => section.trim().length > 0),
-      {
-        message: () => 'outputContract.requiredSections must contain at least one non-empty string.',
-      },
-    ),
+    Schema.filter((sections) => sections.some((section) => section.trim().length > 0), {
+      message: () => 'outputContract.requiredSections must contain at least one non-empty string.',
+    }),
   ),
 })
 
@@ -73,13 +67,9 @@ export const waggleAgentSlotSchema = Schema.Struct({
 export const waggleConfigSchema = Schema.Struct({
   mode: Schema.Literal(...WAGGLE_COLLABORATION_MODES),
   agents: Schema.Array(waggleAgentSlotSchema).pipe(
-    Schema.filter(
-      (agents) => agents.length >= MIN_WAGGLE_AGENT_COUNT,
-      {
-        message: () =>
-          `agents must contain at least ${String(MIN_WAGGLE_AGENT_COUNT)} agent slots.`,
-      },
-    ),
+    Schema.filter((agents) => agents.length >= MIN_WAGGLE_AGENT_COUNT, {
+      message: () => `agents must contain at least ${String(MIN_WAGGLE_AGENT_COUNT)} agent slots.`,
+    }),
   ),
   stop: Schema.Struct({
     primary: Schema.Literal(...WAGGLE_STOP_CONDITIONS),

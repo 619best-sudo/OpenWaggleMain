@@ -1,5 +1,5 @@
 import type { UIMessage } from '@shared/types/chat-ui'
-import type { WaggleConfig, WaggleCollaborationStatus, WagglePreset } from '@shared/types/waggle'
+import type { WaggleCollaborationStatus, WaggleConfig, WagglePreset } from '@shared/types/waggle'
 
 export interface TuringFollowUpSuggestion {
   readonly nextWaggle: string
@@ -32,7 +32,9 @@ function matchesField(line: string, label: string) {
 
 function getMessageText(message: UIMessage) {
   return message.parts
-    .filter((part): part is Extract<UIMessage['parts'][number], { type: 'text' }> => part.type === 'text')
+    .filter(
+      (part): part is Extract<UIMessage['parts'][number], { type: 'text' }> => part.type === 'text',
+    )
     .map((part) => part.content)
     .join('\n')
     .trim()
@@ -93,7 +95,10 @@ export function findWagglePresetForTuringSuggestion(
       for (const key of presetSearchKeys(preset)) {
         const candidateIndex = candidate.indexOf(key)
         if (candidateIndex >= 0) {
-          if (candidateIndex < bestIndex || (candidateIndex === bestIndex && key.length > bestKeyLength)) {
+          if (
+            candidateIndex < bestIndex ||
+            (candidateIndex === bestIndex && key.length > bestKeyLength)
+          ) {
             bestMatch = preset
             bestIndex = candidateIndex
             bestKeyLength = key.length

@@ -102,7 +102,9 @@ describe('ToolCallBlock', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: /Failed bash `npm create next-app`/ })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Failed bash `npm create next-app`/ }),
+    ).toBeInTheDocument()
     expect(screen.queryByText(/Could not create a project called "Test"/)).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: /Failed bash `npm create next-app`/ }))

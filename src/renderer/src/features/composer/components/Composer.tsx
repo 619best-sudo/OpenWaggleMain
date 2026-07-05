@@ -24,6 +24,9 @@ interface ComposerProps {
     readonly clearOnSubmit?: boolean
     readonly recordHistory?: boolean
     readonly allowEnqueue?: boolean
+    readonly machineModeEnabled?: boolean
+    readonly machineModeRunning?: boolean
+    readonly onSetMachineModeEnabled?: (enabled: boolean) => void
   }
   onToast?: (message: string) => void
 }
@@ -36,6 +39,9 @@ export function Composer({ onSend, onEnqueue, onCancel, isLoading, mode, onToast
   const clearOnSubmit = mode?.clearOnSubmit ?? true
   const recordHistory = mode?.recordHistory ?? true
   const allowEnqueue = mode?.allowEnqueue ?? true
+  const machineModeEnabled = mode?.machineModeEnabled ?? false
+  const machineModeRunning = mode?.machineModeRunning ?? false
+  const onSetMachineModeEnabled = mode?.onSetMachineModeEnabled
   const editorRef = useRef<LexicalEditor | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { projectPath } = useProject()
@@ -98,6 +104,9 @@ export function Composer({ onSend, onEnqueue, onCancel, isLoading, mode, onToast
           isLoading={isLoading}
           canSend={submission.canSend}
           sendTitle={sendTitle}
+          machineModeEnabled={machineModeEnabled}
+          machineModeRunning={machineModeRunning}
+          onSetMachineModeEnabled={onSetMachineModeEnabled}
           onToast={onToast}
         />
       </ComposerDropZone>

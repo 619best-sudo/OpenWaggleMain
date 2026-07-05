@@ -100,7 +100,10 @@ describe('composer view helpers', () => {
         hasActiveSession: true,
         failed: true,
       }),
-    ).toMatchObject({ displayValue: '?', title: 'Context usage unavailable' })
+    ).toMatchObject({
+      displayValue: '0',
+      title: 'Context: 0 / 200k tokens (usage unavailable)',
+    })
   })
 
   it('finds a mention query only when the at-sign starts the current token', () => {

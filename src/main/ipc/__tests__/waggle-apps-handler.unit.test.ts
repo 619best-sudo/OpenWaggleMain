@@ -24,7 +24,7 @@ import { registerWaggleAppsHandlers } from '../waggle-apps-handler'
 function samplePreset(): WagglePreset {
   return {
     id: WagglePresetId('preset-1'),
-    name: 'Review Pair',
+    name: 'Review Panel',
     description: 'Two-agent code review',
     config: {
       mode: 'sequential',
@@ -64,7 +64,7 @@ function blankMcpSettingsView(projectPath: string): McpSettingsView {
     sources: [
       {
         id: 'project-openwaggle',
-        label: 'Project OpenWaggle',
+        label: 'Project Turing Machine',
         path: path.join(projectPath, '.openwaggle', 'agent', 'mcp.json'),
         scope: 'project' as const,
         kind: 'openwaggle' as const,

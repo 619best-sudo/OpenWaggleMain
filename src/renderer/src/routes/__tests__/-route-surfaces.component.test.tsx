@@ -8,7 +8,7 @@ import { SkillsRouteSurface } from '../-skills-route-surface'
 import { TeammatesRouteSurface } from '../-teammates-route-surface'
 import { WaggleRouteSurface } from '../-waggle-route-surface'
 
-type SettingsTab = 'profile' | 'general' | 'archived' | 'connections'
+type SettingsTab = 'profile' | 'general' | 'about' | 'archived' | 'connections'
 type RightSidebarPanel = 'diff' | 'session-tree'
 interface RouterState {
   readonly location: {
@@ -195,7 +195,7 @@ describe('route surfaces', () => {
     expect(screen.getByText('Waggle panel')).toBeInTheDocument()
   })
 
-  it('wraps the Team(New) panel in its route surface', () => {
+  it('wraps the Team panel in its route surface', () => {
     render(<TeammatesRouteSurface />)
 
     expect(screen.getByText('Teammates panel')).toBeInTheDocument()

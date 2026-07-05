@@ -3,11 +3,24 @@ import type { SessionId } from '@shared/types/brand'
 import type { SupportedModelId } from '@shared/types/llm'
 import { formatErrorMessage } from '@shared/utils/node-error'
 import * as Effect from 'effect/Effect'
-import { classifyAgentError } from '../../agent/error-classifier'
+import { classifyAgentError, makeErrorInfo } from '../../agent/error-classifier'
 import { createLogger } from '../../logger'
 import type { AgentRunResult } from './types'
 
 const logger = createLogger('agent-run-service')
+const TURING_MACHINE_MODEL = 'turing-machine/turing-machine'
+
+function classifyTerminalErrorForModel(model: SupportedModelId, terminalError: string) {
+  const normalized = terminalError.toLowerCase()
+  if (
+    model === TURING_MACHINE_MODEL &&
+    normalized.includes('403') &&
+    normalized.includes('forbidden')
+  ) {
+    return makeErrorInfo('subscription-required', terminalError)
+  }
+  return classifyAgentError(new Error(terminalError))
+}
 
 interface AgentKernelOutcomeInput {
   readonly terminalError?: string | null
@@ -96,7 +109,7 @@ function terminalErrorOutcome(
     readonly assignedTitle?: string
   },
 ): AgentRunResult {
-  const classified = classifyAgentError(new Error(terminalError))
+  const classified = classifyTerminalErrorForModel(context.model, terminalError)
   logger.error('Agent run ended with terminal error', {
     sessionId: context.sessionId,
     runId: context.runId,

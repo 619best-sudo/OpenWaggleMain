@@ -27,9 +27,9 @@ export function CopyButton({ label, value }: { readonly label: string; readonly 
   return (
     <Button
       variant="unstyled"
-        type="button"
-        className="inline-flex items-center gap-1 rounded border-2 border-home-border px-1.5 py-0.5 text-[11px] text-[color:var(--color-code-card-muted-text)] transition-colors hover:bg-bg-hover hover:text-[color:var(--color-code-card-label-text)]"
-        onClick={(event) => {
+      type="button"
+      className="inline-flex items-center gap-1 rounded border-2 border-home-border px-1.5 py-0.5 text-[11px] text-[color:var(--color-code-card-muted-text)] transition-colors hover:bg-bg-hover hover:text-[color:var(--color-code-card-label-text)]"
+      onClick={(event) => {
         event.stopPropagation()
         copy(value)
       }}

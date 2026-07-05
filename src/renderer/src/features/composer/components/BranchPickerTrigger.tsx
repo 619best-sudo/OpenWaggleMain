@@ -8,17 +8,19 @@ interface BranchPickerTriggerProps {
 }
 
 export function BranchPickerTrigger({ currentBranch, isOpen, onToggle }: BranchPickerTriggerProps) {
+  const branchLabel = currentBranch ?? 'branch'
+
   return (
     <Button
       variant="unstyled"
       type="button"
       onClick={() => onToggle(!isOpen)}
-      className="home-panel-frame-soft flex h-6 items-center gap-1 rounded-[5px] px-2 text-[12px] text-text-secondary transition-colors hover:bg-bg-hover"
-      title="Manage branches"
+      className="home-panel-frame-soft flex h-6 min-w-0 max-w-[min(42vw,220px)] shrink items-center gap-1 rounded-[5px] px-2 text-[12px] text-text-secondary transition-colors hover:bg-bg-hover"
+      title={currentBranch ? `Manage branches (${currentBranch})` : 'Manage branches'}
     >
-      <GitBranch className="size-[13px] text-text-tertiary" />
-      <span>{currentBranch ?? 'branch'}</span>
-      <span className="text-[9px] text-text-tertiary">&#x2228;</span>
+      <GitBranch className="size-[13px] shrink-0 text-text-tertiary" />
+      <span className="min-w-0 truncate whitespace-nowrap">{branchLabel}</span>
+      <span className="shrink-0 text-[9px] text-text-tertiary">&#x2228;</span>
     </Button>
   )
 }

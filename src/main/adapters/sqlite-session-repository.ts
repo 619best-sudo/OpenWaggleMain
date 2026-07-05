@@ -74,9 +74,13 @@ function createSessionBranchMethods(deps: SessionRepositoryStores) {
       repositoryOperation('updateSessionTreeUiState', () =>
         deps.store.updateSessionTreeUiState(sessionId, patch),
       ),
+    updateBranchUiState: (sessionId, branchId, uiStateJson) =>
+      repositoryOperation('updateSessionBranchUiState', () =>
+        deps.store.updateSessionBranchUiState(sessionId, branchId, uiStateJson),
+      ),
   } satisfies Pick<
     SessionRepositoryShape,
-    'renameBranch' | 'archiveBranch' | 'restoreBranch' | 'updateTreeUiState'
+    'renameBranch' | 'archiveBranch' | 'restoreBranch' | 'updateTreeUiState' | 'updateBranchUiState'
   >
 }
 

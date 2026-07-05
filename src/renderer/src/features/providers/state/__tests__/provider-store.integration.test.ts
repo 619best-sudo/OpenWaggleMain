@@ -1,6 +1,6 @@
 import { SupportedModelId } from '@shared/types/brand'
 import type { ProviderInfo } from '@shared/types/llm'
-import { DEFAULT_SETTINGS } from '@shared/types/settings'
+import { DEFAULT_SETTINGS, GREATX_BACKEND_MODEL_REF } from '@shared/types/settings'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '../auth-store'
 import { useProviderStore } from '../provider-store'
@@ -90,6 +90,34 @@ function ollamaProviderModels(): ProviderInfo[] {
   ]
 }
 
+function turingMachineProviderModels(): ProviderInfo[] {
+  return [
+    {
+      provider: 'turing-machine',
+      displayName: 'Turing Machine',
+      auth: {
+        configured: true,
+        source: 'environment-or-custom',
+        apiKeyConfigured: true,
+        apiKeySource: 'environment-or-custom',
+        oauthConnected: false,
+        supportsApiKey: true,
+        supportsOAuth: false,
+      },
+      models: [
+        {
+          id: SupportedModelId('turing-machine/turing-machine'),
+          modelId: 'turing-machine',
+          name: 'Turing Machine',
+          provider: 'turing-machine',
+          available: true,
+          availableThinkingLevels: ['off', 'minimal', 'low', 'medium', 'high'],
+        },
+      ],
+    },
+  ]
+}
+
 describe('provider-store integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -138,6 +166,47 @@ describe('provider-store integration', () => {
         availableThinkingLevels: ['off'],
       },
     ])
+  })
+
+  it('auto-enables turing-machine models so they appear in the picker', async () => {
+    apiMock.getSettings.mockResolvedValue(DEFAULT_SETTINGS)
+    apiMock.getProviderModels.mockResolvedValue(turingMachineProviderModels())
+
+    const updatedSettings = await useProviderStore.getState().loadProviderModels()
+
+    expect(apiMock.updateSettings).toHaveBeenCalledWith({
+      enabledModels: [GREATX_BACKEND_MODEL_REF],
+      selectedModel: GREATX_BACKEND_MODEL_REF,
+    })
+    expect(updatedSettings).toEqual({
+      ...DEFAULT_SETTINGS,
+      enabledModels: [GREATX_BACKEND_MODEL_REF],
+      selectedModel: GREATX_BACKEND_MODEL_REF,
+    })
+  })
+
+  it('forces GreatX backend as the only enabled model when other providers are present', async () => {
+    apiMock.getSettings.mockResolvedValue({
+      ...DEFAULT_SETTINGS,
+      enabledModels: [SupportedModelId('openai/gpt-4.1-mini')],
+      selectedModel: SupportedModelId('openai/gpt-4.1-mini'),
+    })
+    apiMock.getProviderModels.mockResolvedValue([
+      ...openAiProviderModels(),
+      ...turingMachineProviderModels(),
+    ])
+
+    const updatedSettings = await useProviderStore.getState().loadProviderModels()
+
+    expect(apiMock.updateSettings).toHaveBeenCalledWith({
+      enabledModels: [GREATX_BACKEND_MODEL_REF],
+      selectedModel: GREATX_BACKEND_MODEL_REF,
+    })
+    expect(updatedSettings).toEqual({
+      ...DEFAULT_SETTINGS,
+      enabledModels: [GREATX_BACKEND_MODEL_REF],
+      selectedModel: GREATX_BACKEND_MODEL_REF,
+    })
   })
 
   it('updates API key through Pi auth storage and reloads the Pi catalog', async () => {

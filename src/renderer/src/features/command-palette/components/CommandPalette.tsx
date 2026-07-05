@@ -62,12 +62,13 @@ export function CommandPalette({
   }
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-[#2a2f3a] bg-[#161a20]">
+    <div className="w-full overflow-hidden rounded-xl border border-[var(--theme-command-palette-border)] bg-[var(--theme-command-palette-bg)]">
       <CommandPaletteSearch
         inputRef={inputRef}
         query={query}
         onKeyDown={handleKeyDown}
         onQueryChange={handleQueryChange}
+        onClose={closeCommandPalette}
       />
       <CommandPaletteList
         items={items}

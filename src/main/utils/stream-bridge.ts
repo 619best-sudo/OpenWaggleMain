@@ -3,8 +3,11 @@ import type { AgentPhaseEventPayload } from '@shared/types/phase'
 import type { AgentTransportEvent } from '@shared/types/stream'
 import type { WaggleStreamMetadata, WaggleTurnEvent } from '@shared/types/waggle'
 import { resetPhaseForSession, updatePhaseFromTransportEvent } from '../agent/phase-tracker'
+import { createLogger } from '../logger'
 import { broadcastToWindows } from './broadcast'
 import { applyEventToStreamBuffer } from './stream-buffer'
+
+const logger = createLogger('stream-bridge')
 
 export {
   clearStreamBuffer,
@@ -18,6 +21,16 @@ export function emitRunCompleted(sessionId: SessionId) {
 }
 
 export function emitTransportEvent(sessionId: SessionId, event: AgentTransportEvent) {
+  if (
+    (event.type === 'custom' && event.name === 'team:auto-user-prompt') ||
+    (event.type === 'message_start' && event.role === 'user') ||
+    (event.type === 'message_end' && event.role === 'user')
+  ) {
+    logger.debug('Broadcasting Team(New) live user-related transport event', {
+      sessionId,
+      event,
+    })
+  }
   applyEventToStreamBuffer(sessionId, event)
 
   maybeEmitPhase({

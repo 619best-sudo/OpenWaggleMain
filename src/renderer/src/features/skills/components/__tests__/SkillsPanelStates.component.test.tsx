@@ -15,8 +15,11 @@ describe('SkillsPanelStates', () => {
   it('explains which project skill directories are empty', () => {
     render(<EmptySkillsState />)
 
+    expect(screen.getByText('No skills discovered')).toBeInTheDocument()
     expect(
-      screen.getByText('No skills found under `.openwaggle/skills` or `.agents/skills`.'),
+      screen.getByText(
+        'Import a skill or add one to your project skills folder or `.agents/skills`.',
+      ),
     ).toBeInTheDocument()
   })
 })

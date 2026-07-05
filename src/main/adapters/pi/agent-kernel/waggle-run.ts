@@ -31,8 +31,8 @@ import {
 import {
   appendLoopDirective,
   buildWaggleTurnCompactionInstructions,
-  collectToolExecutionHandoff,
   collectResponseDirectiveHandoff,
+  collectToolExecutionHandoff,
   createWaggleTurnHandoffDraft,
   finalizeWaggleTurnHandoff,
   readKeepOrRevertDecision,
@@ -258,7 +258,8 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
   const watchdog = createStuckTerminalToolWatchdog({
     session,
     runId: input.runId,
-    emitErrorEvent: (event) => input.waggle.onWaggleEvent(withTransportEventModel(event, currentMeta), currentMeta),
+    emitErrorEvent: (event) =>
+      input.waggle.onWaggleEvent(withTransportEventModel(event, currentMeta), currentMeta),
     abortWarning,
   })
   const unsubscribe = session.subscribe(

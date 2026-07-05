@@ -105,6 +105,11 @@ export interface SessionRepositoryShape {
     sessionId: SessionId,
     patch: SessionTreeUiStatePatch,
   ) => Effect.Effect<void, SessionProjectionRepositoryError>
+  readonly updateBranchUiState: (
+    sessionId: SessionId,
+    branchId: SessionBranchId,
+    uiStateJson: string,
+  ) => Effect.Effect<void, SessionProjectionRepositoryError>
   readonly recordActiveRun: (
     input: PersistSessionActiveRunInput,
   ) => Effect.Effect<void, SessionProjectionRepositoryError>

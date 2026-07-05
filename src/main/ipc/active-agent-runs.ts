@@ -9,15 +9,17 @@ interface AgentRunMetadata {
 const activeRuns = new ActiveRunManager<SessionId, AgentRunMetadata>()
 const activeCompactions = new ActiveRunManager<SessionId, AgentRunMetadata>()
 const activeWaggleRuns = new ActiveRunManager<SessionId, Record<string, never>>()
+const activeMachineRuns = new ActiveRunManager<SessionId, AgentRunMetadata>()
 const activeTeamRuns = new ActiveRunManager<SessionId, AgentRunMetadata>()
 
-export { activeCompactions, activeRuns, activeTeamRuns, activeWaggleRuns }
+export { activeCompactions, activeMachineRuns, activeRuns, activeTeamRuns, activeWaggleRuns }
 
 export function hasAnyActiveRun(sessionId: SessionId): boolean {
   return (
     activeRuns.has(sessionId) ||
     activeCompactions.has(sessionId) ||
     activeWaggleRuns.has(sessionId) ||
+    activeMachineRuns.has(sessionId) ||
     activeTeamRuns.has(sessionId)
   )
 }
@@ -26,8 +28,9 @@ export function cancelSessionRuns(sessionId: SessionId): boolean {
   const cancelledAgent = activeRuns.cancel(sessionId)
   const cancelledCompaction = activeCompactions.cancel(sessionId)
   const cancelledWaggle = activeWaggleRuns.cancel(sessionId)
+  const cancelledMachine = activeMachineRuns.cancel(sessionId)
   const cancelledTeam = activeTeamRuns.cancel(sessionId)
-  return cancelledAgent || cancelledCompaction || cancelledWaggle || cancelledTeam
+  return cancelledAgent || cancelledCompaction || cancelledWaggle || cancelledMachine || cancelledTeam
 }
 
 export function getAllActiveRunSessionIds(): SessionId[] {
@@ -36,6 +39,7 @@ export function getAllActiveRunSessionIds(): SessionId[] {
       ...activeRuns.keys(),
       ...activeCompactions.keys(),
       ...activeWaggleRuns.keys(),
+      ...activeMachineRuns.keys(),
       ...activeTeamRuns.keys(),
     ]),
   ]
@@ -46,6 +50,7 @@ export function cancelAllSessionRuns(): SessionId[] {
   activeRuns.cancelAll()
   activeCompactions.cancelAll()
   activeWaggleRuns.cancelAll()
+  activeMachineRuns.cancelAll()
   activeTeamRuns.cancelAll()
   return sessionIds
 }

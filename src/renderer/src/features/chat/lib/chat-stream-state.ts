@@ -29,15 +29,14 @@ function appendTeamAutoPromptMessage(
     return messages.slice()
   }
 
-  return [
-    ...messages,
-    {
-      id: `team-auto-user-${event.timestamp}`,
-      role: 'user',
-      parts: [{ type: 'text', content: text }],
-      createdAt: new Date(event.timestamp),
-    },
-  ]
+  const teamAutoPromptMessage: UIMessage = {
+    id: `team-auto-user-${event.timestamp}`,
+    role: 'user',
+    parts: [{ type: 'text', content: text }],
+    createdAt: new Date(event.timestamp),
+  }
+
+  return [...messages, teamAutoPromptMessage]
 }
 
 export function applyAgentTransportEvent(

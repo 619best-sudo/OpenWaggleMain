@@ -14,7 +14,9 @@ function normalizeProjectFilePath(projectPath: string, rawPath: string) {
     return null
   }
 
-  const absolutePath = path.isAbsolute(rawPath) ? path.normalize(rawPath) : path.resolve(projectPath, rawPath)
+  const absolutePath = path.isAbsolute(rawPath)
+    ? path.normalize(rawPath)
+    : path.resolve(projectPath, rawPath)
   const relativePath = path.relative(projectPath, absolutePath)
   if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
     return null
@@ -26,7 +28,10 @@ function normalizeProjectFilePath(projectPath: string, rawPath: string) {
   }
 }
 
-function readSnapshotSync(absolutePath: string): { readonly existed: boolean; readonly content: string } {
+function readSnapshotSync(absolutePath: string): {
+  readonly existed: boolean
+  readonly content: string
+} {
   try {
     return {
       existed: true,

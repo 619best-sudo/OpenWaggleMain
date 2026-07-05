@@ -1,5 +1,5 @@
 import type { AgentKernelRunInput } from '../../../ports/agent-kernel-service'
-import { buildPiRunNewMessages } from '../pi-run-result'
+import { buildPiRunAssistantMessages, buildPiRunNewMessages } from '../pi-run-result'
 import {
   createPiRunSessionRuntime,
   promptPiSession,
@@ -39,8 +39,12 @@ export async function runPiSession(input: AgentKernelRunInput) {
       unsubscribe,
       abortWarning,
       preAbortWarning: 'Failed to abort pre-cancelled Pi session cleanly',
-      operation: () => watchdog.watch(() => promptPiSession(session, model, input.payload)),
-      buildErrorMessages: (appended) => buildPiRunNewMessages(input.payload, appended),
+      operation: () =>
+        watchdog.watch(() => promptPiSession(session, model, input.payload, input.promptDelivery)),
+      buildErrorMessages: (appended) =>
+        input.promptDelivery?.mode === 'hidden-custom-message'
+          ? buildPiRunAssistantMessages(appended)
+          : buildPiRunNewMessages(input.payload, appended),
     })
   } finally {
     watchdog.stop()

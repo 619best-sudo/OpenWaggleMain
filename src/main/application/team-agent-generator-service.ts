@@ -11,12 +11,7 @@ import * as Effect from 'effect/Effect'
 import { ProviderProbeService } from '../ports/provider-probe-service'
 import { ProviderService } from '../ports/provider-service'
 
-const teamAgentKindSchema = Schema.Literal(
-  'executor',
-  'decision-maker',
-  'worker',
-  'reviewer',
-)
+const teamAgentKindSchema = Schema.Literal('executor', 'decision-maker', 'worker', 'reviewer')
 
 const teamRunWhenSchema = Schema.Literal(
   'initial',
@@ -168,7 +163,9 @@ function normalizeGenerationResult(
     minRuns: typeof minRuns === 'number' && minRuns > 0 ? Math.max(0, minRuns) : undefined,
     maxRuns: typeof maxRuns === 'number' ? Math.max(1, maxRuns) : undefined,
     isDecisionMaker: isDecisionMaker || undefined,
-    createPrompt: isDecisionMaker ? 'app-generated' : (result.createPrompt ?? defaultPromptMode(kind)),
+    createPrompt: isDecisionMaker
+      ? 'app-generated'
+      : (result.createPrompt ?? defaultPromptMode(kind)),
     suggestedNextAgentIfSuccess: isDecisionMaker
       ? undefined
       : resolveSuggestedAgentId(result.suggestedNextAgentIfSuccess, input),

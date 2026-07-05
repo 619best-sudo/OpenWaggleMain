@@ -11,13 +11,17 @@ const {
   generateTeamAgentMock,
   navigateMock,
   sendTeamMessageMock,
+  showConfirmMock,
   showToastMock,
+  updateSettingsMock,
 } = vi.hoisted(() => ({
   createSessionMock: vi.fn(),
   generateTeamAgentMock: vi.fn(),
   navigateMock: vi.fn(),
   sendTeamMessageMock: vi.fn(),
+  showConfirmMock: vi.fn(),
   showToastMock: vi.fn(),
+  updateSettingsMock: vi.fn(),
 }))
 
 vi.mock('@tanstack/react-router', () => ({
@@ -36,6 +40,8 @@ vi.mock('@/shared/lib/ipc', () => ({
   api: {
     generateTeamAgent: generateTeamAgentMock,
     sendTeamMessage: sendTeamMessageMock,
+    showConfirm: showConfirmMock,
+    updateSettings: updateSettingsMock,
   },
 }))
 
@@ -58,6 +64,8 @@ describe('TeammatesPanel', () => {
       suggestedNextAgentIfSuccess: 'agent-1',
     })
     sendTeamMessageMock.mockResolvedValue(undefined)
+    showConfirmMock.mockResolvedValue(true)
+    updateSettingsMock.mockResolvedValue({ ok: true })
     usePreferencesStore.setState({
       ...usePreferencesStore.getInitialState(),
       settings: {
@@ -175,6 +183,13 @@ describe('TeammatesPanel', () => {
   it('renders the expanded built-in teammate catalog', () => {
     render(<TeammatesPanel />)
 
+    expect(screen.getByText('Teams')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Prebuilt and custom teams for complex work. Open a team to review its setup, tailor the prompt, and launch.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Custom Execution Team' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Web Executor' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Code Reviewer' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Robust QA' })).toBeInTheDocument()
@@ -200,16 +215,13 @@ describe('TeammatesPanel', () => {
     fireEvent.change(document.getElementById('built-in-optional-skills')!, {
       target: { value: 'ui-ux-pro-max' },
     })
-    fireEvent.change(document.getElementById('built-in-agent-model-web-planner')!, {
-      target: { value: 'openrouter/anthropic/claude-sonnet-4' },
-    })
     fireEvent.change(document.getElementById('built-in-agent-prompt-web-planner')!, {
       target: { value: 'You are Web Planner. Customize the execution plan for this launch.' },
     })
     fireEvent.change(screen.getByLabelText('Task prompt'), {
       target: { value: 'Create a SaaS landing page and make sure it opens.' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Launch Team(New)' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Launch Team' }))
 
     await waitFor(() => {
       expect(createSessionMock).toHaveBeenCalledWith('/repo/openwaggle')
@@ -217,7 +229,7 @@ describe('TeammatesPanel', () => {
         SessionId('session-team-1'),
         expect.objectContaining({
           text: 'Create a SaaS landing page and make sure it opens.',
-          thinkingLevel: DEFAULT_SETTINGS.thinkingLevel,
+          thinkingLevel: 'high',
         }),
         SupportedModelId('openai/gpt-5'),
         expect.objectContaining({
@@ -233,7 +245,7 @@ describe('TeammatesPanel', () => {
           agents: expect.arrayContaining([
             expect.objectContaining({
               id: 'web-planner',
-              modelOverride: SupportedModelId('openrouter/anthropic/claude-sonnet-4'),
+              modelOverride: undefined,
               roleDescription: 'You are Web Planner. Customize the execution plan for this launch.',
             }),
             expect.objectContaining({ id: 'web-architect' }),
@@ -247,7 +259,7 @@ describe('TeammatesPanel', () => {
         to: '/sessions/$sessionId',
         params: { sessionId: 'session-team-1' },
       })
-      expect(showToastMock).toHaveBeenCalledWith('"Web Executor" launched in Team(New).', 'success')
+      expect(showToastMock).toHaveBeenCalledWith('"Web Executor" launched in Team.', 'success')
     })
   })
 
@@ -279,9 +291,7 @@ describe('TeammatesPanel', () => {
     fireEvent.change(screen.getByLabelText('Decision maker'), {
       target: { value: 'agent-1' },
     })
-    fireEvent.change(document.getElementById('agent-model-agent-1')!, {
-      target: { value: 'openrouter/anthropic/claude-sonnet-4' },
-    })
+    expect(screen.queryByLabelText('Choose model')).not.toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Launch Custom Team' })[0]!)
 
     await waitFor(() => {
@@ -289,7 +299,7 @@ describe('TeammatesPanel', () => {
         SessionId('session-team-1'),
         expect.objectContaining({
           text: 'Review the latest code changes and decide whether the work is ready.',
-          thinkingLevel: DEFAULT_SETTINGS.thinkingLevel,
+          thinkingLevel: 'high',
         }),
         SupportedModelId('openai/gpt-5'),
         expect.objectContaining({
@@ -308,14 +318,39 @@ describe('TeammatesPanel', () => {
             expect.objectContaining({
               id: 'agent-1',
               kind: 'decision-maker',
-              modelOverride: SupportedModelId('openrouter/anthropic/claude-sonnet-4'),
               isDecisionMaker: true,
             }),
           ]),
         }),
       )
-      expect(showToastMock).toHaveBeenCalledWith('"Review Squad" launched in Team(New).', 'success')
+      expect(showToastMock).toHaveBeenCalledWith('"Review Squad" launched in Team.', 'success')
     })
+  })
+
+  it('deletes the custom team and lets you create a new one', async () => {
+    render(<TeammatesPanel />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => {
+      expect(showConfirmMock).toHaveBeenCalledWith(
+        'Delete custom team?',
+        'This removes the custom execution team from the storefront. You can create a new one later.',
+      )
+      expect(updateSettingsMock).toHaveBeenCalledWith({ showCustomExecutionTeam: false })
+      expect(
+        screen.queryByRole('heading', { name: 'Custom Execution Team' }),
+      ).not.toBeInTheDocument()
+      expect(showToastMock).toHaveBeenCalledWith('Custom execution team deleted.', 'success')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create Team' }))
+
+    await waitFor(() => {
+      expect(updateSettingsMock).toHaveBeenCalledWith({ showCustomExecutionTeam: true })
+    })
+    expect(screen.getAllByText('Custom Execution Team').length).toBeGreaterThan(0)
+    expect(screen.getByLabelText('Team name')).toHaveValue('Custom Execution Team')
   })
 
   it('generates agent setup from instructions using the Team API', async () => {

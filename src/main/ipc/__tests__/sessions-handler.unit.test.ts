@@ -17,6 +17,7 @@ const {
   archiveBranchMock,
   restoreBranchMock,
   updateTreeUiStateMock,
+  updateBranchUiStateMock,
 } = vi.hoisted(() => ({
   typedHandleMock: vi.fn(),
   listMock: vi.fn(),
@@ -29,6 +30,7 @@ const {
   archiveBranchMock: vi.fn(),
   restoreBranchMock: vi.fn(),
   updateTreeUiStateMock: vi.fn(),
+  updateBranchUiStateMock: vi.fn(),
 }))
 
 vi.mock('../typed-ipc', () => ({
@@ -52,6 +54,8 @@ const TestSessionRepositoryLayer = Layer.succeed(SessionRepository, {
   restoreBranch: (sessionId, branchId) => Effect.sync(() => restoreBranchMock(sessionId, branchId)),
   updateTreeUiState: (sessionId, patch) =>
     Effect.sync(() => updateTreeUiStateMock(sessionId, patch)),
+  updateBranchUiState: (sessionId, branchId, uiStateJson) =>
+    Effect.sync(() => updateBranchUiStateMock(sessionId, branchId, uiStateJson)),
   recordActiveRun: () => Effect.void,
   clearActiveRun: () => Effect.void,
   clearInterruptedRuns: () => Effect.void,
@@ -85,6 +89,7 @@ describe('registerSessionsHandlers', () => {
     archiveBranchMock.mockReset()
     restoreBranchMock.mockReset()
     updateTreeUiStateMock.mockReset()
+    updateBranchUiStateMock.mockReset()
   })
 
   it('registers session branch and tree UI IPC channels', () => {

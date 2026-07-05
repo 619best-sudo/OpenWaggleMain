@@ -36,7 +36,7 @@ export function WaggleDependencyDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--theme-overlay-scrim-55)] p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={`${preset.name} setup`}
@@ -49,7 +49,7 @@ export function WaggleDependencyDialog({
           <div className="space-y-1">
             <h2 className="text-[15px] font-semibold text-text-primary">{preset.name} Setup</h2>
             <p className="max-w-[580px] text-[12px] leading-5 text-text-tertiary">
-              These checks apply only to this Waggle app. Standard chat and non-app Waggle flows are
+              These checks apply only to this Panel app. Standard chat and non-app Panel flows are
               unchanged.
             </p>
           </div>
@@ -82,7 +82,7 @@ export function WaggleDependencyDialog({
                 )}
               >
                 {isReady ? <CheckCircle2 className="size-3.5" /> : <Wrench className="size-3.5" />}
-                {isReady ? 'Ready In Waggle App' : 'Needs Waggle App Setup'}
+                {isReady ? 'Ready In Panel App' : 'Needs Panel App Setup'}
               </span>
               {preflight ? (
                 <span
@@ -98,7 +98,7 @@ export function WaggleDependencyDialog({
               ) : null}
               <span className="text-text-tertiary">
                 {dependencyCount === 0
-                  ? 'This Waggle app does not declare any installable dependencies.'
+                  ? 'This Panel app does not declare any installable dependencies.'
                   : status
                     ? `${status.installedCount}/${status.requiredDependencyCount} required dependencies ready${status.optionalDependencyCount > 0 ? `, ${status.optionalInstalledCount}/${status.optionalDependencyCount} optional ready` : ''}`
                     : `${dependencyCount} dependencies declared`}
@@ -124,7 +124,9 @@ export function WaggleDependencyDialog({
                     className="flex flex-col gap-1 rounded-lg border border-white/6 bg-black/10 px-3 py-2"
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[12px] font-medium text-text-primary">{check.label}</span>
+                      <span className="text-[12px] font-medium text-text-primary">
+                        {check.label}
+                      </span>
                       <span
                         className={cn(
                           'rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
@@ -146,15 +148,15 @@ export function WaggleDependencyDialog({
           {status?.unsupportedCount ? (
             <div className="rounded-xl border border-warning/25 bg-warning/8 px-4 py-3 text-[12px] leading-5 text-warning">
               {status.unsupportedCount} dependency
-              {status.unsupportedCount === 1 ? '' : 'ies'} still need a recipe before this Waggle
-              app can be fully app-managed.
+              {status.unsupportedCount === 1 ? '' : 'ies'} still need a recipe before this Panel app
+              can be fully app-managed.
             </div>
           ) : null}
 
           <div className="space-y-3">
             {dependencyCount === 0 ? (
               <div className="rounded-xl border border-dashed border-border px-4 py-5 text-[12px] text-text-tertiary">
-                No MCPs or skills are declared for this Waggle app yet.
+                No MCPs or skills are declared for this Panel app yet.
               </div>
             ) : (
               status?.dependencies.map((dependency) => (

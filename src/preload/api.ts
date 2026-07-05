@@ -55,7 +55,11 @@ function prepareSelectedAttachments(projectPath: string, files: readonly File[])
 export const api: OpenWaggleApi = {
   // Agent
   sendMessage: invoke('agent:send-message'),
+  sendMachineMessage: invoke('agent:send-machine-message'),
+  approveMachinePlan: invoke('agent:approve-machine-plan'),
+  discardMachinePlan: invoke('agent:discard-machine-plan'),
   cancelAgent: invoke('agent:cancel'),
+  cancelMachine: send('agent:cancel-machine'),
   steerAgent: invoke('agent:steer'),
   onAgentEvent: on('agent:event'),
 
@@ -168,6 +172,7 @@ export const api: OpenWaggleApi = {
   cancelTeam: send('agent:cancel-team'),
 
   // Auth
+  startAppGoogleOAuth: invoke('app-auth:start-google-oauth'),
   startOAuth: invoke('auth:start-oauth'),
   submitAuthCode: invoke('auth:submit-code'),
   cancelOAuth: invoke('auth:cancel-oauth'),
@@ -185,6 +190,7 @@ export const api: OpenWaggleApi = {
 
   // Feedback
   checkGhCli: invoke('feedback:check-gh'),
+  collectGithubRepoStats: invoke('github:collect-repo-stats'),
   collectDiagnostics: invoke('feedback:collect-diagnostics'),
   getRecentLogs: invoke('feedback:get-recent-logs'),
   submitFeedback: invoke('feedback:submit'),

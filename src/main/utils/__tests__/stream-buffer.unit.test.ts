@@ -32,15 +32,15 @@ describe('stream-buffer', () => {
   })
 
   it('starts, lists, snapshots, and clears background run buffers', () => {
-    startStreamBuffer(SESSION_ID, MODEL, 'classic')
+    startStreamBuffer(SESSION_ID, MODEL, 'machine')
 
     expect(listStreamBuffers()).toEqual([
-      { sessionId: SESSION_ID, model: MODEL, mode: 'classic', startedAt: STARTED_AT.getTime() },
+      { sessionId: SESSION_ID, model: MODEL, mode: 'machine', startedAt: STARTED_AT.getTime() },
     ])
     expect(getStreamBuffer(SESSION_ID)).toEqual({
       sessionId: SESSION_ID,
       model: MODEL,
-      mode: 'classic',
+      mode: 'machine',
       startedAt: STARTED_AT.getTime(),
       parts: [],
     })

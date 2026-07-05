@@ -3,7 +3,12 @@ import { readFile } from 'node:fs/promises'
 import os from 'node:os'
 import { BASE_TEN } from '@shared/constants/math'
 import { BYTES_PER_KIBIBYTE, FEEDBACK } from '@shared/constants/resource-limits'
-import type { DiagnosticsInfo, FeedbackPayload, FeedbackSubmitResult } from '@shared/types/feedback'
+import type {
+  DiagnosticsInfo,
+  FeedbackPayload,
+  FeedbackSubmitResult,
+  GithubRepoStatsSnapshot,
+} from '@shared/types/feedback'
 import * as Effect from 'effect/Effect'
 import { app } from 'electron'
 import { getGhCliEnv } from '../env'
@@ -68,6 +73,98 @@ async function readRecentLogs(lineCount: number) {
     return redactSensitiveText(recent)
   } catch {
     return ''
+  }
+}
+
+async function collectGithubRepoStats(): Promise<GithubRepoStatsSnapshot | null> {
+  const env = getGhCliEnv()
+
+  try {
+    await execFilePromise('gh', ['--version'], { env })
+  } catch {
+    return null
+  }
+
+  try {
+    await execFilePromise('gh', ['auth', 'status'], { env })
+  } catch {
+    return null
+  }
+
+  const { stdout: userStdout } = await execFilePromise('gh', ['api', 'user'], { env })
+  const userPayload = JSON.parse(userStdout) as { login?: unknown }
+  const username = typeof userPayload.login === 'string' ? userPayload.login.trim() : ''
+  if (!username) {
+    throw new Error('GitHub CLI did not return a username.')
+  }
+
+  const { stdout: reposStdout } = await execFilePromise(
+    'gh',
+    [
+      'repo',
+      'list',
+      username,
+      '--limit',
+      '1000',
+      '--visibility',
+      'public',
+      '--json',
+      'name,stargazerCount,forkCount,pushedAt',
+    ],
+    { env },
+  )
+
+  const reposPayload = JSON.parse(reposStdout) as unknown
+  const repos = Array.isArray(reposPayload)
+    ? reposPayload.flatMap((repo) => {
+        if (typeof repo !== 'object' || repo === null) {
+          return []
+        }
+        const candidate = repo as {
+          name?: unknown
+          stargazerCount?: unknown
+          forkCount?: unknown
+          pushedAt?: unknown
+        }
+        const name = typeof candidate.name === 'string' ? candidate.name.trim() : ''
+        if (!name) {
+          return []
+        }
+        return [
+          {
+            name,
+            stargazerCount:
+              typeof candidate.stargazerCount === 'number' && Number.isFinite(candidate.stargazerCount)
+                ? Math.max(0, Math.trunc(candidate.stargazerCount))
+                : 0,
+            forkCount:
+              typeof candidate.forkCount === 'number' && Number.isFinite(candidate.forkCount)
+                ? Math.max(0, Math.trunc(candidate.forkCount))
+                : 0,
+            ...(typeof candidate.pushedAt === 'string' && candidate.pushedAt.trim()
+              ? { pushedAt: candidate.pushedAt.trim() }
+              : {}),
+          },
+        ]
+      })
+    : []
+
+  const activeWindowStart = new Date()
+  activeWindowStart.setUTCDate(activeWindowStart.getUTCDate() - 90)
+
+  return {
+    username,
+    repos,
+    publicRepoCount: repos.length,
+    totalStars: repos.reduce((sum, repo) => sum + repo.stargazerCount, 0),
+    totalForks: repos.reduce((sum, repo) => sum + repo.forkCount, 0),
+    activeRepoCount: repos.reduce((sum, repo) => {
+      if (!repo.pushedAt) return sum
+      const pushedAt = new Date(repo.pushedAt)
+      if (Number.isNaN(pushedAt.getTime())) return sum
+      return pushedAt.getTime() >= activeWindowStart.getTime() ? sum + 1 : sum
+    }, 0),
+    syncedAt: new Date().toISOString(),
   }
 }
 
@@ -180,8 +277,9 @@ async function buildMarkdownBody(payload: FeedbackPayload) {
 export function registerFeedbackHandlers(): void {
   typedHandle('feedback:check-gh', () =>
     Effect.gen(function* () {
+      const env = getGhCliEnv()
       const ghAvailable = yield* Effect.tryPromise({
-        try: () => execFilePromise('which', ['gh']).then(() => true),
+        try: () => execFilePromise('gh', ['--version'], { env }).then(() => true),
         catch: () => false,
       })
       if (!ghAvailable) {
@@ -189,11 +287,17 @@ export function registerFeedbackHandlers(): void {
       }
 
       const authenticated = yield* Effect.tryPromise({
-        try: () =>
-          execFilePromise('gh', ['auth', 'status'], { env: getGhCliEnv() }).then(() => true),
+        try: () => execFilePromise('gh', ['auth', 'status'], { env }).then(() => true),
         catch: () => false,
       })
       return { available: true, authenticated }
+    }),
+  )
+
+  typedHandle('github:collect-repo-stats', () =>
+    Effect.tryPromise({
+      try: () => collectGithubRepoStats(),
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
     }),
   )
 

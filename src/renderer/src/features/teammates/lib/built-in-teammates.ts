@@ -7,7 +7,7 @@ const WEB_EXECUTOR_TEAMMATE: TeammateDefinition = {
     'Web Planner scopes the task, Web Builder implements the real change, Web Polish refines UX when it adds value, and Web Verifier checks the runnable result with Playwright before stopping.',
   launchPromptPlaceholder:
     'Build or improve a real website or web app in this repo. Example: redesign the marketing homepage hero, pricing section, and mobile navigation, then verify it in Playwright.',
-  launchButtonLabel: 'Launch Team(New)',
+  launchButtonLabel: 'Launch Team',
   app: {
     requiredMcps: ['playwright'],
     requiredSkills: [],
@@ -26,7 +26,7 @@ const WEB_EXECUTOR_TEAMMATE: TeammateDefinition = {
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'web-builder',
-      roleDescription: `You are the Web Planning Lead for Team(New).
+      roleDescription: `You are the Web Planning Lead for Team.
 
 Your job is to turn the user's website or web app request into an execution-ready handoff for implementation in the real repository.
 
@@ -63,7 +63,7 @@ End every turn with:
       minRuns: 1,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'web-polish',
-      roleDescription: `You are the Web Implementation Lead for Team(New).
+      roleDescription: `You are the Web Implementation Lead for Team.
 
 Your job is to build or repair the real website or web app change in this repository.
 
@@ -101,7 +101,7 @@ End every turn with:
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'web-verifier',
-      roleDescription: `You are the Web UX and Polish Specialist for Team(New).
+      roleDescription: `You are the Web UX and Polish Specialist for Team.
 
 Your job is to improve the implemented website surface only when polish materially raises quality before final verification.
 
@@ -131,11 +131,11 @@ End every turn with:
       kind: 'decision-maker',
       isDecisionMaker: true,
       whyToRun:
-        'Use to verify the runnable website with real browser evidence and decide whether the Team(New) loop should stop.',
+        'Use to verify the runnable website with real browser evidence and decide whether the Team loop should stop.',
       runWhen: ['when-routed', 'before-stop'],
       maxRuns: 3,
       createPrompt: 'app-generated',
-      roleDescription: `You are the sole Decision-Maker and Browser Verifier for Team(New).
+      roleDescription: `You are the sole Decision-Maker and Browser Verifier for Team.
 
 Your job is to verify the current website state by opening the real result with Playwright whenever the app can be run.
 

@@ -1,10 +1,7 @@
 import type { SessionId } from '@shared/types/brand'
-import { generateDisplayName } from '@shared/types/llm'
-import { isInheritedWaggleModelBinding, type WaggleAgentSlot } from '@shared/types/waggle'
 import { AlertTriangle, Loader2, Sparkles, X } from 'lucide-react'
-import { usePreferencesStore } from '@/features/settings/state'
-import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 import { AGENT_BG } from '@/features/waggle/lib/agent-colors'
+import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 import { useWaggleStore } from '@/features/waggle/state/waggle-store'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
@@ -20,13 +17,28 @@ interface CollaborationStatusProps {
   onUseFollowUpPrompt?: (suggestion: TuringFollowUpSuggestion) => void
 }
 
-function turnCountLabel(turnCount: number) {
-  return `${String(turnCount)} ${turnCount === SINGLE_TURN_COUNT ? 'turn' : 'turns'}`
+function sentenceCaseMode(mode: string) {
+  return mode.charAt(0).toUpperCase() + mode.slice(1)
 }
 
-function displayModelForAgent(agent: WaggleAgentSlot, inheritedModel: string) {
-  if (!isInheritedWaggleModelBinding(agent.model)) return generateDisplayName(agent.model)
-  return inheritedModel.trim() ? generateDisplayName(inheritedModel) : 'Select model'
+function statusBadgeCopy(args: {
+  status: string
+  currentTurn: number
+  maxTurns: number
+  currentAgentLabel: string
+  completionReason: string | null
+}) {
+  const { status, currentTurn, maxTurns, currentAgentLabel, completionReason } = args
+
+  if (status === 'running') {
+    return currentAgentLabel.trim()
+      ? `${currentAgentLabel} · ${String(currentTurn + SINGLE_TURN_COUNT)}/${String(maxTurns)}`
+      : `Running · ${String(currentTurn + SINGLE_TURN_COUNT)}/${String(maxTurns)}`
+  }
+
+  if (status === 'completed') return completionReason?.trim() ? completionReason : 'Complete'
+  if (status === 'stopped') return 'Stopped'
+  return 'Ready'
 }
 
 export function WaggleCollaborationStatus({
@@ -35,13 +47,11 @@ export function WaggleCollaborationStatus({
   followUpSuggestion = null,
   onUseFollowUpPrompt,
 }: CollaborationStatusProps) {
-  const selectedModel = usePreferencesStore((s) => s.settings.selectedModel)
   const status = useWaggleStore((s) => s.status)
   const config = useWaggleStore((s) => s.activeConfig)
   const activeCollaborationId = useWaggleStore((s) => s.activeCollaborationId)
   const configSessionId = useWaggleStore((s) => s.configSessionId)
   const currentTurn = useWaggleStore((s) => s.currentTurn)
-  const currentAgentIndex = useWaggleStore((s) => s.currentAgentIndex)
   const currentAgentLabel = useWaggleStore((s) => s.currentAgentLabel)
   const fileConflicts = useWaggleStore((s) => s.fileConflicts)
   const artifacts = useWaggleStore((s) => s.artifacts)
@@ -54,8 +64,15 @@ export function WaggleCollaborationStatus({
   // Scope: only show for the session that owns the waggle state
   const owningSessionId = activeCollaborationId ?? configSessionId
   if (owningSessionId && owningSessionId !== currentSessionId) return null
-  const currentAgent = config.agents[currentAgentIndex]
   const maxTurns = config.stop.maxTurnsSafety
+  const compactStatusCopy = statusBadgeCopy({
+    status,
+    currentTurn,
+    maxTurns,
+    currentAgentLabel,
+    completionReason,
+  })
+  const modeLabel = sentenceCaseMode(config.mode)
 
   function handleDismiss() {
     if (status === 'running') {
@@ -65,72 +82,51 @@ export function WaggleCollaborationStatus({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[720px] px-5 pb-2 space-y-1.5">
-      <div
-        className={cn(
-          'flex items-center gap-3 rounded-lg border px-3 py-2',
-          status === 'idle' ? 'border-accent/20 bg-accent/5' : 'border-border bg-bg-secondary',
-        )}
-      >
-        {/* Agent dots — always visible */}
-        <div className="flex min-w-0 items-center gap-2 shrink-0">
+    <div className="mx-auto w-full max-w-[960px] px-5 pb-2 space-y-1.5">
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg-secondary/50 px-4 py-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="shrink-0 text-[13px] font-semibold text-text-primary">Panel</span>
           {config.agents.map((agent) => {
-            const displayModel = displayModelForAgent(agent, selectedModel)
             return (
               <div
                 key={`${agent.label}-${String(agent.model)}`}
-                className="flex items-center gap-1"
-                title={`${agent.label} · ${displayModel}`}
+                className="flex min-w-0 items-center gap-1.5"
+                title={agent.label}
               >
                 <div className={cn('size-2 rounded-full', AGENT_BG[agent.color])} />
-                <span className="text-[11px] font-medium text-text-secondary">{agent.label}</span>
-                <span className="hidden text-[11px] text-text-tertiary sm:inline">
-                  · {displayModel}
+                <span className="max-w-[140px] truncate text-[12px] font-medium text-text-secondary">
+                  {agent.label}
                 </span>
               </div>
             )
           })}
         </div>
 
-        <div className="h-3 w-px bg-border shrink-0" />
-
-        {/* Status-specific content */}
-        {status === 'idle' && (
-          <span className="text-[12px] text-text-tertiary truncate">
-            Waggle ready · Sequential · {turnCountLabel(maxTurns)}: send a message to start
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <span className="hidden rounded-full border border-border bg-bg px-2.5 py-1 text-[11px] font-medium text-text-tertiary sm:inline-flex">
+            {modeLabel}
           </span>
-        )}
-
-        {status === 'running' && (
-          <div className="flex items-center gap-2 min-w-0">
-            <Loader2 className="size-3 animate-spin text-accent shrink-0" />
-            <span className="text-[12px] text-text-secondary truncate">
-              Turn {currentTurn + SINGLE_TURN_COUNT}/{maxTurns}: {currentAgentLabel}
-              {currentAgent ? ` · ${displayModelForAgent(currentAgent, selectedModel)}` : ''}
-            </span>
-          </div>
-        )}
-
-        {status === 'completed' && (
-          <span className="text-[12px] text-text-secondary truncate">
-            Waggle complete · {completionReason ?? 'Collaboration complete'}
+          <span
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+              status === 'running'
+                ? 'border-accent/20 bg-accent/5 text-text-secondary'
+                : 'border-border bg-bg text-text-tertiary',
+            )}
+          >
+            {status === 'running' ? <Loader2 className="size-3 animate-spin text-accent" /> : null}
+            <span className="max-w-[200px] truncate">{compactStatusCopy}</span>
           </span>
-        )}
-
-        {status === 'stopped' && (
-          <span className="text-[12px] text-text-muted truncate">Stopped by user</span>
-        )}
-
-        {/* Dismiss — always available */}
-        <Button
-          variant="unstyled"
-          type="button"
-          onClick={status === 'idle' ? clearConfig : handleDismiss}
-          className="ml-auto shrink-0 rounded-md p-1 text-text-muted hover:text-text-primary hover:bg-bg-hover transition-colors"
-          title={status === 'running' ? 'Stop & dismiss waggle' : 'Dismiss waggle'}
-        >
-          <X className="size-3" />
-        </Button>
+          <Button
+            variant="unstyled"
+            type="button"
+            onClick={status === 'idle' ? clearConfig : handleDismiss}
+            className="shrink-0 rounded-md p-1 text-text-muted hover:bg-bg-hover hover:text-text-primary transition-colors"
+            title={status === 'running' ? 'Stop & dismiss panel' : 'Dismiss panel'}
+          >
+            <X className="size-3" />
+          </Button>
+        </div>
       </div>
 
       {status === 'completed' && followUpSuggestion ? (

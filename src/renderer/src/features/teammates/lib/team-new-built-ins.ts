@@ -8,7 +8,7 @@ const WEB_EXECUTOR_TEAMMATE: TeammateDefinition = {
     'Web Planner scopes the request, Web Architect maps the route and component approach, Web Builder implements the real change, Web QA verifies behavior and runtime health, Web Polish refines UX when it materially helps, and Web Decision Maker decides when the result is truly ready.',
   launchPromptPlaceholder:
     'Build or improve a real website or web app in this repo. Example: redesign the marketing homepage hero, pricing section, and mobile navigation, then verify it in Playwright.',
-  launchButtonLabel: 'Launch Team(New)',
+  launchButtonLabel: 'Launch Team',
   app: {
     requiredMcps: ['playwright'],
     requiredSkills: [],
@@ -27,7 +27,7 @@ const WEB_EXECUTOR_TEAMMATE: TeammateDefinition = {
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'web-architect',
-      roleDescription: `You are Web Planner for Team(New).
+      roleDescription: `You are Web Planner for Team.
 
 Your job is to turn the user's website or web app request into an execution-ready handoff.
 
@@ -63,7 +63,7 @@ End every turn with:
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'web-builder',
-      roleDescription: `You are Web Architect for Team(New).
+      roleDescription: `You are Web Architect for Team.
 
 Your job is to translate the request into the cleanest implementation approach for this repository.
 
@@ -98,7 +98,7 @@ End every turn with:
       maxRuns: 4,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'web-qa',
-      roleDescription: `You are Web Builder for Team(New).
+      roleDescription: `You are Web Builder for Team.
 
 Your job is to build or repair the real website or web app change in this repository.
 
@@ -136,7 +136,7 @@ End every turn with:
       maxRuns: 3,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'web-polish',
-      roleDescription: `You are Web QA for Team(New).
+      roleDescription: `You are Web QA for Team.
 
 Your job is to verify the current website state using the strongest available browser and runtime evidence.
 
@@ -172,7 +172,7 @@ End every turn with:
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'web-decision-maker',
-      roleDescription: `You are Web Polish for Team(New).
+      roleDescription: `You are Web Polish for Team.
 
 Your job is to improve the implemented website surface only when polish materially raises quality before final decision.
 
@@ -206,7 +206,7 @@ End every turn with:
       minRuns: 1,
       maxRuns: 3,
       createPrompt: 'app-generated',
-      roleDescription: `You are the sole Web Decision Maker for Team(New).
+      roleDescription: `You are the sole Web Decision Maker for Team.
 
 Your job is to decide whether the website loop should stop or continue.
 
@@ -250,7 +250,7 @@ const CODE_REVIEWER_TEAMMATE: TeammateDefinition = {
     'Review Planner scopes the change, Code Reviewer finds correctness and maintainability issues, Standards Auditor checks engineering quality, Ripple Analyst looks for side effects, and Review Decision Maker decides whether review coverage is strong enough to stop.',
   launchPromptPlaceholder:
     'Review the latest code changes for bugs, standards issues, regression risk, and missing tests.',
-  launchButtonLabel: 'Launch Team(New)',
+  launchButtonLabel: 'Launch Team',
   app: {
     requiredMcps: [],
     requiredSkills: [],
@@ -267,7 +267,7 @@ const CODE_REVIEWER_TEAMMATE: TeammateDefinition = {
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'code-reviewer',
-      roleDescription: `You are Review Planner for Team(New).
+      roleDescription: `You are Review Planner for Team.
 
 Your job is to turn the user's review request into an execution-ready plan for the rest of the team.
 
@@ -302,7 +302,7 @@ End every turn with:
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'standards-auditor',
-      roleDescription: `You are Code Reviewer for Team(New).
+      roleDescription: `You are Code Reviewer for Team.
 
 Your job is to inspect the implementation for correctness, regressions, maintainability, and clarity.
 
@@ -337,7 +337,7 @@ End every turn with:
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'ripple-analyst',
-      roleDescription: `You are Standards Auditor for Team(New).
+      roleDescription: `You are Standards Auditor for Team.
 
 Your job is to review the implementation against strong engineering standards for this repository.
 
@@ -371,7 +371,7 @@ End every turn with:
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'review-decision-maker',
-      roleDescription: `You are Ripple Analyst for Team(New).
+      roleDescription: `You are Ripple Analyst for Team.
 
 Your job is to inspect the surrounding system for side effects and second-order impact caused by the latest change.
 
@@ -406,7 +406,7 @@ End every turn with:
       minRuns: 1,
       maxRuns: 2,
       createPrompt: 'app-generated',
-      roleDescription: `You are the sole Review Decision Maker for Team(New).
+      roleDescription: `You are the sole Review Decision Maker for Team.
 
 Your job is to decide whether the review loop should stop or continue.
 
@@ -450,7 +450,7 @@ const ROBUST_QA_TEAMMATE: TeammateDefinition = {
     'QA Intake Planner defines acceptance criteria, Test Case Designer builds a structured ledger, QA Executor runs pending cases in batches, Coverage Auditor checks for gaps, and QA Decision Maker keeps the loop going until every case reaches a terminal result.',
   launchPromptPlaceholder:
     'Test this feature end to end, design the needed test cases, execute them in batches, and report pass/fail/blocked clearly.',
-  launchButtonLabel: 'Launch Team(New)',
+  launchButtonLabel: 'Launch Team',
   app: {
     requiredMcps: [],
     requiredSkills: [],
@@ -468,7 +468,7 @@ const ROBUST_QA_TEAMMATE: TeammateDefinition = {
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'test-case-designer',
-      roleDescription: `You are QA Intake Planner for Team(New).
+      roleDescription: `You are QA Intake Planner for Team.
 
 Your job is to define the QA scope before test cases are designed.
 
@@ -503,7 +503,7 @@ End every turn with:
       maxRuns: 3,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'qa-executor',
-      roleDescription: `You are Test Case Designer for Team(New).
+      roleDescription: `You are Test Case Designer for Team.
 
 Your job is to design a complete, structured Test Case Ledger for the requested feature or fix.
 
@@ -544,7 +544,7 @@ End every turn with:
       maxRuns: 4,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'coverage-auditor',
-      roleDescription: `You are QA Executor for Team(New).
+      roleDescription: `You are QA Executor for Team.
 
 Your job is to execute the current Test Case Ledger and update every case you touch.
 
@@ -580,7 +580,7 @@ End every turn with:
       maxRuns: 3,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'qa-decision-maker',
-      roleDescription: `You are Coverage Auditor for Team(New).
+      roleDescription: `You are Coverage Auditor for Team.
 
 Your job is to audit the QA work for missed cases, weak evidence, skipped scenarios, and regression gaps.
 
@@ -616,7 +616,7 @@ End every turn with:
       minRuns: 1,
       maxRuns: 3,
       createPrompt: 'app-generated',
-      roleDescription: `You are the sole QA Decision Maker for Team(New).
+      roleDescription: `You are the sole QA Decision Maker for Team.
 
 Your job is to decide whether the QA loop should stop or continue.
 
@@ -660,7 +660,7 @@ const DEBUGGER_TEAMMATE: TeammateDefinition = {
     'Debug Intake Planner scopes the issue, Reproduction Analyst gathers evidence, Fix Executor tests one hypothesis at a time, MCP Verifier checks the result, Rollback Guardian reverts failed attempt-owned changes when safe, and Debug Decision Maker drives retries until the issue is fixed or truly blocked.',
   launchPromptPlaceholder:
     'Debug this issue, try a fix, verify it with MCP or the strongest runtime evidence, safely rollback failed attempt-owned edits, and continue until resolved.',
-  launchButtonLabel: 'Launch Team(New)',
+  launchButtonLabel: 'Launch Team',
   app: {
     requiredMcps: [],
     requiredSkills: [],
@@ -678,7 +678,7 @@ const DEBUGGER_TEAMMATE: TeammateDefinition = {
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'reproduction-analyst',
-      roleDescription: `You are Debug Intake Planner for Team(New).
+      roleDescription: `You are Debug Intake Planner for Team.
 
 Your job is to turn the bug report into a concrete debugging scope and first-pass plan.
 
@@ -713,7 +713,7 @@ End every turn with:
       maxRuns: 3,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'fix-executor',
-      roleDescription: `You are Reproduction Analyst for Team(New).
+      roleDescription: `You are Reproduction Analyst for Team.
 
 Your job is to reproduce the issue or localize it as strongly as possible before code changes are made.
 
@@ -748,7 +748,7 @@ End every turn with:
       maxRuns: 5,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'mcp-verifier',
-      roleDescription: `You are Fix Executor for Team(New).
+      roleDescription: `You are Fix Executor for Team.
 
 Your job is to implement the smallest credible fix for the current debugging hypothesis.
 
@@ -785,7 +785,7 @@ End every turn with:
       maxRuns: 5,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'rollback-guardian',
-      roleDescription: `You are MCP Verifier for Team(New).
+      roleDescription: `You are MCP Verifier for Team.
 
 Your job is to verify the current fix attempt using MCP first when available and relevant, then fall back to the strongest local verification.
 
@@ -820,7 +820,7 @@ End every turn with:
       maxRuns: 4,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'debug-decision-maker',
-      roleDescription: `You are Rollback Guardian for Team(New).
+      roleDescription: `You are Rollback Guardian for Team.
 
 Your job is to safely revert the latest failed debug attempt when rollback is needed and safe.
 
@@ -857,7 +857,7 @@ End every turn with:
       minRuns: 1,
       maxRuns: 4,
       createPrompt: 'app-generated',
-      roleDescription: `You are the sole Debug Decision Maker for Team(New).
+      roleDescription: `You are the sole Debug Decision Maker for Team.
 
 Your job is to decide whether the debug loop should stop or continue.
 
@@ -902,7 +902,7 @@ const BACKEND_DEVELOPER_TEAMMATE: TeammateDefinition = {
     'Backend Planner scopes the task, Data Analyst inspects schema and persistence assumptions, API Builder implements the change, API Verifier proves it with real calls or strong runtime evidence, Backend QA Auditor checks contracts and regressions, and Backend Decision Maker decides whether the backend work is truly done.',
   launchPromptPlaceholder:
     'Build or fix this backend feature, inspect DB state if needed, and verify the API actually works before stopping.',
-  launchButtonLabel: 'Launch Team(New)',
+  launchButtonLabel: 'Launch Team',
   app: {
     requiredMcps: [],
     requiredSkills: [],
@@ -920,7 +920,7 @@ const BACKEND_DEVELOPER_TEAMMATE: TeammateDefinition = {
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'data-analyst',
-      roleDescription: `You are Backend Planner for Team(New).
+      roleDescription: `You are Backend Planner for Team.
 
 Your job is to turn the user's backend request into an execution-ready plan.
 
@@ -954,7 +954,7 @@ End every turn with:
       maxRuns: 3,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'api-builder',
-      roleDescription: `You are Data Analyst for Team(New).
+      roleDescription: `You are Data Analyst for Team.
 
 Your job is to inspect the database-facing side of the backend flow and prepare a data-aware handoff.
 
@@ -989,7 +989,7 @@ End every turn with:
       maxRuns: 4,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'api-verifier',
-      roleDescription: `You are API Builder for Team(New).
+      roleDescription: `You are API Builder for Team.
 
 Your job is to implement or repair the backend behavior in the real repository.
 
@@ -1025,7 +1025,7 @@ End every turn with:
       maxRuns: 4,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'backend-qa-auditor',
-      roleDescription: `You are API Verifier for Team(New).
+      roleDescription: `You are API Verifier for Team.
 
 Your job is to verify that the backend behavior actually works using the strongest available evidence.
 
@@ -1060,7 +1060,7 @@ End every turn with:
       maxRuns: 3,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'backend-decision-maker',
-      roleDescription: `You are Backend QA Auditor for Team(New).
+      roleDescription: `You are Backend QA Auditor for Team.
 
 Your job is to inspect the implemented and verified backend change for remaining quality gaps, regressions, and contract risks.
 
@@ -1095,7 +1095,7 @@ End every turn with:
       minRuns: 1,
       maxRuns: 3,
       createPrompt: 'app-generated',
-      roleDescription: `You are the sole Backend Decision Maker for Team(New).
+      roleDescription: `You are the sole Backend Decision Maker for Team.
 
 Your job is to decide whether the backend loop should stop or continue.
 
@@ -1139,7 +1139,7 @@ const MOBILE_DEVELOPER_TEAMMATE: TeammateDefinition = {
     'Mobile Planner scopes the app-first request, Mobile Architect maps the target screens and state flow, Mobile Builder implements the change, Device QA verifies the behavior on the strongest available runtime path, Mobile UX Auditor checks polish and edge cases, and Mobile Decision Maker decides when the result is genuinely ready.',
   launchPromptPlaceholder:
     'Build or fix this mobile feature, inspect the real flow, and verify it behaves correctly on the strongest available runtime path.',
-  launchButtonLabel: 'Launch Team(New)',
+  launchButtonLabel: 'Launch Team',
   app: {
     requiredMcps: [],
     requiredSkills: [],
@@ -1158,7 +1158,7 @@ const MOBILE_DEVELOPER_TEAMMATE: TeammateDefinition = {
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'mobile-architect',
-      roleDescription: `You are Mobile Planner for Team(New).
+      roleDescription: `You are Mobile Planner for Team.
 
 Your job is to turn the user's mobile request into an execution-ready plan for the rest of the team.
 
@@ -1194,7 +1194,7 @@ End every turn with:
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'mobile-builder',
-      roleDescription: `You are Mobile Architect for Team(New).
+      roleDescription: `You are Mobile Architect for Team.
 
 Your job is to translate the mobile request into a clear implementation approach that fits this repository.
 
@@ -1229,7 +1229,7 @@ End every turn with:
       maxRuns: 4,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'device-qa',
-      roleDescription: `You are Mobile Builder for Team(New).
+      roleDescription: `You are Mobile Builder for Team.
 
 Your job is to build or repair the real mobile feature or flow in this repository.
 
@@ -1267,7 +1267,7 @@ End every turn with:
       maxRuns: 4,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'mobile-ux-auditor',
-      roleDescription: `You are Device QA for Team(New).
+      roleDescription: `You are Device QA for Team.
 
 Your job is to verify the current mobile state using the strongest available evidence.
 
@@ -1303,7 +1303,7 @@ End every turn with:
       maxRuns: 2,
       createPrompt: 'app-generated',
       suggestedNextAgentIfSuccess: 'mobile-decision-maker',
-      roleDescription: `You are Mobile UX Auditor for Team(New).
+      roleDescription: `You are Mobile UX Auditor for Team.
 
 Your job is to inspect the mobile result for polish, usability, and missing experience details before final decision.
 
@@ -1337,7 +1337,7 @@ End every turn with:
       minRuns: 1,
       maxRuns: 3,
       createPrompt: 'app-generated',
-      roleDescription: `You are the sole Mobile Decision Maker for Team(New).
+      roleDescription: `You are the sole Mobile Decision Maker for Team.
 
 Your job is to decide whether the mobile loop should stop or continue.
 

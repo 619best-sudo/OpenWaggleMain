@@ -28,7 +28,7 @@ export function ProviderRow({ providerInfo, isLast, autoEdit, onEditingChange }:
     providerInfo.auth.apiKeySource === 'api-key'
       ? 'API key configured'
       : providerInfo.auth.apiKeySource === 'environment-or-custom'
-        ? 'Configured outside OpenWaggle'
+        ? 'Configured outside Turing Machine'
         : 'Not configured'
   const statusColor = isConfigured ? 'var(--color-success)' : 'var(--color-text-muted)'
 

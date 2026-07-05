@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 
 import { SessionBranchId, SessionId, SessionNodeId } from '@shared/types/brand'
-import { DEFAULT_SETTINGS } from '@shared/types/settings'
 import type { SessionWorkspace } from '@shared/types/session'
+import { DEFAULT_SETTINGS } from '@shared/types/settings'
 import { renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useComposerStore } from '@/features/composer/state'
@@ -70,7 +70,11 @@ describe('useApplyPendingWaggleLaunchPrompt', () => {
   it('applies a pending launch prompt into the active composer draft for the session', async () => {
     useWaggleLaunchPromptStore
       .getState()
-      .queuePrompt(SESSION_ID, 'backend-engineer', 'Implement the projects API and verify DB writes.')
+      .queuePrompt(
+        SESSION_ID,
+        'backend-engineer',
+        'Implement the projects API and verify DB writes.',
+      )
 
     renderHook(() => useApplyPendingWaggleLaunchPrompt(SESSION_ID))
 

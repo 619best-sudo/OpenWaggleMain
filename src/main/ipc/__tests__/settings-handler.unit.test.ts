@@ -68,87 +68,29 @@ describe('registerSettingsHandlers', () => {
       )
     })
 
-    it('accepts the cocoa theme mode', async () => {
+    it('accepts the dark theme mode', async () => {
       registerSettingsHandlers()
 
       const handler = getTypedEffectInvokeHandler('settings:update')
       expect(handler).toBeDefined()
 
-      const result = await handler?.({}, { themeMode: 'cocoa' })
-      expect(result).toEqual({ ok: true })
-      expect(updateSettingsMock).toHaveBeenCalledWith(expect.objectContaining({ themeMode: 'cocoa' }))
-    })
-
-    it('accepts the metallic gold and cream theme modes', async () => {
-      registerSettingsHandlers()
-
-      const handler = getTypedEffectInvokeHandler('settings:update')
-      expect(handler).toBeDefined()
-
-      const metallicGoldResult = await handler?.({}, { themeMode: 'metallic-gold' })
-      expect(metallicGoldResult).toEqual({ ok: true })
-
-      const creamResult = await handler?.({}, { themeMode: 'cream' })
-      expect(creamResult).toEqual({ ok: true })
-      expect(updateSettingsMock).toHaveBeenNthCalledWith(
-        1,
-        expect.objectContaining({ themeMode: 'metallic-gold' }),
-      )
-      expect(updateSettingsMock).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({ themeMode: 'cream' }),
-      )
-    })
-
-    it('accepts the velvet obsidian theme mode', async () => {
-      registerSettingsHandlers()
-
-      const handler = getTypedEffectInvokeHandler('settings:update')
-      expect(handler).toBeDefined()
-
-      const result = await handler?.({}, { themeMode: 'velvet-obsidian' })
+      const result = await handler?.({}, { themeMode: 'dark' })
       expect(result).toEqual({ ok: true })
       expect(updateSettingsMock).toHaveBeenCalledWith(
-        expect.objectContaining({ themeMode: 'velvet-obsidian' }),
+        expect.objectContaining({ themeMode: 'dark' }),
       )
     })
 
-    it('accepts the platinum theme mode', async () => {
+    it('accepts the light theme mode', async () => {
       registerSettingsHandlers()
 
       const handler = getTypedEffectInvokeHandler('settings:update')
       expect(handler).toBeDefined()
 
-      const result = await handler?.({}, { themeMode: 'platinum' })
+      const result = await handler?.({}, { themeMode: 'light' })
       expect(result).toEqual({ ok: true })
       expect(updateSettingsMock).toHaveBeenCalledWith(
-        expect.objectContaining({ themeMode: 'platinum' }),
-      )
-    })
-
-    it('accepts the bulgarian rose theme mode', async () => {
-      registerSettingsHandlers()
-
-      const handler = getTypedEffectInvokeHandler('settings:update')
-      expect(handler).toBeDefined()
-
-      const result = await handler?.({}, { themeMode: 'bulgarian-rose' })
-      expect(result).toEqual({ ok: true })
-      expect(updateSettingsMock).toHaveBeenCalledWith(
-        expect.objectContaining({ themeMode: 'bulgarian-rose' }),
-      )
-    })
-
-    it('accepts the off-white theme mode', async () => {
-      registerSettingsHandlers()
-
-      const handler = getTypedEffectInvokeHandler('settings:update')
-      expect(handler).toBeDefined()
-
-      const result = await handler?.({}, { themeMode: 'off-white' })
-      expect(result).toEqual({ ok: true })
-      expect(updateSettingsMock).toHaveBeenCalledWith(
-        expect.objectContaining({ themeMode: 'off-white' }),
+        expect.objectContaining({ themeMode: 'light' }),
       )
     })
 
@@ -159,6 +101,17 @@ describe('registerSettingsHandlers', () => {
       expect(handler).toBeDefined()
 
       const result = await handler?.({}, { thinkingLevel: 'invalid-mode' })
+      expect(result).toEqual({ ok: false, error: expect.any(String) })
+      expect(updateSettingsMock).not.toHaveBeenCalled()
+    })
+
+    it('rejects removed theme modes', async () => {
+      registerSettingsHandlers()
+
+      const handler = getTypedEffectInvokeHandler('settings:update')
+      expect(handler).toBeDefined()
+
+      const result = await handler?.({}, { themeMode: 'cocoa' })
       expect(result).toEqual({ ok: false, error: expect.any(String) })
       expect(updateSettingsMock).not.toHaveBeenCalled()
     })
@@ -236,6 +189,19 @@ describe('registerSettingsHandlers', () => {
       )
       expect(result).toEqual({ ok: true })
       expect(updateSettingsMock).toHaveBeenCalledOnce()
+    })
+
+    it('accepts custom execution team visibility updates', async () => {
+      registerSettingsHandlers()
+
+      const handler = getTypedEffectInvokeHandler('settings:update')
+      expect(handler).toBeDefined()
+
+      const result = await handler?.({}, { showCustomExecutionTeam: false })
+      expect(result).toEqual({ ok: true })
+      expect(updateSettingsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ showCustomExecutionTeam: false }),
+      )
     })
   })
 

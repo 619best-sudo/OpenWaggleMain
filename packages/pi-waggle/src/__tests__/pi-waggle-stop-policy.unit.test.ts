@@ -255,7 +255,9 @@ describe('pi-waggle stop policy', () => {
     const decision = evaluatePiWaggleStopPolicy({
       config: config(),
       turnNumber: 0,
-      summary: summarizePiWaggleTurnMessages([assistantMessage({ text: 'progress: working on it' })]),
+      summary: summarizePiWaggleTurnMessages([
+        assistantMessage({ text: 'progress: working on it' }),
+      ]),
       state: createPiWaggleStopPolicyState(),
       agentLabel: 'Architect',
     })
@@ -272,8 +274,7 @@ describe('pi-waggle stop policy', () => {
       turnNumber: 0,
       summary: summarizePiWaggleTurnMessages([
         assistantMessage({
-          text:
-            'Progress: built the board\nFiles changed: server.js public/game.js\nCommands run: npm install\nArtifacts: none\nBlockers: none\nNext task: implement turn logic',
+          text: 'Progress: built the board\nFiles changed: server.js public/game.js\nCommands run: npm install\nArtifacts: none\nBlockers: none\nNext task: implement turn logic',
         }),
       ]),
       state: createPiWaggleStopPolicyState(),
@@ -467,8 +468,7 @@ highest-value next fix for planner: none`,
       turnNumber: 0,
       summary: summarizePiWaggleTurnMessages([
         assistantMessage({
-          text:
-            'progress: propose migrating orchestration into the package and keeping runtime state Pi-native.\nfiles_changed: none',
+          text: 'progress: propose migrating orchestration into the package and keeping runtime state Pi-native.\nfiles_changed: none',
         }),
       ]),
       state: createPiWaggleStopPolicyState(),
@@ -499,8 +499,7 @@ highest-value next fix for planner: none`,
       turnNumber: 0,
       summary: summarizePiWaggleTurnMessages([
         assistantMessage({
-          text:
-            'loop_verdict: approved\nfailure_categories: none\ntop_blockers: none\nevidence_reviewed: browser checked\nscreenshots: none\nlogs: none\nexact_next_cycle: none',
+          text: 'loop_verdict: approved\nfailure_categories: none\ntop_blockers: none\nevidence_reviewed: browser checked\nscreenshots: none\nlogs: none\nexact_next_cycle: none',
         }),
       ]),
       state: createPiWaggleStopPolicyState(),
@@ -518,8 +517,7 @@ highest-value next fix for planner: none`,
       turnNumber: 0,
       summary: summarizePiWaggleTurnMessages([
         assistantMessage({
-          text:
-            'loop_verdict: another cycle required\nfailure_categories: none\ntop_blockers: dice roll broken\nevidence_reviewed: opened the browser and clicked roll dice\nscreenshots: board.png\nlogs: console.log\nexact_next_cycle: repair dice interaction and retest',
+          text: 'loop_verdict: another cycle required\nfailure_categories: none\ntop_blockers: dice roll broken\nevidence_reviewed: opened the browser and clicked roll dice\nscreenshots: board.png\nlogs: console.log\nexact_next_cycle: repair dice interaction and retest',
         }),
       ]),
       state: createPiWaggleStopPolicyState(),
@@ -537,8 +535,7 @@ highest-value next fix for planner: none`,
       turnNumber: 0,
       summary: summarizePiWaggleTurnMessages([
         assistantMessage({
-          text:
-            'loop_verdict: approved\nfailure_categories: none\ntop_blockers: none\nevidence_reviewed: opened the browser, ran pnpm build, clicked the roll dice button, and checked console output\nscreenshots: ludo-board.png\nlogs: browser-console.txt\nexact_next_cycle: none',
+          text: 'loop_verdict: approved\nfailure_categories: none\ntop_blockers: none\nevidence_reviewed: opened the browser, ran pnpm build, clicked the roll dice button, and checked console output\nscreenshots: ludo-board.png\nlogs: browser-console.txt\nexact_next_cycle: none',
         }),
       ]),
       state: createPiWaggleStopPolicyState(),
@@ -556,8 +553,7 @@ highest-value next fix for planner: none`,
       turnNumber: 0,
       summary: summarizePiWaggleTurnMessages([
         assistantMessage({
-          text:
-            'loop_verdict: another cycle required\nfailure_categories: bootstrap\ntop_blockers: missing script.js\nevidence_reviewed: listed public files and confirmed script.js is missing\nscreenshots: none\nlogs: none\nexact_next_cycle: builder should add the missing script and retest',
+          text: 'loop_verdict: another cycle required\nfailure_categories: bootstrap\ntop_blockers: missing script.js\nevidence_reviewed: listed public files and confirmed script.js is missing\nscreenshots: none\nlogs: none\nexact_next_cycle: builder should add the missing script and retest',
           toolCallId: 'tool-1',
           toolCallName: 'write',
         }),
@@ -578,8 +574,7 @@ highest-value next fix for planner: none`,
       turnNumber: 0,
       summary: summarizePiWaggleTurnMessages([
         assistantMessage({
-          text:
-            "loop_verdict: another cycle required\nfailure_categories: bootstrap\ntop_blockers: missing script.js\nevidence_reviewed: checked public directory and found script.js missing\nscreenshots: none\nlogs: none\nexact_next_cycle: none\nWe need to create public/script.js and implement the button handler.",
+          text: 'loop_verdict: another cycle required\nfailure_categories: bootstrap\ntop_blockers: missing script.js\nevidence_reviewed: checked public directory and found script.js missing\nscreenshots: none\nlogs: none\nexact_next_cycle: none\nWe need to create public/script.js and implement the button handler.',
         }),
       ]),
       state: createPiWaggleStopPolicyState(),

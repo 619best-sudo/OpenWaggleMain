@@ -3,6 +3,7 @@ export type SessionStatus =
   | 'connecting'
   | 'completed'
   | 'awaiting-input'
+  | 'machine-running'
   | 'waggle-running'
   | 'error'
   | 'idle'
@@ -37,6 +38,11 @@ const STATUS_PILL_MAP: Record<Exclude<SessionStatus, 'idle'>, SessionStatusPill>
     icon: 'MessageCircle',
     colorClass: 'text-indigo-500',
     animateClass: null,
+  },
+  'machine-running': {
+    icon: 'Cpu',
+    colorClass: 'text-violet-500',
+    animateClass: 'animate-pulse',
   },
   'waggle-running': {
     icon: 'WaggleBee',

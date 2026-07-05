@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   buildFencedCodeMarkdown,
   buildTailPreview,
-  getToolDiffData,
   getResultError,
   getStringArg,
+  getToolDiffData,
   getToolResultText,
   inferLanguageFromPath,
   shouldHighlightCode,

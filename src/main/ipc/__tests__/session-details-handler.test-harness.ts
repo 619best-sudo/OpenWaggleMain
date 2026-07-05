@@ -194,6 +194,7 @@ const TestSessionRepoLayer = Layer.succeed(SessionRepository, {
   archiveBranch: () => Effect.void,
   restoreBranch: () => Effect.void,
   updateTreeUiState: () => Effect.void,
+  updateBranchUiState: () => Effect.void,
   recordActiveRun: () => Effect.void,
   clearActiveRun: () => Effect.void,
   clearInterruptedRuns: () => Effect.void,

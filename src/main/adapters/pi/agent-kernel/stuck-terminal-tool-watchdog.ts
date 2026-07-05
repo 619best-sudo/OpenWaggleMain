@@ -66,7 +66,9 @@ function summarizeTerminalToolResult(result: unknown) {
   }
 }
 
-function buildTerminalStuckMessage(event: Extract<AgentTransportEvent, { type: 'tool_execution_end' }>) {
+function buildTerminalStuckMessage(
+  event: Extract<AgentTransportEvent, { type: 'tool_execution_end' }>,
+) {
   const summary = summarizeTerminalToolResult(event.result)
   const logHint = summary.fullOutputPath
     ? ` Inspect the terminal log at ${summary.fullOutputPath} and continue from that failure.`

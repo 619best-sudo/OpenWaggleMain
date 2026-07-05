@@ -43,6 +43,54 @@ export type {
 } from './pi-provider-catalog-types'
 
 let builtInModelProviders: ReadonlySet<string> | null = null
+const TURING_MACHINE_PROVIDER_ID = 'turing-machine'
+const TURING_MACHINE_MODEL_ID = 'turing-machine'
+const TURING_MACHINE_MODEL_NAME = 'Turing Machine'
+const DEFAULT_TURING_MACHINE_BASE_URL = 'http://127.0.0.1:3001/turing-machine'
+const TURING_MACHINE_PROVIDER_API_KEY_ENV = 'OPENWAGGLE_TURING_MACHINE_TOKEN'
+const TURING_MACHINE_BASE_URL_ENV_KEYS = [
+  'OPENWAGGLE_TURING_MACHINE_BASE_URL',
+  'TURING_MACHINE_BASE_URL',
+] as const
+
+function normalizeBaseUrl(value: string | null | undefined) {
+  const normalized = value?.trim()
+  if (!normalized) {
+    return null
+  }
+  return normalized.replace(/\/+$/, '')
+}
+
+export function resolveTuringMachineBaseUrl(env: NodeJS.ProcessEnv = process.env) {
+  for (const key of TURING_MACHINE_BASE_URL_ENV_KEYS) {
+    const configuredValue = normalizeBaseUrl(env[key])
+    if (configuredValue) {
+      return configuredValue
+    }
+  }
+  return DEFAULT_TURING_MACHINE_BASE_URL
+}
+
+function registerTuringMachineProvider(modelRegistry: ModelRegistry) {
+  modelRegistry.registerProvider(TURING_MACHINE_PROVIDER_ID, {
+    // Expose a single backend-backed option. The backend decides which upstream model to use.
+    baseUrl: resolveTuringMachineBaseUrl(),
+    apiKey: TURING_MACHINE_PROVIDER_API_KEY_ENV,
+    api: 'openai-completions',
+    models: [
+      {
+        id: TURING_MACHINE_MODEL_ID,
+        name: TURING_MACHINE_MODEL_NAME,
+        api: 'openai-completions',
+        reasoning: true,
+        input: ['text'],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 256_000,
+        maxTokens: 16_384,
+      },
+    ],
+  })
+}
 
 export function getPiAgentDir(): string {
   return getAgentDir()
@@ -181,6 +229,7 @@ export async function createPiRuntimeServices(
       }),
     ),
   )
+  registerTuringMachineProvider(services.modelRegistry)
   // #region debug-point A:runtime-context
   await (async () => {
     let debugServerUrl = 'http://127.0.0.1:7777/event'
@@ -257,6 +306,7 @@ async function createPiGlobalProviderCatalogServices() {
       settingsManager,
     }),
   )
+  registerTuringMachineProvider(services.modelRegistry)
   rememberOpenWaggleMcpRuntimeContext(services, null)
   return services
 }

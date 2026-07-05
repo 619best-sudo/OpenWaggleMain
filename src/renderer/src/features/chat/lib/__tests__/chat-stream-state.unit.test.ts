@@ -318,7 +318,9 @@ describe('applyAgentTransportEvent reasoning streaming', () => {
       {
         id: 'team-auto-user-10',
         role: 'user',
-        parts: [{ type: 'text', content: 'Run the website with Playwright and verify the landing page.' }],
+        parts: [
+          { type: 'text', content: 'Run the website with Playwright and verify the landing page.' },
+        ],
         createdAt: new Date(10),
       },
     ])

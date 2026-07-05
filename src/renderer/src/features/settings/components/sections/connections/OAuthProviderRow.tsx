@@ -51,7 +51,7 @@ function resolveOAuthRowState(input: {
     isAwaitingCode: input.oauthStatus.type === 'awaiting-code',
     isCodeReceived: input.oauthStatus.type === 'code-received',
     isError: input.oauthStatus.type === 'error',
-    statusColor: connected ? '#34d399' : '#6b7280',
+    statusColor: connected ? 'var(--theme-agent-emerald)' : 'var(--theme-header-diff-neutral)',
     statusText: connected ? 'Connected' : 'Disconnected',
     toggleActive: connected || isBusy,
     toggleLabel: isBusy
@@ -74,7 +74,7 @@ function OAuthProviderIdentity({
 
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-input-card-border bg-[#151a22]">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-input-card-border bg-bg-tertiary">
         <Icon className="size-4" style={{ color: meta.color }} />
       </div>
       <div className="min-w-0">

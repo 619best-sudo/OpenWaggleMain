@@ -200,9 +200,29 @@ describe('ChatPanel', () => {
       isLoading: true,
       chatRows: [{ type: 'phase-indicator', label: 'Thinking', elapsedMs: 123 }],
     })
-    const spinner = document.querySelector('[class*="animate-spin"]')
-    expect(spinner).toBeInTheDocument()
+    const loader = document.querySelector('[data-phase-loader="true"]')
+    expect(loader).toBeInTheDocument()
+    expect(loader).toHaveClass('size-7')
     expect(screen.getByText('Thinking...')).toBeInTheDocument()
+  })
+
+  it('uses the light loader in light theme', () => {
+    usePreferencesStore.setState({
+      ...usePreferencesStore.getState(),
+      settings: {
+        ...usePreferencesStore.getState().settings,
+        themeMode: 'light',
+      },
+    })
+
+    renderPanel({
+      isLoading: true,
+      chatRows: [{ type: 'phase-indicator', label: 'Thinking', elapsedMs: 0 }],
+    })
+
+    const loader = document.querySelector('[data-phase-loader="true"]')
+    expect(loader).toBeInTheDocument()
+    expect(loader).toHaveAttribute('src', expect.stringContaining('loader-light.gif'))
   })
 
   it('renders messages when present', () => {
@@ -329,8 +349,9 @@ describe('ChatPanel', () => {
         { type: 'phase-indicator', label: 'Writing', elapsedMs: 456 },
       ],
     })
-    const spinner = document.querySelector('[class*="animate-spin"]')
-    expect(spinner).toBeInTheDocument()
+    const loader = document.querySelector('[data-phase-loader="true"]')
+    expect(loader).toBeInTheDocument()
+    expect(loader).toHaveClass('size-7')
     expect(screen.getByText('Writing...')).toBeInTheDocument()
   })
 
@@ -353,7 +374,7 @@ describe('ChatPanel', () => {
         { type: 'message', message: assistantMessage, isStreaming: false, showTurnDivider: false },
       ],
     })
-    const spinner = document.querySelector('[class*="animate-spin"]')
-    expect(spinner).toBeNull()
+    const loader = document.querySelector('[data-phase-loader="true"]')
+    expect(loader).toBeNull()
   })
 })

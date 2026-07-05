@@ -1,15 +1,19 @@
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { SupportedModelId } from '@shared/types/llm'
+import type { MachineExecutionState } from '@shared/types/machine'
 import type { SessionDetail } from '@shared/types/session'
 import type { WaggleCollaborationStatus } from '@shared/types/waggle'
 import { useState } from 'react'
 import type { useStreamingPhase } from '@/features/chat/hooks/useStreamingPhase'
 import { useWaggleMetadataLookup } from '@/features/chat/hooks/useWaggleMetadataLookup'
 import { useSessionStore } from '@/features/sessions/state'
+import { createRendererLogger } from '@/shared/lib/logger'
 import { resolveTranscriptMessages } from '../lib/session-workspace-transcript'
 import type { ChatTranscriptSectionState } from '../model'
 import { useChatRows } from './useChatRows'
+
+const logger = createRendererLogger('use-transcript-section')
 
 function resolveLastUserMessage(messages: UIMessage[]) {
   let lastUserMessage: UIMessage | undefined
@@ -42,12 +46,15 @@ export interface TranscriptSectionParams {
   readonly recentProjects: readonly string[]
   readonly activeSessionId: SessionId | null
   readonly activeSession: SessionDetail | null
+  readonly machinePlan: MachineExecutionState | null
   readonly model: SupportedModelId
   readonly waggleStatus: WaggleCollaborationStatus
   readonly phase: ReturnType<typeof useStreamingPhase>
   readonly handleOpenProject: () => Promise<void>
   readonly handleSelectProjectPath: (path: string) => void
   readonly handleSendText: (content: string) => Promise<void>
+  readonly handleApproveMachinePlan: () => Promise<void>
+  readonly handleDiscardMachinePlan: () => Promise<void>
   readonly openSettings: () => void
   readonly handleDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   readonly handleBranchFromMessage: (messageId: string) => void
@@ -67,11 +74,14 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     recentProjects,
     activeSessionId,
     activeSession,
+    machinePlan,
     model,
     phase,
     handleOpenProject,
     handleSelectProjectPath,
     handleSendText,
+    handleApproveMachinePlan,
+    handleDiscardMachinePlan,
     openSettings,
     handleDismissInterruptedRun,
     handleBranchFromMessage,
@@ -95,9 +105,19 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     activeSessionId,
     activeWorkspace,
     messages,
+    machinePlan,
     draftBranchSourceNodeId,
   })
-  const waggleMetadataLookup = useWaggleMetadataLookup(activeSession, transcriptMessages)
+  logger.debug('Prepared transcript messages before row building', {
+    sessionId: activeSessionId ? String(activeSessionId) : null,
+    rawMessageCount: messages.length,
+    workspaceMessageCount: activeWorkspace?.transcriptPath.length ?? 0,
+    transcriptMessages: transcriptMessages.map((message) => ({
+      id: message.id,
+      role: message.role,
+    })),
+  })
+  const waggleMetadataLookup = useWaggleMetadataLookup(activeSession, messages)
 
   const lastUserMessage = resolveLastUserMessage(transcriptMessages)
   const interruptedRun =
@@ -108,6 +128,8 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
 
   const chatRows = useChatRows({
     messages: transcriptMessages,
+    allMessages: messages,
+    machinePlan,
     isLoading: transcriptLoading,
     error,
     lastUserMessage,
@@ -117,6 +139,17 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     waggleMetadataLookup,
     phase,
     interruptedRun,
+  })
+  logger.debug('Built transcript rows', {
+    sessionId: activeSessionId ? String(activeSessionId) : null,
+    transcriptMessageCount: transcriptMessages.length,
+    chatRowCount: chatRows.length,
+    renderedMessageRows: chatRows
+      .filter((row) => row.type === 'message')
+      .map((row) => ({
+        id: row.message.id,
+        role: row.message.role,
+      })),
   })
 
   // Compute lastUserMessageId for session-restore identity gating, not send anchoring.
@@ -133,11 +166,14 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     projectPath,
     recentProjects,
     activeSessionId,
+    machinePlan,
     chatRows,
     onOpenProject: handleOpenProject,
     onSelectProjectPath: handleSelectProjectPath,
     onRetryText: handleSendText,
     onOpenSettings: openSettings,
+    onApproveMachinePlan: handleApproveMachinePlan,
+    onDiscardMachinePlan: handleDiscardMachinePlan,
     onDismissError: setDismissedError,
     onDismissInterruptedRun: handleDismissInterruptedRun,
     onBranchFromMessage: handleBranchFromMessage,

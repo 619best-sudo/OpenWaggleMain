@@ -7,6 +7,7 @@ import { createSendHandlers } from '../useSendMessage'
 
 vi.mock('@/shared/lib/ipc', () => ({
   api: {
+    sendMachineMessage: vi.fn(),
     sendMessage: vi.fn(),
     sendTeamMessage: vi.fn(),
     sendWaggleMessage: vi.fn(),
@@ -22,9 +23,10 @@ function makeDeps(overrides: Partial<SendDeps> = {}) {
     thinkingLevel: 'medium',
     createSession: vi.fn<SendDeps['createSession']>().mockResolvedValue(SessionId('new-session')),
     sendMessage: vi.fn<(p: AgentSendPayload) => Promise<void>>().mockResolvedValue(undefined),
-    sendFirstMessageToSession: vi.fn<SendDeps['sendFirstMessageToSession']>().mockResolvedValue(
-      undefined,
-    ),
+    sendMachineMessage: vi.fn<(p: AgentSendPayload) => Promise<void>>().mockResolvedValue(undefined),
+    sendFirstMessageToSession: vi
+      .fn<SendDeps['sendFirstMessageToSession']>()
+      .mockResolvedValue(undefined),
     sendTeamMessage: vi.fn<SendDeps['sendTeamMessage']>().mockResolvedValue(undefined),
     sendWaggleMessage: vi
       .fn<(payload: AgentSendPayload) => Promise<void>>()
@@ -130,17 +132,64 @@ describe('createSendHandlers', () => {
     })
   })
 
+  describe('handleSendMachine', () => {
+    it('sends first-message Machine payloads to the created session instead of plain chat', async () => {
+      const onMachineSessionResolved = vi.fn()
+      const deps = makeDeps({ activeSessionId: null, onMachineSessionResolved })
+      const { handleSendMachine } = createSendHandlers(deps)
+      const payload: AgentSendPayload = {
+        text: 'Build a search experience',
+        thinkingLevel: 'medium',
+        attachments: [],
+      }
+
+      await handleSendMachine(payload)
+
+      expect(deps.createSession).toHaveBeenCalledWith('/test/project')
+      expect(deps.sendFirstMessageToSession).toHaveBeenCalledWith('new-session', payload, {
+        kind: 'machine',
+      })
+      expect(onMachineSessionResolved).toHaveBeenCalledWith('new-session')
+      expect(deps.sendMachineMessage).not.toHaveBeenCalled()
+    })
+
+    it('does not resolve machine session state when the first machine send fails', async () => {
+      const onMachineSessionResolved = vi.fn()
+      const deps = makeDeps({
+        activeSessionId: null,
+        onMachineSessionResolved,
+        sendFirstMessageToSession: vi
+          .fn<SendDeps['sendFirstMessageToSession']>()
+          .mockRejectedValue(new Error('machine failed')),
+      })
+      const { handleSendMachine } = createSendHandlers(deps)
+      const payload: AgentSendPayload = {
+        text: 'Build a search experience',
+        thinkingLevel: 'medium',
+        attachments: [],
+      }
+
+      await expect(handleSendMachine(payload)).rejects.toThrow('machine failed')
+
+      expect(onMachineSessionResolved).not.toHaveBeenCalled()
+    })
+  })
+
   describe('handleSendTeam', () => {
-    it('sends first-message Team(New) payloads to the created session instead of plain chat', async () => {
+    it('sends first-message Team payloads to the created session instead of plain chat', async () => {
       const deps = makeDeps({ activeSessionId: null })
       const { handleSendTeam } = createSendHandlers(deps)
-      const payload: AgentSendPayload = { text: 'build the site', thinkingLevel: 'medium', attachments: [] }
+      const payload: AgentSendPayload = {
+        text: 'build the site',
+        thinkingLevel: 'medium',
+        attachments: [],
+      }
       const teammate: TeammateDefinition = {
         id: 'web-executor',
         name: 'Web Executor',
         description: 'Build and verify websites.',
         launchPromptPlaceholder: 'Build a website',
-        launchButtonLabel: 'Launch Team(New)',
+        launchButtonLabel: 'Launch Team',
         app: { requiredMcps: [], requiredSkills: [] },
         agents: [],
         loopPolicy: {

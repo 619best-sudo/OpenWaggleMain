@@ -32,7 +32,9 @@ export function interruptedRunsByBranchId(rows: readonly SessionActiveRunRow[]) 
 }
 
 function parseActiveRunMode(row: SessionActiveRunRow): RunMode | null {
-  if (row.run_mode === 'classic' || row.run_mode === 'waggle') return row.run_mode
+  if (row.run_mode === 'classic' || row.run_mode === 'waggle' || row.run_mode === 'machine') {
+    return row.run_mode
+  }
   sessionsLogger.warn('Ignoring session run with invalid mode', {
     runId: row.run_id,
     runMode: row.run_mode,

@@ -1,5 +1,6 @@
 import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionId } from '@shared/types/brand'
+import type { MachineExecutionState } from '@shared/types/machine'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/waggle'
@@ -9,15 +10,18 @@ import type { useStreamingPhase } from '@/features/chat/hooks/useStreamingPhase'
 import { $createSkillMentionNode } from '@/features/composer/components'
 import { replaceComposerText } from '@/features/composer/lib/set-composer-text'
 import { useComposerStore } from '@/features/composer/state'
+import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 import type { SessionForkTarget } from '../lib/session-fork-targets'
 import type { ChatComposerSectionState } from '../model'
-import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 
 export interface ComposerSectionParams {
   readonly isLoading: boolean
   readonly isSteering: boolean
   readonly status: AgentChatStatus
   readonly compactionStatus: AgentCompactionStatus | null
+  readonly machineModeEnabled: boolean
+  readonly machineStatus: 'idle' | 'running'
+  readonly machinePlan: MachineExecutionState | null
   readonly activeTeammate: TeammateDefinition | null
   readonly teamStatus: 'idle' | 'running'
   readonly activeSessionId: SessionId | null
@@ -35,6 +39,9 @@ export interface ComposerSectionParams {
   readonly handleUseFollowUpPrompt: (suggestion: TuringFollowUpSuggestion) => void
   readonly handleStartWaggle: (config: WaggleConfig) => void
   readonly handleStartTeam: (teammate: TeammateDefinition) => void
+  readonly handleSetMachineModeEnabled: (enabled: boolean) => void
+  readonly handleApproveMachinePlan: () => Promise<void>
+  readonly handleDiscardMachinePlan: () => Promise<void>
   readonly handleStopCollaboration: () => void
   readonly handleClearTeamMode: () => void
   readonly handleSkipBranchSummary: () => void
@@ -53,6 +60,9 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     isSteering,
     status,
     compactionStatus,
+    machineModeEnabled,
+    machineStatus,
+    machinePlan,
     activeTeammate,
     teamStatus,
     activeSessionId,
@@ -70,6 +80,9 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     handleUseFollowUpPrompt,
     handleStartWaggle,
     handleStartTeam,
+    handleSetMachineModeEnabled,
+    handleApproveMachinePlan,
+    handleDiscardMachinePlan,
     handleStopCollaboration,
     handleClearTeamMode,
     handleSkipBranchSummary,
@@ -114,6 +127,9 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
 
   return {
     activeSessionId,
+    machineModeEnabled,
+    machineStatus,
+    machinePlan,
     waggleStatus,
     followUpSuggestion,
     commandPaletteOpen,
@@ -129,6 +145,9 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     onSelectSkill: handleSelectSkill,
     onStartWaggle: handleStartWaggle,
     onStartTeam: handleStartTeam,
+    onSetMachineModeEnabled: handleSetMachineModeEnabled,
+    onApproveMachinePlan: handleApproveMachinePlan,
+    onDiscardMachinePlan: handleDiscardMachinePlan,
     onClearTeamMode: handleClearTeamMode,
     onSendWithWaggle: handleSendWithWaggle,
     onSteer: handleSteer,

@@ -7,6 +7,7 @@ import type {
 import {
   AlertTriangle,
   CheckCircle2,
+  GitBranch,
   Globe,
   Network,
   Plus,
@@ -26,11 +27,10 @@ function formatServerDetail(server: McpServerSummary) {
   return 'No transport configured'
 }
 
-function formatDirectTools(mode: McpServerSummary['directTools']) {
-  if (mode === 'enabled') return 'Direct tools'
-  if (mode === 'partial') return 'Selected direct tools'
-  if (mode === 'disabled') return 'Proxy only'
-  return 'Inherits direct-tools setting'
+function formatDisplayPath(path: string) {
+  return path
+    .replaceAll('.openwaggle', '.turing-machine')
+    .replaceAll('openwaggle-mcp', 'turing-machine-mcp')
 }
 
 function SourceButton({
@@ -51,14 +51,16 @@ function SourceButton({
       className={cn(
         'w-full rounded-xl border p-3.5 text-left transition-all',
         selected
-          ? 'border-info/35 bg-info/10 text-text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_0_1px_color-mix(in_srgb,var(--color-info)_12%,transparent)]'
-          : 'border-white/6 bg-white/[0.02] text-text-secondary hover:border-white/10 hover:bg-white/[0.03]',
+          ? 'border-info/35 bg-info/10 text-text-primary shadow-[inset_0_1px_0_var(--theme-panel-shadow-highlight),0_0_0_1px_color-mix(in_srgb,var(--color-info)_12%,transparent)]'
+          : 'border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] text-text-secondary hover:border-[var(--theme-border-overlay-strong)] hover:bg-[var(--theme-surface-overlay)]',
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-[13px] font-medium">{source.label}</div>
-          <div className="mt-1 truncate text-[11px] text-text-muted">{source.path}</div>
+          <div className="mt-1 truncate text-[11px] text-text-muted">
+            {formatDisplayPath(source.path)}
+          </div>
         </div>
         <span
           className={cn(
@@ -66,8 +68,8 @@ function SourceButton({
             source.parseError
               ? 'border-error/20 bg-error/10 text-error'
               : source.exists
-                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
-                : 'border-white/8 bg-white/[0.04] text-text-muted',
+                ? 'border-success/25 bg-success/10 text-success'
+                : 'border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay)] text-text-muted',
           )}
         >
           {statusLabel}
@@ -80,7 +82,7 @@ function SourceButton({
           <span
             className={cn(
               'rounded-full px-2 py-0.5',
-              selected ? 'bg-info/12 text-info' : 'bg-white/[0.04]',
+              selected ? 'bg-info/12 text-info' : 'bg-[var(--theme-surface-overlay)]',
             )}
           >
             {source.serverCount} active
@@ -88,7 +90,7 @@ function SourceButton({
           <span
             className={cn(
               'rounded-full px-2 py-0.5',
-              selected ? 'bg-info/10 text-text-secondary' : 'bg-white/[0.04]',
+              selected ? 'bg-info/10 text-text-secondary' : 'bg-[var(--theme-surface-overlay)]',
             )}
           >
             {source.disabledServerCount} disabled
@@ -130,7 +132,7 @@ function ServerRow({
         <span
           className={cn(
             'text-[11px] font-medium',
-            server.enabled ? 'text-emerald-400' : 'text-text-muted',
+            server.enabled ? 'text-success' : 'text-text-muted',
           )}
         >
           {server.enabled ? 'Enabled' : 'Disabled'}
@@ -172,7 +174,7 @@ export function McpErrorAlert({ message }: { readonly message: string | null | u
 
 function McpAdapterStatus({ enabled }: { readonly enabled: boolean }) {
   return enabled ? (
-    <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.5 text-[11px] text-emerald-300">
+    <span className="inline-flex items-center gap-1 rounded bg-success/10 px-1.5 py-0.5 text-[11px] text-success">
       <CheckCircle2 className="size-3" />
       Enabled
     </span>
@@ -197,7 +199,7 @@ export function McpAdapterCard({
 }) {
   const adapterEnabled = view?.adapter.enabled ?? false
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] p-4">
+    <div className="overflow-hidden rounded-xl border border-border bg-bg-secondary p-4 shadow-[inset_0_1px_0_var(--theme-panel-shadow-highlight)]">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Network className="size-4 text-accent" />
@@ -205,7 +207,14 @@ export function McpAdapterCard({
           <McpAdapterStatus enabled={adapterEnabled} />
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="secondary" size="sm" disabled={busy} onClick={onRefresh} leftIcon={<RotateCw className="size-3" />} className="h-7 text-[11px] px-2.5">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={busy}
+            onClick={onRefresh}
+            leftIcon={<RotateCw className="size-3" />}
+            className="h-7 text-[11px] px-2.5"
+          >
             Refresh
           </Button>
           <div className="flex items-center gap-2 rounded-full border border-border bg-bg-tertiary px-2.5 py-1">
@@ -239,34 +248,23 @@ interface McpQuickInstallPanelProps {
   }) => Promise<void>
 }
 
-const MCP_STARTER_PRESETS = [
-  {
-    id: 'playwright',
-    label: 'Playwright',
-    transport: 'stdio' as const,
-    name: 'playwright',
-    command: 'npx',
-    args: '-y @playwright/mcp@latest',
-    url: '',
-  },
-  {
-    id: 'filesystem',
-    label: 'Filesystem',
-    transport: 'stdio' as const,
-    name: 'filesystem',
-    command: 'npx',
-    args: '-y @modelcontextprotocol/server-filesystem .',
-    url: '',
-  },
-  {
-    id: 'http',
-    label: 'HTTP Server',
-    transport: 'http' as const,
-    name: 'my-http-server',
-    command: '',
-    args: '',
-    url: 'http://localhost:3000/mcp',
-  },
+type McpInstallMethod = 'manual' | 'github'
+type McpInstallTarget = {
+  readonly id: McpConfigSourceId
+  readonly label: string
+  readonly helper: string
+}
+
+const PROJECT_SOURCE_PREFERENCE: readonly McpConfigSourceId[] = [
+  'project-openwaggle',
+  'project-standard',
+  'project-agents',
+  'project-pi',
+] as const
+
+const GLOBAL_SOURCE_PREFERENCE: readonly McpConfigSourceId[] = [
+  'global-standard',
+  'global-pi',
 ] as const
 
 export function McpQuickInstallPanel({
@@ -276,26 +274,101 @@ export function McpQuickInstallPanel({
   onSelectSource,
   onAddServer,
 }: McpQuickInstallPanelProps) {
+  const [installMethod, setInstallMethod] = useState<McpInstallMethod>('manual')
   const [transport, setTransport] = useState<'stdio' | 'http'>('stdio')
   const [name, setName] = useState('')
   const [command, setCommand] = useState('')
   const [args, setArgs] = useState('')
   const [url, setUrl] = useState('')
+  const [githubUrl, setGitHubUrl] = useState('')
+
+  const githubInstall = useMemo(() => {
+    if (githubUrl.trim().length === 0) {
+      return null
+    }
+
+    try {
+      return buildGitHubInstallInput(githubUrl)
+    } catch {
+      return null
+    }
+  }, [githubUrl])
+
+  const githubValidationMessage = useMemo(() => {
+    if (githubUrl.trim().length === 0) {
+      return 'Paste a GitHub repository URL to generate a ready-to-run MCP command.'
+    }
+
+    try {
+      buildGitHubInstallInput(githubUrl)
+      return null
+    } catch (error) {
+      return error instanceof Error ? error.message : 'Enter a valid GitHub repository URL.'
+    }
+  }, [githubUrl])
 
   const canInstall =
     !busy &&
     !!selectedSource?.editable &&
-    name.trim().length > 0 &&
-    (transport === 'http' ? url.trim().length > 0 : command.trim().length > 0)
+    (installMethod === 'github'
+      ? githubInstall !== null
+      : name.trim().length > 0 &&
+        (transport === 'http' ? url.trim().length > 0 : command.trim().length > 0))
+
+  const installTargets = useMemo(() => {
+    const editableSources = sources.filter((source) => source.editable)
+    const projectSources = editableSources.filter((source) => source.scope === 'project')
+    const globalSources = editableSources.filter((source) => source.scope === 'global')
+
+    const preferredProjectSource = choosePreferredSource(projectSources, PROJECT_SOURCE_PREFERENCE)
+    const preferredGlobalSource = choosePreferredSource(globalSources, GLOBAL_SOURCE_PREFERENCE)
+
+    const activeProjectSource =
+      selectedSource?.editable && selectedSource.scope === 'project'
+        ? selectedSource
+        : preferredProjectSource
+    const activeGlobalSource =
+      selectedSource?.editable && selectedSource.scope === 'global'
+        ? selectedSource
+        : preferredGlobalSource
+
+    const targets: McpInstallTarget[] = []
+    if (activeProjectSource) {
+      targets.push({
+        id: activeProjectSource.id,
+        label: 'This Project Only',
+        helper: 'Recommended. Keeps this MCP just for the project you are working in.',
+      })
+    }
+    if (activeGlobalSource) {
+      targets.push({
+        id: activeGlobalSource.id,
+        label: 'All Projects On This Computer',
+        helper: 'Makes this MCP available everywhere in Turing Machine on this device.',
+      })
+    }
+    return targets
+  }, [selectedSource, sources])
+
+  const selectedInstallTarget = useMemo(
+    () => installTargets.find((target) => target.id === selectedSource?.id) ?? null,
+    [installTargets, selectedSource?.id],
+  )
 
   const availableTarget = useMemo(() => {
-    if (!selectedSource) return 'Pick a project or global MCP source to install into.'
+    if (!selectedSource) return 'Choose where this MCP should be available.'
     if (!selectedSource.editable)
-      return 'This source is read-only. Pick another source to add a server.'
-    return `New servers will be written to ${selectedSource.path}.`
-  }, [selectedSource])
+      return 'This destination is read-only. Pick another place to add this MCP.'
+    return selectedInstallTarget?.helper ?? 'Choose where this MCP should be available.'
+  }, [selectedInstallTarget, selectedSource])
 
   async function handleAdd() {
+    if (installMethod === 'github') {
+      if (!githubInstall) return
+      await onAddServer(githubInstall)
+      return
+    }
+
     await onAddServer({
       transport,
       name,
@@ -305,134 +378,193 @@ export function McpQuickInstallPanel({
     })
   }
 
-  function applyPreset(preset: (typeof MCP_STARTER_PRESETS)[number]) {
-    setTransport(preset.transport)
-    setName(preset.name)
-    setCommand(preset.command)
-    setArgs(preset.args)
-    setUrl(preset.url ?? '')
-  }
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="space-y-1">
           <p className="max-w-[500px] text-[13px] leading-5 text-text-tertiary">
-            Choose a preset or configure a custom connection. New servers are saved into your active
-            configuration.
+            Technical users can configure a server manually. Everyone else can paste a GitHub
+            repository URL and let Turing Machine prepare the command for them.
           </p>
         </div>
         {sources.length > 0 && (
           <label className="flex shrink-0 items-center gap-2">
-            <span className="text-[12px] font-medium text-text-secondary">Save to:</span>
+            <span className="text-[12px] font-medium text-text-secondary">Install for:</span>
             <Select
               value={selectedSource?.id ?? ''}
               disabled={busy}
               onChange={(e) => onSelectSource(e.target.value as McpConfigSourceId)}
-              className="w-[200px] text-[12px] py-1.5 pl-3 pr-8 h-8 rounded-lg border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"
+              className="h-8 w-[200px] rounded-lg border-[var(--theme-border-overlay-strong)] bg-[var(--theme-surface-overlay-subtle)] py-1.5 pl-3 pr-8 text-[12px] hover:bg-[var(--theme-surface-overlay)]"
             >
               <option value="" disabled>
-                Select source...
+                Choose destination...
               </option>
-              {sources
-                .filter((s) => s.editable)
-                .map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
-                  </option>
-                ))}
+              {installTargets.map((target) => (
+                <option key={target.id} value={target.id}>
+                  {target.label}
+                </option>
+              ))}
             </Select>
           </label>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-6">
-        {MCP_STARTER_PRESETS.map((preset) => (
+      <div className="mb-6 space-y-3">
+        <div
+          className="grid w-full grid-cols-2 rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-1"
+          aria-label="MCP install method"
+        >
           <Button
-            key={preset.id}
             variant="unstyled"
-            size="sm"
             disabled={busy}
-            onClick={() => applyPreset(preset)}
-            className="rounded-full bg-white/[0.02] px-4 py-1.5 text-[12px] font-medium text-text-secondary hover:bg-white/[0.04] hover:text-text-primary transition-colors"
+            aria-pressed={installMethod === 'manual'}
+            onClick={() => setInstallMethod('manual')}
+            fullWidth
+            className={cn(
+              'rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors',
+              installMethod === 'manual'
+                ? 'bg-[var(--theme-surface-overlay)] text-text-primary shadow-sm'
+                : 'text-text-tertiary hover:bg-[var(--theme-surface-overlay)] hover:text-text-secondary',
+            )}
           >
-            {preset.label}
+            Manual Setup
           </Button>
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        <div className="grid gap-3 rounded-xl border border-white/6 bg-black/20 p-4 md:grid-cols-[180px_minmax(0,1fr)]">
-          <label className="space-y-1.5">
-            <span className="text-[12px] font-medium text-text-primary">Connection Type</span>
-            <Select
-              value={transport}
-              disabled={busy}
-              onChange={(event) => setTransport(event.target.value as 'stdio' | 'http')}
-              className="w-full text-[12px] h-9 bg-white/[0.02] border-transparent hover:bg-white/[0.04] focus:border-white/10"
-            >
-              <option value="stdio">Local Command</option>
-              <option value="http">Remote URL</option>
-            </Select>
-          </label>
-          <label className="space-y-1.5">
-            <span className="text-[12px] font-medium text-text-primary">Server Name</span>
-            <TextInput
-              value={name}
-              disabled={busy}
-              placeholder="playwright"
-              onChange={(event) => setName(event.target.value)}
-              className="w-full text-[12px] h-9 bg-white/[0.02] border-transparent hover:bg-white/[0.04] focus:border-white/10 placeholder:text-text-muted"
-            />
-          </label>
+          <Button
+            variant="unstyled"
+            disabled={busy}
+            aria-pressed={installMethod === 'github'}
+            onClick={() => setInstallMethod('github')}
+            fullWidth
+            className={cn(
+              'rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors',
+              installMethod === 'github'
+                ? 'bg-[var(--theme-surface-overlay)] text-text-primary shadow-sm'
+                : 'text-text-tertiary hover:bg-[var(--theme-surface-overlay)] hover:text-text-secondary',
+            )}
+          >
+            GitHub URL
+          </Button>
         </div>
-
-        {transport === 'stdio' ? (
-          <div className="grid gap-3 rounded-xl border border-white/6 bg-black/20 p-4 md:grid-cols-[180px_minmax(0,1fr)]">
-            <label className="space-y-1.5">
-              <span className="flex items-center gap-1.5 text-[12px] font-medium text-text-primary">
-                <TerminalSquare className="size-3.5 text-text-tertiary" />
-                Command
-              </span>
-              <TextInput
-                value={command}
-                disabled={busy}
-                placeholder="npx"
-                onChange={(event) => setCommand(event.target.value)}
-                className="w-full text-[12px] h-9 bg-white/[0.02] border-transparent hover:bg-white/[0.04] focus:border-white/10 placeholder:text-text-muted"
-              />
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-[12px] font-medium text-text-primary">Arguments</span>
-              <TextInput
-                value={args}
-                disabled={busy}
-                placeholder="-y @playwright/mcp@latest"
-                onChange={(event) => setArgs(event.target.value)}
-                className="w-full text-[12px] h-9 bg-white/[0.02] border-transparent hover:bg-white/[0.04] focus:border-white/10 placeholder:text-text-muted"
-              />
-            </label>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-white/6 bg-black/20 p-4">
-            <label className="space-y-1.5">
-              <span className="flex items-center gap-1.5 text-[12px] font-medium text-text-primary">
-                <Globe className="size-3.5 text-text-tertiary" />
-                Server URL
-              </span>
-              <TextInput
-                value={url}
-                disabled={busy}
-                placeholder="http://localhost:3000/mcp"
-                onChange={(event) => setUrl(event.target.value)}
-                className="w-full text-[12px] h-9 bg-white/[0.02] border-transparent hover:bg-white/[0.04] focus:border-white/10 placeholder:text-text-muted"
-              />
-            </label>
-          </div>
-        )}
       </div>
 
-      <div className="mt-8 flex items-center justify-between gap-4 pt-4 border-t border-white/6">
+      {installMethod === 'manual' ? (
+        <div className="space-y-3">
+          <div className="grid gap-3 rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4 md:grid-cols-[180px_minmax(0,1fr)]">
+            <label className="space-y-1.5">
+              <span className="text-[12px] font-medium text-text-primary">Connection Type</span>
+              <Select
+                value={transport}
+                disabled={busy}
+                onChange={(event) => setTransport(event.target.value as 'stdio' | 'http')}
+                className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)]"
+              >
+                <option value="stdio">Local Command</option>
+                <option value="http">Remote URL</option>
+              </Select>
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-[12px] font-medium text-text-primary">Server Name</span>
+              <TextInput
+                value={name}
+                disabled={busy}
+                placeholder="playwright"
+                onChange={(event) => setName(event.target.value)}
+                className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
+              />
+            </label>
+          </div>
+
+          {transport === 'stdio' ? (
+            <div className="grid gap-3 rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4 md:grid-cols-[180px_minmax(0,1fr)]">
+              <label className="space-y-1.5">
+                <span className="flex items-center gap-1.5 text-[12px] font-medium text-text-primary">
+                  <TerminalSquare className="size-3.5 text-text-tertiary" />
+                  Command
+                </span>
+                <TextInput
+                  value={command}
+                  disabled={busy}
+                  placeholder="npx"
+                  onChange={(event) => setCommand(event.target.value)}
+                  className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-[12px] font-medium text-text-primary">Arguments</span>
+                <TextInput
+                  value={args}
+                  disabled={busy}
+                  placeholder="-y @playwright/mcp@latest"
+                  onChange={(event) => setArgs(event.target.value)}
+                  className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
+                />
+              </label>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4">
+              <label className="space-y-1.5">
+                <span className="flex items-center gap-1.5 text-[12px] font-medium text-text-primary">
+                  <Globe className="size-3.5 text-text-tertiary" />
+                  Server URL
+                </span>
+                <TextInput
+                  value={url}
+                  disabled={busy}
+                  placeholder="http://localhost:3000/mcp"
+                  onChange={(event) => setUrl(event.target.value)}
+                  className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
+                />
+              </label>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4">
+            <label className="space-y-1.5">
+              <span className="flex items-center gap-1.5 text-[12px] font-medium text-text-primary">
+                <GitBranch className="size-3.5 text-text-tertiary" />
+                GitHub Repository URL
+              </span>
+              <TextInput
+                value={githubUrl}
+                disabled={busy}
+                placeholder="https://github.com/owner/repo"
+                onChange={(event) => setGitHubUrl(event.target.value)}
+                className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
+              />
+            </label>
+            <p
+              className={cn(
+                'mt-2 text-[11px] leading-5',
+                githubValidationMessage ? 'text-text-tertiary' : 'text-text-muted',
+              )}
+            >
+              {githubValidationMessage ??
+                'Turing Machine will save a generated npx command so the MCP is ready to run from this repository.'}
+            </p>
+          </div>
+
+          <div className="grid gap-3 rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <span className="text-[12px] font-medium text-text-primary">Server Name</span>
+              <div className="flex min-h-10 items-center rounded-lg border border-transparent bg-[var(--theme-surface-overlay)] px-3 py-2 text-[12px] text-text-secondary">
+                {githubInstall?.name ?? 'Derived from the repository name'}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <span className="text-[12px] font-medium text-text-primary">Generated Command</span>
+              <div className="flex min-h-10 items-center rounded-lg border border-transparent bg-[var(--theme-surface-overlay)] px-3 py-2 font-mono text-[11px] text-text-secondary">
+                {githubInstall
+                  ? `${githubInstall.command} ${githubInstall.args ?? ''}`.trim()
+                  : 'npx -y github:owner/repo'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-8 flex items-center justify-between gap-4 border-t border-[var(--theme-border-overlay-subtle)] pt-4">
         <p className="min-w-0 text-[12px] text-text-muted">{availableTarget}</p>
         <Button
           variant={canInstall ? 'accent' : 'secondary'}
@@ -445,11 +577,88 @@ export function McpQuickInstallPanel({
               : 'px-6'
           }
         >
-          Add Server
+          {installMethod === 'github' ? 'Add From GitHub' : 'Add Server'}
         </Button>
       </div>
     </div>
   )
+}
+
+function buildGitHubInstallInput(sourceUrl: string): {
+  transport: 'stdio'
+  name: string
+  command: string
+  args: string
+} {
+  const url = parseGitHubUrl(sourceUrl)
+  const packageSpec = url.ref
+    ? `github:${url.owner}/${url.repo}#${url.ref}`
+    : `github:${url.owner}/${url.repo}`
+
+  return {
+    transport: 'stdio',
+    name: normalizeGitHubRepoName(url.repo),
+    command: 'npx',
+    args: `-y ${packageSpec}`,
+  }
+}
+
+function parseGitHubUrl(sourceUrl: string) {
+  let url: URL
+  try {
+    url = new URL(sourceUrl.trim())
+  } catch {
+    throw new Error('Enter a valid GitHub repository URL.')
+  }
+
+  if (
+    (url.protocol !== 'http:' && url.protocol !== 'https:') ||
+    !['github.com', 'www.github.com'].includes(url.hostname)
+  ) {
+    throw new Error('Enter a valid GitHub repository URL.')
+  }
+
+  const segments = url.pathname
+    .replace(/\.git$/, '')
+    .split('/')
+    .filter(Boolean)
+  const [owner, repo, mode, ref] = segments
+
+  if (!owner || !repo) {
+    throw new Error('GitHub URLs must include both an owner and repository name.')
+  }
+
+  return {
+    owner,
+    repo,
+    ref: mode === 'tree' || mode === 'blob' ? ref : undefined,
+  }
+}
+
+function normalizeGitHubRepoName(repo: string) {
+  const normalized = repo
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+  if (!normalized) {
+    throw new Error('Could not derive an MCP server name from that repository URL.')
+  }
+
+  return normalized
+}
+
+function choosePreferredSource(
+  sources: readonly McpConfigSourceSummary[],
+  preference: readonly McpConfigSourceId[],
+) {
+  for (const sourceId of preference) {
+    const match = sources.find((source) => source.id === sourceId)
+    if (match) return match
+  }
+
+  return sources[0] ?? null
 }
 
 export function McpSourcesPanel({
@@ -462,7 +671,7 @@ export function McpSourcesPanel({
   readonly onSelectSource: (sourceId: McpConfigSourceId) => void
 }) {
   return (
-    <div className="rounded-2xl border border-white/6 bg-[linear-gradient(180deg,#111418,#0d1014)] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+    <div className="rounded-2xl border border-[var(--theme-border-overlay-subtle)] bg-[linear-gradient(180deg,var(--theme-panel-gradient-start),var(--theme-panel-gradient-end))] p-5 shadow-[inset_0_1px_0_var(--theme-panel-shadow-highlight)]">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
           <h3 className="text-[16px] font-semibold text-text-primary">Sources</h3>
@@ -470,7 +679,7 @@ export function McpSourcesPanel({
             Choose where new MCP servers should be written and which config you want to edit.
           </p>
         </div>
-        <span className="rounded-full border border-white/8 bg-white/[0.03] px-2.5 py-1 text-[11px] text-text-secondary">
+        <span className="rounded-full border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] px-2.5 py-1 text-[11px] text-text-secondary">
           {sources.length} total
         </span>
       </div>
@@ -510,7 +719,9 @@ export function McpServersPanel({
           />
         ))
       ) : (
-        <p className="px-4 py-6 text-[13px] text-text-muted text-center">No MCP servers configured.</p>
+        <p className="px-4 py-6 text-[13px] text-text-muted text-center">
+          No MCP servers configured.
+        </p>
       )}
     </div>
   )

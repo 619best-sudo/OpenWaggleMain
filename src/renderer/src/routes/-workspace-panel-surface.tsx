@@ -24,12 +24,7 @@ export function WorkspacePanelSurface({
   framed = true,
 }: WorkspacePanelSurfaceProps) {
   return (
-    <div
-      className={cn(
-        'flex min-h-0 min-w-0 flex-1 overflow-hidden',
-        framed && 'p-3',
-      )}
-    >
+    <div className={cn('flex min-h-0 min-w-0 flex-1 overflow-hidden', framed && 'p-3')}>
       <PanelErrorBoundary
         name={name}
         className={cn(
@@ -39,10 +34,7 @@ export function WorkspacePanelSurface({
         )}
       >
         <div
-          className={cn(
-            'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
-            framed && 'bg-bg',
-          )}
+          className={cn('flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden', framed && 'bg-bg')}
         >
           {title || description || headerActionsId ? (
             <div className="shrink-0 border-b border-border/70 px-6 py-4">

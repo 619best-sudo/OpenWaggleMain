@@ -23,6 +23,23 @@ export interface GhCliStatus {
   readonly authenticated: boolean
 }
 
+export interface GithubRepoStat {
+  readonly name: string
+  readonly stargazerCount: number
+  readonly forkCount: number
+  readonly pushedAt?: string
+}
+
+export interface GithubRepoStatsSnapshot {
+  readonly username: string
+  readonly repos: readonly GithubRepoStat[]
+  readonly publicRepoCount: number
+  readonly totalStars: number
+  readonly totalForks: number
+  readonly activeRepoCount: number
+  readonly syncedAt: string
+}
+
 export interface DiagnosticsInfo {
   readonly os: string
   readonly appVersion: string

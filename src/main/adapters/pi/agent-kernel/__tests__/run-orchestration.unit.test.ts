@@ -91,6 +91,41 @@ describe('Pi run orchestration', () => {
     expect(runMocks.disposeOpenWagglePiSession).toHaveBeenCalledWith(session)
   })
 
+  it('runs hidden Team(New) internal turns through custom messages instead of visible user prompts', async () => {
+    const fakePi = createFakePi()
+    const session = createFakeSession(fakePi.getAgentEndHandler)
+    runMocks.createPiProjectModelRuntime.mockImplementation(async (input: RuntimeFactoryInput) => ({
+      model: modelFromReference(input.modelReference),
+      services: {},
+    }))
+    runMocks.createOpenWaggleAgentSessionFromServices.mockResolvedValue({ session })
+
+    const result = await runPiSession({
+      session: sessionDetail(),
+      runId: 'run-team-hidden-turn',
+      payload: payload('Internal fallback prompt'),
+      promptDelivery: {
+        mode: 'hidden-custom-message',
+        customType: 'openwaggle.team-internal-turn',
+        details: { kind: 'team-internal-turn', promptSource: 'fallback' },
+      },
+      model: PRIMARY_MODEL,
+      signal: new AbortController().signal,
+      onEvent: vi.fn(),
+    })
+
+    expect(session.prompt).not.toHaveBeenCalled()
+    expect(session.sendCustomMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        customType: 'openwaggle.team-internal-turn',
+        display: false,
+      }),
+      { triggerTurn: true },
+    )
+    expect(result.newMessages.map((message) => message.role)).toEqual(['assistant'])
+    expect(runMocks.disposeOpenWagglePiSession).toHaveBeenCalledWith(session)
+  })
+
   it('keeps original text and image attachments in OpenWaggle Waggle turn prompts', async () => {
     const fakePi = createFakePi()
     const session = createFakeSession(fakePi.getAgentEndHandler)

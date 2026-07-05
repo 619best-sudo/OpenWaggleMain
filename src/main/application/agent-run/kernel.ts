@@ -29,6 +29,7 @@ export function runAgentKernel(
       runId: input.runId,
       payload,
       model: input.model,
+      ...(input.promptDelivery ? { promptDelivery: input.promptDelivery } : {}),
       signal: input.signal,
       onEvent: input.onEvent,
       ...(preflight.skillToggles ? { skillToggles: preflight.skillToggles } : {}),

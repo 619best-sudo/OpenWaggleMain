@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
-  applyContentSecurityPolicyHeader,
+  applySecurityHeaders,
   assertSecureWebPreferences,
   buildContentSecurityPolicy,
   CONTENT_SECURITY_POLICY,
@@ -54,7 +54,7 @@ describe('assertSecureWebPreferences', () => {
         [testCase.preference]: testCase.actual,
       }
 
-      expect(() => assertSecureWebPreferences(insecurePreferences)).toThrowError(
+      expect(() => assertSecureWebPreferences(insecurePreferences)).toThrow(
         `Insecure BrowserWindow webPreferences: "${testCase.preference}" must be ${String(testCase.expected)}, received ${String(testCase.actual)}.`,
       )
     }
@@ -68,21 +68,26 @@ describe('buildContentSecurityPolicy', () => {
     expect(CONTENT_SECURITY_POLICY).toContain(
       "script-src 'self' 'sha256-Z2/iFzh9VMlVkEOar1f/oSHWwQk3ve1qk/C2WdsC4Xk='",
     )
-    expect(CONTENT_SECURITY_POLICY).toContain("style-src 'self' 'unsafe-inline'")
+    expect(CONTENT_SECURITY_POLICY).toContain(
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    )
+    expect(CONTENT_SECURITY_POLICY).toContain("font-src 'self' https://fonts.gstatic.com")
     expect(CONTENT_SECURITY_POLICY).toContain("img-src 'self' data:")
     expect(CONTENT_SECURITY_POLICY).toContain(
-      "connect-src 'self' ws://localhost:* http://localhost:* https://localhost:* wss://localhost:*",
+      "connect-src 'self' ws://localhost:* http://localhost:* https://localhost:* wss://localhost:* ws://127.0.0.1:* http://127.0.0.1:* https://127.0.0.1:* wss://127.0.0.1:*",
     )
   })
 })
 
-describe('applyContentSecurityPolicyHeader', () => {
-  it('adds the CSP header while preserving existing response headers', () => {
-    const updatedHeaders = applyContentSecurityPolicyHeader({ 'X-Test': ['ok'] })
+describe('applySecurityHeaders', () => {
+  it('adds the security headers while preserving existing response headers', () => {
+    const updatedHeaders = applySecurityHeaders({ 'X-Test': ['ok'] })
 
     expect(updatedHeaders).toMatchObject({
       'X-Test': ['ok'],
       'Content-Security-Policy': [CONTENT_SECURITY_POLICY],
+      'Cross-Origin-Opener-Policy': ['same-origin-allow-popups'],
+      'Referrer-Policy': ['no-referrer-when-downgrade'],
     })
   })
 })
@@ -101,5 +106,27 @@ describe('installCspHeaders', () => {
     installCspHeaders(session)
 
     expect(onHeadersReceived).toHaveBeenCalledOnce()
+  })
+
+  it('returns original headers for URLs outside the trusted matcher', () => {
+    const onHeadersReceived = vi.fn()
+    const session = {
+      webRequest: {
+        onHeadersReceived,
+      },
+    }
+
+    installCspHeaders(session, (url) => url.startsWith('http://localhost:5173'))
+
+    const callback = vi.fn()
+    const handler = onHeadersReceived.mock.calls[0]?.[0]
+
+    expect(handler).toBeTypeOf('function')
+
+    handler?.({ url: 'https://example.com/login' }, callback)
+
+    expect(callback).toHaveBeenCalledWith({
+      responseHeaders: undefined,
+    })
   })
 })

@@ -67,7 +67,7 @@ describe('BranchPicker', () => {
 
   it('opens branch menu on click', () => {
     render(<BranchPicker />)
-    fireEvent.click(screen.getByTitle('Manage branches'))
+    fireEvent.click(screen.getByTitle(/Manage branches/))
     expect(useComposerStore.getState().branchMenuOpen).toBe(true)
     expect(screen.getByPlaceholderText('Search branches')).toBeInTheDocument()
   })

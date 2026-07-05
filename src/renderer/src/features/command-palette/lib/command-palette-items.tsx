@@ -26,12 +26,16 @@ import { truncateCommandDescription } from './command-palette-text'
 
 const TEAM_DISCOVERY_TERMS = [
   'team',
+  'pair',
   'team(new)',
   'team new',
   'teammate',
   'web executor',
   'web',
 ] as const
+
+const PAIR_DISCOVERY_TERMS = ['panel', 'pair', 'waggle'] as const
+const VISIBLE_PANEL_PRESET_IDS: ReadonlySet<string> = new Set(['debate', 'red-team'])
 
 const TEAM_SEARCH_ALIASES: Record<string, readonly string[]> = {
   'web executor': ['web', 'website', 'site', 'landing page', 'frontend'],
@@ -51,15 +55,15 @@ export function createBaseCommands(actions: CommandPaletteActionHandlers) {
   return [
     {
       id: 'waggle',
-      label: 'Waggle Mode',
-      description: 'Start LLM collaboration session',
+      label: 'Panel Mode',
+      description: 'Start a Panel session',
       icon: <Waypoints className="size-3.5" />,
       action: actions.startWaggle,
     },
     {
       id: 'team-new',
-      label: 'Team(New) Mode',
-      description: 'Arm a Team(New) preset, then send your own prompt',
+      label: 'Team Mode',
+      description: 'Arm a Team preset, then send your own prompt',
       icon: <Globe className="size-3.5" />,
       action: actions.configureTeam,
     },
@@ -115,6 +119,7 @@ export function createPresetItems(
 ) {
   const items: CommandPaletteItem[] = []
   for (const preset of presets) {
+    if (!VISIBLE_PANEL_PRESET_IDS.has(String(preset.id))) continue
     if (!presetMatchesQuery(preset, lowerQuery)) continue
 
     items.push({
@@ -125,7 +130,7 @@ export function createPresetItems(
         COMMAND_PALETTE.WAGGLE_PRESET_DESCRIPTION_LIMIT,
       ),
       icon: presetIcon(preset),
-      section: 'Waggle Mode',
+      section: 'Panel Mode',
       trailing: 'Sequential',
       trailingBadge: preset.isBuiltIn ? undefined : 'Custom',
       action: () => selectPreset(preset),
@@ -149,7 +154,7 @@ export function createTeamItems(
       label: teammate.name,
       description: truncateCommandDescription(teammate.description, 88),
       icon: <Globe className="size-3.5" />,
-      section: 'Team(New)',
+      section: 'Team',
       trailing: 'Loop',
       action: () => selectTeam(teammate),
     })
@@ -163,8 +168,8 @@ export function createConfigureWaggleItem(lowerQuery: string, configureWaggle: (
   return [
     {
       id: 'configure-waggle',
-      label: 'Configure Waggle Mode...',
-      description: 'Open Waggle Mode settings',
+      label: 'Configure Panel Mode...',
+      description: 'Open Panel settings',
       icon: <Settings className="size-3.5" />,
       section: 'configure',
       action: configureWaggle,
@@ -177,8 +182,8 @@ export function createConfigureTeamItem(lowerQuery: string, configureTeam: () =>
   return [
     {
       id: 'configure-team-new',
-      label: 'Configure Team(New)...',
-      description: 'Open Team(New) presets and builder',
+      label: 'Configure Team...',
+      description: 'Open Team presets and builder',
       icon: <Settings className="size-3.5" />,
       section: 'configure',
       action: configureTeam,
@@ -239,7 +244,7 @@ function presetMatchesQuery(preset: WagglePreset, lowerQuery: string) {
   return (
     !lowerQuery ||
     preset.name.toLowerCase().includes(lowerQuery) ||
-    COMMAND_PALETTE.WAGGLE_QUERY.includes(lowerQuery)
+    PAIR_DISCOVERY_TERMS.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term))
   )
 }
 
@@ -257,7 +262,7 @@ function teamMatchesQuery(teammate: TeammateDefinition, lowerQuery: string) {
 function isWaggleFilter(lowerQuery: string) {
   return (
     lowerQuery.length > 0 &&
-    COMMAND_PALETTE.WAGGLE_QUERY.includes(lowerQuery) &&
+    PAIR_DISCOVERY_TERMS.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term)) &&
     !lowerQuery.startsWith(COMMAND_PALETTE.WAGGLE_COMMAND_PREFIX)
   )
 }
@@ -265,10 +270,9 @@ function isWaggleFilter(lowerQuery: string) {
 function isTeamFilter(lowerQuery: string) {
   return (
     lowerQuery.length > 0 &&
-    [
-      ...TEAM_DISCOVERY_TERMS,
-      ...Object.values(TEAM_SEARCH_ALIASES).flat(),
-    ].some((query) => query.includes(lowerQuery) || lowerQuery.includes(query))
+    [...TEAM_DISCOVERY_TERMS, ...Object.values(TEAM_SEARCH_ALIASES).flat()].some(
+      (query) => query.includes(lowerQuery) || lowerQuery.includes(query),
+    )
   )
 }
 

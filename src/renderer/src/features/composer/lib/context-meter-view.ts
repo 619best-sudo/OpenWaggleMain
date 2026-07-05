@@ -53,7 +53,7 @@ export function buildContextMeterValue({
       CONTEXT_METER.GEOMETRY.CIRCUMFERENCE -
       (normalizedPercent / CONTEXT_METER.THRESHOLDS.PERCENT_MAX) *
         CONTEXT_METER.GEOMETRY.CIRCUMFERENCE,
-    displayValue: percent === null ? '?' : String(Math.round(normalizedPercent)),
+    displayValue: String(Math.round(normalizedPercent)),
     strokeColor: getContextStrokeColor(percent, contextWindow !== null),
     title: formatUsageTitle({ tokens, contextWindow, percent, failed }),
   }
@@ -81,10 +81,13 @@ function clampContextPercent(percent: number | null) {
 }
 
 function formatUsageTitle({ tokens, contextWindow, percent, failed }: UsageTitleInput) {
+  if (failed && contextWindow) {
+    return `Context: 0 / ${formatTokens(contextWindow)} tokens (usage unavailable)`
+  }
   if (failed) return 'Context usage unavailable'
   if (!contextWindow) return 'Context usage'
   if (tokens === null || percent === null) {
-    return `Context: ? / ${formatTokens(contextWindow)} tokens`
+    return `Context: 0 / ${formatTokens(contextWindow)} tokens (0.0%)`
   }
   return `Context: ${formatTokens(tokens)} / ${formatTokens(contextWindow)} tokens (${percent.toFixed(1)}%)`
 }

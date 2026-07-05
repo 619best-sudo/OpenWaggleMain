@@ -20,6 +20,7 @@ export interface StreamingPhaseState {
   current: StreamingPhase | null
   completed: readonly CompletedPhase[]
   totalElapsedMs: number
+  completedAtMs: number | null
 }
 
 export function formatElapsed(ms: number): string {
@@ -55,6 +56,7 @@ export function useStreamingPhase(sessionId: SessionId | null): StreamingPhaseHa
   const [elapsedMs, setElapsedMs] = useState(0)
   const [completedSnapshot, setCompletedSnapshot] = useState<readonly CompletedPhase[]>([])
   const [totalSnapshot, setTotalSnapshot] = useState(0)
+  const [completedAtSnapshot, setCompletedAtSnapshot] = useState<number | null>(null)
 
   // --- Refs for IPC callback (outside React render) ---
   const phaseRef = useRef<AgentPhaseState | null>(null)
@@ -73,6 +75,7 @@ export function useStreamingPhase(sessionId: SessionId | null): StreamingPhaseHa
     setCompletedSnapshot([])
     setCurrentLabel(null)
     setTotalSnapshot(0)
+    setCompletedAtSnapshot(null)
   }
 
   useEffect(() => {
@@ -86,6 +89,7 @@ export function useStreamingPhase(sessionId: SessionId | null): StreamingPhaseHa
     setElapsedMs(0)
     setCompletedSnapshot([])
     setTotalSnapshot(0)
+    setCompletedAtSnapshot(null)
 
     if (!sessionId) {
       return
@@ -100,6 +104,7 @@ export function useStreamingPhase(sessionId: SessionId | null): StreamingPhaseHa
       phaseRef.current = null
       completedRef.current = []
       lastPhaseEndRef.current = 0
+      setCompletedAtSnapshot(null)
     }
 
     const completeCurrentPhase = (prevPhase: AgentPhaseState, now: number) => {
@@ -111,6 +116,7 @@ export function useStreamingPhase(sessionId: SessionId | null): StreamingPhaseHa
       setCurrentLabel(null)
       setCompletedSnapshot([...completedRef.current])
       setTotalSnapshot(now - interactionStartRef.current)
+      setCompletedAtSnapshot(now)
     }
 
     const switchCurrentPhase = (
@@ -142,6 +148,7 @@ export function useStreamingPhase(sessionId: SessionId | null): StreamingPhaseHa
       setCurrentLabel(nextPhase.label)
       setElapsedMs(Math.max(0, now - clientPhaseStartRef.current))
       setTotalSnapshot(Math.max(0, now - interactionStartRef.current))
+      setCompletedAtSnapshot(null)
     }
 
     const handlePhaseChange = (nextPhase: AgentPhaseState | null) => {
@@ -207,5 +214,11 @@ export function useStreamingPhase(sessionId: SessionId | null): StreamingPhaseHa
   const current = currentLabel ? { label: currentLabel, elapsedMs } : null
   const completed = current ? completedRef.current : completedSnapshot
 
-  return { current, completed, totalElapsedMs: totalSnapshot, reset }
+  return {
+    current,
+    completed,
+    totalElapsedMs: totalSnapshot,
+    completedAtMs: completedAtSnapshot,
+    reset,
+  }
 }

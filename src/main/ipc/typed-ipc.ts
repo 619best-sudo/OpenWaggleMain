@@ -89,7 +89,7 @@ function toIpcError(channel: IpcInvokeChannel, error: unknown): Error {
       stage: error.stage,
       message: error.message,
     })
-    return new Error('OpenWaggle failed to initialize its application database.')
+    return new Error('Turing Machine failed to initialize its application database.')
   }
 
   if (isDatabaseBootstrapTaggedError(error)) {
@@ -98,7 +98,7 @@ function toIpcError(channel: IpcInvokeChannel, error: unknown): Error {
       stage: databaseError.stage,
       message: databaseError.message,
     })
-    return new Error('OpenWaggle failed to initialize its application database.')
+    return new Error('Turing Machine failed to initialize its application database.')
   }
 
   if (error instanceof DatabaseQueryError) {

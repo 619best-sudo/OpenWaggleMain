@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { refreshUsageSnapshotsForAuthenticatedUser } from '@/features/auth/state/app-auth-store'
 import { isTerminalTransportEvent } from '@/features/chat/lib/agent-stream-utils'
 import { useBackgroundRunStore } from '@/features/chat/state/background-run-store'
 import { useChatStore } from '@/features/chat/state/chat-store'
@@ -39,6 +40,7 @@ export function useBackgroundRunMonitor(): void {
     const unsubCompleted = api.onRunCompleted((payload) => {
       removeActiveRun(payload.sessionId)
       void refreshSession(payload.sessionId)
+      void refreshUsageSnapshotsForAuthenticatedUser()
     })
 
     return () => {

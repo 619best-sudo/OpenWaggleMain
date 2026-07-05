@@ -58,6 +58,7 @@ describe('Diff panel components', () => {
       target: { value: 'Prefer the new branch guard.' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Add to review' }))
+    fireEvent.click(screen.getByTitle('Expand side panel'))
     fireEvent.click(screen.getByRole('button', { name: /Send review/ }))
 
     await waitFor(() => expect(onSendMessage).toHaveBeenCalledOnce())
@@ -74,6 +75,20 @@ describe('Diff panel components', () => {
     rerender(<DiffPanel projectPath="/repo" onSendMessage={vi.fn()} />)
 
     expect(await screen.findByText('No uncommitted changes')).toBeInTheDocument()
+  })
+
+  it('defaults the changes view to no-file mode and lets the user expand the tree', async () => {
+    vi.mocked(api.getGitDiff).mockResolvedValue([fileDiff()])
+
+    render(<DiffPanel projectPath="/repo" onSendMessage={vi.fn()} />)
+
+    expect(await screen.findByText('new line')).toBeInTheDocument()
+    expect(screen.queryByText('Send review (0)')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByTitle('Expand side panel'))
+
+    expect(await screen.findByText('src')).toBeInTheDocument()
+    expect(screen.getByText('app.ts')).toBeInTheDocument()
   })
 
   it('expands collapsed context and emits single-line comments', () => {
@@ -102,6 +117,27 @@ describe('Diff panel components', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add single comment' }))
 
     expect(onAddSingleComment).toHaveBeenCalledWith('src/app.ts', 8, 8, 'ship it')
+  })
+
+  it('dismisses an inline comment from the close button', () => {
+    const onSetActiveComment = vi.fn()
+
+    render(
+      <DiffFileSection
+        filePath="src/app.ts"
+        items={buildDisplayItems(SAMPLE_DIFF)}
+        additions={1}
+        deletions={1}
+        activeCommentLocation={{ filePath: 'src/app.ts', line: 8, lineType: 'add' }}
+        onSetActiveComment={onSetActiveComment}
+        onAddSingleComment={vi.fn()}
+        onAddToReview={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss comment' }))
+
+    expect(onSetActiveComment).toHaveBeenCalledWith(null)
   })
 
   it('renders nested file tree controls and bottom action state', () => {

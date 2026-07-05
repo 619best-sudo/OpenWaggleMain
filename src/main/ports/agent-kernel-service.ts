@@ -33,11 +33,20 @@ export interface AgentKernelRunInput {
   readonly runId: string
   readonly payload: HydratedAgentSendPayload
   readonly model: SupportedModelId
+  readonly promptDelivery?: AgentKernelPromptDelivery
   readonly skillToggles?: Readonly<Record<string, boolean>>
   readonly signal: AbortSignal
   readonly onEvent: (event: AgentTransportEvent) => void
   readonly waggle?: AgentKernelWaggleRunOptions
 }
+
+export interface HiddenCustomPromptDelivery {
+  readonly mode: 'hidden-custom-message'
+  readonly customType: string
+  readonly details?: Readonly<Record<string, unknown>>
+}
+
+export type AgentKernelPromptDelivery = HiddenCustomPromptDelivery
 
 export interface AgentKernelWaggleRunOptions {
   readonly config: WaggleConfig

@@ -4,6 +4,7 @@ import { registerAuthHandlers } from './auth-handler'
 import { registerComposerHandlers } from './composer-handler'
 import { registerFeedbackHandlers } from './feedback-handler'
 import { registerGitHandlers } from './git'
+import { registerMachineHandlers } from './machine-handler'
 import { registerMcpHandlers } from './mcp-handler'
 import { registerProjectHandlers } from './project-handler'
 import { registerProvidersHandlers } from './providers-handler'
@@ -12,8 +13,8 @@ import { registerSessionsHandlers } from './sessions-handler'
 import { registerSettingsHandlers } from './settings-handler'
 import { registerShellHandlers } from './shell-handler'
 import { registerSkillsHandlers } from './skills-handler'
-import { registerTerminalHandlers } from './terminal-handler'
 import { registerTeamHandlers } from './team-handler'
+import { registerTerminalHandlers } from './terminal-handler'
 import { registerUpdaterHandlers } from './updater-handler'
 import { registerVoiceHandlers } from './voice-handler'
 import { registerWaggleAppsHandlers } from './waggle-apps-handler'
@@ -25,6 +26,7 @@ export { cleanupTerminals } from './terminal-handler'
 export function registerAllIpcHandlers(): void {
   registerAuthHandlers()
   registerAgentHandlers()
+  registerMachineHandlers()
   registerSettingsHandlers()
   registerSessionsHandlers()
   registerSessionDetailsHandlers()

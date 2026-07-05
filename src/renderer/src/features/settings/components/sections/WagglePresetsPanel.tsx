@@ -1,14 +1,8 @@
 import type { WagglePreset } from '@shared/types/waggle'
-import {
-  ChevronDown,
-  LoaderCircle,
-  Play,
-  Plus,
-  Trash2,
-} from 'lucide-react'
+import { ChevronDown, LoaderCircle, Play, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { useWaggleAppInstallStatus } from '@/queries/waggle-apps'
 import { getPresetStarterPrompts } from '@/features/waggle/lib'
+import { useWaggleAppInstallStatus } from '@/queries/waggle-apps'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { Popover } from '@/shared/ui/Popover'
@@ -40,66 +34,16 @@ interface PresetGuidance {
   readonly next?: string
 }
 
-const PRODUCT_LIFECYCLE_PRESET_ORDER = [
-  'turing',
-  'product-planning',
-  'design-asset-direction',
-  'web-build',
-  'mobile-build',
-  'backend-build',
-  'qa-repair-loop',
-  'release-readiness',
-  'deployment',
-] as const
-
-const PRODUCT_LIFECYCLE_PRESET_IDS: ReadonlySet<string> = new Set(PRODUCT_LIFECYCLE_PRESET_ORDER)
-const MOBILE_LIFECYCLE_PRESET_ORDER = [
-  'turing',
-  'product-planning',
-  'design-asset-direction',
-  'mobile-build',
-  'qa-repair-loop',
-  'quality-assurance-engineer',
-  'release-readiness',
-  'deployment',
-] as const
-const MOBILE_LIFECYCLE_PRESET_IDS: ReadonlySet<string> = new Set(MOBILE_LIFECYCLE_PRESET_ORDER)
-
-const CORE_LAUNCH_PRESET_IDS = new Set([
-  'product-planning',
-  'product-ui',
-  'web-engineer',
-  'mobile-engineer',
-  'backend-systems',
-  'backend-engineer',
-  'qa-debug',
-  'launch-readiness',
-])
-
-const QUALITY_PRESET_IDS = new Set([
-  'development-qa',
-  'quality-assurance-engineer',
-  'security-audit',
-  'performance-inspector',
-])
-
-const UI_SPECIALIST_PRESET_IDS = new Set([
-  'frontend-ui-audit',
-  'reference-image-replication',
-  'design-system-compliance',
-  'responsive-qa',
-])
-
 const PRESET_GUIDANCE: Readonly<Record<string, PresetGuidance>> = {
   turing: {
     stage: 'Routing',
     bestFor: 'Routing the next lifecycle step from repo context',
-    next: 'Usually Product Planning or a build Waggle',
+    next: 'Usually Product Planning or a build Panel',
   },
   'product-planning': {
     stage: 'Planning',
     bestFor: 'Turning a vague request into a buildable scope',
-    next: 'Design And Asset Direction or a build Waggle',
+    next: 'Design And Asset Direction or a build Panel',
   },
   'design-asset-direction': {
     stage: 'Design',
@@ -200,97 +144,26 @@ function sortPresetsByPreferredOrder(
 }
 
 function createPresetSections(presets: readonly WagglePreset[]): readonly PresetSection[] {
-  const builtInLifecycle: WagglePreset[] = []
-  const builtInMobileLifecycle: WagglePreset[] = []
-  const builtInCore: WagglePreset[] = []
-  const builtInQuality: WagglePreset[] = []
-  const builtInUi: WagglePreset[] = []
-  const builtInOther: WagglePreset[] = []
   const custom: WagglePreset[] = []
+  const builtIn: WagglePreset[] = []
 
   for (const preset of presets) {
     if (!preset.isBuiltIn) {
       custom.push(preset)
-      continue
+    } else {
+      builtIn.push(preset)
     }
-
-    let assignedToLifecycle = false
-    if (PRODUCT_LIFECYCLE_PRESET_IDS.has(String(preset.id))) {
-      builtInLifecycle.push(preset)
-      assignedToLifecycle = true
-    }
-    if (MOBILE_LIFECYCLE_PRESET_IDS.has(String(preset.id))) {
-      builtInMobileLifecycle.push(preset)
-      assignedToLifecycle = true
-    }
-    if (CORE_LAUNCH_PRESET_IDS.has(String(preset.id))) {
-      builtInCore.push(preset)
-      continue
-    }
-    if (QUALITY_PRESET_IDS.has(String(preset.id))) {
-      builtInQuality.push(preset)
-      continue
-    }
-    if (UI_SPECIALIST_PRESET_IDS.has(String(preset.id))) {
-      builtInUi.push(preset)
-      continue
-    }
-    if (assignedToLifecycle) {
-      continue
-    }
-
-    builtInOther.push(preset)
   }
 
   return [
     {
-      id: 'product-tech-lifecycle',
-      title: 'Product And Tech Lifecycle',
-      description:
-        'Run the end-to-end chain in order: Turing -> Product Planning -> Design And Asset Direction -> Web or Mobile or Backend Build -> QA Repair Loop -> Release Readiness -> Deployment. Install auto-adds recipe-backed MCPs and skills into the active project.',
-      presets: sortPresetsByPreferredOrder(builtInLifecycle, PRODUCT_LIFECYCLE_PRESET_ORDER),
-    },
-    {
-      id: 'mobile-product-lifecycle',
-      title: 'Mobile Lifecycle',
-      description:
-        'Use this curated mobile path when the request is app-first: Turing -> Product Planning -> Design And Asset Direction -> Mobile Build -> QA Repair Loop or Quality Assurance Engineer -> Release Readiness -> Deployment.',
-      presets: sortPresetsByPreferredOrder(builtInMobileLifecycle, MOBILE_LIFECYCLE_PRESET_ORDER),
-    },
-    {
-      id: 'core-launch-set',
-      title: 'Core Launch Set',
-      description:
-        'Start here for the minimum product lifecycle: plan, build UI, build systems, verify quality, and decide whether to ship.',
-      presets: sortPresetsByPreferredOrder(builtInCore, [...CORE_LAUNCH_PRESET_IDS]),
-    },
-    {
-      id: 'quality-and-inspection',
-      title: 'Quality And Inspection',
-      description:
-        'Run broader QA, security review, or performance investigation when the product needs deeper evidence before release.',
-      presets: sortPresetsByPreferredOrder(builtInQuality, [...QUALITY_PRESET_IDS]),
-    },
-    {
-      id: 'ui-specialists',
-      title: 'UI Specialists',
-      description:
-        'Use these when you need focused UI fidelity, design-system consistency, or responsive polish beyond the core lifecycle set.',
-      presets: sortPresetsByPreferredOrder(builtInUi, [...UI_SPECIALIST_PRESET_IDS]),
-    },
-    {
-      id: 'other-built-ins',
-      title: 'Other Built-Ins',
-      description:
-        'Additional built-in Waggles that do not belong to the core launch set or specialist groups.',
-      presets: sortPresetsByPreferredOrder(builtInOther, []),
-    },
-    {
-      id: 'custom-waggles',
-      title: 'Custom Waggles',
-      description:
-        'Saved project-specific Waggles you created or customized for your own workflow.',
-      presets: sortPresetsByPreferredOrder(custom, []),
+      id: 'panels',
+      title: 'Panels',
+      description: 'Choose a panel to run, or create one for a repeatable workflow.',
+      presets: [
+        ...sortPresetsByPreferredOrder(custom, []),
+        ...sortPresetsByPreferredOrder(builtIn, []),
+      ],
     },
   ].filter((section) => section.presets.length > 0)
 }
@@ -313,34 +186,32 @@ export function WagglePresetsPanel({
     <div className="w-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-8 border-b border-white/[0.04]">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-accent/10 text-accent text-[11px] font-bold uppercase tracking-wider">
-            Storefront
-          </div>
-          <h3 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500 tracking-tight">Teammates</h3>
+          <h3 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500 tracking-tight">
+            Panel
+          </h3>
           <p className="max-w-[640px] text-[15px] leading-relaxed text-text-secondary">
-            Discover and manage saved Waggle apps. Open an app to configure its flow and
-            dependencies, use Install to auto-add recipe-backed MCPs and skills into this project,
-            or start a new Waggle app from scratch.
+            A panel runs a two-agent loop designed for one clear task.
           </p>
         </div>
         <Button
           variant="accent"
           size="lg"
+          radius="full"
           type="button"
           onClick={onStartCreate}
           leftIcon={<Plus className="size-5" />}
-          className="shrink-0 rounded-full px-6 shadow-lg hover:scale-105 active:scale-95 transition-transform"
+          className="shrink-0 px-6 shadow-lg transition-transform hover:scale-105 active:scale-95"
         >
-          Create App
+          Create Panel
         </Button>
       </div>
 
       <div className="space-y-12">
         {presets.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 px-4 py-12 text-center">
-            <p className="text-[14px] font-medium text-text-primary">No Teammates found</p>
+            <p className="text-[14px] font-medium text-text-primary">No panels yet</p>
             <p className="mt-2 text-[13px] text-text-tertiary">
-              Create your first Teammate to get started.
+              Create a panel to save a repeatable workflow.
             </p>
           </div>
         ) : null}
@@ -412,7 +283,8 @@ function WagglePresetCard({
     (preset.app.optionalMcps?.length ?? 0) + (preset.app.optionalSkills?.length ?? 0)
   const totalDependencyCount = requiredDependencyCount + optionalDependencyCount
   const hasOptionalSetupWork =
-    (installStatus?.optionalMissingCount ?? 0) > 0 || (installStatus?.optionalUnsupportedCount ?? 0) > 0
+    (installStatus?.optionalMissingCount ?? 0) > 0 ||
+    (installStatus?.optionalUnsupportedCount ?? 0) > 0
   const starterPrompts = getPresetStarterPrompts(preset.id)
   const hasStarterPrompts = starterPrompts.length > 0
   const guidance = getPresetGuidance(preset.id)
@@ -455,7 +327,7 @@ function WagglePresetCard({
         )}
       >
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        
+
         <div className="flex items-start justify-between w-full relative z-10">
           <div className="flex gap-4 items-center flex-1 min-w-0">
             <div
@@ -531,7 +403,7 @@ function WagglePresetCard({
               ) : null}
             </div>
           </div>
-          
+
           {!preset.isBuiltIn ? (
             <button
               type="button"
@@ -560,7 +432,9 @@ function WagglePresetCard({
                   void onInstall()
                 }
               }}
-              leftIcon={isInstalling ? <LoaderCircle className="size-3.5 animate-spin" /> : undefined}
+              leftIcon={
+                isInstalling ? <LoaderCircle className="size-3.5 animate-spin" /> : undefined
+              }
             >
               {isInstalling ? 'Installing...' : 'Install'}
             </Button>
@@ -631,10 +505,15 @@ function WagglePresetCard({
               <Button
                 variant="accent"
                 size="sm"
-                disabled={isPrimaryDisabled || (requiredDependencyCount > 0 && !installStatus?.ready)}
+                disabled={
+                  isPrimaryDisabled || (requiredDependencyCount > 0 && !installStatus?.ready)
+                }
                 onClick={(event) => {
                   event.stopPropagation()
-                  if (!isPrimaryDisabled && (requiredDependencyCount === 0 || installStatus?.ready)) {
+                  if (
+                    !isPrimaryDisabled &&
+                    (requiredDependencyCount === 0 || installStatus?.ready)
+                  ) {
                     void onLaunch()
                   }
                 }}

@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Archive, Cable, Settings2, UserRound } from 'lucide-react'
+import { Archive, Info, Settings2, UserRound } from 'lucide-react'
+// import { Cable } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import type { SettingsTab } from '@/shell/ui-store'
@@ -13,8 +14,10 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: 'profile', label: 'Profile', icon: UserRound },
   { id: 'general', label: 'General', icon: Settings2 },
+  { id: 'about', label: 'About & updates', icon: Info },
   { id: 'archived', label: 'Archived items', icon: Archive },
-  { id: 'connections', label: 'Connections', icon: Cable },
+  // Keep the Connections nav item commented out so it can be restored quickly later.
+  // { id: 'connections', label: 'Connections', icon: Cable },
 ]
 
 interface SettingsNavProps {
@@ -41,9 +44,9 @@ export function SettingsNav({ activeTab }: SettingsNavProps) {
             key={item.id}
             onClick={() => navigateToTab(item.id)}
             className={cn(
-              'gap-2.5 border border-transparent transition-colors',
+              'flex min-h-11 gap-2.5 rounded-xl border border-transparent px-3.5 py-2.5 transition-colors',
               isActive
-                ? 'rounded-xl border-border bg-bg-active text-text-primary font-medium'
+                ? 'border-border bg-bg-active text-text-primary font-medium'
                 : 'text-text-tertiary hover:border-border/50',
             )}
           >
