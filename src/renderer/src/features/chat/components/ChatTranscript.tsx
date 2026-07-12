@@ -1,7 +1,7 @@
 import { matchBy } from '@diegogbrisa/ts-match'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
-import { Bug, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Button } from '@/shared/ui/Button'
 import { useUIStore } from '@/shell/ui-store'
@@ -391,20 +391,6 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
               </div>
             </div>
           ) : null}
-          <div className="absolute bottom-3 right-4 z-10">
-            <Button
-              variant="secondary"
-              size="sm"
-              radius="full"
-              className="home-panel-frame-soft bg-bg-secondary shadow-sm"
-              leftIcon={<Bug className="size-3.5" />}
-              onClick={() => setIsDebugPanelOpen((current) => !current)}
-              aria-expanded={isDebugPanelOpen}
-              aria-controls="transcript-debug-panel"
-            >
-              Transcript Debug
-            </Button>
-          </div>
         </>
       ) : null}
       <ScrollToBottomButton visible={showScrollToBottom} onClick={scrollToBottom} />

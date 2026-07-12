@@ -24,6 +24,7 @@ import {
   type PiRuntimeServicesOptions,
 } from './pi-provider-resources'
 import { getPiModelAvailableThinkingLevels } from './pi-provider-thinking'
+import { createTuringMachineToolSelectionExtension } from './turing-machine-tool-selection-extension'
 
 export { getPiModelAvailableThinkingLevels } from './pi-provider-thinking'
 
@@ -90,6 +91,21 @@ function registerTuringMachineProvider(modelRegistry: ModelRegistry) {
       },
     ],
   })
+}
+
+async function loadTuringMachineMcpServerNames(configPath: string | null | undefined) {
+  if (!configPath) {
+    return [] as string[]
+  }
+
+  try {
+    const { readFile } = await import('node:fs/promises')
+    const rawConfig = await readFile(configPath, 'utf8')
+    const parsed = JSON.parse(rawConfig) as { mcpServers?: Record<string, unknown> }
+    return Object.keys(parsed.mcpServers ?? {})
+  } catch {
+    return [] as string[]
+  }
 }
 
 export function getPiAgentDir(): string {
@@ -207,6 +223,11 @@ export async function createPiRuntimeServices(
   if (mcpRuntimeContext) {
     await settingsManager.reload()
   }
+  const turingMachineExtensionFactory = createTuringMachineToolSelectionExtension({
+    authStorage,
+    baseUrl: resolveTuringMachineBaseUrl(),
+    mcpServerNames: await loadTuringMachineMcpServerNames(mcpRuntimeContext?.configPath),
+  })
   const services = await withNpmCompatibleProcessEnv(() =>
     withOpenWaggleMcpAdapterProcessContext(mcpRuntimeContext, () =>
       createAgentSessionServices({
@@ -223,71 +244,19 @@ export async function createPiRuntimeServices(
           : {}),
         resourceLoaderOptions: createOpenWagglePiResourceLoaderOptions(
           projectPath,
-          options,
+          {
+            ...options,
+            extensionFactories: [
+              ...(options.extensionFactories ?? []),
+              turingMachineExtensionFactory,
+            ],
+          },
           settingsManager,
         ),
       }),
     ),
   )
   registerTuringMachineProvider(services.modelRegistry)
-  // #region debug-point A:runtime-context
-  await (async () => {
-    let debugServerUrl = 'http://127.0.0.1:7777/event'
-    let debugSessionId = 'pi-mcp-browser'
-    try {
-      const { readFileSync } = await import('node:fs')
-      const envFile = readFileSync('.dbg/pi-mcp-browser.env', 'utf8')
-      debugServerUrl = envFile.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? debugServerUrl
-      debugSessionId = envFile.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? debugSessionId
-    } catch {}
-    let generatedConfig: unknown = null
-    if (mcpRuntimeContext?.configPath) {
-      try {
-        const { readFileSync } = await import('node:fs')
-        generatedConfig = JSON.parse(readFileSync(mcpRuntimeContext.configPath, 'utf8'))
-      } catch (error) {
-        generatedConfig = {
-          readError: error instanceof Error ? error.message : String(error),
-        }
-      }
-    }
-    const extensionsResult = services.resourceLoader.getExtensions()
-    void fetch(debugServerUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: debugSessionId,
-        runId: 'pre-fix',
-        hypothesisId: 'A',
-        location: 'src/main/adapters/pi/pi-provider-catalog.ts:createPiRuntimeServices',
-        msg: '[DEBUG] Created Pi runtime services',
-        data: {
-          projectPath,
-          loadMcpAdapter,
-          hasMcpRuntimeContext: mcpRuntimeContext !== null,
-          configPath: mcpRuntimeContext?.configPath ?? null,
-          adapterCwd: mcpRuntimeContext?.adapterCwd ?? null,
-          generatedConfig,
-          settingsPackages: services.settingsManager.getGlobalSettings().packages ?? [],
-          extensionPaths: extensionsResult.extensions.map((extension) => extension.path),
-          extensionErrors: extensionsResult.errors.map((error) => ({
-            path: error.path,
-            error: String(error.error),
-          })),
-          commandNames:
-            (extensionsResult.runtime as any).commands instanceof Map
-              ? [...(extensionsResult.runtime as any).commands.keys()]
-              : [],
-          flagNames:
-            extensionsResult.runtime.flagValues instanceof Map
-              ? [...extensionsResult.runtime.flagValues.keys()]
-              : [],
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
-  })()
-  // #endregion
   rememberOpenWaggleMcpRuntimeContext(services, mcpRuntimeContext)
   return services
 }
@@ -317,73 +286,10 @@ export async function createPiProviderCatalogSnapshot(
   const normalizedProjectPath = projectPath?.trim()
   if (!normalizedProjectPath) {
     const services = await createPiGlobalProviderCatalogServices()
-    // #region debug-point E:provider-catalog-global-snapshot
-    try {
-      const { readFileSync } = await import('node:fs')
-      const envContent = readFileSync('.dbg/openrouter-key-save.env', 'utf8')
-      const debugServerUrl =
-        envContent.match(/DEBUG_SERVER_URL=(.+)/)?.[1]?.trim() ?? 'http://127.0.0.1:7777/event'
-      const sessionId =
-        envContent.match(/DEBUG_SESSION_ID=(.+)/)?.[1]?.trim() ?? 'openrouter-key-save'
-      const openrouterCredential = services.authStorage.get('openrouter')
-      void fetch(debugServerUrl, {
-        method: 'POST',
-        body: JSON.stringify({
-          sessionId,
-          runId: 'pre-fix',
-          hypothesisId: 'D',
-          location: 'pi-provider-catalog.ts:createPiProviderCatalogSnapshot:global',
-          msg: '[DEBUG] Built global provider catalog snapshot',
-          data: {
-            projectPath: null,
-            openrouterCredentialType: openrouterCredential?.type ?? null,
-            openrouterCredentialPresent: openrouterCredential !== undefined,
-            openrouterInOAuthProviders: services.authStorage
-              .getOAuthProviders()
-              .some((provider) => provider.id === 'openrouter'),
-          },
-          ts: Date.now(),
-        }),
-      }).catch(() => {})
-    } catch {}
-    // #endregion
     return createPiProviderCatalogSnapshotFromRuntime(services.modelRegistry, services.authStorage)
   }
 
   const services = await createPiRuntimeServices(normalizedProjectPath, { loadMcpAdapter: false })
-  // #region debug-point F:provider-catalog-project-snapshot
-  try {
-    const { readFileSync } = await import('node:fs')
-    const envContent = readFileSync('.dbg/openrouter-key-save.env', 'utf8')
-    const debugServerUrl =
-      envContent.match(/DEBUG_SERVER_URL=(.+)/)?.[1]?.trim() ?? 'http://127.0.0.1:7777/event'
-    const sessionId =
-      envContent.match(/DEBUG_SESSION_ID=(.+)/)?.[1]?.trim() ?? 'openrouter-key-save'
-    const openrouterCredential = services.authStorage.get('openrouter')
-    void fetch(debugServerUrl, {
-      method: 'POST',
-      body: JSON.stringify({
-        sessionId,
-        runId: 'pre-fix',
-        hypothesisId: 'D',
-        location: 'pi-provider-catalog.ts:createPiProviderCatalogSnapshot:project',
-        msg: '[DEBUG] Built project provider catalog snapshot',
-        data: {
-          projectPath: normalizedProjectPath,
-          openrouterCredentialType: openrouterCredential?.type ?? null,
-          openrouterCredentialPresent: openrouterCredential !== undefined,
-          openrouterInOAuthProviders: services.authStorage
-            .getOAuthProviders()
-            .some((provider) => provider.id === 'openrouter'),
-          openrouterModelAvailable: services.modelRegistry
-            .getAvailable()
-            .some((model) => model.provider === 'openrouter'),
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
-  } catch {}
-  // #endregion
   return createPiProviderCatalogSnapshotFromRuntime(services.modelRegistry, services.authStorage)
 }
 
@@ -400,34 +306,6 @@ export function setPiProviderApiKey(providerId: string, apiKey: string): void {
   } else {
     authStorage.remove(provider)
   }
-  // #region debug-point G:set-api-key-readback
-  try {
-    const { readFileSync } = require('node:fs') as typeof import('node:fs')
-    const envContent = readFileSync('.dbg/openrouter-key-save.env', 'utf8')
-    const debugServerUrl =
-      envContent.match(/DEBUG_SERVER_URL=(.+)/)?.[1]?.trim() ?? 'http://127.0.0.1:7777/event'
-    const sessionId =
-      envContent.match(/DEBUG_SESSION_ID=(.+)/)?.[1]?.trim() ?? 'openrouter-key-save'
-    const persistedCredential = authStorage.get(provider)
-    void fetch(debugServerUrl, {
-      method: 'POST',
-      body: JSON.stringify({
-        sessionId,
-        runId: 'pre-fix',
-        hypothesisId: 'D',
-        location: 'pi-provider-catalog.ts:setPiProviderApiKey',
-        msg: '[DEBUG] Wrote provider API key and read it back immediately',
-        data: {
-          provider,
-          trimmedLength: trimmedKey.length,
-          persistedCredentialType: persistedCredential?.type ?? null,
-          persistedCredentialPresent: persistedCredential !== undefined,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
-  } catch {}
-  // #endregion
 }
 
 export function createPiRuntimeAuthStorage(): AuthStorage {

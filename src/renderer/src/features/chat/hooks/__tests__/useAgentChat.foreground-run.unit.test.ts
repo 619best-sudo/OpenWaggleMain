@@ -3,7 +3,15 @@
 import { SessionId, SupportedModelId } from '@shared/types/brand'
 import type { SessionDetail } from '@shared/types/session'
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+const { authStoreMock } = vi.hoisted(() => ({
+  authStoreMock: {
+    ensureFreshAppSessionProviderTokenForTuringMachine: vi.fn().mockResolvedValue(undefined),
+  },
+}))
+
+vi.mock('@/features/auth/state/app-auth-store', () => authStoreMock)
 import {
   apiMock,
   createDeferred,
@@ -107,6 +115,24 @@ describe('useAgentChat foreground run', () => {
     expect(result.current.error).toBe(failure)
     expect(result.current.status).toBe('error')
     expect(result.current.isLoading).toBe(false)
+  })
+
+  it('refreshes auth before an active-session Turing Machine send', async () => {
+    const { result } = renderHook(() =>
+      useAgentChat(
+        SessionId('session-1'),
+        createSession(),
+        SupportedModelId('turing-machine/turing-machine'),
+        'medium',
+      ),
+    )
+
+    await act(async () => {
+      void result.current.sendMessage(SEND_PAYLOAD)
+      await Promise.resolve()
+    })
+
+    expect(authStoreMock.ensureFreshAppSessionProviderTokenForTuringMachine).toHaveBeenCalledOnce()
   })
 
   it('settles a foreground send when the run is cancelled', async () => {

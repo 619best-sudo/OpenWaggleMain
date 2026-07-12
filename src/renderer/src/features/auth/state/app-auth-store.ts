@@ -161,6 +161,29 @@ export async function syncAppSessionProviderToken(user: AppAuthUser | null) {
   await api.setProviderApiKey(TURING_MACHINE_PROVIDER_ID, token)
 }
 
+export async function ensureFreshAppSessionProviderTokenForTuringMachine() {
+  const currentUser = useAppAuthStore.getState().user
+  if (!currentUser) {
+    return
+  }
+
+  if (shouldRefreshAccessToken(currentUser.accessToken)) {
+    await refreshAuthenticatedSession('pre-run')
+  }
+
+  const refreshedUser = useAppAuthStore.getState().user
+  if (!refreshedUser || shouldRefreshAccessToken(refreshedUser.accessToken)) {
+    throw new Error('Your session expired. Please sign in again.')
+  }
+
+  await syncAppSessionProviderToken(refreshedUser).catch((error) => {
+    logger.warn('Failed to sync backend model token before starting a Turing Machine run', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    throw error
+  })
+}
+
 async function refreshSubscriptionSnapshotForUser(
   user: AppAuthUser,
   warningMessage: string,
@@ -172,7 +195,16 @@ async function refreshSubscriptionSnapshotForUser(
 
   try {
     const subscriptionSnapshot = await fetchSubscriptionSnapshot(user.accessToken)
-    useAppAuthStore.setState({ subscriptionSnapshot })
+    const nextUser = {
+      ...user,
+      isSubscribed: subscriptionSnapshot.tier.key !== 'free',
+      subscriptionTier: normalizeSubscriptionTier(subscriptionSnapshot.tier.key),
+    }
+    persistUser(nextUser)
+    useAppAuthStore.setState({
+      user: nextUser,
+      subscriptionSnapshot,
+    })
   } catch (error) {
     logger.warn(warningMessage, {
       error: error instanceof Error ? error.message : String(error),
@@ -428,7 +460,7 @@ async function clearAuthenticatedSession(error: string | null) {
   })
 }
 
-async function refreshAuthenticatedSession(reason: 'restore' | 'scheduled') {
+async function refreshAuthenticatedSession(reason: 'restore' | 'scheduled' | 'pre-run') {
   const currentUser = useAppAuthStore.getState().user
   if (!currentUser) return
 
@@ -442,13 +474,17 @@ async function refreshAuthenticatedSession(reason: 'restore' | 'scheduled') {
       refreshedUser,
       reason === 'restore'
         ? 'Failed to sync backend model token after restoring session'
-        : 'Failed to sync backend model token after refreshing session',
+        : reason === 'pre-run'
+          ? 'Failed to sync backend model token before starting a Turing Machine run'
+          : 'Failed to sync backend model token after refreshing session',
       { syncGithubRepoStats: reason === 'restore' },
     )
   } catch (error) {
     logger.warn(
       reason === 'restore'
         ? 'Failed to restore app auth session'
+        : reason === 'pre-run'
+          ? 'Failed to refresh app auth session before starting a Turing Machine run'
         : 'Failed to refresh app auth session',
       {
         error: error instanceof Error ? error.message : String(error),

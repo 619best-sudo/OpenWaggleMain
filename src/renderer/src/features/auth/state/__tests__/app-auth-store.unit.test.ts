@@ -1,5 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+function createJwtWithExpiry(offsetSeconds: number) {
+  const encode = (value: Record<string, unknown>) =>
+    btoa(JSON.stringify(value)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+
+  return `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({
+    exp: Math.floor(Date.now() / 1000) + offsetSeconds,
+  })}.signature`
+}
+
 const { authClientMock, apiMock, loggerMock } = vi.hoisted(() => ({
   authClientMock: {
     googleAuthWithIdToken: vi.fn(),
@@ -23,11 +32,16 @@ vi.mock('@/shared/lib/logger', () => ({
   createRendererLogger: () => loggerMock,
 }))
 
-import { syncAppSessionProviderToken, useAppAuthStore } from '../app-auth-store'
+import {
+  ensureFreshAppSessionProviderTokenForTuringMachine,
+  syncAppSessionProviderToken,
+  useAppAuthStore,
+} from '../app-auth-store'
 
 describe('app-auth-store', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    const refreshedAccessToken = createJwtWithExpiry(3600)
     apiMock.setProviderApiKey.mockResolvedValue(undefined)
     apiMock.startAppGoogleOAuth.mockResolvedValue('google-id-token')
     authClientMock.loginWithPassword.mockResolvedValue({
@@ -55,7 +69,7 @@ describe('app-auth-store', () => {
       id: 'user-1',
       name: 'Test User',
       email: 'test@example.com',
-      accessToken: 'refreshed-access-token',
+      accessToken: refreshedAccessToken,
       refreshToken: 'refreshed-refresh-token',
     })
     authClientMock.logoutFromBackend.mockResolvedValue(undefined)
@@ -77,6 +91,35 @@ describe('app-auth-store', () => {
     })
 
     expect(apiMock.setProviderApiKey).toHaveBeenCalledWith('turing-machine', 'access-token')
+  })
+
+  it('refreshes and resyncs the provider token before a Turing Machine run when the access token is stale', async () => {
+    useAppAuthStore.setState({
+      status: 'authenticated',
+      user: {
+        id: 'user-1',
+        name: 'Test User',
+        email: 'test@example.com',
+        accessToken: 'stale-access-token',
+        refreshToken: 'refresh-token',
+      },
+      error: null,
+    })
+
+    await ensureFreshAppSessionProviderTokenForTuringMachine()
+
+    expect(authClientMock.refreshSession).toHaveBeenCalledWith({
+      refreshToken: 'refresh-token',
+      fallbackName: 'Test User',
+      fallbackEmail: 'test@example.com',
+    })
+    const syncedAccessToken = useAppAuthStore.getState().user?.accessToken
+    expect(typeof syncedAccessToken).toBe('string')
+    expect(syncedAccessToken).not.toBe('stale-access-token')
+    expect(apiMock.setProviderApiKey).toHaveBeenLastCalledWith(
+      'turing-machine',
+      syncedAccessToken,
+    )
   })
 
   it('signs in and mirrors the access token into the provider auth store', async () => {

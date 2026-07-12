@@ -44,6 +44,7 @@ Load `.agents/skills/electron-runtime/SKILL.md` for details.
 - macOS `electron-updater` requires ZIP artifacts in GitHub release metadata; DMG-only mac releases can advertise an update but fail with "ZIP file not provided".
 - On Apple silicon, performance/package QA should use arm64 outputs, not Rosetta x64 output from a universal build folder.
 - Electron Playwright E2E requires isolated user data and single-instance lock opt-out when another OpenWaggle instance is running.
+- Local Electron dev scripts should use dedicated `OPENWAGGLE_USER_DATA_DIR` paths so `pnpm dev` and `pnpm dev:debug` do not compete with the default packaged-app single-instance lock/user-data directory.
 - CDP file upload can produce `File` objects without native paths; native file-path behavior needs preload/unit coverage or real OS selection QA.
 
 ## Renderer And Session Memory

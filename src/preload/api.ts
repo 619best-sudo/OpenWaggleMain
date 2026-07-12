@@ -195,6 +195,7 @@ export const api: OpenWaggleApi = {
   getRecentLogs: invoke('feedback:get-recent-logs'),
   submitFeedback: invoke('feedback:submit'),
   generateFeedbackMarkdown: invoke('feedback:generate-markdown'),
+  openBillingOverlay: invoke('shell:open-billing-overlay'),
   openExternal: invoke('shell:open-external'),
 
   // Composer

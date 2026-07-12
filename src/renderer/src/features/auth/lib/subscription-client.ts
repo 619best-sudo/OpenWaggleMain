@@ -100,6 +100,50 @@ export interface AppGithubRepoSyncResult {
   readonly syncedAt: string
 }
 
+export interface AppBillingSessionResponse {
+  readonly url: string
+  readonly sessionId?: string
+  readonly tierKey?: string
+  readonly billingCycle?: 'monthly' | 'yearly'
+}
+
+export interface AppBillingCheckoutReconcileResponse {
+  readonly synced: boolean
+  readonly checkoutSessionId: string
+  readonly paymentId?: string
+  readonly paymentStatus?: string | null
+  readonly subscriptionId?: string
+  readonly subscriptionStatus?: string
+  readonly tierKey?: string
+  readonly billingCycle?: 'monthly' | 'yearly'
+  readonly reason?: string
+}
+
+export interface AppPublicSubscriptionTier {
+  readonly key: string
+  readonly name: string
+  readonly descriptionMarkdown: string | null
+  readonly pricing: {
+    readonly monthly: {
+      readonly originalCents: number
+      readonly discountedCents: number | null
+      readonly finalCents: number
+      readonly discountPercent: number
+      readonly billingCycle: 'monthly'
+    }
+    readonly yearly: {
+      readonly originalCents: number
+      readonly discountedCents: number | null
+      readonly finalCents: number
+      readonly discountPercent: number
+      readonly billingCycle: 'yearly'
+    }
+  }
+  readonly limits: {
+    readonly turingMachineQuotaUsdCents: number
+  }
+}
+
 function getErrorMessage(payload: unknown, fallback: string) {
   if (
     typeof payload === 'object' &&
@@ -123,6 +167,16 @@ function getErrorMessage(payload: unknown, fallback: string) {
   }
 
   return fallback
+}
+
+function isBillingSessionResponse(payload: unknown): payload is AppBillingSessionResponse {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'url' in payload &&
+    typeof payload.url === 'string' &&
+    payload.url.length > 0
+  )
 }
 
 export async function fetchSubscriptionSnapshot(
@@ -225,6 +279,131 @@ export async function fetchTuringMachineLeaderboard(
   }
 
   return payload as AppLeaderboardSnapshot
+}
+
+export async function fetchBillingTierCatalog(): Promise<readonly AppPublicSubscriptionTier[]> {
+  const url = resolveAuthUrl('/subscription-tiers')
+  let response: Response
+
+  try {
+    response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+  } catch {
+    throw new Error('Unable to reach the billing catalog. Check that the backend is running.')
+  }
+
+  const payload = (await response.json().catch(() => null)) as
+    | { tiers?: readonly AppPublicSubscriptionTier[]; message?: string | string[] }
+    | null
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to load billing plans.'))
+  }
+
+  if (!payload || !Array.isArray(payload.tiers)) {
+    throw new Error('Billing catalog returned an invalid response.')
+  }
+
+  return payload.tiers
+}
+
+async function createBillingSession(
+  accessToken: string,
+  path: '/subscriptions/me/billing/checkout' | '/subscriptions/me/billing/portal',
+  body?: Record<string, unknown>,
+): Promise<AppBillingSessionResponse> {
+  const url = resolveAuthUrl(path)
+  let response: Response
+
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body ?? {}),
+    })
+  } catch {
+    throw new Error('Unable to reach the billing server. Check that the backend is running.')
+  }
+
+  const payload = (await response.json().catch(() => null)) as
+    | AppBillingSessionResponse
+    | { message?: string | string[] }
+    | null
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to start billing.'))
+  }
+
+  if (!isBillingSessionResponse(payload)) {
+    throw new Error('Billing server returned an invalid session response.')
+  }
+
+  return payload
+}
+
+export async function createBillingCheckoutSession(
+  accessToken: string,
+  input?: {
+    readonly tierKey?: string
+    readonly billingCycle?: 'monthly' | 'yearly'
+  },
+): Promise<AppBillingSessionResponse> {
+  return createBillingSession(accessToken, '/subscriptions/me/billing/checkout', input)
+}
+
+export async function createBillingPortalSession(
+  accessToken: string,
+): Promise<AppBillingSessionResponse> {
+  return createBillingSession(accessToken, '/subscriptions/me/billing/portal')
+}
+
+export async function reconcileBillingCheckoutSession(
+  accessToken: string,
+  checkoutSessionId: string,
+): Promise<AppBillingCheckoutReconcileResponse> {
+  const url = resolveAuthUrl('/subscriptions/me/billing/reconcile-checkout')
+  let response: Response
+
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ checkoutSessionId }),
+    })
+  } catch {
+    throw new Error('Unable to reach the billing server. Check that the backend is running.')
+  }
+
+  const payload = (await response.json().catch(() => null)) as
+    | AppBillingCheckoutReconcileResponse
+    | { message?: string | string[] }
+    | null
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, 'Failed to refresh billing status.'))
+  }
+
+  if (
+    !payload ||
+    typeof payload !== 'object' ||
+    !('synced' in payload) ||
+    typeof payload.synced !== 'boolean' ||
+    !('checkoutSessionId' in payload) ||
+    typeof payload.checkoutSessionId !== 'string'
+  ) {
+    throw new Error('Billing server returned an invalid reconciliation response.')
+  }
+
+  return payload as AppBillingCheckoutReconcileResponse
 }
 
 async function writeGithubRepoStats(

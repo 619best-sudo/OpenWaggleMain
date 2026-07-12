@@ -1,7 +1,4 @@
-import {
-  buildSubscriptionUsageSummary,
-  formatUsdDisplay,
-} from '@/features/auth/lib/subscription-plan'
+import { buildSubscriptionUsageSummary, formatUsdDisplay } from '@/features/auth/lib/subscription-plan'
 import { useAppAuthStore } from '@/features/auth/state/app-auth-store'
 import { useChatStore } from '@/features/chat/state'
 import { useProviderStore } from '@/features/providers/state'
@@ -30,20 +27,17 @@ function MonthlyQuotaStrip() {
 
   return (
     <div
-      className="flex hidden h-6 min-w-0 shrink-0 items-center gap-1.5 rounded-[5px] bg-bg-secondary/40 px-2 text-[12px] text-text-secondary sm:flex"
-      title={`Turing Machine quota: ${String(roundedPercent)}% used ($${formatUsdDisplay(usage.consumed)} of $${formatUsdDisplay(usage.totalBudget)})`}
+      className="hidden h-8 min-w-0 shrink-0 items-center gap-2 rounded-[8px] bg-bg-secondary/40 px-2.5 text-[12px] text-text-secondary sm:flex"
+      title={`Turing Machine used: ${String(roundedPercent)}% used, ${String(Math.max(0, 100 - roundedPercent))}% left ($${formatUsdDisplay(usage.consumed)} of $${formatUsdDisplay(usage.totalBudget)})`}
     >
-      <span className="text-[10px] font-medium text-text-tertiary">Quota</span>
-      <div className="h-1 w-10 overflow-hidden rounded-full bg-bg-tertiary">
+      <span className="text-[10px] font-medium text-text-tertiary">Used</span>
+      <div className="h-2 w-14 overflow-hidden rounded-full bg-bg-tertiary">
         <div
           className="h-full rounded-full transition-[width] duration-300 ease-out"
           style={{ width: `${String(percent)}%`, backgroundColor: tone }}
         />
       </div>
-      <span className="font-mono text-[10px] font-semibold leading-none text-text-secondary tabular-nums">
-        ${formatUsdDisplay(usage.totalBudget)}
-      </span>
-      <span className="font-mono text-[10px] font-semibold leading-none text-text-secondary tabular-nums">
+      <span className="font-mono text-[11px] font-semibold leading-none text-text-secondary tabular-nums">
         {roundedPercent}%
       </span>
     </div>

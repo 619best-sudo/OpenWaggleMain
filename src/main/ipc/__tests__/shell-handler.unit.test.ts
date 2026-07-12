@@ -1,13 +1,58 @@
 import * as Effect from 'effect/Effect'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const mockShellOpenPath = vi.fn()
-const mockAppGetPath = vi.fn((_name: string) => '/tmp/logs')
-const handlers = new Map<string, (...args: unknown[]) => unknown>()
-
-const mockShellOpenExternal = vi.fn(async (_url: string) => {})
+const {
+  handlers,
+  mockAppGetPath,
+  mockBrowserWindowClose,
+  mockBrowserWindowFocus,
+  mockBrowserWindowIsDestroyed,
+  mockBrowserWindowLoadURL,
+  mockBrowserWindowOn,
+  mockBrowserWindowOnce,
+  mockBrowserWindowSetPosition,
+  mockBrowserWindowSetWindowOpenHandler,
+  mockBrowserWindowShow,
+  mockGetAllWindows,
+  mockGetFocusedWindow,
+  mockShellOpenExternal,
+  mockShellOpenPath,
+} = vi.hoisted(() => ({
+  handlers: new Map<string, (...args: unknown[]) => unknown>(),
+  mockAppGetPath: vi.fn((_name: string) => '/tmp/logs'),
+  mockBrowserWindowClose: vi.fn(),
+  mockBrowserWindowFocus: vi.fn(),
+  mockBrowserWindowIsDestroyed: vi.fn(() => false),
+  mockBrowserWindowLoadURL: vi.fn(async (_url: string) => {}),
+  mockBrowserWindowOn: vi.fn(),
+  mockBrowserWindowOnce: vi.fn(),
+  mockBrowserWindowSetPosition: vi.fn(),
+  mockBrowserWindowSetWindowOpenHandler: vi.fn(),
+  mockBrowserWindowShow: vi.fn(),
+  mockGetAllWindows: vi.fn(() => []),
+  mockGetFocusedWindow: vi.fn(() => null),
+  mockShellOpenExternal: vi.fn(async (_url: string) => {}),
+  mockShellOpenPath: vi.fn(),
+}))
 
 vi.mock('electron', () => ({
+  BrowserWindow: class {
+    static getFocusedWindow = mockGetFocusedWindow
+    static getAllWindows = mockGetAllWindows
+
+    webContents = {
+      setWindowOpenHandler: mockBrowserWindowSetWindowOpenHandler,
+      on: mockBrowserWindowOn,
+    }
+
+    loadURL = mockBrowserWindowLoadURL
+    show = mockBrowserWindowShow
+    focus = mockBrowserWindowFocus
+    close = mockBrowserWindowClose
+    setPosition = mockBrowserWindowSetPosition
+    once = mockBrowserWindowOnce
+    isDestroyed = mockBrowserWindowIsDestroyed
+  },
   shell: {
     openPath: (p: string) => mockShellOpenPath(p),
     openExternal: (url: string) => mockShellOpenExternal(url),
@@ -36,6 +81,17 @@ vi.mock('../../logger', () => ({
   }),
 }))
 
+vi.mock('../../security/electron-security', () => ({
+  SECURE_WEB_PREFERENCES: {
+    nodeIntegration: false,
+    contextIsolation: true,
+    sandbox: true,
+    webSecurity: true,
+    allowRunningInsecureContent: false,
+  },
+  assertSecureWebPreferences: vi.fn(),
+}))
+
 import { registerShellHandlers } from '../shell-handler'
 
 describe('shell-handler', () => {
@@ -44,18 +100,40 @@ describe('shell-handler', () => {
     mockShellOpenPath.mockReset()
     mockShellOpenExternal.mockReset()
     mockAppGetPath.mockReset()
+    mockBrowserWindowLoadURL.mockReset()
+    mockBrowserWindowShow.mockReset()
+    mockBrowserWindowFocus.mockReset()
+    mockBrowserWindowClose.mockReset()
+    mockBrowserWindowSetPosition.mockReset()
+    mockBrowserWindowSetWindowOpenHandler.mockReset()
+    mockBrowserWindowOn.mockReset()
+    mockBrowserWindowOnce.mockReset()
+    mockBrowserWindowIsDestroyed.mockReset()
+    mockGetFocusedWindow.mockReset()
+    mockGetAllWindows.mockReset()
     mockShellOpenPath.mockResolvedValue('')
     mockAppGetPath.mockReturnValue('/tmp/logs')
+    mockBrowserWindowLoadURL.mockResolvedValue(undefined)
+    mockBrowserWindowIsDestroyed.mockReturnValue(false)
+    mockGetFocusedWindow.mockReturnValue(null)
+    mockGetAllWindows.mockReturnValue([])
+    mockBrowserWindowOnce.mockImplementation((event, callback) => {
+      if (event === 'ready-to-show' || event === 'closed') {
+        callback()
+      }
+      return undefined
+    })
   })
 
-  it('registers exactly four handlers', () => {
+  it('registers exactly five handlers', () => {
     registerShellHandlers()
 
-    expect(handlers.size).toBe(4)
+    expect(handlers.size).toBe(5)
     expect(handlers.has('app:open-logs-dir')).toBe(true)
     expect(handlers.has('app:get-logs-path')).toBe(true)
     expect(handlers.has('shell:open-path')).toBe(true)
     expect(handlers.has('shell:open-external')).toBe(true)
+    expect(handlers.has('shell:open-billing-overlay')).toBe(true)
   })
 
   describe('app:open-logs-dir', () => {
@@ -129,6 +207,32 @@ describe('shell-handler', () => {
     })
   })
 
+  describe('shell:open-billing-overlay', () => {
+    it('opens checkout inside a dedicated modal browser window', async () => {
+      registerShellHandlers()
+      const handler = handlers.get('shell:open-billing-overlay')
+      expect(handler).toBeDefined()
+
+      await handler?.({}, 'https://checkout.dodopayments.com/session/cks_test')
+
+      expect(mockBrowserWindowLoadURL).toHaveBeenCalledWith(
+        'https://checkout.dodopayments.com/session/cks_test',
+      )
+      expect(mockShellOpenExternal).not.toHaveBeenCalled()
+      expect(mockBrowserWindowSetWindowOpenHandler).toHaveBeenCalledTimes(1)
+    })
+
+    it('rejects disallowed billing overlay URLs', async () => {
+      registerShellHandlers()
+      const handler = handlers.get('shell:open-billing-overlay')
+
+      await expect(handler?.({}, 'file:///tmp/checkout')).rejects.toThrow(
+        'Disallowed URL protocol: file:',
+      )
+      expect(mockBrowserWindowLoadURL).not.toHaveBeenCalled()
+    })
+  })
+
   describe('shell:open-path', () => {
     it('opens local paths through shell.openPath', async () => {
       registerShellHandlers()
@@ -157,4 +261,5 @@ describe('shell-handler', () => {
       )
     })
   })
+
 })

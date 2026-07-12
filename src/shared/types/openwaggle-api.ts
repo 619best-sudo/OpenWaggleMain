@@ -65,6 +65,7 @@ import type {
 // ─── Convenience API (what we actually expose on window.api) ─
 
 export interface OpenWaggleApi {
+  openBillingOverlay(url: string): Promise<{ finalUrl: string | null; matchedReturnUrl: boolean }>
   // Agent
   sendMessage(
     sessionId: SessionId,

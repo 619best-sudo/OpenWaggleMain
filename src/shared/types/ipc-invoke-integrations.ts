@@ -272,6 +272,10 @@ export interface IpcIntegrationInvokeChannelMap {
     args: [url: string]
     return: undefined
   }
+  'shell:open-billing-overlay': {
+    args: [url: string]
+    return: { finalUrl: string | null; matchedReturnUrl: boolean }
+  }
   'shell:open-path': {
     args: [path: string]
     return: undefined

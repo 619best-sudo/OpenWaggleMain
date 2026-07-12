@@ -30,36 +30,6 @@ export async function createOpenWaggleAgentSessionFromServices(
     }
     try {
       await bindSessionExtensions(result.session)
-      // #region debug-point B:session-tools
-      await (async () => {
-        let debugServerUrl = 'http://127.0.0.1:7777/event'
-        let debugSessionId = 'pi-mcp-browser'
-        try {
-          const { readFileSync } = await import('node:fs')
-          const envFile = readFileSync('.dbg/pi-mcp-browser.env', 'utf8')
-          debugServerUrl = envFile.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? debugServerUrl
-          debugSessionId = envFile.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? debugSessionId
-        } catch {}
-        void fetch(debugServerUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: debugSessionId,
-            runId: 'pre-fix',
-            hypothesisId: 'B',
-            location:
-              'src/main/adapters/pi/pi-session-lifecycle.ts:createOpenWaggleAgentSessionFromServices',
-            msg: '[DEBUG] Bound Pi session extensions',
-            data: {
-              sessionId: result.session.sessionId,
-              toolNames: result.session.agent.state.tools.map((tool) => tool.name),
-              toolCount: result.session.agent.state.tools.length,
-            },
-            ts: Date.now(),
-          }),
-        }).catch(() => {})
-      })()
-      // #endregion
       return result
     } catch (error) {
       await disposeOpenWagglePiSession(result.session)

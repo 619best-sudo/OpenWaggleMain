@@ -4,6 +4,7 @@ import type { UIMessage } from '@shared/types/chat-ui'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { SessionDetail } from '@shared/types/session'
 import type { WaggleConfig } from '@shared/types/waggle'
+import { ensureFreshAppSessionProviderTokenForTuringMachine } from '@/features/auth/state/app-auth-store'
 import { api } from '@/shared/lib/ipc'
 import { createOptimisticUserMessage } from '../lib/useAgentChat.utils'
 import { createPendingRunWaiter, updateMessagesForSession } from './useAgentChat.message-cache'
@@ -19,6 +20,8 @@ import type {
   SetMessagesBySessionId,
   SetRunRenderMessages,
 } from './useAgentChat.types'
+
+const TURING_MACHINE_MODEL_REF = 'turing-machine/turing-machine'
 
 interface AgentRunControlRefs {
   readonly currentSessionIdRef: MutableValueRef<SessionId | null>
@@ -142,6 +145,10 @@ export function createAgentRunControls(params: AgentRunControlParams) {
   async function dispatchAgentSend(payload: AgentSendPayload, waggleConfig: WaggleConfig | null) {
     if (!sessionId) {
       return
+    }
+
+    if (params.model === TURING_MACHINE_MODEL_REF) {
+      await ensureFreshAppSessionProviderTokenForTuringMachine()
     }
 
     const targetSessionId = sessionId

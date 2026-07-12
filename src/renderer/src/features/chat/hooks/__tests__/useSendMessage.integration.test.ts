@@ -4,6 +4,13 @@ import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleConfig } from '@shared/types/waggle'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createSendHandlers } from '../useSendMessage'
+import { useSendMessage } from '../useSendMessage'
+
+const { authStoreMock } = vi.hoisted(() => ({
+  authStoreMock: {
+    ensureFreshAppSessionProviderTokenForTuringMachine: vi.fn().mockResolvedValue(undefined),
+  },
+}))
 
 vi.mock('@/shared/lib/ipc', () => ({
   api: {
@@ -13,6 +20,7 @@ vi.mock('@/shared/lib/ipc', () => ({
     sendWaggleMessage: vi.fn(),
   },
 }))
+vi.mock('@/features/auth/state/app-auth-store', () => authStoreMock)
 
 type SendDeps = Parameters<typeof createSendHandlers>[0]
 
@@ -210,6 +218,30 @@ describe('createSendHandlers', () => {
         teammate,
       })
       expect(deps.sendTeamMessage).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('useSendMessage', () => {
+    it('refreshes auth before the first Turing Machine send', async () => {
+      const sendHandlers = useSendMessage({
+        activeSessionId: null,
+        model: SupportedModelId('turing-machine/turing-machine'),
+        projectPath: '/test/project',
+        thinkingLevel: 'medium',
+        createSession: vi.fn().mockResolvedValue(SessionId('new-session')),
+        sendMessage: vi.fn().mockResolvedValue(undefined),
+        sendMachineMessage: vi.fn().mockResolvedValue(undefined),
+        sendWaggleMessage: vi.fn().mockResolvedValue(undefined),
+        sendTeamMessage: vi.fn().mockResolvedValue(undefined),
+      })
+
+      await sendHandlers.handleSend({
+        text: 'run the agent',
+        thinkingLevel: 'medium',
+        attachments: [],
+      })
+
+      expect(authStoreMock.ensureFreshAppSessionProviderTokenForTuringMachine).toHaveBeenCalledOnce()
     })
   })
 })

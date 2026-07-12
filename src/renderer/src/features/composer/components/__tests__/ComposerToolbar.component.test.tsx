@@ -76,8 +76,7 @@ describe('ComposerToolbar', () => {
   it('renders a compact turing machine quota strip beside the context meter', () => {
     renderToolbar()
 
-    expect(screen.getByText('Quota')).toBeInTheDocument()
-    expect(screen.getByText('$0')).toBeInTheDocument()
+    expect(screen.getByText('Used')).toBeInTheDocument()
     expect(screen.getByText('0%')).toBeInTheDocument()
   })
 
@@ -115,8 +114,7 @@ describe('ComposerToolbar', () => {
 
     renderToolbar()
 
-    expect(screen.getByText('Quota')).toBeInTheDocument()
-    expect(screen.getByText('$30')).toBeInTheDocument()
+    expect(screen.getByText('Used')).toBeInTheDocument()
     expect(screen.getByText('100%')).toBeInTheDocument()
   })
 

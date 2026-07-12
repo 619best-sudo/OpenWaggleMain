@@ -5,6 +5,7 @@ import type { SupportedModelId } from '@shared/types/llm'
 import type { ThinkingLevel } from '@shared/types/settings'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleConfig } from '@shared/types/waggle'
+import { ensureFreshAppSessionProviderTokenForTuringMachine } from '@/features/auth/state/app-auth-store'
 import { createOptimisticUserMessage } from '@/features/chat/lib/useAgentChat.utils'
 import { useBackgroundRunStore } from '@/features/chat/state/background-run-store'
 import { useOptimisticUserMessageStore } from '@/features/chat/state/optimistic-user-message-store'
@@ -12,6 +13,7 @@ import { api } from '@/shared/lib/ipc'
 import { createRendererLogger } from '@/shared/lib/logger'
 
 const logger = createRendererLogger('use-send-message')
+const TURING_MACHINE_MODEL_REF = 'turing-machine/turing-machine'
 
 interface SendMessageDeps {
   readonly activeSessionId: SessionId | null
@@ -204,6 +206,10 @@ export function useSendMessage(options: UseSendMessageOptions): SendMessageHandl
       | { readonly kind: 'waggle'; readonly config: WaggleConfig }
       | { readonly kind: 'team'; readonly teammate: TeammateDefinition },
   ) {
+    if (model === TURING_MACHINE_MODEL_REF) {
+      await ensureFreshAppSessionProviderTokenForTuringMachine()
+    }
+
     await seedOptimisticSendForSession({
       sessionId,
       payload,
