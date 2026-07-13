@@ -15,6 +15,7 @@ import type {
   SessionWorkspaceSelection,
 } from './session'
 import type { Settings } from './settings'
+import type { ToolPermissionResolution } from './tool-permission'
 
 // ─── IPC Channel Map ─────────────────────────────────────────
 // Single source of truth for every IPC channel.
@@ -32,6 +33,10 @@ export interface IpcCoreInvokeChannelMap {
   'agent:steer': {
     args: [sessionId: SessionId]
     return: { preserved: boolean }
+  }
+  'agent:resolve-tool-permission': {
+    args: [sessionId: SessionId, resolution: ToolPermissionResolution, model: SupportedModelId]
+    return: undefined
   }
   'agent:get-context-usage': {
     args: [sessionId: SessionId, model: SupportedModelId]

@@ -10,12 +10,14 @@
 import { randomUUID } from 'node:crypto'
 import { matchBy } from '@diegogbrisa/ts-match'
 import { decodeUnknownOrThrow } from '@shared/schema'
-import { agentSendPayloadSchema } from '@shared/schemas/validation'
+import { agentSendPayloadSchema, toolPermissionResolutionSchema } from '@shared/schemas/validation'
 import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionId } from '@shared/types/brand'
 import type { SupportedModelId } from '@shared/types/llm'
+import type { ToolPermissionResolution } from '@shared/types/tool-permission'
 import type { AgentTransportEvent } from '@shared/types/stream'
 import * as Effect from 'effect/Effect'
+import { registerApprovedToolPermission } from '../adapters/pi/tool-permission-request-extension'
 import { getPhaseForSession } from '../agent/phase-tracker'
 import { cleanupSessionRun } from '../agent/session-cleanup'
 import { type AgentRunResult, executeAgentRun } from '../application/agent-run-service'
@@ -62,6 +64,54 @@ function handleRunResult(sessionId: SessionId, result: AgentRunResult) {
       emitErrorAndFinish(sessionId, value.message, value.code),
     )
     .exhaustive()
+}
+
+const TOOL_PERMISSION_CUSTOM_TYPE = 'openwaggle.tool-permission-resolution'
+
+function buildToolPermissionResolutionPrompt(resolution: ToolPermissionResolution) {
+  const requestJson = JSON.stringify(
+    {
+      toolCallId: resolution.request.toolCallId,
+      toolName: resolution.request.toolName,
+      input: resolution.request.input,
+    },
+    null,
+    2,
+  )
+
+  if (resolution.decision === 'approved') {
+    return [
+      'The user approved a pending tool permission request.',
+      'Continue the run from this point.',
+      'If the exact same tool call is still required, run it now using the same arguments.',
+      'Do not ask for permission again for this exact request.',
+      '',
+      requestJson,
+    ].join('\n')
+  }
+
+  return [
+    'The user denied a pending tool permission request.',
+    'Do not run the denied tool call.',
+    'Briefly acknowledge the denial and continue with a safe alternative if possible.',
+    '',
+    requestJson,
+  ].join('\n')
+}
+
+function toolPermissionPromptDelivery(resolution: ToolPermissionResolution) {
+  return {
+    mode: 'hidden-custom-message' as const,
+    customType: TOOL_PERMISSION_CUSTOM_TYPE,
+    details: {
+      source: 'openwaggle',
+      kind: 'tool-permission-resolution',
+      decision: resolution.decision,
+      toolCallId: resolution.request.toolCallId,
+      toolName: resolution.request.toolName,
+      input: resolution.request.input,
+    },
+  }
 }
 
 /**
@@ -134,6 +184,57 @@ function registerAgentRunHandlers() {
         }
       }
     }),
+  )
+
+  typedHandle(
+    'agent:resolve-tool-permission',
+    (_event, sessionId: SessionId, resolution: ToolPermissionResolution, model: SupportedModelId) =>
+      Effect.gen(function* () {
+        const validatedResolution = decodeUnknownOrThrow(toolPermissionResolutionSchema, resolution)
+
+        if (cancelSessionRuns(sessionId)) {
+          clearSessionTransportState(sessionId)
+        }
+
+        if (validatedResolution.decision === 'approved') {
+          registerApprovedToolPermission(validatedResolution.request)
+        }
+
+        const abortController = new AbortController()
+        const runId = randomUUID()
+        activeRuns.register(sessionId, abortController, {
+          model,
+        })
+
+        startStreamBuffer(sessionId, model, 'classic')
+
+        const result = yield* executeAgentRun({
+          sessionId,
+          runId,
+          payload: {
+            text: buildToolPermissionResolutionPrompt(validatedResolution),
+            thinkingLevel: 'medium',
+            attachments: [],
+          },
+          model,
+          promptDelivery: toolPermissionPromptDelivery(validatedResolution),
+          signal: abortController.signal,
+          onEvent: (event: AgentTransportEvent) => {
+            emitTransportEvent(sessionId, event)
+          },
+          onTitleAssigned: (title) => {
+            broadcastToWindows('sessions:title-updated', { sessionId, title })
+          },
+        })
+
+        handleRunResult(sessionId, result)
+
+        if (activeRuns.deleteIfCurrent(sessionId, abortController)) {
+          clearAgentPhase(sessionId)
+          clearStreamBuffer(sessionId)
+          emitRunCompleted(sessionId)
+        }
+      }),
   )
 }
 

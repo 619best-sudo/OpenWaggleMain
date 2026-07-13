@@ -1,0 +1,48 @@
+diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
+index bd27f9c32c3ddfac52704f7544ae24a3a9e542e8..45f3e90906969827c0195554badd0f2c80c0ed53 100644
+--- a/dist/core/agent-session.js
++++ b/dist/core/agent-session.js
+@@ -176,12 +176,13 @@ export class AgentSession {
+             }
+             await this._agentEventQueue;
+             try {
+-                return await runner.emitToolCall({
++                const hookResult = await runner.emitToolCall({
+                     type: "tool_call",
+                     toolName: toolCall.name,
+                     toolCallId: toolCall.id,
+                     input: args,
+                 });
++                return hookResult;
+             }
+             catch (err) {
+                 if (err instanceof Error) {
+diff --git a/dist/core/extensions/types.d.ts b/dist/core/extensions/types.d.ts
+index 736c6550522fcffa71ca3e6d2f7cb5f13f5331f3..f0779b0dd0f5b1841b008fd822182a7c94fd72f2 100644
+--- a/dist/core/extensions/types.d.ts
++++ b/dist/core/extensions/types.d.ts
+@@ -704,6 +704,24 @@ export interface ToolCallEventResult {
+     /** Block tool execution. To modify arguments, mutate `event.input` in place instead. */
+     block?: boolean;
+     reason?: string;
++    /**
++     * Optional request envelope surfaced in the synthesized tool result when the
++     * host wants to pause local execution and handle the tool externally.
++     */
++    request?: {
++        model?: string;
++        permission?: unknown;
++        metadata?: Record<string, unknown>;
++    };
++    /**
++     * Optional content/details override for immediate request-first fulfillment.
++     * When present, the runtime emits a synthesized tool result without running
++     * the local tool implementation.
++     */
++    content?: (TextContent | ImageContent)[];
++    details?: unknown;
++    isError?: boolean;
++    terminate?: boolean;
+ }
+ /** Result from user_bash event handler */
+ export interface UserBashEventResult {

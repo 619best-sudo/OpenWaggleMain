@@ -71,6 +71,10 @@
       "@tanstack/router-plugin": "1.167.35",
       "@tanstack/router-utils": "1.161.8",
       "@tanstack/virtual-file-routes": "1.161.7"
+    },
+    "patchedDependencies": {
+      "@mariozechner/pi-agent-core@0.70.2": "patches/@mariozechner__pi-agent-core@0.70.2.patch",
+      "@mariozechner/pi-coding-agent@0.70.2": "patches/@mariozechner__pi-coding-agent@0.70.2.patch"
     }
   },
   "repository": {

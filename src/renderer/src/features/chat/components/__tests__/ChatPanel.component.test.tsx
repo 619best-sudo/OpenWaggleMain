@@ -34,6 +34,7 @@ vi.mock('@/shared/lib/ipc', () => ({
     renameGitBranch: vi.fn().mockResolvedValue({ ok: true, message: 'ok' }),
     deleteGitBranch: vi.fn().mockResolvedValue({ ok: true, message: 'ok' }),
     setGitBranchUpstream: vi.fn().mockResolvedValue({ ok: true, message: 'ok' }),
+    resolveToolPermission: vi.fn().mockResolvedValue(undefined),
     prepareAttachments: vi.fn().mockResolvedValue([]),
     onWaggleEvent: vi.fn(() => () => undefined),
     onWaggleTurnEvent: vi.fn(() => () => undefined),
@@ -62,11 +63,17 @@ function createSections(
     streamSignalVersion: 0,
     userDidSend: false,
     onUserDidSendConsumed: vi.fn(),
+    pendingToolPermissionRequest: null,
+    toolPermissionBusy: false,
+    toolPermissionError: null,
     onOpenProject: vi.fn().mockResolvedValue(undefined),
     onSelectProjectPath: vi.fn(),
     onRetryText: vi.fn().mockResolvedValue(undefined),
     onOpenSettings: vi.fn(),
     onDismissError: vi.fn(),
+    onDismissToolPermission: vi.fn(),
+    onApproveToolPermission: vi.fn().mockResolvedValue(undefined),
+    onDenyToolPermission: vi.fn().mockResolvedValue(undefined),
     onDismissInterruptedRun: vi.fn(),
     onBranchFromMessage: vi.fn(),
     onForkFromMessage: vi.fn(),
@@ -167,7 +174,7 @@ describe('ChatPanel', () => {
     const projectPickerButton = screen.getByRole('button', { name: 'project' })
 
     expect(heading).toHaveClass('font-bold')
-    expect(projectPickerButton).toHaveClass('bg-[#8ba57b]', 'text-[16px]', 'font-semibold')
+    expect(projectPickerButton).toHaveClass('bg-accent', 'text-[16px]', 'font-semibold')
   })
 
   it('opens the folder picker directly from the empty-state CTA', () => {
@@ -238,6 +245,25 @@ describe('ChatPanel', () => {
     expect(screen.queryByText(/open a project/i)).toBeNull()
     expect(document.querySelector('[data-user-message-id="u1"]')).toHaveClass('px-5')
     expect(document.querySelector('[data-user-message-id="u1"]')).toHaveClass('max-w-[960px]')
+  })
+
+  it('shows the tool permission dialog when a pending request exists', () => {
+    renderPanel({
+      pendingToolPermissionRequest: {
+        messageId: 'assistant-1',
+        toolCallId: 'tool-1',
+        toolName: 'bash',
+        input: { command: 'ls -la' },
+        title: 'Approve Bash',
+        description: 'Permission is required before running bash.',
+        summary: 'Permission required before running bash: ls -la',
+      },
+    })
+
+    expect(screen.getByText('Approve Bash')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Deny' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Dismiss permission dialog' })).toBeInTheDocument()
   })
 
   it('routes custom branch-summary submission through send instead of enqueue while loading', () => {
@@ -326,7 +352,7 @@ describe('ChatPanel', () => {
   it('uses the darker sidenav-matched background for the chat panel shell', () => {
     const { container } = renderPanel()
     const mainPanel = container.querySelector('[data-chat-panel-main="true"]')
-    expect(mainPanel).toHaveClass('bg-[#09090b]')
+    expect(mainPanel).toHaveClass('bg-bg')
   })
 
   it('shows Writing phase when loading and assistant has streaming content', () => {

@@ -9,6 +9,7 @@
 import { Schema } from '@shared/schema'
 import type { JsonArray, JsonObject, JsonValue } from '@shared/types/json'
 import { THINKING_LEVELS } from '@shared/types/settings'
+import type { ToolPermissionResolution } from '@shared/types/tool-permission'
 
 const attachmentKindSchema = Schema.Literal('text', 'image', 'pdf')
 const attachmentOriginSchema = Schema.Literal('user-file', 'auto-paste-text')
@@ -57,6 +58,18 @@ export const agentSendPayloadSchema = Schema.Struct({
   text: Schema.String,
   thinkingLevel: Schema.Literal(...THINKING_LEVELS),
   attachments: Schema.mutable(Schema.Array(preparedAttachmentSchema)),
+})
+
+export const toolPermissionResolutionSchema: Schema.Schema<ToolPermissionResolution> = Schema.Struct({
+  request: Schema.Struct({
+    toolCallId: Schema.String,
+    toolName: Schema.String,
+    input: jsonObjectSchema,
+    title: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String),
+    model: Schema.optional(Schema.String),
+  }),
+  decision: Schema.Literal('approved', 'denied'),
 })
 
 export const projectPreferencesSchema = Schema.Struct({

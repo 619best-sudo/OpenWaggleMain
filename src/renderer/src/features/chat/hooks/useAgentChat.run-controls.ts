@@ -3,6 +3,7 @@ import type { SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { SessionDetail } from '@shared/types/session'
+import type { ToolPermissionResolution } from '@shared/types/tool-permission'
 import type { WaggleConfig } from '@shared/types/waggle'
 import { ensureFreshAppSessionProviderTokenForTuringMachine } from '@/features/auth/state/app-auth-store'
 import { api } from '@/shared/lib/ipc'
@@ -175,6 +176,36 @@ export function createAgentRunControls(params: AgentRunControlParams) {
     }
   }
 
+  async function resolveToolPermission(resolution: ToolPermissionResolution) {
+    if (!sessionId) {
+      return
+    }
+
+    if (params.model === TURING_MACHINE_MODEL_REF) {
+      await ensureFreshAppSessionProviderTokenForTuringMachine()
+    }
+
+    const targetSessionId = sessionId
+    const runPromise = startForegroundRun(targetSessionId)
+
+    try {
+      await api.resolveToolPermission(targetSessionId, resolution, params.model)
+      await runPromise
+    } catch (runError) {
+      const normalizedError = normalizeError(runError)
+      if (refs.foregroundSessionIdRef.current === targetSessionId) {
+        refs.pendingRunWaiterRef.current = null
+        clearRunPointers(refs)
+      }
+      if (refs.currentSessionIdRef.current === targetSessionId) {
+        params.setError(normalizedError)
+        params.setStatus('error')
+        refs.terminalRunErrorRef.current = normalizedError
+      }
+      throw normalizedError
+    }
+  }
+
   async function sendUserPayload(payload: AgentSendPayload, waggleConfig: WaggleConfig | null) {
     if (!sessionId) {
       return
@@ -221,6 +252,7 @@ export function createAgentRunControls(params: AgentRunControlParams) {
     } satisfies AgentRunActions,
     withDeferredSnapshotRefresh,
     sendUserPayload,
+    resolveToolPermission,
     stop,
     steer,
   }

@@ -3,6 +3,7 @@ import { useChatPanelSections } from '../hooks/use-chat-panel-controller'
 import type { ChatPanelSections } from '../model'
 import { ChatComposerStack } from './ChatComposerStack'
 import { ChatTranscript } from './ChatTranscript'
+import { ToolPermissionDialog } from './ToolPermissionDialog'
 
 interface ChatPanelContentProps {
   readonly sections: ChatPanelSections
@@ -10,6 +11,7 @@ interface ChatPanelContentProps {
 }
 
 export function ChatPanelContent({ sections, onOpenSessionTree }: ChatPanelContentProps) {
+  const pendingToolPermissionRequest = sections.transcript.pendingToolPermissionRequest
   return (
     <div className="flex size-full overflow-hidden bg-bg">
       <div
@@ -19,6 +21,16 @@ export function ChatPanelContent({ sections, onOpenSessionTree }: ChatPanelConte
         <PanelErrorBoundary name="Chat transcript" className="flex flex-1 flex-col overflow-hidden">
           <ChatTranscript section={sections.transcript} />
         </PanelErrorBoundary>
+        {pendingToolPermissionRequest && (
+          <ToolPermissionDialog
+            request={pendingToolPermissionRequest}
+            busy={sections.transcript.toolPermissionBusy}
+            error={sections.transcript.toolPermissionError}
+            onClose={sections.transcript.onDismissToolPermission}
+            onApprove={sections.transcript.onApproveToolPermission}
+            onDeny={sections.transcript.onDenyToolPermission}
+          />
+        )}
 
         <PanelErrorBoundary name="Composer">
           <ChatComposerStack section={sections.composer} onOpenSessionTree={onOpenSessionTree} />

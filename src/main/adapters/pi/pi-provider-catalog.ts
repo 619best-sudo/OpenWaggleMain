@@ -24,6 +24,7 @@ import {
   type PiRuntimeServicesOptions,
 } from './pi-provider-resources'
 import { getPiModelAvailableThinkingLevels } from './pi-provider-thinking'
+import { createToolPermissionRequestExtension } from './tool-permission-request-extension'
 import { createTuringMachineToolSelectionExtension } from './turing-machine-tool-selection-extension'
 
 export { getPiModelAvailableThinkingLevels } from './pi-provider-thinking'
@@ -228,6 +229,9 @@ export async function createPiRuntimeServices(
     baseUrl: resolveTuringMachineBaseUrl(),
     mcpServerNames: await loadTuringMachineMcpServerNames(mcpRuntimeContext?.configPath),
   })
+  const toolPermissionRequestExtensionFactory = createToolPermissionRequestExtension({
+    toolNames: ['bash', 'read'],
+  })
   const services = await withNpmCompatibleProcessEnv(() =>
     withOpenWaggleMcpAdapterProcessContext(mcpRuntimeContext, () =>
       createAgentSessionServices({
@@ -248,6 +252,7 @@ export async function createPiRuntimeServices(
             ...options,
             extensionFactories: [
               ...(options.extensionFactories ?? []),
+              toolPermissionRequestExtensionFactory,
               turingMachineExtensionFactory,
             ],
           },

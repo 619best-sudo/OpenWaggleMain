@@ -1,6 +1,6 @@
 import { SessionId } from '@shared/types/brand'
 import type { WaggleCollaborationStatus } from '@shared/types/waggle'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAgentChat } from '@/features/chat/hooks/useAgentChat'
 import { useAutoSendQueue } from '@/features/chat/hooks/useAutoSendQueue'
 import { useSendMessage } from '@/features/chat/hooks/useSendMessage'
@@ -23,6 +23,7 @@ import { useWaggleLaunchPromptStore, useWaggleStore } from '@/features/waggle/st
 import { api } from '@/shared/lib/ipc'
 import { createRendererLogger } from '@/shared/lib/logger'
 import { reportAutoSendQueueFailure } from '../lib/queue-failure-feedback'
+import { findLatestPendingToolPermissionRequest } from '../lib/tool-permission-request'
 import type { ChatPanelSections } from '../model'
 import { useBranchSummaryWorkflow } from './useBranchSummaryWorkflow'
 import { useChatPanelEnvironment } from './useChatPanelEnvironment'
@@ -37,6 +38,10 @@ const logger = createRendererLogger('chat-panel')
 export function useChatPanelSections(): ChatPanelSections {
   // ── Intent-driven scroll flag ──
   const [userDidSend, setUserDidSend] = useState(false)
+  const [dismissedToolPermissionIds, setDismissedToolPermissionIds] = useState<Set<string>>(() => new Set())
+  const [toolPermissionBusy, setToolPermissionBusy] = useState(false)
+  const [toolPermissionError, setToolPermissionError] = useState<string | null>(null)
+  const [suppressedToolPermissionId, setSuppressedToolPermissionId] = useState<string | null>(null)
 
   function onUserDidSendConsumed() {
     setUserDidSend(false)
@@ -69,6 +74,7 @@ export function useChatPanelSections(): ChatPanelSections {
     messages,
     sendMessage,
     sendWaggleMessage,
+    resolveToolPermission,
     isLoading,
     status,
     stop,
@@ -396,6 +402,78 @@ export function useChatPanelSections(): ChatPanelSections {
     streamSignalVersion,
   })
 
+  const latestToolPermissionRequest = findLatestPendingToolPermissionRequest(
+    transcript.messages,
+    dismissedToolPermissionIds,
+  )
+  const pendingToolPermissionRequest =
+    latestToolPermissionRequest &&
+    latestToolPermissionRequest.toolCallId !== suppressedToolPermissionId
+      ? latestToolPermissionRequest
+      : null
+
+  const latestToolPermissionId = latestToolPermissionRequest?.toolCallId ?? null
+
+  useEffect(() => {
+    if (!pendingToolPermissionRequest) {
+      setToolPermissionBusy(false)
+      setToolPermissionError(null)
+    }
+  }, [pendingToolPermissionRequest])
+
+  useEffect(() => {
+    if (latestToolPermissionId && latestToolPermissionId !== suppressedToolPermissionId) {
+      setToolPermissionError(null)
+    }
+  }, [latestToolPermissionId, suppressedToolPermissionId])
+
+  const dismissCurrentToolPermission = useMemo(
+    () => () => {
+      if (!latestToolPermissionId) {
+        return
+      }
+      setSuppressedToolPermissionId(latestToolPermissionId)
+      setToolPermissionBusy(false)
+      setToolPermissionError(null)
+    },
+    [latestToolPermissionId],
+  )
+
+  async function handleResolveToolPermission(decision: 'approved' | 'denied') {
+    if (!activeSessionId || !pendingToolPermissionRequest) {
+      showToast('No pending tool permission request.')
+      return
+    }
+
+    setToolPermissionBusy(true)
+    setToolPermissionError(null)
+    try {
+      await resolveToolPermission({
+        request: {
+          toolCallId: pendingToolPermissionRequest.toolCallId,
+          toolName: pendingToolPermissionRequest.toolName,
+          input: pendingToolPermissionRequest.input,
+          title: pendingToolPermissionRequest.title,
+          description: pendingToolPermissionRequest.description,
+          model: pendingToolPermissionRequest.model,
+        },
+        decision,
+      })
+      setSuppressedToolPermissionId(pendingToolPermissionRequest.toolCallId)
+      setDismissedToolPermissionIds((current) => {
+        const next = new Set(current)
+        next.add(pendingToolPermissionRequest.toolCallId)
+        return next
+      })
+      setToolPermissionBusy(false)
+    } catch (permissionError) {
+      const message = permissionError instanceof Error ? permissionError.message : String(permissionError)
+      setToolPermissionBusy(false)
+      setToolPermissionError(message)
+      showToast(message)
+    }
+  }
+
   const followUpSuggestion = getTuringFollowUpSuggestion({
     messages: transcript.messages,
     waggleStatus,
@@ -473,7 +551,15 @@ export function useChatPanelSections(): ChatPanelSections {
   })
 
   return {
-    transcript,
+    transcript: {
+      ...transcript,
+      pendingToolPermissionRequest,
+      toolPermissionBusy,
+      toolPermissionError,
+      onDismissToolPermission: dismissCurrentToolPermission,
+      onApproveToolPermission: () => handleResolveToolPermission('approved'),
+      onDenyToolPermission: () => handleResolveToolPermission('denied'),
+    },
     composer,
     diff: {
       projectPath,

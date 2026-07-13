@@ -3,6 +3,7 @@ import type { SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { IpcEventPayload } from '@shared/types/ipc'
 import type { SessionDetail } from '@shared/types/session'
+import type { ToolPermissionResolution } from '@shared/types/tool-permission'
 import type { WaggleConfig } from '@shared/types/waggle'
 
 export type AgentChatStatus =
@@ -27,6 +28,7 @@ export interface AgentChatReturn {
   messages: UIMessage[]
   sendMessage: (payload: AgentSendPayload) => Promise<void>
   sendWaggleMessage: (payload: AgentSendPayload, config: WaggleConfig) => Promise<void>
+  resolveToolPermission: (resolution: ToolPermissionResolution) => Promise<void>
   isLoading: boolean
   status: AgentChatStatus
   stop: () => void

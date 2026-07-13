@@ -1,0 +1,110 @@
+diff --git a/dist/agent-loop.js b/dist/agent-loop.js
+index 39ab91df1832ede1cdefd02a736f97b7e0b36dcc..8929972248052331912ffce8734739cb2dd5b1ca 100644
+--- a/dist/agent-loop.js
++++ b/dist/agent-loop.js
+@@ -344,6 +344,13 @@ async function prepareToolCall(currentContext, assistantMessage, toolCall, confi
+                     isError: true,
+                 };
+             }
++            if (shouldImmediateResolveToolCall(beforeResult)) {
++                return {
++                    kind: "immediate",
++                    result: createBeforeToolCallImmediateResult(toolCall, validatedArgs, beforeResult),
++                    isError: beforeResult?.isError ?? false,
++                };
++            }
+         }
+         return {
+             kind: "prepared",
+@@ -422,6 +429,39 @@ function createErrorToolResult(message) {
+         details: {},
+     };
+ }
++function shouldImmediateResolveToolCall(beforeResult) {
++    return Boolean(beforeResult &&
++        (beforeResult.request ||
++            beforeResult.content !== undefined ||
++            beforeResult.details !== undefined ||
++            beforeResult.isError !== undefined ||
++            beforeResult.terminate !== undefined));
++}
++function createBeforeToolCallImmediateResult(toolCall, args, beforeResult) {
++    const requestDetails = beforeResult?.request
++        ? {
++            kind: "tool_request",
++            toolName: toolCall.name,
++            args,
++            request: beforeResult.request,
++        }
++        : undefined;
++    const customDetails = beforeResult?.details;
++    const mergedDetails = requestDetails && isPlainObject(customDetails)
++        ? { ...requestDetails, ...customDetails }
++        : customDetails ?? requestDetails ?? {};
++    const defaultText = beforeResult?.request
++        ? `Tool execution requested for ${toolCall.name}${beforeResult.request.model ? ` using model ${beforeResult.request.model}` : ""}.`
++        : beforeResult?.reason || `Tool execution was handled before local execution for ${toolCall.name}.`;
++    return {
++        content: beforeResult?.content ?? [{ type: "text", text: defaultText }],
++        details: mergedDetails,
++        terminate: beforeResult?.terminate ?? Boolean(beforeResult?.request),
++    };
++}
++function isPlainObject(value) {
++    return typeof value === "object" && value !== null && !Array.isArray(value);
++}
+ async function emitToolExecutionEnd(finalized, emit) {
+     await emit({
+         type: "tool_execution_end",
+diff --git a/dist/types.d.ts b/dist/types.d.ts
+index af4599795035cdb76758e0d560d3c69970ce2670..f57ffaf7df6e099d03380eae0e77b4d29d1ebe8b 100644
+--- a/dist/types.d.ts
++++ b/dist/types.d.ts
+@@ -23,15 +23,47 @@ export type ToolExecutionMode = "sequential" | "parallel";
+ export type AgentToolCall = Extract<AssistantMessage["content"][number], {
+     type: "toolCall";
+ }>;
++export interface BeforeToolCallRequest {
++    /**
++     * Optional executor model hint chosen by the host/router for this tool request.
++     * The core runtime does not execute the model switch itself; it surfaces the
++     * request in the synthesized tool result for the host to act on.
++     */
++    model?: string;
++    /**
++     * Optional permission payload that the host can use to ask the user for
++     * approval before actually executing the tool.
++     */
++    permission?: unknown;
++    /**
++     * Arbitrary host metadata preserved in the synthesized tool result details.
++     */
++    metadata?: Record<string, unknown>;
++}
+ /**
+  * Result returned from `beforeToolCall`.
+  *
+  * Returning `{ block: true }` prevents the tool from executing. The loop emits an error tool result instead.
+  * `reason` becomes the text shown in that error result. If omitted, a default blocked message is used.
++ *
++ * Returning `request`, `content`, or `details` short-circuits local execution and
++ * emits a synthesized tool result immediately. This is intended for request-first
++ * runtimes that want to surface a tool proposal to the host for permission,
++ * delegation, or external fulfillment before continuing.
+  */
+ export interface BeforeToolCallResult {
+     block?: boolean;
+     reason?: string;
++    request?: BeforeToolCallRequest;
++    content?: (TextContent | ImageContent)[];
++    details?: unknown;
++    isError?: boolean;
++    /**
++     * Hint that the agent should stop after the current tool batch.
++     * Defaults to `true` when `request` is provided so hosts can pause on
++     * permission/delegation boundaries.
++     */
++    terminate?: boolean;
+ }
+ /**
+  * Partial override returned from `afterToolCall`.

@@ -182,5 +182,11 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     streamSignalVersion,
     userDidSend,
     onUserDidSendConsumed,
+    pendingToolPermissionRequest: null,
+    toolPermissionBusy: false,
+    toolPermissionError: null,
+    onDismissToolPermission: () => undefined,
+    onApproveToolPermission: async () => undefined,
+    onDenyToolPermission: async () => undefined,
   }
 }

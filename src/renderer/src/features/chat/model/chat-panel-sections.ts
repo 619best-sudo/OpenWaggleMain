@@ -8,6 +8,7 @@ import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/wagg
 import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 import type { AgentChatStatus, AgentCompactionStatus } from '../hooks/useAgentChat'
 import type { SessionForkTarget } from '../lib/session-fork-targets'
+import type { PendingToolPermissionRequest } from '../lib/tool-permission-request'
 import type { ChatRow } from '../lib/types-chat-row'
 
 export interface ChatTranscriptSectionState {
@@ -26,12 +27,18 @@ export interface ChatTranscriptSectionState {
   readonly userDidSend: boolean
   /** Clears userDidSend after the scroll effect processes it. */
   readonly onUserDidSendConsumed: () => void
+  readonly pendingToolPermissionRequest: PendingToolPermissionRequest | null
+  readonly toolPermissionBusy: boolean
+  readonly toolPermissionError: string | null
   onOpenProject: () => Promise<void>
   onSelectProjectPath: (path: string) => void
   onRetryText: (content: string) => Promise<void>
   onOpenSettings: () => void
   onApproveMachinePlan: () => Promise<void>
   onDiscardMachinePlan: () => Promise<void>
+  onDismissToolPermission: () => void
+  onApproveToolPermission: () => Promise<void>
+  onDenyToolPermission: () => Promise<void>
   onDismissError: (errorId: string | null) => void
   onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   onBranchFromMessage: (messageId: string) => void

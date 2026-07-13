@@ -217,6 +217,10 @@ export function useAgentChat(
       runControls.withDeferredSnapshotRefresh(async () => {
         await runControls.sendUserPayload(payload, config)
       }),
+    resolveToolPermission: async (resolution) =>
+      runControls.withDeferredSnapshotRefresh(async () => {
+        await runControls.resolveToolPermission(resolution)
+      }),
     isLoading,
     status: backgroundStreaming ? 'streaming' : status,
     stop: runControls.stop,

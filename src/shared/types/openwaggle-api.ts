@@ -51,6 +51,7 @@ import type {
   TeammateAgentGenerationResult,
   TeammateDefinition,
 } from './teammate'
+import type { ToolPermissionResolution } from './tool-permission'
 import type { UpdateStatus } from './updater'
 import type { VoiceTranscriptionRequest, VoiceTranscriptionResult } from './voice'
 import type {
@@ -82,6 +83,11 @@ export interface OpenWaggleApi {
   cancelAgent(sessionId?: SessionId): Promise<void>
   cancelMachine(sessionId: SessionId): void
   steerAgent(sessionId: SessionId): Promise<{ preserved: boolean }>
+  resolveToolPermission(
+    sessionId: SessionId,
+    resolution: ToolPermissionResolution,
+    model: SupportedModelId,
+  ): Promise<void>
   /** Subscribe to live Pi-shaped runtime events from the main process */
   onAgentEvent(callback: (payload: IpcEventPayload<'agent:event'>) => void): () => void
 
