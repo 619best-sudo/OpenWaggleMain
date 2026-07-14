@@ -1,8 +1,14 @@
 import { WagglePresetId } from '@shared/types/brand'
+import type { McpServerSummary } from '@shared/types/mcp'
 import { describe, expect, it, vi } from 'vitest'
 import type { CommandPaletteItem } from '../../model'
 import { buildCommandPaletteEntries } from '../command-palette-entries'
-import { createBaseCommands, createPresetItems } from '../command-palette-items'
+import {
+  createBaseCommands,
+  createConfigureMcpItem,
+  createMcpItems,
+  createPresetItems,
+} from '../command-palette-items'
 import { normalizeCommandQuery, truncateCommandDescription } from '../command-palette-text'
 
 const {
@@ -102,8 +108,10 @@ describe('createBaseCommands', () => {
     const closeCommandPalette = vi.fn()
     const commands = createBaseCommands({
       closeCommandPalette,
+      configureMcp: vi.fn(),
       configureWaggle: vi.fn(),
       insertCompactCommand: vi.fn(),
+      toggleMcpServer: vi.fn(),
       selectPreset: vi.fn(),
       selectSkill: vi.fn(),
       startWaggle: vi.fn(),
@@ -113,7 +121,64 @@ describe('createBaseCommands', () => {
     expect(commands.map((command) => command.id)).not.toContain('new-worktree')
     expect(commands.map((command) => command.id)).not.toContain('personality')
     expect(commands.map((command) => command.id)).not.toContain('team-new')
+    expect(commands.map((command) => command.id)).toContain('mcp')
     expect(commands.some((command) => command.action === closeCommandPalette)).toBe(false)
+  })
+})
+
+describe('mcp command palette matching', () => {
+  const servers: McpServerSummary[] = [
+    {
+      name: 'playwright',
+      enabled: true,
+      sourceId: 'project-openwaggle',
+      sourceLabel: 'Project',
+      sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+      transport: 'stdio',
+      directTools: 'enabled',
+    },
+    {
+      name: 'database',
+      enabled: false,
+      sourceId: 'global-standard',
+      sourceLabel: 'Global',
+      sourcePath: '/tmp/global/mcp.json',
+      transport: 'http',
+      directTools: 'disabled',
+    },
+  ]
+
+  it('shows MCP servers with enabled state and source metadata', () => {
+    const toggleMcpServer = vi.fn()
+    const items = createMcpItems(servers, '', toggleMcpServer)
+
+    expect(items.map((item) => item.label)).toEqual(['playwright', 'database'])
+    expect(items[0]).toMatchObject({
+      section: 'MCPs',
+      trailing: 'On',
+      trailingBadge: 'Project',
+    })
+    expect(items[1]).toMatchObject({
+      trailing: 'Off',
+      trailingBadge: 'Global',
+    })
+
+    items[1]?.action()
+    expect(toggleMcpServer).toHaveBeenCalledWith(servers[1])
+  })
+
+  it('matches MCP servers by category and server name', () => {
+    expect(createMcpItems(servers, 'mcp', vi.fn()).map((item) => item.label)).toEqual([
+      'playwright',
+      'database',
+    ])
+    expect(createMcpItems(servers, 'play', vi.fn()).map((item) => item.label)).toEqual([
+      'playwright',
+    ])
+    expect(createMcpItems(servers, 'off', vi.fn()).map((item) => item.label)).toEqual([
+      'database',
+    ])
+    expect(createConfigureMcpItem('mcp', vi.fn())).toHaveLength(1)
   })
 })
 

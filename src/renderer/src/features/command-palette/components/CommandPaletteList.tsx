@@ -19,13 +19,13 @@ export function CommandPaletteList({
   const entries = buildCommandPaletteEntries(items)
 
   return (
-    <div ref={listRef} className="max-h-[400px] overflow-y-auto">
+    <div ref={listRef} className="max-h-[400px] overflow-y-auto px-1 pb-1.5 pt-1">
       {items.length === 0 ? <CommandPaletteEmptyState /> : null}
       {entries.map((entry) => {
         if (entry.type === 'section')
           return <CommandPaletteSectionHeader key={entry.key} label={entry.label} />
         if (entry.type === 'separator')
-          return <div key={entry.key} className="border-t border-border" />
+          return <div key={entry.key} className="mx-2 my-1 border-t border-border/40" />
         return (
           <CommandPaletteItemButton
             key={entry.key}
@@ -42,7 +42,7 @@ export function CommandPaletteList({
 
 function CommandPaletteEmptyState() {
   return (
-    <div className="flex h-16 items-center justify-center text-[13px] text-text-muted">
+    <div className="mx-1.5 my-2 flex h-14 items-center justify-center border border-dashed border-border/45 bg-bg-secondary/40 text-[12px] text-text-muted">
       No matching commands
     </div>
   )
@@ -54,8 +54,10 @@ interface CommandPaletteSectionHeaderProps {
 
 function CommandPaletteSectionHeader({ label }: CommandPaletteSectionHeaderProps) {
   return (
-    <div className="flex h-7 items-center border-t border-border px-3.5">
-      <span className="text-[11px] font-medium text-text-muted">{label}</span>
+    <div className="px-2 pb-0.5 pt-1.5">
+      <span className="inline-flex items-center text-[10px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+        {label}
+      </span>
     </div>
   )
 }

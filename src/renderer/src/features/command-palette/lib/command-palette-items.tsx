@@ -1,3 +1,4 @@
+import type { McpServerSummary } from '@shared/types/mcp'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
 import type { WagglePreset } from '@shared/types/waggle'
 import {
@@ -7,6 +8,7 @@ import {
   GitPullRequest,
   ListTree,
   MessageSquare,
+  Plug,
   Settings,
   Shield,
   ShieldAlert,
@@ -23,6 +25,7 @@ import { openFeedbackModal } from './command-palette-actions'
 import { truncateCommandDescription } from './command-palette-text'
 
 const PAIR_DISCOVERY_TERMS = ['panel', 'pair', 'waggle'] as const
+const MCP_DISCOVERY_TERMS = ['mcp', 'mcps', 'server', 'servers', 'tool', 'tools'] as const
 const VISIBLE_PANEL_PRESET_IDS: ReadonlySet<string> = new Set(['debate', 'red-team'])
 
 export function createBaseCommands(actions: CommandPaletteActionHandlers) {
@@ -38,6 +41,13 @@ export function createBaseCommands(actions: CommandPaletteActionHandlers) {
       description: 'Start a Council of Experts session',
       icon: <Waypoints className="size-3.5" />,
       action: actions.startWaggle,
+    },
+    {
+      id: 'mcp',
+      label: 'MCPs',
+      description: 'Select MCP servers for this project',
+      icon: <Plug className="size-3.5" />,
+      action: actions.configureMcp,
     },
     {
       id: 'feedback',
@@ -112,6 +122,40 @@ export function createPresetItems(
   return items
 }
 
+export function createMcpItems(
+  servers: readonly McpServerSummary[],
+  lowerQuery: string,
+  toggleMcpServer: CommandPaletteActionHandlers['toggleMcpServer'],
+) {
+  const sortedServers = [...servers].sort(
+    (a, b) =>
+      Number(b.enabled) - Number(a.enabled) ||
+      a.name.localeCompare(b.name) ||
+      a.sourceLabel.localeCompare(b.sourceLabel),
+  )
+
+  const items: CommandPaletteItem[] = []
+  for (const server of sortedServers) {
+    if (!mcpMatchesQuery(server, lowerQuery)) continue
+
+    items.push({
+      id: `mcp-${server.sourceId}-${server.name}`,
+      label: server.name,
+      description: truncateCommandDescription(
+        `${server.sourceLabel} • ${formatMcpTransport(server)}`,
+        COMMAND_PALETTE.DESCRIPTION_LIMIT,
+      ),
+      icon: <Plug className="size-3.5" />,
+      section: 'MCPs',
+      trailing: server.enabled ? 'On' : 'Off',
+      trailingBadge: server.sourceLabel,
+      action: () => toggleMcpServer(server),
+    })
+  }
+
+  return items
+}
+
 export function createConfigureWaggleItem(lowerQuery: string, configureWaggle: () => void) {
   if (!isWaggleFilter(lowerQuery)) return []
   return [
@@ -122,6 +166,20 @@ export function createConfigureWaggleItem(lowerQuery: string, configureWaggle: (
       icon: <Settings className="size-3.5" />,
       section: 'configure',
       action: configureWaggle,
+    },
+  ]
+}
+
+export function createConfigureMcpItem(lowerQuery: string, configureMcp: () => void) {
+  if (!isMcpFilter(lowerQuery)) return []
+  return [
+    {
+      id: 'configure-mcp',
+      label: 'Configure MCPs...',
+      description: 'Open MCP settings',
+      icon: <Settings className="size-3.5" />,
+      section: 'configure',
+      action: configureMcp,
     },
   ]
 }
@@ -175,11 +233,37 @@ function skillMatchesQuery(skill: SkillDiscoveryItem, lowerQuery: string) {
   )
 }
 
+function mcpMatchesQuery(server: McpServerSummary, lowerQuery: string) {
+  if (!lowerQuery) return true
+
+  const lowerName = server.name.toLowerCase()
+  const lowerSourceLabel = server.sourceLabel.toLowerCase()
+  const lowerTransport = formatMcpTransport(server)
+  const statusTerms = server.enabled
+    ? ['enabled', 'active', 'on']
+    : ['disabled', 'inactive', 'off']
+
+  return (
+    lowerName.includes(lowerQuery) ||
+    lowerSourceLabel.includes(lowerQuery) ||
+    lowerTransport.includes(lowerQuery) ||
+    MCP_DISCOVERY_TERMS.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term)) ||
+    statusTerms.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term))
+  )
+}
+
 function presetMatchesQuery(preset: WagglePreset, lowerQuery: string) {
   return (
     !lowerQuery ||
     preset.name.toLowerCase().includes(lowerQuery) ||
     PAIR_DISCOVERY_TERMS.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term))
+  )
+}
+
+function isMcpFilter(lowerQuery: string) {
+  return (
+    lowerQuery.length > 0 &&
+    MCP_DISCOVERY_TERMS.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term))
   )
 }
 
@@ -198,6 +282,10 @@ function presetIcon(preset: WagglePreset) {
   if (name.includes('red team')) return <ShieldAlert className="size-3.5" />
   if (name.includes('qa') || name.includes('test')) return <Shield className="size-3.5" />
   return <User className="size-3.5" />
+}
+
+function formatMcpTransport(server: McpServerSummary) {
+  return server.transport === 'unknown' ? 'server' : server.transport
 }
 
 function appendOptionalCommand(commands: CommandPaletteItem[], command: CommandPaletteItem | null) {

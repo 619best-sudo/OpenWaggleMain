@@ -7,7 +7,7 @@ export type ThinkingLevel = (typeof THINKING_LEVELS)[number]
 export const THEME_MODES = ['light', 'dark'] as const
 export type ThemeMode = (typeof THEME_MODES)[number]
 
-export const TOOL_PERMISSION_MODES = ['ask', 'allow-all'] as const
+export const TOOL_PERMISSION_MODES = ['ask', 'ask-edit', 'allow-all'] as const
 export type ToolPermissionMode = (typeof TOOL_PERMISSION_MODES)[number]
 
 export function isThemeMode(value: unknown): value is ThemeMode {

@@ -123,11 +123,6 @@ describe('BranchPicker', () => {
   it('marks current branch with indicator', () => {
     useComposerStore.setState({ branchMenuOpen: true })
     render(<BranchPicker />)
-    // "main" is current, should have the ● indicator
-    const mainButtons = screen.getAllByRole('button')
-    const mainBranch = mainButtons.find(
-      (b) => b.textContent?.includes('main') && b.textContent?.includes('●'),
-    )
-    expect(mainBranch).toBeTruthy()
+    expect(screen.getByLabelText('Current branch')).toBeInTheDocument()
   })
 })

@@ -133,10 +133,10 @@ describe('ComposerToolbar', () => {
     renderToolbar()
 
     fireEvent.click(screen.getByTitle('Permission: Ask'))
-    fireEvent.click(screen.getByRole('button', { name: /Allow all/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Ask only edit/i }))
 
     await waitFor(() => {
-      expect(usePreferencesStore.getState().settings.toolPermissionMode).toBe('allow-all')
+      expect(usePreferencesStore.getState().settings.toolPermissionMode).toBe('ask-edit')
     })
   })
 

@@ -139,7 +139,7 @@ function RemoteBranchRow({ branch, onCheckout }: BranchRowProps) {
       )}
     >
       <span className="truncate">{branch.name}</span>
-      {branch.isCurrent ? <span>●</span> : null}
+      {branch.isCurrent ? <ActiveBranchIndicator /> : null}
     </Button>
   )
 }
@@ -156,7 +156,18 @@ function BranchCheckoutButton({ branch, onCheckout }: BranchRowProps) {
       )}
     >
       <span className="truncate">{branch.name}</span>
-      {branch.isCurrent ? <span>●</span> : null}
+      {branch.isCurrent ? <ActiveBranchIndicator /> : null}
     </Button>
+  )
+}
+
+function ActiveBranchIndicator() {
+  return (
+    <span
+      aria-label="Current branch"
+      className="flex size-3 shrink-0 items-center justify-center rounded-full border border-success/70"
+    >
+      <span className="size-1.5 rounded-full bg-success" />
+    </span>
   )
 }

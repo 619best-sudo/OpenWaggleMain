@@ -58,7 +58,7 @@ export function CommandPalette({
   }
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-[var(--theme-command-palette-border)] bg-[var(--theme-command-palette-bg)]">
+    <div className="w-full overflow-hidden rounded-xl border border-border/70 bg-code-card">
       <CommandPaletteSearch
         inputRef={inputRef}
         query={query}

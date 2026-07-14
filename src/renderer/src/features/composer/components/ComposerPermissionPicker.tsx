@@ -1,5 +1,5 @@
 import { TOOL_PERMISSION_MODES, type ToolPermissionMode } from '@shared/types/settings'
-import { Check, Shield, ShieldCheck } from 'lucide-react'
+import { Check, Shield, ShieldCheck, ShieldEllipsis } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { usePreferencesStore } from '@/features/settings/state'
 import { cn } from '@/shared/lib/cn'
@@ -8,11 +8,13 @@ import { Popover } from '@/shared/ui/Popover'
 
 const PERMISSION_MODE_LABELS: Record<ToolPermissionMode, string> = {
   ask: 'Ask',
+  'ask-edit': 'Ask only edit',
   'allow-all': 'Allow all',
 }
 
 const PERMISSION_MODE_HELPER: Record<ToolPermissionMode, string> = {
   ask: 'Show permission prompts before guarded tools run.',
+  'ask-edit': 'Let tools run by default, but ask before code mutation tools run.',
   'allow-all': 'Run guarded tools without permission prompts by default.',
 }
 
@@ -50,6 +52,8 @@ export function ComposerPermissionPicker() {
         >
           {permissionMode === 'allow-all' ? (
             <ShieldCheck className="size-[13px] shrink-0 text-text-tertiary" />
+          ) : permissionMode === 'ask-edit' ? (
+            <ShieldEllipsis className="size-[13px] shrink-0 text-text-tertiary" />
           ) : (
             <Shield className="size-[13px] shrink-0 text-text-tertiary" />
           )}

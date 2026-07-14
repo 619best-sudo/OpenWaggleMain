@@ -19,29 +19,31 @@ export function CommandPaletteSearch({
   onClose,
 }: CommandPaletteSearchProps) {
   return (
-    <div className="flex h-11 items-center gap-2 border-b border-border px-3.5">
-      <Search className="size-3.5 shrink-0 text-text-tertiary" />
-      <TextInput
-        ref={inputRef}
-        type="text"
-        value={query}
-        onKeyDown={onKeyDown}
-        onChange={(event) => onQueryChange(event.target.value)}
-        placeholder="Search"
-        variant="transparent"
-        inputSize="sm"
-        className="flex-1 px-0"
-      />
-      <Button
-        variant="unstyled"
-        type="button"
-        onClick={onClose}
-        className="shrink-0 rounded-md p-1 text-text-muted transition-colors hover:bg-bg-hover hover:text-text-primary"
-        aria-label="Close command palette"
-        title="Close"
-      >
-        <X className="size-3.5" />
-      </Button>
+    <div className="border-b border-border/60 bg-code-card px-3 py-1.5">
+      <div className="flex items-center gap-2.5 border-b border-border/45 pb-1.5">
+        <Search className="size-3.5 shrink-0 text-text-tertiary" />
+        <TextInput
+          ref={inputRef}
+          type="text"
+          value={query}
+          onKeyDown={onKeyDown}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder="Search"
+          variant="transparent"
+          inputSize="sm"
+          className="h-8 flex-1 px-0 text-[12px] placeholder:text-text-muted focus-visible:shadow-none"
+        />
+        <Button
+          variant="unstyled"
+          type="button"
+          onClick={onClose}
+          className="shrink-0 rounded-sm p-1 text-text-muted transition-colors hover:bg-bg-hover/60 hover:text-text-primary"
+          aria-label="Close command palette"
+          title="Close"
+        >
+          <X className="size-3.5" />
+        </Button>
+      </div>
     </div>
   )
 }

@@ -233,7 +233,7 @@ export async function createPiRuntimeServices(
     mcpServerNames: await loadTuringMachineMcpServerNames(mcpRuntimeContext?.configPath),
   })
   const toolPermissionRequestExtensionFactory = createToolPermissionRequestExtension({
-    toolNames: ['bash', 'read', 'write', 'edit', 'multiedit', 'grep', 'find', 'ls'],
+    toolNames: ['bash', 'read', 'write', 'edit', 'patch', 'multiedit', 'grep', 'find', 'ls'],
     getPermissionMode: async () => {
       const settings = await runAppEffect(Effect.gen(function* () {
         const service = yield* SettingsService

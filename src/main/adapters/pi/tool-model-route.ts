@@ -9,7 +9,7 @@ function normalizeToolName(toolName: string) {
   return toolName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '')
 }
 
-function isCodeEditingTool(toolName: string) {
+export function isCodeEditingTool(toolName: string) {
   const normalized = normalizeToolName(toolName)
   if (CODE_EDITING_TOOL_NAMES.has(normalized)) {
     return true

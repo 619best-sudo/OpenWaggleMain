@@ -2,7 +2,7 @@ import type { ExtensionFactory } from '@mariozechner/pi-coding-agent'
 import type { ToolPermissionRequestEnvelope } from '@shared/types/tool-permission'
 import type { ToolPermissionMode } from '@shared/types/settings'
 import { registerApprovedToolExecutionModel } from './tool-execution-model-state'
-import { resolveToolExecutionModel } from './tool-model-route'
+import { isCodeEditingTool, resolveToolExecutionModel } from './tool-model-route'
 
 type JsonRecord = Record<string, unknown>
 type ToolCallEvent = {
@@ -38,6 +38,18 @@ function toTitle(value: string) {
 
 function normalizeToolNames(toolNames: readonly string[] | undefined) {
   return new Set((toolNames ?? ['bash']).map((toolName) => toolName.trim().toLowerCase()).filter(Boolean))
+}
+
+function shouldRequestPermission(toolName: string, permissionMode: ToolPermissionMode) {
+  if (permissionMode === 'allow-all') {
+    return false
+  }
+
+  if (permissionMode === 'ask-edit') {
+    return isCodeEditingTool(toolName)
+  }
+
+  return true
 }
 
 function readToolTarget(input: JsonRecord) {
@@ -120,7 +132,7 @@ export function createToolPermissionRequestExtension(
 
       const permissionMode = (await options.getPermissionMode?.()) ?? 'ask'
       const toolExecutionModel = resolveToolExecutionModel(event.toolName)
-      if (permissionMode === 'allow-all') {
+      if (!shouldRequestPermission(event.toolName, permissionMode)) {
         registerApprovedToolExecutionModel(toolExecutionModel)
         return undefined
       }

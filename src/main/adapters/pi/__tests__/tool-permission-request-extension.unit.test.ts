@@ -193,4 +193,50 @@ describe('createToolPermissionRequestExtension', () => {
 
     expect(consumeApprovedToolExecutionModel()).toBe('bytedance-seed/seed-2.0-mini')
   })
+
+  it('only intercepts code-editing tools when ask-edit mode is active', async () => {
+    const harness = createExtensionHarness()
+    createToolPermissionRequestExtension({
+      toolNames: ['bash', 'read', 'write', 'edit', 'patch', 'multiedit'],
+      getPermissionMode: () => 'ask-edit',
+    })(harness.pi as never)
+
+    await expect(
+      harness.getToolCallHandler()({
+        toolName: 'bash',
+        input: { command: 'ls -la' },
+      }),
+    ).resolves.toBeUndefined()
+
+    const result = (await harness.getToolCallHandler()({
+      toolName: 'write',
+      input: { path: 'src/main.ts', content: 'console.log("hi")' },
+    })) as Record<string, unknown>
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        terminate: true,
+        request: expect.objectContaining({
+          model: 'tencent/hy3',
+        }),
+      }),
+    )
+  })
+
+  it('queues the routed execution model for non-edit tools in ask-edit mode', async () => {
+    const harness = createExtensionHarness()
+    createToolPermissionRequestExtension({
+      toolNames: ['bash', 'read', 'write', 'edit', 'patch', 'multiedit'],
+      getPermissionMode: () => 'ask-edit',
+    })(harness.pi as never)
+
+    await expect(
+      harness.getToolCallHandler()({
+        toolName: 'read',
+        input: { path: 'src/main.ts' },
+      }),
+    ).resolves.toBeUndefined()
+
+    expect(consumeApprovedToolExecutionModel()).toBe('bytedance-seed/seed-2.0-mini')
+  })
 })
