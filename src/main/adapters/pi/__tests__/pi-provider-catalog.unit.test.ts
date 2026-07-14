@@ -137,6 +137,23 @@ describe('createPiRuntimeServices', () => {
     }
   })
 
+  it('registers a default tool_call permission handler in project runtimes', async () => {
+    const projectPath = await createTempProject()
+
+    try {
+      const services = await createPiRuntimeServices(projectPath)
+      const extensions = services.resourceLoader.getExtensions().extensions
+      const hasToolPermissionHandler = extensions.some((extension) => {
+        const handlers = extension.handlers.get('tool_call')
+        return Array.isArray(handlers) && handlers.length > 0
+      })
+
+      expect(hasToolPermissionHandler).toBe(true)
+    } finally {
+      await fs.rm(projectPath, { recursive: true, force: true })
+    }
+  })
+
   it('prefers .openwaggle resources over Pi-native project resources on name collisions', async () => {
     const projectPath = await createTempProject()
     const openWaggleSkill = await writeSkill(projectPath, '.openwaggle', 'shared-skill')

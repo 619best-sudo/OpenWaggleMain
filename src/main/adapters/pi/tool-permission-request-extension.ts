@@ -2,7 +2,7 @@ import type { ExtensionFactory } from '@mariozechner/pi-coding-agent'
 import type { ToolPermissionRequestEnvelope } from '@shared/types/tool-permission'
 import type { ToolPermissionMode } from '@shared/types/settings'
 import { registerApprovedToolExecutionModel } from './tool-execution-model-state'
-import { isCodeEditingTool, resolveToolExecutionModel } from './tool-model-route'
+import { isCodeEditingTool, normalizeToolName, resolveToolExecutionModel } from './tool-model-route'
 
 type JsonRecord = Record<string, unknown>
 type ToolCallEvent = {
@@ -23,6 +23,7 @@ interface ApprovedToolPermission {
 
 const APPROVED_PERMISSION_TTL_MS = 2 * 60 * 1000
 const approvedToolPermissions = new Map<string, ApprovedToolPermission>()
+const CODE_EDITING_GUARDED_TOOL_NAMES = ['edit', 'write', 'patch', 'multiedit'] as const
 
 function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -37,7 +38,22 @@ function toTitle(value: string) {
 }
 
 function normalizeToolNames(toolNames: readonly string[] | undefined) {
-  return new Set((toolNames ?? ['bash']).map((toolName) => toolName.trim().toLowerCase()).filter(Boolean))
+  return new Set((toolNames ?? ['bash']).map((toolName) => normalizeToolName(toolName)).filter(Boolean))
+}
+
+function shouldGuardTool(toolName: string, guardedToolNames: ReadonlySet<string>) {
+  const normalizedToolName = normalizeToolName(toolName)
+  if (guardedToolNames.has(normalizedToolName)) {
+    return true
+  }
+
+  if (!isCodeEditingTool(toolName)) {
+    return false
+  }
+
+  return CODE_EDITING_GUARDED_TOOL_NAMES.some((guardedToolName) =>
+    guardedToolNames.has(guardedToolName),
+  )
 }
 
 function shouldRequestPermission(toolName: string, permissionMode: ToolPermissionMode) {
@@ -86,7 +102,7 @@ function stableJson(value: unknown): string {
 }
 
 function buildToolPermissionFingerprint(toolName: string, input: unknown) {
-  return `${toolName.trim().toLowerCase()}::${stableJson(input)}`
+  return `${normalizeToolName(toolName)}::${stableJson(input)}`
 }
 
 function pruneExpiredApprovals(now = Date.now()) {
@@ -126,7 +142,7 @@ export function createToolPermissionRequestExtension(
 
   return (pi) => {
     ;(pi.on as (event: 'tool_call', handler: ToolCallHandler) => void)('tool_call', async (event) => {
-      if (!guardedToolNames.has(event.toolName.trim().toLowerCase())) {
+      if (!shouldGuardTool(event.toolName, guardedToolNames)) {
         return undefined
       }
 

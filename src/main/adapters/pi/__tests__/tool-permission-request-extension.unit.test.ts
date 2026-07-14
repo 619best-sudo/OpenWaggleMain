@@ -77,6 +77,27 @@ describe('createToolPermissionRequestExtension', () => {
     ).resolves.toBeUndefined()
   })
 
+  it('matches guarded tool names after normalization', async () => {
+    const harness = createExtensionHarness()
+    createToolPermissionRequestExtension({ toolNames: ['multi_edit'] })(harness.pi as never)
+
+    const result = (await harness.getToolCallHandler()({
+      toolName: 'multi-edit',
+      input: { path: 'src/main.ts', edits: [{ oldText: 'a', newText: 'b' }] },
+    })) as Record<string, unknown>
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        terminate: true,
+        request: expect.objectContaining({
+          permission: expect.objectContaining({
+            toolName: 'multi-edit',
+          }),
+        }),
+      }),
+    )
+  })
+
   it('returns a request envelope for read tool calls', async () => {
     const harness = createExtensionHarness()
     createToolPermissionRequestExtension({ toolNames: ['bash', 'read'] })(harness.pi as never)
@@ -238,5 +259,30 @@ describe('createToolPermissionRequestExtension', () => {
     ).resolves.toBeUndefined()
 
     expect(consumeApprovedToolExecutionModel()).toBe('bytedance-seed/seed-2.0-mini')
+  })
+
+  it('intercepts edit aliases when edit-family tools are guarded', async () => {
+    const harness = createExtensionHarness()
+    createToolPermissionRequestExtension({
+      toolNames: ['edit', 'write', 'patch', 'multiedit'],
+      getPermissionMode: () => 'ask',
+    })(harness.pi as never)
+
+    const result = (await harness.getToolCallHandler()({
+      toolName: 'write-file',
+      input: { path: 'src/main.ts', content: 'console.log("hi")' },
+    })) as Record<string, unknown>
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        terminate: true,
+        request: expect.objectContaining({
+          model: 'tencent/hy3',
+          permission: expect.objectContaining({
+            toolName: 'write-file',
+          }),
+        }),
+      }),
+    )
   })
 })

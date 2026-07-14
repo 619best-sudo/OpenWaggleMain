@@ -5,7 +5,7 @@ const CODE_EDITING_TOOL_EXECUTION_MODEL = 'tencent/hy3'
 const READ_TOOL_NAMES = new Set(['read'])
 const CODE_EDITING_TOOL_NAMES = new Set(['edit', 'write', 'patch', 'multiedit'])
 
-function normalizeToolName(toolName: string) {
+export function normalizeToolName(toolName: string) {
   return toolName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '')
 }
 
