@@ -159,6 +159,7 @@ export function ChatRouteSurface({
             <ChatPanelContent
               sections={sections}
               onOpenSessionTree={() => handleSessionTreeOpenChange(true)}
+              routeSessionId={sessionId}
             />
           </RightSidebarLayout>
         )}

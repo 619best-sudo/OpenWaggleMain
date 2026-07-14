@@ -1,6 +1,7 @@
 import type { JsonObject, JsonValue } from './json'
 
 export type ToolPermissionDecision = 'approved' | 'denied'
+export const TOOL_PERMISSION_CUSTOM_TYPE = 'openwaggle.tool-permission-resolution'
 
 export interface ToolPermissionRequestEnvelope {
   readonly toolCallId: string

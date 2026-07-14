@@ -57,4 +57,21 @@ describe('findLatestPendingToolPermissionRequest', () => {
 
     expect(request).toBeNull()
   })
+
+  it('does not resurrect an older permission request when newer transcript content exists', () => {
+    const request = findLatestPendingToolPermissionRequest(
+      [
+        makePermissionMessage(),
+        {
+          id: 'assistant-2',
+          role: 'assistant',
+          createdAt: new Date(),
+          parts: [{ type: 'text', content: 'Done.' }],
+        },
+      ],
+      new Set(),
+    )
+
+    expect(request).toBeNull()
+  })
 })

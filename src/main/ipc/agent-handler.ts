@@ -14,10 +14,11 @@ import { agentSendPayloadSchema, toolPermissionResolutionSchema } from '@shared/
 import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionId } from '@shared/types/brand'
 import type { SupportedModelId } from '@shared/types/llm'
-import type { ToolPermissionResolution } from '@shared/types/tool-permission'
+import { TOOL_PERMISSION_CUSTOM_TYPE, type ToolPermissionResolution } from '@shared/types/tool-permission'
 import type { AgentTransportEvent } from '@shared/types/stream'
 import * as Effect from 'effect/Effect'
 import { registerApprovedToolPermission } from '../adapters/pi/tool-permission-request-extension'
+import { registerApprovedToolExecutionModel } from '../adapters/pi/tool-execution-model-state'
 import { getPhaseForSession } from '../agent/phase-tracker'
 import { cleanupSessionRun } from '../agent/session-cleanup'
 import { type AgentRunResult, executeAgentRun } from '../application/agent-run-service'
@@ -66,14 +67,18 @@ function handleRunResult(sessionId: SessionId, result: AgentRunResult) {
     .exhaustive()
 }
 
-const TOOL_PERMISSION_CUSTOM_TYPE = 'openwaggle.tool-permission-resolution'
-
 function buildToolPermissionResolutionPrompt(resolution: ToolPermissionResolution) {
   const requestJson = JSON.stringify(
     {
       toolCallId: resolution.request.toolCallId,
       toolName: resolution.request.toolName,
       input: resolution.request.input,
+      ...(resolution.request.model
+        ? {
+            model: resolution.request.model,
+            requestedToolModel: resolution.request.model,
+          }
+        : {}),
     },
     null,
     2,
@@ -81,9 +86,9 @@ function buildToolPermissionResolutionPrompt(resolution: ToolPermissionResolutio
 
   if (resolution.decision === 'approved') {
     return [
-      'The user approved a pending tool permission request.',
-      'Continue the run from this point.',
-      'If the exact same tool call is still required, run it now using the same arguments.',
+      'Resume the run from the suspended tool decision.',
+      'Do not mention the permission approval to the user.',
+      'If the exact same tool call is still required, run it now using the same arguments without re-explaining the approval.',
       'Do not ask for permission again for this exact request.',
       '',
       requestJson,
@@ -110,6 +115,12 @@ function toolPermissionPromptDelivery(resolution: ToolPermissionResolution) {
       toolCallId: resolution.request.toolCallId,
       toolName: resolution.request.toolName,
       input: resolution.request.input,
+      ...(resolution.request.model
+        ? {
+            model: resolution.request.model,
+            requestedToolModel: resolution.request.model,
+          }
+        : {}),
     },
   }
 }
@@ -190,6 +201,38 @@ function registerAgentRunHandlers() {
     'agent:resolve-tool-permission',
     (_event, sessionId: SessionId, resolution: ToolPermissionResolution, model: SupportedModelId) =>
       Effect.gen(function* () {
+        // #region debug-point A:ipc-handler-entry
+        ;(() => {
+          const fallbackUrl = 'http://127.0.0.1:7779/event'
+          const fallbackSession = 'tool-model-routing'
+          let debugServerUrl = fallbackUrl
+          let debugSessionId = fallbackSession
+          try {
+            const fs = require('node:fs')
+            const env = fs.readFileSync('.dbg/tool-model-routing.env', 'utf8') as string
+            debugServerUrl = env.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? fallbackUrl
+            debugSessionId = env.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? fallbackSession
+          } catch {}
+          void fetch(debugServerUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: debugSessionId,
+              runId: 'pre-fix',
+              hypothesisId: 'A',
+              location: 'agent-handler.ts:resolve-tool-permission',
+              msg: '[DEBUG] Main process entered resolve-tool-permission handler',
+              data: {
+                sessionId,
+                resolutionModel: resolution.request?.model ?? null,
+                decision: resolution.decision,
+                activeModel: model,
+              },
+              ts: Date.now(),
+            }),
+          }).catch(() => {})
+        })()
+        // #endregion
         const validatedResolution = decodeUnknownOrThrow(toolPermissionResolutionSchema, resolution)
 
         if (cancelSessionRuns(sessionId)) {
@@ -198,7 +241,43 @@ function registerAgentRunHandlers() {
 
         if (validatedResolution.decision === 'approved') {
           registerApprovedToolPermission(validatedResolution.request)
+          if (validatedResolution.request.model) {
+            registerApprovedToolExecutionModel(validatedResolution.request.model)
+          }
         }
+        // #region debug-point A:permission-resolution-resume
+        ;(() => {
+          const fallbackUrl = 'http://127.0.0.1:7779/event'
+          const fallbackSession = 'tool-model-routing'
+          let debugServerUrl = fallbackUrl
+          let debugSessionId = fallbackSession
+          try {
+            const fs = require('node:fs')
+            const env = fs.readFileSync('.dbg/tool-model-routing.env', 'utf8') as string
+            debugServerUrl = env.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? fallbackUrl
+            debugSessionId = env.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? fallbackSession
+          } catch {}
+          void fetch(debugServerUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: debugSessionId,
+              runId: 'pre-fix',
+              hypothesisId: 'A',
+              location: 'agent-handler.ts',
+              msg: '[DEBUG] Tool permission resolution resumed agent run',
+              data: {
+                sessionId,
+                decision: validatedResolution.decision,
+                requestedToolName: validatedResolution.request.toolName,
+                requestedModel: validatedResolution.request.model ?? null,
+                activeRunModel: model,
+              },
+              ts: Date.now(),
+            }),
+          }).catch(() => {})
+        })()
+        // #endregion
 
         const abortController = new AbortController()
         const runId = randomUUID()

@@ -445,29 +445,52 @@ export function useChatPanelSections(): ChatPanelSections {
       return
     }
 
+    const currentRequest = pendingToolPermissionRequest
+
+    setSuppressedToolPermissionId(currentRequest.toolCallId)
     setToolPermissionBusy(true)
     setToolPermissionError(null)
+    // #region debug-point A:renderer-permission-submit
+    void fetch('http://127.0.0.1:7779/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'tool-model-routing',
+        runId: 'pre-fix',
+        hypothesisId: 'A',
+        location: 'use-chat-panel-controller.ts:handleResolveToolPermission',
+        msg: '[DEBUG] Renderer submitted tool permission resolution',
+        data: {
+          decision,
+          toolCallId: currentRequest.toolCallId,
+          toolName: currentRequest.toolName,
+          model: currentRequest.model ?? null,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {})
+    // #endregion
     try {
       await resolveToolPermission({
         request: {
-          toolCallId: pendingToolPermissionRequest.toolCallId,
-          toolName: pendingToolPermissionRequest.toolName,
-          input: pendingToolPermissionRequest.input,
-          title: pendingToolPermissionRequest.title,
-          description: pendingToolPermissionRequest.description,
-          model: pendingToolPermissionRequest.model,
+          toolCallId: currentRequest.toolCallId,
+          toolName: currentRequest.toolName,
+          input: currentRequest.input,
+          title: currentRequest.title,
+          description: currentRequest.description,
+          model: currentRequest.model,
         },
         decision,
       })
-      setSuppressedToolPermissionId(pendingToolPermissionRequest.toolCallId)
       setDismissedToolPermissionIds((current) => {
         const next = new Set(current)
-        next.add(pendingToolPermissionRequest.toolCallId)
+        next.add(currentRequest.toolCallId)
         return next
       })
       setToolPermissionBusy(false)
     } catch (permissionError) {
       const message = permissionError instanceof Error ? permissionError.message : String(permissionError)
+      setSuppressedToolPermissionId((current) => (current === currentRequest.toolCallId ? null : current))
       setToolPermissionBusy(false)
       setToolPermissionError(message)
       showToast(message)

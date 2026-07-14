@@ -36,7 +36,7 @@ export function ToolPermissionDialog({
       <div className="mx-auto w-full max-w-[960px]">
         <div className="rounded-none rounded-tl-md rounded-tr-md border-x border-t border-border/40 bg-bg-secondary p-3.5 shadow-none">
           <div className="mb-2.5 flex items-center gap-2">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-warning">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-text-primary">
               Permission
             </p>
             <span className="rounded-md bg-warning/15 px-2 py-0.5 text-[10px] font-medium text-warning-foreground">

@@ -10,6 +10,7 @@ import {
   SETTINGS_KEY_SKILL_TOGGLES_BY_PROJECT,
   SETTINGS_KEY_THEME_MODE,
   SETTINGS_KEY_THINKING_LEVEL,
+  SETTINGS_KEY_TOOL_PERMISSION_MODE,
 } from './keys'
 import { isValidThinkingLevel } from './sanitizers'
 
@@ -101,6 +102,12 @@ export function collectSettingsPatchWrites(partial: Partial<Settings>, next: Set
     partial.showCustomExecutionTeam !== undefined,
     SETTINGS_KEY_SHOW_CUSTOM_EXECUTION_TEAM,
     next.showCustomExecutionTeam,
+  )
+  appendChangedSetting(
+    writes,
+    partial.toolPermissionMode !== undefined,
+    SETTINGS_KEY_TOOL_PERMISSION_MODE,
+    next.toolPermissionMode,
   )
 
   return writes

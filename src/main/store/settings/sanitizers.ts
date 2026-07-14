@@ -1,7 +1,7 @@
 import { BASE_TEN, PERCENT_BASE } from '@shared/constants/math'
 import { SupportedModelId } from '@shared/types/brand'
 import { parseModelRef } from '@shared/types/llm'
-import { DEFAULT_SETTINGS, THINKING_LEVELS } from '@shared/types/settings'
+import { DEFAULT_SETTINGS, THINKING_LEVELS, TOOL_PERMISSION_MODES } from '@shared/types/settings'
 import { includes } from '@shared/utils/validation'
 
 export function isObjectRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -16,12 +16,20 @@ export function isValidThinkingLevel(value: unknown) {
   return typeof value === 'string' && includes(THINKING_LEVELS, value)
 }
 
+export function isValidToolPermissionMode(value: unknown) {
+  return typeof value === 'string' && includes(TOOL_PERMISSION_MODES, value)
+}
+
 export function resolveProjectPath(raw: unknown) {
   return isStringOrNull(raw) ? raw : DEFAULT_SETTINGS.projectPath
 }
 
 export function resolveThinkingLevel(raw: unknown) {
   return isValidThinkingLevel(raw) ? raw : DEFAULT_SETTINGS.thinkingLevel
+}
+
+export function resolveToolPermissionMode(raw: unknown) {
+  return isValidToolPermissionMode(raw) ? raw : DEFAULT_SETTINGS.toolPermissionMode
 }
 
 export function normalizeStoredModelRef(raw: string) {

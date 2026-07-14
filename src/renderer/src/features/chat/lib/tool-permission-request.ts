@@ -68,23 +68,22 @@ export function findLatestPendingToolPermissionRequest(
   messages: readonly UIMessage[],
   dismissedRequestIds: ReadonlySet<string>,
 ): PendingToolPermissionRequest | null {
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    const message = messages[index]
-    if (!message) {
+  const latestMessage = messages.at(-1)
+  if (!latestMessage) {
+    return null
+  }
+
+  for (let partIndex = latestMessage.parts.length - 1; partIndex >= 0; partIndex -= 1) {
+    const part = latestMessage.parts[partIndex]
+    if (!part || part.type !== 'tool-result') {
       continue
     }
-    for (let partIndex = message.parts.length - 1; partIndex >= 0; partIndex -= 1) {
-      const part = message.parts[partIndex]
-      if (!part || part.type !== 'tool-result') {
-        continue
-      }
-      if (dismissedRequestIds.has(part.toolCallId)) {
-        continue
-      }
-      const request = toPermissionRequest(part, message.id)
-      if (request) {
-        return request
-      }
+    if (dismissedRequestIds.has(part.toolCallId)) {
+      continue
+    }
+    const request = toPermissionRequest(part, latestMessage.id)
+    if (request) {
+      return request
     }
   }
   return null

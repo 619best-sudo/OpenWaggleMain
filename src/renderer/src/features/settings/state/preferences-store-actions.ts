@@ -4,6 +4,7 @@ import {
   GREATX_BACKEND_MODEL_REF,
   THINKING_LEVELS,
   type ThinkingLevel,
+  type ToolPermissionMode,
 } from '@shared/types/settings'
 import { includes } from '@shared/utils/validation'
 import { api } from '@/shared/lib/ipc'
@@ -166,6 +167,11 @@ export function createPreferencesActions(
       const { settings } = get()
       await api.updateSettings({ showCustomExecutionTeam: visible })
       set({ settings: { ...settings, showCustomExecutionTeam: visible } })
+    },
+    setToolPermissionMode: async (mode: ToolPermissionMode) => {
+      const { settings } = get()
+      await api.updateSettings({ toolPermissionMode: mode })
+      set({ settings: { ...settings, toolPermissionMode: mode } })
     },
     setEnabledModels: (models) => setEnabledModels(models, set, get),
     setProjectDisplayName: async (path, name) => {

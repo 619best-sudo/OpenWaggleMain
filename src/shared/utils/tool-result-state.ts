@@ -1,5 +1,19 @@
 import { match, P } from '@diegogbrisa/ts-match'
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+export function isToolPermissionRequestPayload(value: unknown): boolean {
+  const normalized = normalizeToolResultPayload(value)
+  if (!isRecord(normalized)) {
+    return false
+  }
+
+  const details = normalized.details
+  return isRecord(details) && details.kind === 'tool_permission_request'
+}
+
 export function parseSerializedToolPayload(value: unknown): unknown {
   if (typeof value !== 'string') {
     return value
@@ -24,5 +38,5 @@ export function normalizeToolResultPayload(value: unknown): unknown {
 }
 
 export function hasConcreteToolOutput(value: unknown): boolean {
-  return value !== undefined
+  return value !== undefined && !isToolPermissionRequestPayload(value)
 }

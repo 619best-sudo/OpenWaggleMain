@@ -10,6 +10,7 @@ import {
   SETTINGS_KEY_SKILL_TOGGLES_BY_PROJECT,
   SETTINGS_KEY_THEME_MODE,
   SETTINGS_KEY_THINKING_LEVEL,
+  SETTINGS_KEY_TOOL_PERMISSION_MODE,
 } from './keys'
 import {
   isValidThinkingLevel,
@@ -21,6 +22,7 @@ import {
   resolveShowCustomExecutionTeam,
   resolveSkillTogglesByProject,
   resolveThinkingLevel,
+  resolveToolPermissionMode,
   sanitizeEnabledModels,
   sanitizeFavoriteModels,
   sanitizeProjectDisplayNames,
@@ -78,6 +80,9 @@ export function buildSettingsSnapshot(storedSettings: Readonly<Record<string, un
       showCustomExecutionTeam: resolveShowCustomExecutionTeam(
         getStoredValue(storedSettings, SETTINGS_KEY_SHOW_CUSTOM_EXECUTION_TEAM),
       ),
+      toolPermissionMode: resolveToolPermissionMode(
+        getStoredValue(storedSettings, SETTINGS_KEY_TOOL_PERMISSION_MODE),
+      ),
     } satisfies Settings,
   }
 }
@@ -120,6 +125,10 @@ export function buildNextSettingsSnapshot(current: Settings, partial: Partial<Se
     partial.showCustomExecutionTeam !== undefined
       ? partial.showCustomExecutionTeam
       : current.showCustomExecutionTeam
+  const toolPermissionMode =
+    partial.toolPermissionMode !== undefined
+      ? resolveToolPermissionMode(partial.toolPermissionMode)
+      : current.toolPermissionMode
 
   return {
     ...current,
@@ -133,5 +142,6 @@ export function buildNextSettingsSnapshot(current: Settings, partial: Partial<Se
     skillTogglesByProject,
     projectDisplayNames,
     showCustomExecutionTeam,
+    toolPermissionMode,
   } satisfies Settings
 }

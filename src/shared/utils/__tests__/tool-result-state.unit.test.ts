@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { hasConcreteToolOutput, normalizeToolResultPayload } from '../tool-result-state'
+import {
+  hasConcreteToolOutput,
+  isToolPermissionRequestPayload,
+  normalizeToolResultPayload,
+} from '../tool-result-state'
 
 describe('tool-result-state', () => {
   it('normalizes structured JSON tool payloads', () => {
@@ -21,5 +25,19 @@ describe('tool-result-state', () => {
 
   it('treats arbitrary strings as concrete tool output', () => {
     expect(hasConcreteToolOutput('not-json')).toBe(true)
+  })
+
+  it('treats permission request envelopes as non-concrete tool output', () => {
+    const payload = {
+      content: [{ type: 'text', text: 'Permission required before running bash: ls -la' }],
+      details: {
+        kind: 'tool_permission_request',
+        toolName: 'bash',
+        input: { command: 'ls -la' },
+      },
+    }
+
+    expect(isToolPermissionRequestPayload(payload)).toBe(true)
+    expect(hasConcreteToolOutput(payload)).toBe(false)
   })
 })

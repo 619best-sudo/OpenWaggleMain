@@ -4,6 +4,7 @@ import { cn } from '@/shared/lib/cn'
 import { ToggleSwitch } from '@/shared/ui/ToggleSwitch'
 import { BranchPicker } from './BranchPicker'
 import { ComposerAttachButton } from './ComposerAttachButton'
+import { ComposerPermissionPicker } from './ComposerPermissionPicker'
 import { ComposerSendControls } from './ComposerSendControls'
 import { ComposerVoiceButton } from './ComposerVoiceButton'
 import { ContextMeter } from './ContextMeter'
@@ -42,6 +43,7 @@ export function ComposerToolbar({
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
         <ComposerAttachButton fileInputRef={fileInputRef} />
         <BranchPicker onToast={onToast} />
+        <ComposerPermissionPicker />
         {onSetMachineModeEnabled ? (
           <div
             className={cn(

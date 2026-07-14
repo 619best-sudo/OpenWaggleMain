@@ -1,6 +1,6 @@
 import { SupportedModelId } from '@shared/types/brand'
 import { DEFAULT_SETTINGS } from '@shared/types/settings'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAppAuthStore } from '@/features/auth/state/app-auth-store'
 import { useComposerActionStore } from '@/features/composer/state/composer-action-store'
@@ -122,6 +122,22 @@ describe('ComposerToolbar', () => {
     renderToolbar()
     expect(screen.getByTitle(/Manage branches/)).toBeInTheDocument()
     expect(screen.getByText('main')).toBeInTheDocument()
+  })
+
+  it('renders the future tool permission selector', () => {
+    renderToolbar()
+    expect(screen.getByTitle('Permission: Ask')).toBeInTheDocument()
+  })
+
+  it('updates the future tool permission selector mode', async () => {
+    renderToolbar()
+
+    fireEvent.click(screen.getByTitle('Permission: Ask'))
+    fireEvent.click(screen.getByRole('button', { name: /Allow all/i }))
+
+    await waitFor(() => {
+      expect(usePreferencesStore.getState().settings.toolPermissionMode).toBe('allow-all')
+    })
   })
 
   it('does not render the branch picker when no project is selected', () => {

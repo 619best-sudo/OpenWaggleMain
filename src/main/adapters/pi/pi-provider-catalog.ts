@@ -9,7 +9,10 @@ import {
 } from '@mariozechner/pi-coding-agent'
 import { MCP_ADAPTER_PACKAGE_SOURCES } from '@shared/constants/mcp'
 import { createModelRef } from '@shared/types/llm'
+import * as Effect from 'effect/Effect'
 import { withNpmCompatibleProcessEnv } from '../../env'
+import { runAppEffect } from '../../runtime'
+import { SettingsService } from '../../services/settings-service'
 import {
   createOpenWaggleGlobalPiSettingsManager,
   createOpenWagglePiSettingsManager,
@@ -230,7 +233,14 @@ export async function createPiRuntimeServices(
     mcpServerNames: await loadTuringMachineMcpServerNames(mcpRuntimeContext?.configPath),
   })
   const toolPermissionRequestExtensionFactory = createToolPermissionRequestExtension({
-    toolNames: ['bash', 'read'],
+    toolNames: ['bash', 'read', 'write', 'edit', 'multiedit', 'grep', 'find', 'ls'],
+    getPermissionMode: async () => {
+      const settings = await runAppEffect(Effect.gen(function* () {
+        const service = yield* SettingsService
+        return yield* service.get()
+      }))
+      return settings.toolPermissionMode
+    },
   })
   const services = await withNpmCompatibleProcessEnv(() =>
     withOpenWaggleMcpAdapterProcessContext(mcpRuntimeContext, () =>

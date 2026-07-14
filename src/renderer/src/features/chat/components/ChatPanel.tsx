@@ -8,10 +8,20 @@ import { ToolPermissionDialog } from './ToolPermissionDialog'
 interface ChatPanelContentProps {
   readonly sections: ChatPanelSections
   readonly onOpenSessionTree?: () => void
+  readonly routeSessionId?: string | null
 }
 
-export function ChatPanelContent({ sections, onOpenSessionTree }: ChatPanelContentProps) {
+export function ChatPanelContent({
+  sections,
+  onOpenSessionTree,
+  routeSessionId,
+}: ChatPanelContentProps) {
   const pendingToolPermissionRequest = sections.transcript.pendingToolPermissionRequest
+  const shouldRenderToolPermission =
+    pendingToolPermissionRequest &&
+    (routeSessionId === undefined ||
+      (sections.transcript.activeSessionId !== null &&
+        String(sections.transcript.activeSessionId) === routeSessionId))
   return (
     <div className="flex size-full overflow-hidden bg-bg">
       <div
@@ -21,7 +31,7 @@ export function ChatPanelContent({ sections, onOpenSessionTree }: ChatPanelConte
         <PanelErrorBoundary name="Chat transcript" className="flex flex-1 flex-col overflow-hidden">
           <ChatTranscript section={sections.transcript} />
         </PanelErrorBoundary>
-        {pendingToolPermissionRequest && (
+        {shouldRenderToolPermission && (
           <ToolPermissionDialog
             request={pendingToolPermissionRequest}
             busy={sections.transcript.toolPermissionBusy}

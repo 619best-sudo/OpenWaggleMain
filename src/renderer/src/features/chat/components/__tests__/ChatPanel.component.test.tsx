@@ -14,7 +14,7 @@ import { useProviderStore } from '@/features/providers/state'
 import { usePreferencesStore } from '@/features/settings/state'
 import { useWaggleStore } from '@/features/waggle/state'
 import type { ChatPanelSections } from '../../model'
-import { ChatPanel } from '../ChatPanel'
+import { ChatPanel, ChatPanelContent } from '../ChatPanel'
 
 const useChatPanelSectionsMock = vi.hoisted(() => vi.fn<() => ChatPanelSections>())
 
@@ -260,10 +260,41 @@ describe('ChatPanel', () => {
       },
     })
 
-    expect(screen.getByText('Approve Bash')).toBeInTheDocument()
+    expect(screen.getByText('Permission')).toBeInTheDocument()
+    expect(screen.getByText('bash')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Deny' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Dismiss permission dialog' })).toBeInTheDocument()
+  })
+
+  it('does not show the tool permission dialog while the routed session is switching', () => {
+    const sections = createSections({
+      activeSessionId: SessionId('session-1'),
+      pendingToolPermissionRequest: {
+        messageId: 'assistant-1',
+        toolCallId: 'tool-1',
+        toolName: 'bash',
+        input: { command: 'ls -la' },
+        title: 'Approve Bash',
+        description: 'Permission is required before running bash.',
+        summary: 'Permission required before running bash: ls -la',
+      },
+    })
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ChatPanelContent sections={sections} routeSessionId="session-2" />
+      </QueryClientProvider>,
+    )
+
+    expect(screen.queryByText('Permission')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Approve' })).toBeNull()
   })
 
   it('routes custom branch-summary submission through send instead of enqueue while loading', () => {

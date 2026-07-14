@@ -7,6 +7,9 @@ export type ThinkingLevel = (typeof THINKING_LEVELS)[number]
 export const THEME_MODES = ['light', 'dark'] as const
 export type ThemeMode = (typeof THEME_MODES)[number]
 
+export const TOOL_PERMISSION_MODES = ['ask', 'allow-all'] as const
+export type ToolPermissionMode = (typeof TOOL_PERMISSION_MODES)[number]
+
 export function isThemeMode(value: unknown): value is ThemeMode {
   return typeof value === 'string' && THEME_MODES.includes(value as ThemeMode)
 }
@@ -30,6 +33,7 @@ export interface Settings {
   readonly skillTogglesByProject: Readonly<Record<string, Readonly<Record<string, boolean>>>>
   readonly projectDisplayNames: Readonly<Record<string, string>>
   readonly showCustomExecutionTeam: boolean
+  readonly toolPermissionMode: ToolPermissionMode
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -43,4 +47,5 @@ export const DEFAULT_SETTINGS: Settings = {
   skillTogglesByProject: {},
   projectDisplayNames: {},
   showCustomExecutionTeam: true,
+  toolPermissionMode: 'ask',
 }

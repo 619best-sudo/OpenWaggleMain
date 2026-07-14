@@ -189,6 +189,26 @@ export function createAgentRunControls(params: AgentRunControlParams) {
     const runPromise = startForegroundRun(targetSessionId)
 
     try {
+      // #region debug-point A:renderer-ipc-invoke
+      void fetch('http://127.0.0.1:7779/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'tool-model-routing',
+          runId: 'pre-fix',
+          hypothesisId: 'A',
+          location: 'useAgentChat.run-controls.ts:resolveToolPermission',
+          msg: '[DEBUG] Renderer invoked resolveToolPermission IPC',
+          data: {
+            sessionId: targetSessionId,
+            requestModel: resolution.request.model ?? null,
+            activeModel: params.model,
+            decision: resolution.decision,
+          },
+          ts: Date.now(),
+        }),
+      }).catch(() => {})
+      // #endregion
       await api.resolveToolPermission(targetSessionId, resolution, params.model)
       await runPromise
     } catch (runError) {

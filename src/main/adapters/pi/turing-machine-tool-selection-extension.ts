@@ -1,5 +1,8 @@
 import path from 'node:path'
-import type { AuthStorage, ExtensionFactory, ToolInfo } from '@mariozechner/pi-coding-agent'
+import type { AuthStorage, ExtensionFactory, SessionEntry, ToolInfo } from '@mariozechner/pi-coding-agent'
+import { TOOL_PERMISSION_CUSTOM_TYPE } from '@shared/types/tool-permission'
+import { parseModelRef } from '@shared/types/llm'
+import { consumeApprovedToolExecutionModel } from './tool-execution-model-state'
 
 const TURING_MACHINE_PROVIDER_ID = 'turing-machine'
 const MAX_SELECTION_CACHE_ENTRIES = 64
@@ -17,6 +20,9 @@ type ProviderPayload = JsonRecord & {
 type TuringMachineExtensionContext = {
   readonly getModel: () => { readonly provider?: string } | undefined
   readonly getAllTools: () => ToolInfo[]
+  readonly sessionManager?: {
+    readonly getEntries: () => readonly SessionEntry[]
+  }
 }
 
 type ToolSelectionResponse = {
@@ -390,7 +396,13 @@ function shouldHandleTuringMachinePayload(
   if (model?.provider === TURING_MACHINE_PROVIDER_ID) {
     return true
   }
-  return payload.model === 'turing-machine'
+  if (payload.model === 'turing-machine') {
+    return true
+  }
+  if (typeof payload.model !== 'string') {
+    return false
+  }
+  return parseModelRef(payload.model)?.provider === TURING_MACHINE_PROVIDER_ID
 }
 
 function annotatePayloadTools(input: {
@@ -406,6 +418,68 @@ function annotatePayloadTools(input: {
       mcpServerNames: input.mcpServerNames,
     }),
   }
+}
+
+function resolveToolPermissionOverrideModel(ctx: TuringMachineExtensionContext) {
+  const entries = ctx.sessionManager?.getEntries()
+  const latestEntry = entries?.at(-1)
+  // #region debug-point A:provider-context-inspection
+  ;(() => {
+    const fallbackUrl = 'http://127.0.0.1:7779/event'
+    const fallbackSession = 'tool-model-routing'
+    let debugServerUrl = fallbackUrl
+    let debugSessionId = fallbackSession
+    try {
+      const fs = require('node:fs')
+      const env = fs.readFileSync('.dbg/tool-model-routing.env', 'utf8') as string
+      debugServerUrl = env.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? fallbackUrl
+      debugSessionId = env.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? fallbackSession
+    } catch {}
+    void fetch(debugServerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: debugSessionId,
+        runId: 'pre-fix',
+        hypothesisId: 'A',
+        location: 'turing-machine-tool-selection-extension.ts:resolveToolPermissionOverrideModel',
+        msg: '[DEBUG] Provider hook inspected latest session entry for approved tool model',
+        data: {
+          hasSessionEntries: Array.isArray(entries),
+          latestEntryType: latestEntry?.type ?? null,
+          latestCustomType: latestEntry && 'customType' in latestEntry ? latestEntry.customType : null,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {})
+  })()
+  // #endregion
+  if (!Array.isArray(entries)) {
+    return null
+  }
+
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    const entry = entries[index]
+    if (!entry || (entry.type !== 'custom_message' && entry.type !== 'custom')) {
+      continue
+    }
+
+    if (entry.customType !== TOOL_PERMISSION_CUSTOM_TYPE || !isRecord(entry.details)) {
+      continue
+    }
+
+    if (entry.details.kind !== 'tool-permission-resolution' || entry.details.decision !== 'approved') {
+      continue
+    }
+
+    const model =
+      typeof entry.details.requestedToolModel === 'string'
+        ? entry.details.requestedToolModel
+        : entry.details.model
+    return typeof model === 'string' && model.trim().length > 0 ? model.trim() : null
+  }
+
+  return null
 }
 
 export function createTuringMachineToolSelectionExtension(input: {
@@ -439,9 +513,49 @@ export function createTuringMachineToolSelectionExtension(input: {
         ctx: extensionContext,
         mcpServerNames,
       })
+      const approvedToolModelOverride =
+        consumeApprovedToolExecutionModel() ?? resolveToolPermissionOverrideModel(extensionContext)
+      const routedPayload = approvedToolModelOverride
+        ? {
+            ...annotatedPayload,
+            model: approvedToolModelOverride,
+          }
+        : annotatedPayload
+      // #region debug-point C:provider-payload-model
+      ;(() => {
+        const fallbackUrl = 'http://127.0.0.1:7779/event'
+        const fallbackSession = 'tool-model-routing'
+        let debugServerUrl = fallbackUrl
+        let debugSessionId = fallbackSession
+        try {
+          const fs = require('node:fs')
+          const env = fs.readFileSync('.dbg/tool-model-routing.env', 'utf8') as string
+          debugServerUrl = env.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? fallbackUrl
+          debugSessionId = env.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? fallbackSession
+        } catch {}
+        void fetch(debugServerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: debugSessionId,
+            runId: 'pre-fix',
+            hypothesisId: approvedToolModelOverride ? 'C' : 'A',
+            location: 'turing-machine-tool-selection-extension.ts:before_provider_request',
+            msg: '[DEBUG] Prepared Turing Machine provider payload model',
+            data: {
+              incomingPayloadModel: payload.model ?? null,
+              approvedToolModelOverride,
+              outgoingPayloadModel: routedPayload.model ?? null,
+              latestUserMessageFound: Boolean(extractLatestUserMessageText(annotatedPayload.messages)),
+            },
+            ts: Date.now(),
+          }),
+        }).catch(() => {})
+      })()
+      // #endregion
       const latestUserMessage = extractLatestUserMessageText(annotatedPayload.messages)
       if (!latestUserMessage) {
-        return annotatedPayload
+        return routedPayload
       }
 
       const cacheKey = buildToolSelectionCacheKey({
@@ -453,7 +567,7 @@ export function createTuringMachineToolSelectionExtension(input: {
       if (!existingEntry) {
         const entry: ToolSelectionCacheEntry = {
           promise: fetchToolSelection({
-            payload: annotatedPayload,
+            payload: routedPayload,
             authStorage: input.authStorage,
             baseUrl: input.baseUrl,
           }),
@@ -471,7 +585,7 @@ export function createTuringMachineToolSelectionExtension(input: {
           })
         selectionCache.set(cacheKey, entry)
         trimSelectionCache(selectionCache)
-        return annotatedPayload
+        return routedPayload
       }
 
       existingEntry.updatedAt = Date.now()
@@ -486,18 +600,18 @@ export function createTuringMachineToolSelectionExtension(input: {
           selectedExternalCategories = response.selectedExternalCategories
           existingEntry.selectedExternalCategories = response.selectedExternalCategories
         } catch {
-          return annotatedPayload
+          return routedPayload
         }
       }
 
       if (selectedExternalCategories.length === 0) {
-        return annotatedPayload
+        return routedPayload
       }
 
       return {
-        ...annotatedPayload,
+        ...routedPayload,
         metadata: mergeSelectedExternalCategories(
-          annotatedPayload.metadata,
+          routedPayload.metadata,
           selectedExternalCategories,
         ),
       }

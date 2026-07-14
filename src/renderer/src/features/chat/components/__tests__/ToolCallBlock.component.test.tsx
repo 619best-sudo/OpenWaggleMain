@@ -140,6 +140,30 @@ describe('ToolCallBlock', () => {
     expect(screen.getByRole('button', { name: /Ran `pnpm test`/ })).toBeInTheDocument()
   })
 
+  it('keeps permission-gated tools in the requested state until they actually run', () => {
+    render(
+      <ToolCallBlock
+        name="bash"
+        args='{"command":"ls -la"}'
+        state="output-available"
+        result={{
+          content: {
+            content: [{ type: 'text', text: 'Permission required before running bash: ls -la' }],
+            details: {
+              kind: 'tool_permission_request',
+              toolName: 'bash',
+              input: { command: 'ls -la' },
+            },
+          },
+          state: 'output-available',
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: /Requested bash `ls -la`/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Ran `ls -la`/ })).toBeNull()
+  })
+
   it('expands to show arguments on click', () => {
     render(
       <ToolCallBlock

@@ -1,5 +1,8 @@
 import type { ExtensionFactory } from '@mariozechner/pi-coding-agent'
 import type { ToolPermissionRequestEnvelope } from '@shared/types/tool-permission'
+import type { ToolPermissionMode } from '@shared/types/settings'
+import { registerApprovedToolExecutionModel } from './tool-execution-model-state'
+import { resolveToolExecutionModel } from './tool-model-route'
 
 type JsonRecord = Record<string, unknown>
 type ToolCallEvent = {
@@ -10,6 +13,7 @@ type ToolCallHandler = (event: ToolCallEvent) => Promise<unknown> | unknown
 
 type ToolPermissionRequestOptions = {
   readonly toolNames?: readonly string[]
+  readonly getPermissionMode?: () => Promise<ToolPermissionMode> | ToolPermissionMode
 }
 
 interface ApprovedToolPermission {
@@ -114,10 +118,49 @@ export function createToolPermissionRequestExtension(
         return undefined
       }
 
+      const permissionMode = (await options.getPermissionMode?.()) ?? 'ask'
+      const toolExecutionModel = resolveToolExecutionModel(event.toolName)
+      if (permissionMode === 'allow-all') {
+        registerApprovedToolExecutionModel(toolExecutionModel)
+        return undefined
+      }
+
       const input = isRecord(event.input) ? event.input : {}
       if (consumeApprovedToolPermission(event.toolName, input)) {
         return undefined
       }
+      // #region debug-point B:tool-permission-route
+      ;(() => {
+        const fallbackUrl = 'http://127.0.0.1:7779/event'
+        const fallbackSession = 'tool-model-routing'
+        let debugServerUrl = fallbackUrl
+        let debugSessionId = fallbackSession
+        try {
+          const fs = require('node:fs')
+          const env = fs.readFileSync('.dbg/tool-model-routing.env', 'utf8') as string
+          debugServerUrl = env.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? fallbackUrl
+          debugSessionId = env.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? fallbackSession
+        } catch {}
+        void fetch(debugServerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: debugSessionId,
+            runId: 'pre-fix',
+            hypothesisId: 'B',
+            location: 'tool-permission-request-extension.ts',
+            msg: '[DEBUG] Guarded tool call routed for permission handling',
+            data: {
+              toolName: event.toolName,
+              inputKeys: Object.keys(input),
+              toolExecutionModel,
+              permissionMode,
+            },
+            ts: Date.now(),
+          }),
+        }).catch(() => {})
+      })()
+      // #endregion
       const commandValue = (input as { command?: unknown }).command
       const command = typeof commandValue === 'string' ? commandValue : undefined
       const targetPath = readToolTarget(input)
@@ -127,22 +170,24 @@ export function createToolPermissionRequestExtension(
         : targetPath
           ? `Permission required before running ${event.toolName}: ${targetPath}`
           : `Permission required before running ${event.toolName}.`
+      const permissionRequest = {
+        model: toolExecutionModel,
+        permission: {
+          kind: 'user-approval' as const,
+          toolName: event.toolName,
+          title: `Approve ${permissionLabel}`,
+          description: targetPath
+            ? `OpenWaggle requested permission before reading ${targetPath}.`
+            : `OpenWaggle requested permission before running ${event.toolName}.`,
+          input,
+        },
+        metadata: {
+          source: 'openwaggle-tool-permission-request',
+        },
+      }
 
       return {
-        request: {
-          permission: {
-            kind: 'user-approval',
-            toolName: event.toolName,
-            title: `Approve ${permissionLabel}`,
-            description: targetPath
-              ? `OpenWaggle requested permission before reading ${targetPath}.`
-              : `OpenWaggle requested permission before running ${event.toolName}.`,
-            input,
-          },
-          metadata: {
-            source: 'openwaggle-tool-permission-request',
-          },
-        },
+        request: permissionRequest,
         content: [
           {
             type: 'text' as const,
@@ -153,6 +198,7 @@ export function createToolPermissionRequestExtension(
           kind: 'tool_permission_request',
           toolName: event.toolName,
           input,
+          request: permissionRequest,
         },
         terminate: true,
       }
