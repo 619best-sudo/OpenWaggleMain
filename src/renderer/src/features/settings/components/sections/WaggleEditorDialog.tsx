@@ -94,36 +94,40 @@ export function WaggleEditorDialog({
 
           <div className="space-y-4">
             <label className="block space-y-1.5">
-              <span className="text-[12px] font-medium text-text-secondary">Panel Title</span>
+              <span className="text-[12px] font-medium text-text-secondary">
+                Council of Experts Title
+              </span>
               <input
                 className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
                 value={formState.titleText}
                 onChange={(event) =>
                   dispatchForm({ type: 'set-title-text', value: event.target.value })
                 }
-                placeholder="Name this Panel."
+                placeholder="Name this Council of Experts workflow."
                 disabled={!canEditTitle}
                 spellCheck={false}
               />
             </label>
             <label className="block space-y-1.5">
-              <span className="text-[12px] font-medium text-text-secondary">Panel Description</span>
+              <span className="text-[12px] font-medium text-text-secondary">
+                Council of Experts Description
+              </span>
               <textarea
                 className="min-h-[88px] w-full resize-y rounded-lg border border-border bg-bg px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50"
                 value={formState.descriptionText}
                 onChange={(event) =>
                   dispatchForm({ type: 'set-description-text', value: event.target.value })
                 }
-                placeholder="Describe what this Panel does."
+                placeholder="Describe what this Council of Experts workflow does."
                 spellCheck={false}
               />
             </label>
 
             <div className="flex items-center justify-between gap-3 rounded-xl border border-border-light bg-bg-secondary/35 px-4 py-3">
               <div className="text-[12px] leading-5 text-text-tertiary">
-                Configure each Expert in the collaboration loop. The Panel rotates through every
-                active Expert in order, and individual slots can opt into prompt-keyword gating when
-                they should only join certain requests.
+                Configure each Expert in the collaboration loop. Council of Experts rotates through
+                every active Expert in order, and individual slots can opt into prompt-keyword
+                gating when they should only join certain requests.
               </div>
               <Button
                 variant="secondary"
@@ -152,22 +156,22 @@ export function WaggleEditorDialog({
 
           <div className="mt-6">
             <div className="mb-3 rounded-xl border border-border-light bg-bg-secondary/50 px-4 py-3 text-[12px] leading-5 text-text-tertiary">
-              Panel apps bundle Expert roles with the MCPs and skills they depend on. GreatX handles
-              model routing for the run, so this editor focuses on role prompts, dependencies, and
-              stop rules. When using MCPs, always map artifact starter payload values into the tool
-              schema exactly.
+              Council of Experts workflows bundle Expert roles with the MCPs and skills they depend
+              on. GreatX handles model routing for the run, so this editor focuses on role prompts,
+              dependencies, and stop rules. When using MCPs, always map artifact starter payload
+              values into the tool schema exactly.
             </div>
             <div className="mb-6 grid gap-4 md:grid-cols-2">
               <DependencyEditor
                 label="Required MCPs"
-                description="One MCP id per line. These become the installable MCP dependencies for this Panel app."
+                description="One MCP id per line. These become the installable MCP dependencies for this Council of Experts workflow."
                 placeholder={'playwright\npostgres\nffmpeg'}
                 value={formState.requiredMcpsText}
                 onChange={(value) => dispatchForm({ type: 'set-required-mcps-text', value })}
               />
               <DependencyEditor
                 label="Required Skills"
-                description="One skill id per line. These become the installable skill dependencies for this Panel app."
+                description="One skill id per line. These become the installable skill dependencies for this Council of Experts workflow."
                 placeholder={'ui-critic\nbackend-auditor\nmedia-director'}
                 value={formState.requiredSkillsText}
                 onChange={(value) => dispatchForm({ type: 'set-required-skills-text', value })}

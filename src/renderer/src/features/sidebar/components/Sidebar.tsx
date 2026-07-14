@@ -68,7 +68,6 @@ export function Sidebar() {
             onNewSession={controller.handleNewSession}
             onOpenMcp={controller.handleOpenMcp}
             onOpenSkills={controller.handleOpenSkills}
-            onOpenTeammates={controller.handleOpenTeammates}
             onOpenWaggle={controller.handleOpenWaggle}
           />
           <SidebarProjectsHeader

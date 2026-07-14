@@ -273,7 +273,7 @@ function TeamVisitingCard({
         </div>
 
         <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-          <span className="text-[12px] font-medium text-text-tertiary">Open team</span>
+          <span className="text-[12px] font-medium text-text-tertiary">Open council</span>
           <div className="flex items-center gap-2">
             {onDelete ? (
               <Button
@@ -307,7 +307,7 @@ function TeamVisitingCard({
 }
 
 function summarizeRole(agentLabels: readonly string[]) {
-  return agentLabels.slice(0, 2).join(' • ') || 'Custom Execution Team'
+  return agentLabels.slice(0, 2).join(' • ') || 'Custom Council'
 }
 
 function summarizeDescription(text: string, fallback: string) {
@@ -447,8 +447,8 @@ export function TeammatesPanel() {
   async function handleDeleteCustomTeam() {
     try {
       const confirmed = await api.showConfirm(
-        'Delete custom team?',
-        'This removes the custom execution team from the storefront. You can create a new one later.',
+        'Delete custom council?',
+        'This removes the custom council from the library. You can create a new one later.',
       )
       if (!confirmed) return
       const nextDraft = createDefaultTeamBuilderDraft()
@@ -456,9 +456,9 @@ export function TeammatesPanel() {
       setAgentEditorModes(buildAgentEditorModes(nextDraft))
       setIsCustomEditorOpen(false)
       await setShowCustomExecutionTeam(false)
-      showToast('Custom execution team deleted.', 'success')
+      showToast('Custom council deleted.', 'success')
     } catch (error) {
-      logger.error('Failed to open delete custom team confirmation.', {
+      logger.error('Failed to open delete custom council confirmation.', {
         message: error instanceof Error ? error.message : String(error),
       })
       showToast('Failed to open delete confirmation.', 'error')
@@ -488,7 +488,7 @@ export function TeammatesPanel() {
 
   function removeAgent(agentId: string) {
     if (customTeam.agents.length <= 1) {
-      showToast('A custom team needs at least one agent.', 'error')
+      showToast('A custom council needs at least one agent.', 'error')
       return
     }
 
@@ -648,15 +648,15 @@ export function TeammatesPanel() {
 
   async function launchTeam(teammate: TeammateDefinition, prompt: string) {
     if (!projectPath) {
-      showToast('Select a project before launching Team.', 'error')
+      showToast('Select a project before launching Council.', 'error')
       return
     }
     if (!selectedModel.trim()) {
-      showToast('Select a model before launching Team.', 'error')
+      showToast('Select a model before launching Council.', 'error')
       return
     }
     if (!prompt) {
-      showToast('Write the task prompt before launching Team.', 'error')
+      showToast('Write the task prompt before launching Council.', 'error')
       return
     }
 
@@ -695,14 +695,14 @@ export function TeammatesPanel() {
         teammate,
       )
 
-      showToast(`"${teammate.name}" launched in Team.`, 'success')
+      showToast(`"${teammate.name}" launched in Council.`, 'success')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      logger.error('Failed to launch Team', {
+      logger.error('Failed to launch Council', {
         teammateId: teammate.id,
         error: message,
       })
-      showToast(`Failed to launch Team: ${message}`, 'error')
+      showToast(`Failed to launch Council: ${message}`, 'error')
     } finally {
       setLaunchingId(null)
     }
@@ -735,11 +735,11 @@ export function TeammatesPanel() {
       (agent) => agent.id === teammate.loopPolicy.decisionMakerAgentId,
     )
     if (!customTeam.name.trim()) {
-      showToast('Give the custom team a name before launching it.', 'error')
+      showToast('Give the custom council a name before launching it.', 'error')
       return
     }
     if (!decisionMakerExists) {
-      showToast('Select one agent as the decision maker before launching the team.', 'error')
+      showToast('Select one agent as the decision maker before launching the council.', 'error')
       return
     }
     if (teammate.agents.some((agent) => agent.roleDescription.trim().length === 0)) {
@@ -759,11 +759,11 @@ export function TeammatesPanel() {
             </div>
             <div className="space-y-2">
               <h2 className="bg-gradient-to-r from-amber-400 to-rose-500 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent">
-                Team
+                Council
               </h2>
               <p className="max-w-[700px] text-[15px] leading-relaxed text-text-secondary">
-                Choose a team for multi-step work. Each team combines specialists, instructions, and
-                launch settings for a specific kind of task.
+                Choose a council for multi-step work. Each council combines specialists,
+                instructions, and launch settings for a specific kind of task.
               </p>
             </div>
           </div>
@@ -781,26 +781,26 @@ export function TeammatesPanel() {
               setIsCustomEditorOpen(true)
             }}
           >
-            Create Team
+            Create Council
           </Button>
         </div>
 
         <section className="space-y-4">
           <StoreSectionHeader
-            title="Teams"
+            title="Councils"
             count={builtInTeammates.length + (hasCustomTeam ? 1 : 0)}
-            description="Prebuilt and custom teams for complex work. Open a team to review its setup, tailor the prompt, and launch."
+            description="Prebuilt and custom councils for complex work. Open a council to review its setup, tailor the prompt, and launch."
           />
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {hasCustomTeam ? (
               <TeamVisitingCard
                 icon={<WandSparkles className="size-7" />}
                 eyebrow="Custom"
-                title={customTeam.name.trim() || 'Custom Execution Team'}
+                title={customTeam.name.trim() || 'Custom Council'}
                 role={summarizeRole(customTeam.agents.map((agent) => agent.label || agent.id))}
                 description={summarizeDescription(
                   customTeam.description,
-                  'Build your own team for end-to-end execution of long-running tasks.',
+                  'Build your own council for end-to-end execution of long-running tasks.',
                 )}
                 agentLabels={customTeam.agents.map((agent) => agent.label || agent.id)}
                 dependencyLabels={customDependencyLabels}
@@ -841,14 +841,14 @@ export function TeammatesPanel() {
 
       {isCustomEditorOpen && hasCustomTeam ? (
         <TeamEditorDialog
-          title={customTeam.name.trim() || 'Custom Execution Team'}
-          description="Edit the full team: top-level launch settings, every agent, AI generation instructions, and decision-maker behavior."
+          title={customTeam.name.trim() || 'Custom Council'}
+          description="Edit the full council: top-level launch settings, every agent, AI generation instructions, and decision-maker behavior."
           onClose={() => setIsCustomEditorOpen(false)}
         >
           <div className="space-y-4">
             <div className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-accent/10 bg-accent/5 px-5 py-4 mb-2 shadow-sm">
               <div className="text-[13px] leading-5 text-text-secondary">
-                Build your team below. Use the AI generator to auto-fill agents from a simple
+                Build your council below. Use the AI generator to auto-fill agents from a simple
                 prompt.
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -860,7 +860,7 @@ export function TeammatesPanel() {
                     void handleDeleteCustomTeam()
                   }}
                 >
-                  Delete Team
+                  Delete Council
                 </Button>
                 <Button
                   variant="secondary"
@@ -874,13 +874,13 @@ export function TeammatesPanel() {
             </div>
 
             <CollapsibleSection
-              title="Team Settings"
-              description="Basic identity and the primary task prompt for this team."
+              title="Council Settings"
+              description="Basic identity and the primary task prompt for this council."
               defaultExpanded={true}
             >
               <div className="flex flex-col gap-4 mt-4">
                 <label className="space-y-1.5">
-                  <FieldLabel htmlFor="custom-team-name">Team name</FieldLabel>
+                  <FieldLabel htmlFor="custom-team-name">Council name</FieldLabel>
                   <TextInput
                     id="custom-team-name"
                     value={customTeam.name}
@@ -901,7 +901,7 @@ export function TeammatesPanel() {
                 </label>
 
                 <label className="space-y-1.5">
-                  <FieldLabel htmlFor="custom-team-task-prompt">Team task prompt</FieldLabel>
+                  <FieldLabel htmlFor="custom-team-task-prompt">Council task prompt</FieldLabel>
                   <Textarea
                     id="custom-team-task-prompt"
                     value={customTeam.taskPrompt}
@@ -917,7 +917,7 @@ export function TeammatesPanel() {
 
             <CollapsibleSection
               title="Dependencies"
-              description="Allow MCPs and skills for this custom team. Use commas or new lines between entries."
+              description="Allow MCPs and skills for this custom council. Use commas or new lines between entries."
             >
               <div className="flex flex-col gap-4 mt-4">
                 <label className="space-y-1.5">
@@ -934,7 +934,7 @@ export function TeammatesPanel() {
                     resize="none"
                     className="min-h-[60px]"
                   />
-                  <SectionHint>Required MCPs gate launch readiness for this team.</SectionHint>
+                  <SectionHint>Required MCPs gate launch readiness for this council.</SectionHint>
                 </label>
 
                 <label className="space-y-1.5">
@@ -971,7 +971,7 @@ export function TeammatesPanel() {
                     className="min-h-[60px]"
                   />
                   <SectionHint>
-                    Required skills should be present whenever this team launches.
+                    Required skills should be present whenever this council launches.
                   </SectionHint>
                 </label>
 
@@ -1178,7 +1178,7 @@ export function TeammatesPanel() {
                             />
                           </label>
                           <div className="flex flex-wrap items-center justify-between gap-3">
-                            <SectionHint>Team will autofill the agent fields below.</SectionHint>
+                            <SectionHint>Council will autofill the agent fields below.</SectionHint>
                             <Button
                               variant="secondary"
                               size="sm"
@@ -1447,7 +1447,7 @@ export function TeammatesPanel() {
       {activeBuiltInTeammate ? (
         <TeamEditorDialog
           title={activeBuiltInTeammate.name}
-          description="Edit the built-in team for this launch: adjust MCPs, skills, and agent prompts, then write the task prompt and launch it."
+          description="Edit the built-in council for this launch: adjust MCPs, skills, and agent prompts, then write the task prompt and launch it."
           onClose={() => setActiveBuiltInEditorId(null)}
         >
           <div className="space-y-6">
@@ -1483,7 +1483,7 @@ export function TeammatesPanel() {
 
             <CollapsibleSection
               title="Dependencies"
-              description="Add, remove, or adjust MCPs and skills for this built-in team. Changes apply to this launch configuration."
+              description="Add, remove, or adjust MCPs and skills for this built-in council. Changes apply to this launch configuration."
               defaultExpanded={true}
             >
               <div className="flex flex-col gap-4 mt-4">

@@ -38,12 +38,12 @@ const PRESET_GUIDANCE: Readonly<Record<string, PresetGuidance>> = {
   turing: {
     stage: 'Routing',
     bestFor: 'Routing the next lifecycle step from repo context',
-    next: 'Usually Product Planning or a build Panel',
+    next: 'Usually Design And Asset Direction or a build Council of Experts workflow',
   },
   'product-planning': {
     stage: 'Planning',
     bestFor: 'Turning a vague request into a buildable scope',
-    next: 'Design And Asset Direction or a build Panel',
+    next: 'Design And Asset Direction or a build Council of Experts workflow',
   },
   'design-asset-direction': {
     stage: 'Design',
@@ -158,8 +158,8 @@ function createPresetSections(presets: readonly WagglePreset[]): readonly Preset
   return [
     {
       id: 'panels',
-      title: 'Panels',
-      description: 'Choose a panel to run, or create one for a repeatable workflow.',
+      title: 'Council of Experts',
+      description: 'Choose a Council of Experts workflow to run, or create one for a repeatable workflow.',
       presets: [
         ...sortPresetsByPreferredOrder(custom, []),
         ...sortPresetsByPreferredOrder(builtIn, []),
@@ -187,10 +187,10 @@ export function WagglePresetsPanel({
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-8 border-b border-white/[0.04]">
         <div className="space-y-4">
           <h3 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500 tracking-tight">
-            Panel
+            Council of Experts
           </h3>
           <p className="max-w-[640px] text-[15px] leading-relaxed text-text-secondary">
-            A panel runs a two-agent loop designed for one clear task.
+            A Council of Experts workflow runs a two-agent loop designed for one clear task.
           </p>
         </div>
         <Button
@@ -202,16 +202,16 @@ export function WagglePresetsPanel({
           leftIcon={<Plus className="size-5" />}
           className="shrink-0 px-6 shadow-lg transition-transform hover:scale-105 active:scale-95"
         >
-          Create Panel
+          Create Council of Experts
         </Button>
       </div>
 
       <div className="space-y-12">
         {presets.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 px-4 py-12 text-center">
-            <p className="text-[14px] font-medium text-text-primary">No panels yet</p>
+            <p className="text-[14px] font-medium text-text-primary">No Council of Experts workflows yet</p>
             <p className="mt-2 text-[13px] text-text-tertiary">
-              Create a panel to save a repeatable workflow.
+              Create a Council of Experts workflow to save a repeatable workflow.
             </p>
           </div>
         ) : null}

@@ -1,14 +1,8 @@
 import { WagglePresetId } from '@shared/types/brand'
 import { describe, expect, it, vi } from 'vitest'
-import { BUILT_IN_TEAMMATES } from '@/features/teammates/lib/team-new-built-ins'
 import type { CommandPaletteItem } from '../../model'
 import { buildCommandPaletteEntries } from '../command-palette-entries'
-import {
-  createBaseCommands,
-  createConfigureTeamItem,
-  createPresetItems,
-  createTeamItems,
-} from '../command-palette-items'
+import { createBaseCommands, createPresetItems } from '../command-palette-items'
 import { normalizeCommandQuery, truncateCommandDescription } from '../command-palette-text'
 
 const {
@@ -108,11 +102,9 @@ describe('createBaseCommands', () => {
     const closeCommandPalette = vi.fn()
     const commands = createBaseCommands({
       closeCommandPalette,
-      configureTeam: vi.fn(),
       configureWaggle: vi.fn(),
       insertCompactCommand: vi.fn(),
       selectPreset: vi.fn(),
-      selectTeam: vi.fn(),
       selectSkill: vi.fn(),
       startWaggle: vi.fn(),
     })
@@ -120,35 +112,8 @@ describe('createBaseCommands', () => {
     expect(commands.map((command) => command.id)).not.toContain('code-review')
     expect(commands.map((command) => command.id)).not.toContain('new-worktree')
     expect(commands.map((command) => command.id)).not.toContain('personality')
+    expect(commands.map((command) => command.id)).not.toContain('team-new')
     expect(commands.some((command) => command.action === closeCommandPalette)).toBe(false)
-  })
-})
-
-describe('team command palette matching', () => {
-  it('surfaces the new team presets through domain-specific aliases', () => {
-    const items = createTeamItems(BUILT_IN_TEAMMATES, 'mobile', vi.fn())
-
-    expect(items.map((item) => item.label)).toContain('Mobile Developer')
-    expect(
-      createTeamItems(BUILT_IN_TEAMMATES, 'backend', vi.fn()).map((item) => item.label),
-    ).toContain('Backend Developer')
-    expect(
-      createTeamItems(BUILT_IN_TEAMMATES, 'debug', vi.fn()).map((item) => item.label),
-    ).toContain('Debugger')
-    expect(createTeamItems(BUILT_IN_TEAMMATES, 'qa', vi.fn()).map((item) => item.label)).toContain(
-      'Robust QA',
-    )
-    expect(
-      createTeamItems(BUILT_IN_TEAMMATES, 'review', vi.fn()).map((item) => item.label),
-    ).toContain('Code Reviewer')
-  })
-
-  it('shows the team configure item for the same alias searches', () => {
-    expect(createConfigureTeamItem('mobile', vi.fn())).toHaveLength(1)
-    expect(createConfigureTeamItem('backend', vi.fn())).toHaveLength(1)
-    expect(createConfigureTeamItem('debug', vi.fn())).toHaveLength(1)
-    expect(createConfigureTeamItem('qa', vi.fn())).toHaveLength(1)
-    expect(createConfigureTeamItem('review', vi.fn())).toHaveLength(1)
   })
 })
 

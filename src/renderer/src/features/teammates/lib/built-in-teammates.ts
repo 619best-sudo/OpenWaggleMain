@@ -7,7 +7,7 @@ const WEB_EXECUTOR_TEAMMATE: TeammateDefinition = {
     'Web Planner scopes the task, Web Builder implements the real change, Web Polish refines UX when it adds value, and Web Verifier checks the runnable result with Playwright before stopping.',
   launchPromptPlaceholder:
     'Build or improve a real website or web app in this repo. Example: redesign the marketing homepage hero, pricing section, and mobile navigation, then verify it in Playwright.',
-  launchButtonLabel: 'Launch Team',
+  launchButtonLabel: 'Launch Council',
   app: {
     requiredMcps: ['playwright'],
     requiredSkills: [],

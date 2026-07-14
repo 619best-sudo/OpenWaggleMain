@@ -16,6 +16,11 @@ import { WagglePresetsRepository } from '../ports/waggle-presets-repository'
 import { BUILT_IN_WAGGLE_PRESETS } from './settings-waggle-presets-built-ins'
 
 const logger = createLogger('waggle-presets-repository')
+const REMOVED_WAGGLE_PRESET_IDS: ReadonlySet<string> = new Set([
+  'product-planning',
+  'web-engineer',
+  'frontend-ui-audit',
+])
 
 interface ScopedWagglePresets {
   readonly hiddenBuiltInPresetIds: readonly string[]
@@ -70,6 +75,10 @@ function hydratePresets(rawPresets: readonly unknown[] | undefined): WagglePrese
 
 function isWagglePreset(value: WagglePreset | null): value is WagglePreset {
   return value !== null
+}
+
+function isVisibleWagglePreset(preset: WagglePreset) {
+  return !REMOVED_WAGGLE_PRESET_IDS.has(String(preset.id))
 }
 
 async function readPresetState(filePath: string) {
@@ -175,6 +184,7 @@ async function listWagglePresets(projectPath?: string | null) {
   })
     .map((entry) => hydratePreset(entry.preset))
     .filter(isWagglePreset)
+    .filter(isVisibleWagglePreset)
 }
 
 async function saveWagglePreset(preset: WagglePreset, projectPath?: string | null) {

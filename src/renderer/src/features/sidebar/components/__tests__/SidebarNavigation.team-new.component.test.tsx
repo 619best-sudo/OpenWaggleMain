@@ -2,9 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { SidebarPrimaryActions } from '../SidebarNavigation'
 
-describe('SidebarPrimaryActions Team', () => {
-  it('renders Team above Panel and opens the teammate route', () => {
-    const onOpenTeammates = vi.fn()
+describe('SidebarPrimaryActions', () => {
+  it('hides Team and still opens Council of Experts', () => {
     const onOpenWaggle = vi.fn()
 
     render(
@@ -13,21 +12,14 @@ describe('SidebarPrimaryActions Team', () => {
         onNewSession={vi.fn()}
         onOpenMcp={vi.fn()}
         onOpenSkills={vi.fn()}
-        onOpenTeammates={onOpenTeammates}
         onOpenWaggle={onOpenWaggle}
       />,
     )
 
-    const buttons = screen.getAllByRole('button')
-    const teamNewButton = screen.getByRole('button', { name: 'Team' })
-    const teamButton = screen.getByRole('button', { name: 'Panel' })
+    expect(screen.queryByRole('button', { name: 'Team' })).not.toBeInTheDocument()
 
-    expect(buttons.indexOf(teamNewButton)).toBeLessThan(buttons.indexOf(teamButton))
+    fireEvent.click(screen.getByRole('button', { name: 'Council of Experts' }))
 
-    fireEvent.click(teamNewButton)
-    fireEvent.click(teamButton)
-
-    expect(onOpenTeammates).toHaveBeenCalledOnce()
     expect(onOpenWaggle).toHaveBeenCalledOnce()
   })
 })

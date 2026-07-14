@@ -8,7 +8,7 @@ const WEB_EXECUTOR_TEAMMATE: TeammateDefinition = {
     'Web Planner scopes the request, Web Architect maps the route and component approach, Web Builder implements the real change, Web QA verifies behavior and runtime health, Web Polish refines UX when it materially helps, and Web Decision Maker decides when the result is truly ready.',
   launchPromptPlaceholder:
     'Build or improve a real website or web app in this repo. Example: redesign the marketing homepage hero, pricing section, and mobile navigation, then verify it in Playwright.',
-  launchButtonLabel: 'Launch Team',
+  launchButtonLabel: 'Launch Council',
   app: {
     requiredMcps: ['playwright'],
     requiredSkills: [],
@@ -250,7 +250,7 @@ const CODE_REVIEWER_TEAMMATE: TeammateDefinition = {
     'Review Planner scopes the change, Code Reviewer finds correctness and maintainability issues, Standards Auditor checks engineering quality, Ripple Analyst looks for side effects, and Review Decision Maker decides whether review coverage is strong enough to stop.',
   launchPromptPlaceholder:
     'Review the latest code changes for bugs, standards issues, regression risk, and missing tests.',
-  launchButtonLabel: 'Launch Team',
+  launchButtonLabel: 'Launch Council',
   app: {
     requiredMcps: [],
     requiredSkills: [],
@@ -450,7 +450,7 @@ const ROBUST_QA_TEAMMATE: TeammateDefinition = {
     'QA Intake Planner defines acceptance criteria, Test Case Designer builds a structured ledger, QA Executor runs pending cases in batches, Coverage Auditor checks for gaps, and QA Decision Maker keeps the loop going until every case reaches a terminal result.',
   launchPromptPlaceholder:
     'Test this feature end to end, design the needed test cases, execute them in batches, and report pass/fail/blocked clearly.',
-  launchButtonLabel: 'Launch Team',
+  launchButtonLabel: 'Launch Council',
   app: {
     requiredMcps: [],
     requiredSkills: [],
@@ -660,7 +660,7 @@ const DEBUGGER_TEAMMATE: TeammateDefinition = {
     'Debug Intake Planner scopes the issue, Reproduction Analyst gathers evidence, Fix Executor tests one hypothesis at a time, MCP Verifier checks the result, Rollback Guardian reverts failed attempt-owned changes when safe, and Debug Decision Maker drives retries until the issue is fixed or truly blocked.',
   launchPromptPlaceholder:
     'Debug this issue, try a fix, verify it with MCP or the strongest runtime evidence, safely rollback failed attempt-owned edits, and continue until resolved.',
-  launchButtonLabel: 'Launch Team',
+  launchButtonLabel: 'Launch Council',
   app: {
     requiredMcps: [],
     requiredSkills: [],
@@ -902,7 +902,7 @@ const BACKEND_DEVELOPER_TEAMMATE: TeammateDefinition = {
     'Backend Planner scopes the task, Data Analyst inspects schema and persistence assumptions, API Builder implements the change, API Verifier proves it with real calls or strong runtime evidence, Backend QA Auditor checks contracts and regressions, and Backend Decision Maker decides whether the backend work is truly done.',
   launchPromptPlaceholder:
     'Build or fix this backend feature, inspect DB state if needed, and verify the API actually works before stopping.',
-  launchButtonLabel: 'Launch Team',
+  launchButtonLabel: 'Launch Council',
   app: {
     requiredMcps: [],
     requiredSkills: [],
@@ -1139,7 +1139,7 @@ const MOBILE_DEVELOPER_TEAMMATE: TeammateDefinition = {
     'Mobile Planner scopes the app-first request, Mobile Architect maps the target screens and state flow, Mobile Builder implements the change, Device QA verifies the behavior on the strongest available runtime path, Mobile UX Auditor checks polish and edge cases, and Mobile Decision Maker decides when the result is genuinely ready.',
   launchPromptPlaceholder:
     'Build or fix this mobile feature, inspect the real flow, and verify it behaves correctly on the strongest available runtime path.',
-  launchButtonLabel: 'Launch Team',
+  launchButtonLabel: 'Launch Council',
   app: {
     requiredMcps: [],
     requiredSkills: [],

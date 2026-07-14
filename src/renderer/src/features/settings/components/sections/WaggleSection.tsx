@@ -67,7 +67,7 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
       const createdPreset = await handleCreatePreset()
       if (createdPreset) {
         setEditorMode('closed')
-        showToast(`Created Panel "${createdPreset.name}".`, 'success')
+        showToast(`Created Council of Experts "${createdPreset.name}".`, 'success')
       }
       return
     }
@@ -77,7 +77,7 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
 
   async function handleInstallDependencies(preset: (typeof presets)[number]) {
     if (!projectPath) {
-      showToast('Select a project before installing Panel app dependencies.', 'error')
+      showToast('Select a project before installing Council of Experts dependencies.', 'error')
       return
     }
 
@@ -93,19 +93,19 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
       }
       showToast(
         changedCount > 0
-          ? `Installed Panel app dependencies for "${preset.name}".`
+          ? `Installed Council of Experts dependencies for "${preset.name}".`
           : `"${preset.name}" is already ready to run.`,
         'success',
       )
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      showToast(`Failed to install Panel app dependencies: ${message}`, 'error')
+      showToast(`Failed to install Council of Experts dependencies: ${message}`, 'error')
     }
   }
 
   async function handleLaunchPreset(preset: (typeof presets)[number], prompt?: string) {
     if (!projectPath) {
-      showToast('Select a project before launching a Panel app.', 'error')
+      showToast('Select a project before launching Council of Experts.', 'error')
       return
     }
 
@@ -126,34 +126,35 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
       showToast(
         prompt
           ? `"${preset.name}" is ready with a starter prompt in the composer.`
-          : `"${preset.name}" is ready. Send the first prompt in chat to start this Panel app.`,
+          : `"${preset.name}" is ready. Send the first prompt in chat to start Council of Experts.`,
         'success',
       )
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      showToast(`Failed to launch Panel app: ${message}`, 'error')
+      showToast(`Failed to launch Council of Experts: ${message}`, 'error')
     }
   }
 
   const editorTitle =
     editorMode === 'create'
-      ? 'Create Panel'
+      ? 'Create Council of Experts'
       : activePreset
         ? `Edit ${activePreset.name}`
-        : 'Edit Panel'
+        : 'Edit Council of Experts'
   const editorDescription =
     editorMode === 'create'
-      ? 'Define the Expert roles, app dependencies, and stop rules, then save this Panel app when it is ready.'
+      ? 'Define the Expert roles, dependencies, and stop rules, then save this Council of Experts workflow when it is ready.'
       : activePreset?.description?.trim()
         ? activePreset.description
-        : 'Adjust the selected Panel app here after reviewing it from the list.'
-  const primaryActionLabel = editorMode === 'create' ? 'Create Panel' : 'Save Changes'
+        : 'Adjust the selected Council of Experts workflow here after reviewing it from the list.'
+  const primaryActionLabel =
+    editorMode === 'create' ? 'Create Council of Experts' : 'Save Changes'
   const isDialogOpen = editorMode !== 'closed'
 
   return (
     <div className="space-y-6">
       {showHeading ? (
-        <h2 className="text-[20px] font-semibold text-text-primary">Panel Mode</h2>
+        <h2 className="text-[20px] font-semibold text-text-primary">Council of Experts</h2>
       ) : null}
       {!isDialogOpen && displayedError && (
         <p

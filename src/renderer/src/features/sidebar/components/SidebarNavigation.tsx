@@ -102,14 +102,12 @@ export function SidebarPrimaryActions({
   onNewSession,
   onOpenMcp,
   onOpenSkills,
-  onOpenTeammates,
   onOpenWaggle,
 }: {
   readonly activeView: SidebarView
   readonly onNewSession: () => void
   readonly onOpenMcp: () => void
   readonly onOpenSkills: () => void
-  readonly onOpenTeammates: () => void
   readonly onOpenWaggle: () => void
 }) {
   return (
@@ -126,15 +124,9 @@ export function SidebarPrimaryActions({
 
       <div className="mt-7 space-y-1">
         <SidebarShortcut
-          active={activeView === 'teammates'}
-          icon={Users}
-          label="Team"
-          onClick={onOpenTeammates}
-        />
-        <SidebarShortcut
           active={activeView === 'waggle'}
           icon={Users}
-          label="Panel"
+          label="Council of Experts"
           onClick={onOpenWaggle}
         />
         <SidebarShortcut

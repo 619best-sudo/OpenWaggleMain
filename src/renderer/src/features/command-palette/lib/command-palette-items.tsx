@@ -1,12 +1,10 @@
 import type { SkillDiscoveryItem } from '@shared/types/standards'
-import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WagglePreset } from '@shared/types/waggle'
 import {
   Archive,
   Copy,
   GitBranch,
   GitPullRequest,
-  Globe,
   ListTree,
   MessageSquare,
   Settings,
@@ -24,27 +22,8 @@ import type {
 import { openFeedbackModal } from './command-palette-actions'
 import { truncateCommandDescription } from './command-palette-text'
 
-const TEAM_DISCOVERY_TERMS = [
-  'team',
-  'pair',
-  'team(new)',
-  'team new',
-  'teammate',
-  'web executor',
-  'web',
-] as const
-
 const PAIR_DISCOVERY_TERMS = ['panel', 'pair', 'waggle'] as const
 const VISIBLE_PANEL_PRESET_IDS: ReadonlySet<string> = new Set(['debate', 'red-team'])
-
-const TEAM_SEARCH_ALIASES: Record<string, readonly string[]> = {
-  'web executor': ['web', 'website', 'site', 'landing page', 'frontend'],
-  'code reviewer': ['review', 'reviewer', 'code review', 'audit', 'quality'],
-  'robust qa': ['qa', 'test', 'testing', 'verify', 'verification'],
-  debugger: ['debug', 'debugger', 'bug', 'fix', 'troubleshoot'],
-  'backend developer': ['backend', 'api', 'server', 'database', 'db'],
-  'mobile developer': ['mobile', 'app', 'ios', 'android', 'react native'],
-}
 
 export function createBaseCommands(actions: CommandPaletteActionHandlers) {
   const optionalCommands: CommandPaletteItem[] = []
@@ -55,17 +34,10 @@ export function createBaseCommands(actions: CommandPaletteActionHandlers) {
   return [
     {
       id: 'waggle',
-      label: 'Panel Mode',
-      description: 'Start a Panel session',
+      label: 'Council of Experts',
+      description: 'Start a Council of Experts session',
       icon: <Waypoints className="size-3.5" />,
       action: actions.startWaggle,
-    },
-    {
-      id: 'team-new',
-      label: 'Team Mode',
-      description: 'Arm a Team preset, then send your own prompt',
-      icon: <Globe className="size-3.5" />,
-      action: actions.configureTeam,
     },
     {
       id: 'feedback',
@@ -130,33 +102,10 @@ export function createPresetItems(
         COMMAND_PALETTE.WAGGLE_PRESET_DESCRIPTION_LIMIT,
       ),
       icon: presetIcon(preset),
-      section: 'Panel Mode',
+      section: 'Council of Experts',
       trailing: 'Sequential',
       trailingBadge: preset.isBuiltIn ? undefined : 'Custom',
       action: () => selectPreset(preset),
-    })
-  }
-
-  return items
-}
-
-export function createTeamItems(
-  teammates: readonly TeammateDefinition[],
-  lowerQuery: string,
-  selectTeam: CommandPaletteActionHandlers['selectTeam'],
-) {
-  const items: CommandPaletteItem[] = []
-  for (const teammate of teammates) {
-    if (!teamMatchesQuery(teammate, lowerQuery)) continue
-
-    items.push({
-      id: `team-new-${teammate.id}`,
-      label: teammate.name,
-      description: truncateCommandDescription(teammate.description, 88),
-      icon: <Globe className="size-3.5" />,
-      section: 'Team',
-      trailing: 'Loop',
-      action: () => selectTeam(teammate),
     })
   }
 
@@ -168,25 +117,11 @@ export function createConfigureWaggleItem(lowerQuery: string, configureWaggle: (
   return [
     {
       id: 'configure-waggle',
-      label: 'Configure Panel Mode...',
-      description: 'Open Panel settings',
+      label: 'Configure Council of Experts...',
+      description: 'Open Council of Experts settings',
       icon: <Settings className="size-3.5" />,
       section: 'configure',
       action: configureWaggle,
-    },
-  ]
-}
-
-export function createConfigureTeamItem(lowerQuery: string, configureTeam: () => void) {
-  if (!isTeamFilter(lowerQuery)) return []
-  return [
-    {
-      id: 'configure-team-new',
-      label: 'Configure Team...',
-      description: 'Open Team presets and builder',
-      icon: <Settings className="size-3.5" />,
-      section: 'configure',
-      action: configureTeam,
     },
   ]
 }
@@ -248,31 +183,11 @@ function presetMatchesQuery(preset: WagglePreset, lowerQuery: string) {
   )
 }
 
-function teamMatchesQuery(teammate: TeammateDefinition, lowerQuery: string) {
-  const aliasTerms = TEAM_SEARCH_ALIASES[teammate.name.toLowerCase()] ?? []
-  return (
-    !lowerQuery ||
-    teammate.name.toLowerCase().includes(lowerQuery) ||
-    teammate.description.toLowerCase().includes(lowerQuery) ||
-    TEAM_DISCOVERY_TERMS.includes(lowerQuery as (typeof TEAM_DISCOVERY_TERMS)[number]) ||
-    aliasTerms.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term))
-  )
-}
-
 function isWaggleFilter(lowerQuery: string) {
   return (
     lowerQuery.length > 0 &&
     PAIR_DISCOVERY_TERMS.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term)) &&
     !lowerQuery.startsWith(COMMAND_PALETTE.WAGGLE_COMMAND_PREFIX)
-  )
-}
-
-function isTeamFilter(lowerQuery: string) {
-  return (
-    lowerQuery.length > 0 &&
-    [...TEAM_DISCOVERY_TERMS, ...Object.values(TEAM_SEARCH_ALIASES).flat()].some(
-      (query) => query.includes(lowerQuery) || lowerQuery.includes(query),
-    )
   )
 }
 

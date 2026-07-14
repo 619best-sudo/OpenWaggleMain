@@ -189,7 +189,7 @@ describe('TeammatesPanel', () => {
         'Prebuilt and custom teams for complex work. Open a team to review its setup, tailor the prompt, and launch.',
       ),
     ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Custom Execution Team' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Custom Council' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Web Executor' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Code Reviewer' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Robust QA' })).toBeInTheDocument()
@@ -221,7 +221,7 @@ describe('TeammatesPanel', () => {
     fireEvent.change(screen.getByLabelText('Task prompt'), {
       target: { value: 'Create a SaaS landing page and make sure it opens.' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Launch Team' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Launch Council' }))
 
     await waitFor(() => {
       expect(createSessionMock).toHaveBeenCalledWith('/repo/openwaggle')
@@ -259,18 +259,18 @@ describe('TeammatesPanel', () => {
         to: '/sessions/$sessionId',
         params: { sessionId: 'session-team-1' },
       })
-      expect(showToastMock).toHaveBeenCalledWith('"Web Executor" launched in Team.', 'success')
+      expect(showToastMock).toHaveBeenCalledWith('"Web Executor" launched in Council.', 'success')
     })
   })
 
   it('launches a custom team built from the new agent form', async () => {
     render(<TeammatesPanel />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Team' }))
-    fireEvent.change(screen.getByLabelText('Team name'), {
+    fireEvent.click(screen.getByRole('button', { name: 'Create Council' }))
+    fireEvent.change(screen.getByLabelText('Council name'), {
       target: { value: 'Review Squad' },
     })
-    fireEvent.change(screen.getByLabelText('Team task prompt'), {
+    fireEvent.change(screen.getByLabelText('Council task prompt'), {
       target: { value: 'Review the latest code changes and decide whether the work is ready.' },
     })
     fireEvent.click(screen.getByText('Dependencies', { selector: 'h4' }))
@@ -292,7 +292,7 @@ describe('TeammatesPanel', () => {
       target: { value: 'agent-1' },
     })
     expect(screen.queryByLabelText('Choose model')).not.toBeInTheDocument()
-    fireEvent.click(screen.getAllByRole('button', { name: 'Launch Custom Team' })[0]!)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Launch Custom Council' })[0]!)
 
     await waitFor(() => {
       expect(sendTeamMessageMock).toHaveBeenCalledWith(
@@ -323,7 +323,7 @@ describe('TeammatesPanel', () => {
           ]),
         }),
       )
-      expect(showToastMock).toHaveBeenCalledWith('"Review Squad" launched in Team.', 'success')
+      expect(showToastMock).toHaveBeenCalledWith('"Review Squad" launched in Council.', 'success')
     })
   })
 
@@ -334,29 +334,27 @@ describe('TeammatesPanel', () => {
 
     await waitFor(() => {
       expect(showConfirmMock).toHaveBeenCalledWith(
-        'Delete custom team?',
-        'This removes the custom execution team from the storefront. You can create a new one later.',
+        'Delete custom council?',
+        'This removes the custom council from the library. You can create a new one later.',
       )
       expect(updateSettingsMock).toHaveBeenCalledWith({ showCustomExecutionTeam: false })
-      expect(
-        screen.queryByRole('heading', { name: 'Custom Execution Team' }),
-      ).not.toBeInTheDocument()
-      expect(showToastMock).toHaveBeenCalledWith('Custom execution team deleted.', 'success')
+      expect(screen.queryByRole('heading', { name: 'Custom Council' })).not.toBeInTheDocument()
+      expect(showToastMock).toHaveBeenCalledWith('Custom council deleted.', 'success')
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Team' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Council' }))
 
     await waitFor(() => {
       expect(updateSettingsMock).toHaveBeenCalledWith({ showCustomExecutionTeam: true })
     })
-    expect(screen.getAllByText('Custom Execution Team').length).toBeGreaterThan(0)
-    expect(screen.getByLabelText('Team name')).toHaveValue('Custom Execution Team')
+    expect(screen.getAllByText('Custom Council').length).toBeGreaterThan(0)
+    expect(screen.getByLabelText('Council name')).toHaveValue('Custom Council')
   })
 
   it('generates agent setup from instructions using the Team API', async () => {
     render(<TeammatesPanel />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create Team' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Council' }))
     fireEvent.click(screen.getByRole('button', { name: '✨ Generate with AI' }))
     fireEvent.change(screen.getByLabelText('Agent instructions'), {
       target: { value: 'Reviewer who checks bugs and missing tests before stop.' },

@@ -1,5 +1,4 @@
 import type { SkillDiscoveryItem } from '@shared/types/standards'
-import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleConfig } from '@shared/types/waggle'
 import { useEffect, useRef, useState } from 'react'
 import { useEscapeHotkey } from '@/shared/hooks/useEscapeHotkey'
@@ -13,7 +12,6 @@ interface CommandPaletteProps {
   readonly slashSkills: readonly SkillDiscoveryItem[]
   readonly onSelectSkill: (skillId: string, skillName?: string) => void
   readonly onStartWaggle: (config: WaggleConfig) => void
-  readonly onStartTeam: (teammate: TeammateDefinition) => void
   readonly onOpenSessionTree?: () => void
   readonly onForkToNewSession?: () => void
   readonly onCloneToNewSession?: () => void
@@ -23,7 +21,6 @@ export function CommandPalette({
   slashSkills,
   onSelectSkill,
   onStartWaggle,
-  onStartTeam,
   onOpenSessionTree,
   onForkToNewSession,
   onCloneToNewSession,
@@ -38,7 +35,6 @@ export function CommandPalette({
     slashSkills,
     onSelectSkill,
     onStartWaggle,
-    onStartTeam,
     onOpenSessionTree,
     onForkToNewSession,
     onCloneToNewSession,

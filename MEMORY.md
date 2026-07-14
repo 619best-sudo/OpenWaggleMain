@@ -22,6 +22,7 @@ Durable OpenWaggle project memory. Keep this compact and technical. Do not add p
 Load `.agents/skills/pi-integration/SKILL.md` for details.
 
 - Pi JSONL sessions are runtime state; SQLite session projection is the product read model for renderer navigation, branching, persistence, active runs, and UI state.
+- Tool-model routing for Turing Machine is split across OpenWaggle app code and patched Pi packages. Read `docs/tool-model-routing.md` before changing tool permission/model routing, because the final backend-bound model override is enforced in the patched `@mariozechner/pi-ai` transport, not only in app-side provider hooks.
 - Pi-native tool events, thinking levels, compaction behavior, session ids, provider/model ids, and auth methods should stay Pi-native through the adapter boundary.
 - Missing projected Pi entries during clean-cut projection rebuilds should be treated as stale/cancelled navigation, not thrown through IPC.
 - Preserve Pi-created session ids before first prompt by opening the pre-created id correctly instead of allowing a missing JSONL path to create a different id.

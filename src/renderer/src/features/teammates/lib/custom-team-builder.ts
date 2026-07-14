@@ -181,10 +181,10 @@ export function createDefaultTeamBuilderDraft(): TeamBuilderDraft {
   const firstAgent = createDefaultAgentDraft()
   return {
     id: createDraftId('custom-team'),
-    name: 'Custom Execution Team',
-    description: 'A custom team for end-to-end execution of long-running tasks.',
-    launchPromptPlaceholder: 'Describe the task this team should execute.',
-    launchButtonLabel: 'Launch Custom Team',
+    name: 'Custom Council',
+    description: 'A custom council for end-to-end execution of long-running tasks.',
+    launchPromptPlaceholder: 'Describe the task this council should execute.',
+    launchButtonLabel: 'Launch Custom Council',
     requiredMcps: [],
     optionalMcps: [],
     requiredSkills: [],
@@ -373,11 +373,11 @@ export function buildTeammateFromDraft(draft: TeamBuilderDraft): TeammateDefinit
 
   return {
     id: draft.id,
-    name: draft.name.trim() || 'Custom Execution Team',
-    description: draft.description.trim() || 'A custom teammate built in Team mode.',
+    name: draft.name.trim() || 'Custom Council',
+    description: draft.description.trim() || 'A custom council built for multi-step execution.',
     launchPromptPlaceholder:
-      draft.launchPromptPlaceholder.trim() || 'Describe the task this custom team should run.',
-    launchButtonLabel: draft.launchButtonLabel.trim() || 'Launch Custom Team',
+      draft.launchPromptPlaceholder.trim() || 'Describe the task this custom council should run.',
+    launchButtonLabel: draft.launchButtonLabel.trim() || 'Launch Custom Council',
     app: {
       requiredMcps,
       requiredSkills,

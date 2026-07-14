@@ -165,15 +165,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
         ],
       },
     })
-    expect(
-      presets.find((preset) => preset.id === WagglePresetId('product-planning')),
-    ).toMatchObject({
-      name: 'Product Planning',
-      app: {
-        requiredMcps: [],
-        requiredSkills: [],
-      },
-    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('product-planning'))).toBeUndefined()
     expect(presets.find((preset) => preset.id === WagglePresetId('turing'))).toMatchObject({
       name: 'Turing',
       app: {
@@ -217,33 +209,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
         agents: [{ label: 'Web Builder' }, { label: 'Integration Reviewer' }],
       },
     })
-    expect(presets.find((preset) => preset.id === WagglePresetId('web-engineer'))).toMatchObject({
-      name: 'Web Engineer',
-      app: {
-        requiredMcps: ['playwright'],
-        requiredSkills: [],
-        optionalMcps: [
-          'figma',
-          'gsap',
-          'remotion',
-          'animejs',
-          'multimodal-media',
-          'ffmpeg',
-          'blender',
-          '3d-asset-processing',
-          'gltf-mcp',
-        ],
-        optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor', 'media-director'],
-      },
-      config: {
-        agents: [
-          { label: 'Web Planner' },
-          { label: 'Web Builder' },
-          { label: 'Web Animation Expert' },
-          { label: 'Web Verifier' },
-        ],
-      },
-    })
+    expect(presets.find((preset) => preset.id === WagglePresetId('web-engineer'))).toBeUndefined()
     expect(presets.find((preset) => preset.id === WagglePresetId('mobile-build'))).toMatchObject({
       name: 'Mobile Build',
       app: {
@@ -441,13 +407,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     })
     expect(
       presets.find((preset) => preset.id === WagglePresetId('frontend-ui-audit')),
-    ).toMatchObject({
-      name: 'Frontend UI Audit',
-      app: {
-        requiredMcps: ['playwright'],
-        requiredSkills: ['frontend-implementer', 'ui-screenshot-auditor'],
-      },
-    })
+    ).toBeUndefined()
     expect(
       presets.find((preset) => preset.id === WagglePresetId('reference-image-replication')),
     ).toMatchObject({

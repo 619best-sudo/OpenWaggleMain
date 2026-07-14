@@ -166,15 +166,19 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    expect(await screen.findByText('Panel Mode')).toBeInTheDocument()
+    expect(await screen.findByText('Council of Experts')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.queryByDisplayValue('Reviewer')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /create panel/i }))
+    fireEvent.click(screen.getByRole('button', { name: /create council of experts/i }))
 
-    const createDialog = await screen.findByRole('dialog', { name: /create panel/i })
+    const createDialog = await screen.findByRole('dialog', {
+      name: /create council of experts/i,
+    })
     expect(createDialog).toBeInTheDocument()
-    expect(within(createDialog).getByRole('button', { name: /create panel/i })).toBeInTheDocument()
+    expect(
+      within(createDialog).getByRole('button', { name: /create council of experts/i }),
+    ).toBeInTheDocument()
     expect(screen.getByDisplayValue('Expert 1')).toBeInTheDocument()
     expect(screen.queryByLabelText(/model/i)).not.toBeInTheDocument()
   })
@@ -197,12 +201,6 @@ describe('WaggleSection', () => {
       createPreset({
         id: WagglePresetId('turing'),
         name: 'Turing',
-        isBuiltIn: true,
-        app: { requiredMcps: [], requiredSkills: [] },
-      }),
-      createPreset({
-        id: WagglePresetId('product-planning'),
-        name: 'Product Planning',
         isBuiltIn: true,
         app: { requiredMcps: [], requiredSkills: [] },
       }),
@@ -246,11 +244,6 @@ describe('WaggleSection', () => {
         isBuiltIn: true,
       }),
       createPreset({
-        id: WagglePresetId('frontend-ui-audit'),
-        name: 'Frontend UI Audit',
-        isBuiltIn: true,
-      }),
-      createPreset({
         id: WagglePresetId('code-review'),
         name: 'Code Review',
         isBuiltIn: true,
@@ -273,7 +266,7 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    expect(await screen.findByText('Panels')).toBeInTheDocument()
+    expect(await screen.findByText('Council of Experts')).toBeInTheDocument()
     expect(screen.getAllByText('Turing')).toHaveLength(1)
     expect(screen.getAllByText('Design And Asset Direction')).toHaveLength(1)
     expect(screen.getAllByText('Mobile Build')).toHaveLength(1)
@@ -283,7 +276,9 @@ describe('WaggleSection', () => {
     expect(screen.getByText('Person 360')).toBeInTheDocument()
     expect(screen.getByText('Person Profile With Optional Career Pass')).toBeInTheDocument()
     expect(
-      screen.getByText(/Choose a panel to run, or create one for a repeatable workflow\./i),
+      screen.getByText(
+        /Choose a Council of Experts workflow to run, or create one for a repeatable workflow\./i,
+      ),
     ).toBeInTheDocument()
   })
 
@@ -343,12 +338,6 @@ describe('WaggleSection', () => {
         app: { requiredMcps: [], requiredSkills: [] },
       }),
       createPreset({
-        id: WagglePresetId('product-planning'),
-        name: 'Product Planning',
-        isBuiltIn: true,
-        app: { requiredMcps: [], requiredSkills: [] },
-      }),
-      createPreset({
         id: WagglePresetId('design-asset-direction'),
         name: 'Design And Asset Direction',
         isBuiltIn: true,
@@ -380,21 +369,7 @@ describe('WaggleSection', () => {
     ).toBeInTheDocument()
     expect(
       within(elementAt(turingGuidance, 0)).getByText(
-        /Recommended Next: Usually Product Planning or a build Panel/i,
-      ),
-    ).toBeInTheDocument()
-
-    const planningStage = await screen.findAllByTestId('preset-stage-product-planning')
-    expect(within(elementAt(planningStage, 0)).getByText('Planning')).toBeInTheDocument()
-    const planningGuidance = await screen.findAllByTestId('preset-guidance-product-planning')
-    expect(
-      within(elementAt(planningGuidance, 0)).getByText(
-        /Best For: Turning a vague request into a buildable scope/i,
-      ),
-    ).toBeInTheDocument()
-    expect(
-      within(elementAt(planningGuidance, 0)).getByText(
-        /Recommended Next: Design And Asset Direction or a build Panel/i,
+        /Recommended Next: Usually Design And Asset Direction or a build Council of Experts workflow/i,
       ),
     ).toBeInTheDocument()
 
@@ -631,52 +606,6 @@ describe('WaggleSection', () => {
       expect(
         useWaggleLaunchPromptStore.getState().pendingBySessionId['session-123']?.prompt,
       ).toMatch(/mobile-build, qa-repair-loop, or quality-assurance-engineer/i)
-    })
-  })
-
-  it('launches Web Engineer with a Figma starter prompt', async () => {
-    const preset = createPreset({
-      id: WagglePresetId('web-engineer'),
-      name: 'Web Engineer',
-      isBuiltIn: true,
-      app: {
-        requiredMcps: ['playwright'],
-        requiredSkills: [],
-        optionalMcps: ['figma', 'gsap', 'remotion', 'animejs'],
-        optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor'],
-      },
-    })
-    listWagglePresetsMock.mockResolvedValueOnce([preset])
-    getWaggleAppInstallStatusMock.mockResolvedValueOnce({
-      ready: true,
-      requiredDependencyCount: 1,
-      optionalDependencyCount: 6,
-      installedCount: 1,
-      missingCount: 0,
-      unsupportedCount: 0,
-      optionalInstalledCount: 6,
-      optionalMissingCount: 0,
-      optionalUnsupportedCount: 0,
-      dependencies: [],
-    })
-
-    renderWithQueryClient(<WaggleSection />)
-
-    fireEvent.click(
-      elementAt(await screen.findAllByRole('button', { name: /starter prompts/i }), 0),
-    )
-    fireEvent.click(await screen.findByRole('button', { name: /figma to web ui/i }))
-
-    await waitFor(() => {
-      expect(createSessionMock).toHaveBeenCalledWith(PROJECT_PATH)
-      expect(navigateMock).toHaveBeenCalledWith({
-        to: '/sessions/$sessionId',
-        params: { sessionId: 'session-123' },
-      })
-      expect(useWaggleStore.getState().activeConfig).toEqual(preset.config)
-      expect(
-        useWaggleLaunchPromptStore.getState().pendingBySessionId['session-123']?.prompt,
-      ).toMatch(/provided figma or design reference/i)
     })
   })
 
@@ -1015,7 +944,7 @@ describe('WaggleSection', () => {
     await waitFor(() => {
       const dialog = screen.getByRole('dialog', { name: /edit review panel/i })
       expect(dialog).toBeInTheDocument()
-      expect(screen.getByLabelText(/panel description/i)).toHaveValue(
+      expect(screen.getByLabelText(/council of experts description/i)).toHaveValue(
         'Custom: Finds regressions before they land.',
       )
       expect(screen.getByDisplayValue('Reviewer')).toBeInTheDocument()
@@ -1086,7 +1015,7 @@ describe('WaggleSection', () => {
     fireEvent.change(screen.getByDisplayValue('Reviewer'), {
       target: { value: 'Refiner' },
     })
-    fireEvent.change(screen.getByLabelText(/panel description/i), {
+    fireEvent.change(screen.getByLabelText(/council of experts description/i), {
       target: { value: 'Custom: Tightens the remediation plan.' },
     })
     fireEvent.change(screen.getByDisplayValue('Finds regressions before they land.'), {
@@ -1158,21 +1087,21 @@ describe('WaggleSection', () => {
 
     renderWithQueryClient(<WaggleSection />)
 
-    fireEvent.click(await screen.findByRole('button', { name: /create panel/i }))
-    await screen.findByRole('dialog', { name: /create panel/i })
+    fireEvent.click(await screen.findByRole('button', { name: /create council of experts/i }))
+    await screen.findByRole('dialog', { name: /create council of experts/i })
     fireEvent.change(screen.getByDisplayValue('Expert 1'), {
       target: { value: 'Strategist' },
     })
     fireEvent.change(screen.getByDisplayValue('Expert 2'), {
       target: { value: 'Skeptic' },
     })
-    fireEvent.change(screen.getByLabelText(/panel title/i), {
+    fireEvent.change(screen.getByLabelText(/council of experts title/i), {
       target: { value: 'Launch Review Panel' },
     })
     fireEvent.change(elementAt(screen.getAllByPlaceholderText(/describe this expert's/i), 0), {
       target: { value: 'Frames trade-offs before implementation.' },
     })
-    fireEvent.change(screen.getByLabelText(/panel description/i), {
+    fireEvent.change(screen.getByLabelText(/council of experts description/i), {
       target: { value: 'Custom: Frames trade-offs before implementation.' },
     })
     fireEvent.change(screen.getByLabelText(/required mcps/i), {
@@ -1183,9 +1112,12 @@ describe('WaggleSection', () => {
     })
 
     fireEvent.click(
-      within(screen.getByRole('dialog', { name: /create panel/i })).getByRole('button', {
-        name: /create panel/i,
-      }),
+      within(screen.getByRole('dialog', { name: /create council of experts/i })).getByRole(
+        'button',
+        {
+          name: /create council of experts/i,
+        },
+      ),
     )
 
     await waitFor(() => {
@@ -1209,9 +1141,9 @@ describe('WaggleSection', () => {
         PROJECT_PATH,
       )
     })
-    expect(await screen.findByText('Panels')).toBeInTheDocument()
+    expect(await screen.findByText('Council of Experts')).toBeInTheDocument()
     expect(screen.getByText('Launch Review Panel')).toBeInTheDocument()
-    expect(screen.queryByRole('dialog', { name: /create panel/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: /create council of experts/i })).not.toBeInTheDocument()
     expect(listWagglePresetsMock).toHaveBeenCalledTimes(2)
   })
 

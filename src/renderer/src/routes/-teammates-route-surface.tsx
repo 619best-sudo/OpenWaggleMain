@@ -4,7 +4,7 @@ import { WorkspacePanelSurface } from './-workspace-panel-surface'
 export function TeammatesRouteSurface() {
   return (
     <WorkspacePanelSurface
-      name="Team"
+      name="Council"
       title=""
       description=""
       contentClassName="px-8 py-8"
