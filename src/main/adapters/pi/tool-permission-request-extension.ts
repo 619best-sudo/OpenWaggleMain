@@ -1,6 +1,7 @@
 import type { ExtensionFactory } from '@mariozechner/pi-coding-agent'
 import type { ToolPermissionMode } from '@shared/types/settings'
 import type { ToolPermissionRequestEnvelope } from '@shared/types/tool-permission'
+import { registerEarlyToolAuthoringBridge } from './early-tool-authoring-bridge'
 import { isCodeEditingTool, normalizeToolName, resolveToolRoute } from './tool-model-route'
 
 type JsonRecord = Record<string, unknown>
@@ -208,6 +209,9 @@ export function createToolPermissionRequestExtension(
   options: ToolPermissionRequestOptions = {},
 ): ExtensionFactory {
   const guardedToolNames = normalizeToolNames(options.toolNames)
+  // Expose the early-authoring plan to the runtime so it can interrupt the
+  // orchestrator before a routed mutation generates its whole payload.
+  registerEarlyToolAuthoringBridge()
 
   return (pi) => {
     ;(pi.on as (event: 'tool_call', handler: ToolCallHandler) => void)(

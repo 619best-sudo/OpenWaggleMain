@@ -145,6 +145,72 @@ export function fakeResponse(finalMessage: unknown) {
   }
 }
 
+/**
+ * Simulate an orchestrator streaming a tool call incrementally: `start` →
+ * `toolcall_start` → target arg → payload arg begins (the cut point) → …later
+ * events that should never be consumed once the runtime interrupts. `onLateEvent`
+ * fires if the runtime reads past the cut point (i.e. failed to interrupt early).
+ */
+export function streamingEarlyAuthorResponse(input: {
+  toolName: string
+  toolCallId: string
+  target: JsonRecord
+  payloadKey: string
+  onLateEvent: () => void
+}) {
+  const content: JsonRecord[] = []
+  const output = {
+    role: 'assistant',
+    content,
+    api: 'openai-completions',
+    provider: 'turing-machine',
+    model: 'orchestrator',
+    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0 },
+    stopReason: 'toolUse',
+    timestamp: 1,
+  }
+  const block: JsonRecord = {
+    type: 'toolCall',
+    id: input.toolCallId,
+    name: input.toolName,
+    arguments: {},
+    partialArgs: '',
+  }
+  const thunks: Array<() => unknown> = [
+    () => ({ type: 'start', partial: output }),
+    () => {
+      output.content.push(block)
+      return { type: 'toolcall_start', partial: output }
+    },
+    () => {
+      block.arguments = { ...input.target }
+      return { type: 'toolcall_delta', partial: output }
+    },
+    () => {
+      // Target known, payload just begun → the earliest safe cut point.
+      block.arguments = { ...input.target, [input.payloadKey]: '' }
+      return { type: 'toolcall_delta', partial: output }
+    },
+    () => {
+      input.onLateEvent()
+      block.arguments = { ...input.target, [input.payloadKey]: 'ORCHESTRATOR PARTIAL PAYLOAD' }
+      return { type: 'toolcall_delta', partial: output }
+    },
+    () => {
+      input.onLateEvent()
+      return { type: 'done', partial: output }
+    },
+  ]
+  return {
+    async *[Symbol.asyncIterator]() {
+      for (const make of thunks) {
+        yield make()
+      }
+    },
+    result: async () => ({ ...output }),
+  }
+}
+
 export function createWriteTool(recorder: JsonRecord[]) {
   return {
     name: 'write',

@@ -7,7 +7,11 @@
  * orchestrator's proposed arguments — and that the routed output is normalized
  * exactly like a first-class tool call.
  */
-import { beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import {
+  clearEarlyToolAuthoringBridge,
+  registerEarlyToolAuthoringBridge,
+} from '../early-tool-authoring-bridge'
 import {
   assistantStopMessage,
   assistantTextMessage,
@@ -21,6 +25,7 @@ import {
   type JsonRecord,
   loadRunAgentLoop,
   type RunAgentLoop,
+  streamingEarlyAuthorResponse,
   userPrompt,
 } from './routed-tool-authoring-harness'
 
@@ -30,6 +35,12 @@ let runAgentLoop: RunAgentLoop
 
 beforeAll(async () => {
   runAgentLoop = await loadRunAgentLoop()
+  // The runtime reads the early-authoring plan off a global the app registers.
+  registerEarlyToolAuthoringBridge()
+})
+
+afterAll(() => {
+  clearEarlyToolAuthoringBridge()
 })
 
 describe('routed tool authoring (patched pi-agent-core loop)', () => {
@@ -73,6 +84,58 @@ describe('routed tool authoring (patched pi-agent-core loop)', () => {
     expect(executedArgs).toEqual([{ path: '/file.ts', content: 'ROUTED' }])
     // The routed-authoring completion ran on the routed model id.
     expect(modelsSeen).toContain('tencent/hy3')
+  })
+
+  it('interrupts the orchestrator early, before it generates the mutation payload', async () => {
+    const executedArgs: JsonRecord[] = []
+    let lateEventsConsumed = false
+    let orchestratorTurns = 0
+
+    const streamFn = (
+      _model: { id: string },
+      _context: unknown,
+      options?: { toolChoice?: unknown },
+    ) => {
+      // Routed authoring completion (forced tool) → authors the real payload.
+      if (options?.toolChoice) {
+        return fakeResponse(
+          assistantToolCallMessage('write', { path: '/index.html', content: 'ROUTED CONTENT' }),
+        )
+      }
+      orchestratorTurns += 1
+      if (orchestratorTurns === 1) {
+        // Orchestrator streams the write incrementally; the payload never completes
+        // because the runtime should interrupt at the payload boundary.
+        return streamingEarlyAuthorResponse({
+          toolName: 'write',
+          toolCallId: 'tc1',
+          target: { path: '/index.html' },
+          payloadKey: 'content',
+          onLateEvent: () => {
+            lateEventsConsumed = true
+          },
+        })
+      }
+      return fakeResponse(assistantStopMessage())
+    }
+
+    await runAgentLoop(
+      userPrompt(),
+      {
+        systemPrompt: 'You are a coding agent.',
+        messages: [],
+        tools: [createWriteTool(executedArgs)],
+      },
+      baseConfig(routeReauthor),
+      async () => {},
+      undefined,
+      streamFn,
+    )
+
+    // The routed model authored the payload; the orchestrator never generated it.
+    expect(executedArgs).toEqual([{ path: '/index.html', content: 'ROUTED CONTENT' }])
+    // The stream was cut at the payload boundary — later events were never read.
+    expect(lateEventsConsumed).toBe(false)
   })
 
   it('executes with orchestrator arguments when the route does not re-author', async () => {

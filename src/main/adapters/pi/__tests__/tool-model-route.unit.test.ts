@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isCodeEditingTool,
   isReadTool,
+  resolveEarlyToolAuthoringPlan,
   resolveToolExecutionModel,
   resolveToolRoute,
 } from '../tool-model-route'
@@ -53,6 +54,23 @@ describe('resolveToolRoute', () => {
   it('keeps resolveToolExecutionModel in sync with the route model', () => {
     for (const toolName of ['read', 'edit', 'bash']) {
       expect(resolveToolExecutionModel(toolName)).toBe(resolveToolRoute(toolName).model)
+    }
+  })
+})
+
+describe('resolveEarlyToolAuthoringPlan', () => {
+  it('returns a plan only for tools that author their final args', () => {
+    for (const toolName of ['edit', 'write', 'patch', 'multiedit', 'write-file']) {
+      const plan = resolveEarlyToolAuthoringPlan(toolName)
+      expect(plan).not.toBeNull()
+      expect(plan?.targetKeys).toContain('path')
+      expect(plan?.payloadKeys).toEqual(expect.arrayContaining(['content', 'edits']))
+    }
+  })
+
+  it('returns null for read and default tools', () => {
+    for (const toolName of ['read', 'bash', 'grep', 'ls']) {
+      expect(resolveEarlyToolAuthoringPlan(toolName)).toBeNull()
     }
   })
 })

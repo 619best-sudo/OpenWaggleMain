@@ -119,6 +119,43 @@ export function resolveToolExecutionModel(toolName: string) {
   return resolveToolRoute(toolName).model
 }
 
+/**
+ * Argument keys the runtime uses to detect the earliest safe cut point when a
+ * routed-author tool is streaming: once a `target` key (the destination) is
+ * present and a `payload` key (the heavy content) has begun, the orchestrator
+ * stream can be interrupted and the routed model asked to author the payload.
+ */
+const EARLY_AUTHOR_TARGET_KEYS = ['path', 'filePath', 'file_path'] as const
+const EARLY_AUTHOR_PAYLOAD_KEYS = [
+  'content',
+  'edits',
+  'patch',
+  'newText',
+  'new_string',
+  'oldText',
+  'old_string',
+] as const
+
+export interface EarlyToolAuthoringPlan {
+  readonly targetKeys: readonly string[]
+  readonly payloadKeys: readonly string[]
+}
+
+/**
+ * The early-catch plan for a tool, or null when it should not be caught early.
+ * Only tools whose route authors the final arguments are eligible — those are the
+ * tools where the orchestrator's payload would be discarded anyway.
+ */
+export function resolveEarlyToolAuthoringPlan(toolName: string): EarlyToolAuthoringPlan | null {
+  if (!resolveToolRoute(toolName).authorFinalArgs) {
+    return null
+  }
+  return {
+    targetKeys: [...EARLY_AUTHOR_TARGET_KEYS],
+    payloadKeys: [...EARLY_AUTHOR_PAYLOAD_KEYS],
+  }
+}
+
 export const TOOL_EXECUTION_MODEL_ROUTES = {
   default: DEFAULT_TOOL_EXECUTION_MODEL,
   read: READ_TOOL_EXECUTION_MODEL,
