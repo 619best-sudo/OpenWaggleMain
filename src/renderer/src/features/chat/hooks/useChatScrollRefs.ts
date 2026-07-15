@@ -8,6 +8,7 @@ interface ChatScrollRefs extends ScrollEffectRefs {
   readonly activeSessionIdRef: MutableValueRef<string | null>
   readonly pendingAutoScrollFrameRef: MutableValueRef<number | null>
   readonly pendingRestoreTimerRef: MutableValueRef<ReturnType<typeof setTimeout> | null>
+  readonly restoreRetryCountRef: MutableValueRef<number>
   readonly effectRefs: ScrollEffectRefs
 }
 
@@ -24,6 +25,7 @@ export function useChatScrollRefs(
   const pendingUserScrollUpIntentRef = useRef(false)
   const pendingAutoScrollFrameRef = useRef<number | null>(null)
   const pendingRestoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const restoreRetryCountRef = useRef(0)
   const pendingRestoreScrollTopRef = useRef<number | null>(null)
   const lastRestoredSessionRef = useRef<string | null>(null)
   const hasRestoredScrollRef = useRef(false)
@@ -59,6 +61,7 @@ export function useChatScrollRefs(
     activeSessionIdRef,
     pendingAutoScrollFrameRef,
     pendingRestoreTimerRef,
+    restoreRetryCountRef,
     effectRefs,
   }
 }

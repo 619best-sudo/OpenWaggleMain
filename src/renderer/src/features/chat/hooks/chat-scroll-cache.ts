@@ -4,6 +4,14 @@ export const SCROLL_UP_HYSTERESIS_PX = 1
 export const SCROLLBAR_HIDE_DELAY_MS = 800
 export const SCROLL_PERSIST_DEBOUNCE_MS = 150
 export const SESSION_RESTORE_RETRY_MS = 96
+/**
+ * Upper bound on session-restore retry ticks. A saved scroll position can become
+ * unreachable (the session is now shorter, or content stops rendering short of
+ * it); without a cap the retry would re-pin the view to the bottom forever, which
+ * prevents the user from scrolling up. ~60 * 96ms ≈ 5.7s is well beyond normal
+ * async content measurement.
+ */
+export const MAX_SESSION_RESTORE_RETRIES = 60
 
 const SCROLL_CACHE_MAX_ENTRIES = 100
 const SCROLL_CACHE_KEY = 'openwaggle:scroll-positions'

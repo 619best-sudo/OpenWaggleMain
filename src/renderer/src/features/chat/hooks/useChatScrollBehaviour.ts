@@ -5,12 +5,14 @@ import {
   scrollElementToBottom,
 } from '@/features/chat/lib/scroll-to-bottom'
 import {
+  MAX_SESSION_RESTORE_RETRIES,
   SCROLL_PERSIST_DEBOUNCE_MS,
   SCROLL_UP_HYSTERESIS_PX,
   SCROLLBAR_HIDE_DELAY_MS,
   SESSION_RESTORE_RETRY_MS,
   saveScrollCache,
 } from './chat-scroll-cache'
+import { resolveAutoScrollSnapshot } from './chat-scroll-snapshot'
 import type {
   ScrollTouchEvent,
   ScrollWheelEvent,
@@ -24,42 +26,6 @@ export type {
   UseChatScrollBehaviourParams,
   UseChatScrollBehaviourResult,
 } from './chat-scroll-types'
-
-interface ScrollPositionSnapshot {
-  readonly currentScrollTop: number
-  readonly isNearBottom: boolean
-  readonly lastKnownScrollTop: number
-  readonly pendingUserScrollUpIntent: boolean
-  readonly shouldAutoScroll: boolean
-}
-
-function scrolledUpBeyondHysteresis(currentScrollTop: number, lastKnownScrollTop: number) {
-  return currentScrollTop < lastKnownScrollTop - SCROLL_UP_HYSTERESIS_PX
-}
-
-function resolveAutoScrollSnapshot(snapshot: ScrollPositionSnapshot) {
-  if (!snapshot.shouldAutoScroll && snapshot.isNearBottom) {
-    return {
-      pendingUserScrollUpIntent: false,
-      shouldAutoScroll: true,
-      shouldCancelPendingStickToBottom: false,
-    }
-  }
-
-  const userDetachedFromBottom =
-    snapshot.shouldAutoScroll &&
-    !snapshot.isNearBottom &&
-    scrolledUpBeyondHysteresis(snapshot.currentScrollTop, snapshot.lastKnownScrollTop)
-  const shouldAutoScroll = userDetachedFromBottom ? false : snapshot.shouldAutoScroll
-
-  return {
-    pendingUserScrollUpIntent: snapshot.pendingUserScrollUpIntent
-      ? false
-      : snapshot.pendingUserScrollUpIntent,
-    shouldAutoScroll,
-    shouldCancelPendingStickToBottom: snapshot.shouldAutoScroll && !shouldAutoScroll,
-  }
-}
 
 export function useChatScrollBehaviour(
   params: UseChatScrollBehaviourParams,
@@ -84,6 +50,7 @@ export function useChatScrollBehaviour(
     pendingUserScrollUpIntentRef,
     pendingAutoScrollFrameRef,
     pendingRestoreTimerRef,
+    restoreRetryCountRef,
     pendingRestoreScrollTopRef,
     activeSessionIdRef,
     scrollCacheRef,
@@ -145,6 +112,15 @@ export function useChatScrollBehaviour(
       clearTimeout(pendingRestoreTimerRef.current)
       pendingRestoreTimerRef.current = null
     }
+    restoreRetryCountRef.current = 0
+  }
+
+  // Abandon an in-flight session-scroll restore when the user takes control, so
+  // it stops re-pinning the view. Previously only the scroll-to-bottom button did.
+  function abandonPendingRestore() {
+    if (pendingRestoreScrollTopRef.current === null) return
+    pendingRestoreScrollTopRef.current = null
+    cancelPendingRestoreRetry()
   }
 
   function scrollMessagesToBottom(behavior: ScrollBehavior = 'auto') {
@@ -195,8 +171,18 @@ export function useChatScrollBehaviour(
     if (pendingRestoreTimerRef.current !== null) return
     pendingRestoreTimerRef.current = setTimeout(() => {
       pendingRestoreTimerRef.current = null
+      restoreRetryCountRef.current += 1
+      if (restoreRetryCountRef.current > MAX_SESSION_RESTORE_RETRIES) {
+        // Target is unreachable (session shorter than the saved position, or
+        // content stopped growing short of it). Give up instead of re-pinning the
+        // view forever, which would trap the user at the bottom.
+        abandonPendingRestore()
+        return
+      }
       if (applyPendingRestore()) {
         scheduleRestoreRetry()
+      } else {
+        restoreRetryCountRef.current = 0
       }
     }, SESSION_RESTORE_RETRY_MS)
   }
@@ -215,6 +201,13 @@ export function useChatScrollBehaviour(
     showScrollbarTemporarily()
 
     const currentScrollTop = scrollContainer.scrollTop
+    // A position differing from our last programmatic write means a user-initiated
+    // scroll (any input). Abandon a pending restore so it stops snapping back; our
+    // own restore/stick writes keep `lastKnownScrollTopRef` in sync, so they don't
+    // trip this.
+    if (currentScrollTop !== lastKnownScrollTopRef.current) {
+      abandonPendingRestore()
+    }
     const isNearBottom = isScrollContainerNearBottom(scrollContainer)
     const nextAutoScroll = resolveAutoScrollSnapshot({
       currentScrollTop,
@@ -236,6 +229,8 @@ export function useChatScrollBehaviour(
   function optOutOfAutoScrollForUserIntent() {
     const scrollContainer = scrollerRef.current
     pendingUserScrollUpIntentRef.current = true
+    // Scrolling up is an explicit signal to stop any restore/auto-follow.
+    abandonPendingRestore()
     if (!scrollContainer || scrollContainer.scrollTop <= 0) return
 
     shouldAutoScrollRef.current = false
