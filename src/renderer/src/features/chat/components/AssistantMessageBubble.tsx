@@ -7,8 +7,10 @@ import { GitBranch } from 'lucide-react'
 import React from 'react'
 import { Button } from '@/shared/ui/Button'
 import { useMessageCollapse } from '../hooks/useMessageCollapse'
+import { looksLikeMachinePlanText } from '../lib/machine-plan-detection'
 import { AgentLabel } from './AgentLabel'
 import { CollapsibleDetails } from './CollapsibleDetails'
+import { MachinePlanStreamingPlaceholder } from './MachinePlanStreamingPlaceholder'
 import { StreamingText } from './StreamingText'
 import { ToolCallRouter } from './ToolCallRouter'
 
@@ -68,6 +70,25 @@ function BranchFromMessageButton({
       <GitBranch className="size-3.5" />
     </Button>
   )
+}
+
+/**
+ * Renders an assistant text part. While streaming, a machine-mode plan arrives as
+ * raw JSON that the transcript replaces with the timeline card once persisted;
+ * show a placeholder instead of flashing that JSON. After streaming ends the
+ * normal content renders, so nothing is permanently hidden if it wasn't a plan.
+ */
+function AssistantTextPart({
+  content,
+  isStreaming,
+}: {
+  readonly content: string
+  readonly isStreaming: boolean
+}) {
+  if (isStreaming && looksLikeMachinePlanText(content)) {
+    return <MachinePlanStreamingPlaceholder />
+  }
+  return <StreamingText text={content} isStreaming={isStreaming} />
 }
 
 interface AssistantMessageBubbleProps {
@@ -154,9 +175,9 @@ export function AssistantMessageBubble({
               : matchBy(part, 'type')
                   .with('text', (value) =>
                     value.content.trim() ? (
-                      <StreamingText
+                      <AssistantTextPart
                         key={`${message.id}-text-${String(i)}`}
-                        text={value.content}
+                        content={value.content}
                         isStreaming={!!isStreaming}
                       />
                     ) : null,
