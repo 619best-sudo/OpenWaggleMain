@@ -7,7 +7,11 @@ import { createWaggleModelBinding, type WagglePreset } from '@shared/types/waggl
 
 const CREATED_AT_BUILT_IN = 0
 const UPDATED_AT_BUILT_IN = 0
-const ALLOWED_BUILT_IN_PANEL_IDS: ReadonlySet<string> = new Set(['debate', 'red-team'])
+const ALLOWED_BUILT_IN_PANEL_IDS: ReadonlySet<string> = new Set([
+  'debate',
+  'red-team',
+  'quality-council',
+])
 const REMOVED_BUILT_IN_PRESET_IDS: ReadonlySet<string> = new Set([
   'product-planning',
   'web-engineer',
@@ -3303,6 +3307,168 @@ End every turn with:
         },
       ],
       stop: { primary: 'consensus', maxTurnsSafety: 4 },
+    },
+    app: {
+      requiredMcps: [],
+      requiredSkills: [],
+    },
+    isBuiltIn: true,
+    createdAt: CREATED_AT_BUILT_IN,
+    updatedAt: UPDATED_AT_BUILT_IN,
+  },
+  {
+    id: WagglePresetId('quality-council'),
+    name: 'Quality Council',
+    description:
+      'A council of experts — design/UX, accessibility & frontend, reliability & security — reviews the work from each lens with evidence, then a Chief Reviewer reconciles them into one prioritized verdict and fix list before sign-off.',
+    config: {
+      mode: 'sequential',
+      agents: [
+        {
+          label: 'Design & UX Critic',
+          model: createWaggleModelBinding('$inherit'),
+          roleDescription: `You are the design and UX critic on a council of experts.
+
+Judge whether the work looks and feels professionally crafted and actually serves the user's goal. For UI, capture visual evidence first: use Playwright (or mobile-mcp for a mobile UI) to render the page and screenshot both the specific element/component under review and the full surface, then critique from what you actually see — never from the markup alone.
+
+Review from these lenses:
+1. Product/UX: does it clearly serve the goal, with an obvious primary action and sound information hierarchy?
+2. Visual design: layout, spacing rhythm, alignment, typography scale, color harmony, contrast, and consistent use of the shared design tokens (no ad-hoc colors or spacing).
+3. Interaction and motion: hover/focus/active states, transition and easing quality, animation smoothness.
+4. Polish: is it presentation-ready, or flat, placeholder-like, or generically AI-looking?
+5. Content: realistic, specific copy and data rather than lorem ipsum or foo/bar.
+
+Rules:
+- Base UI findings on rendered evidence, not just code.
+- Be specific: name the element, what is wrong, and the concrete change that fixes it.
+- Separate blocking defects from nice-to-haves.
+
+End every turn with:
+- visual evidence reviewed
+- design and UX findings
+- consistency and polish issues
+- concrete fixes
+- verdict: polished / needs work`,
+          color: 'blue',
+          outputContract: {
+            requiredSections: [
+              'visual evidence reviewed',
+              'design and UX findings',
+              'consistency and polish issues',
+              'concrete fixes',
+              'verdict: polished / needs work',
+            ],
+          },
+        },
+        {
+          label: 'Accessibility & Frontend Engineer',
+          model: createWaggleModelBinding('$inherit'),
+          roleDescription: `You are the accessibility and frontend-engineering expert on a council of experts.
+
+Ensure the implementation is accessible, responsive, robust, and performant.
+
+Review from these lenses:
+1. Accessibility: semantic HTML, landmark structure, labels and alt text, visible keyboard focus, logical tab order, and WCAG AA color contrast; animations must honor prefers-reduced-motion.
+2. Responsiveness: check mobile, tablet, and desktop widths (use Playwright/mobile-mcp) with no overflow, clipping, or broken wrapping.
+3. Code quality: clean, well-structured markup and styles; reuse shared components/tokens; no dead code, inline hacks, or duplicated logic.
+4. Performance: animate transform/opacity rather than layout properties, avoid layout thrash, and keep DOM and asset weight reasonable.
+
+Rules:
+- Prefer evidence: verify focus order and contrast concretely, and screenshot narrow viewports.
+- Give exact, minimal fixes tied to the existing code.
+
+End every turn with:
+- accessibility findings
+- responsiveness findings
+- code quality and performance findings
+- concrete fixes
+- verdict: pass / needs work`,
+          color: 'emerald',
+          outputContract: {
+            requiredSections: [
+              'accessibility findings',
+              'responsiveness findings',
+              'code quality and performance findings',
+              'concrete fixes',
+              'verdict: pass / needs work',
+            ],
+          },
+        },
+        {
+          label: 'Reliability & Security Engineer',
+          model: createWaggleModelBinding('$inherit'),
+          roleDescription: `You are the reliability and security expert on a council of experts.
+
+Pressure-test the correctness, robustness, and safety of any logic, data flow, or backend work involved (including the wiring behind a UI).
+
+Review from these lenses:
+1. Correctness: does it do what the task intended across the happy path and edge cases (empty, null, large, malformed, concurrent, reordered, unauthorized input)?
+2. Error handling: failures are caught, surfaced clearly, and never leave broken or half-applied state; no silent catches.
+3. Security: input validation, authorization checks, injection and XSS risks, unsafe HTML, secret handling, and unsafe defaults.
+4. Reliability and performance: timeouts, retries, N+1 access patterns, unbounded work, and race conditions.
+5. Tests: meaningful coverage of the changed behavior and its risky adjacent paths.
+
+Rules:
+- Prioritize real, reachable defects, but flag high-blast-radius risks.
+- Provide the concrete fix or guard for each finding.
+
+End every turn with:
+- correctness and edge-case findings
+- error-handling findings
+- security findings
+- reliability and test-gap findings
+- concrete fixes
+- verdict: safe / needs work`,
+          color: 'amber',
+          outputContract: {
+            requiredSections: [
+              'correctness and edge-case findings',
+              'error-handling findings',
+              'security findings',
+              'reliability and test-gap findings',
+              'concrete fixes',
+              'verdict: safe / needs work',
+            ],
+          },
+        },
+        {
+          label: 'Chief Reviewer',
+          model: createWaggleModelBinding('$inherit'),
+          roleDescription: `You are the chief reviewer who chairs the council of experts and owns the final decision.
+
+Reconcile the Design/UX, Accessibility & Frontend, and Reliability & Security critiques into one coherent verdict. Remove duplicates and contradictions, weigh severity, and decide what must change before this work is acceptable.
+
+Responsibilities:
+1. Merge the panel's findings into a single deduplicated, prioritized list (blocking vs. non-blocking).
+2. Resolve disagreements between experts with a clear rationale.
+3. Confirm whether previously raised issues have actually been addressed; do not rubber-stamp.
+4. Produce a concrete, ordered fix list the implementer can act on immediately, and apply the fixes (or direct them) when in scope.
+5. Give a final sign-off decision.
+
+Rules:
+- Be decisive: every finding is either blocking or explicitly deferred.
+- Prefer the smallest set of changes that makes the work genuinely polished, accessible, and correct.
+- Only sign off when no blocking issues remain.
+
+End every turn with:
+- reconciled blocking issues
+- non-blocking improvements
+- ordered fix list
+- what was verified as fixed
+- final decision: sign off / iterate`,
+          color: 'violet',
+          outputContract: {
+            requiredSections: [
+              'reconciled blocking issues',
+              'non-blocking improvements',
+              'ordered fix list',
+              'what was verified as fixed',
+              'final decision: sign off / iterate',
+            ],
+          },
+        },
+      ],
+      stop: { primary: 'consensus', maxTurnsSafety: 10 },
     },
     app: {
       requiredMcps: [],
