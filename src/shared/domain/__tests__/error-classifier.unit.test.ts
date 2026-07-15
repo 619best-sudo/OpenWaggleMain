@@ -28,6 +28,24 @@ describe('classifyErrorMessage', () => {
     })
   })
 
+  describe('transient bodyless auth-status errors', () => {
+    it('classifies a bodyless 401 as a retryable provider-down error, not api-key-invalid', () => {
+      const info = classifyErrorMessage('401 status code (no body)')
+      expect(info.code).toBe('provider-down')
+      expect(info.retryable).toBe(true)
+    })
+
+    it('classifies a bodyless 403 as provider-down', () => {
+      expect(classifyErrorMessage('403 status code (no body)').code).toBe('provider-down')
+    })
+
+    it('still classifies a bodied 401 with auth keywords as api-key-invalid', () => {
+      expect(classifyErrorMessage('401 Unauthorized: invalid api key (no body)').code).toBe(
+        'api-key-invalid',
+      )
+    })
+  })
+
   describe('existing classifications still work', () => {
     it('classifies 401 as api-key-invalid', () => {
       expect(classifyErrorMessage('401 Unauthorized').code).toBe('api-key-invalid')

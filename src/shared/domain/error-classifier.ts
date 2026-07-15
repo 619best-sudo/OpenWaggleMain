@@ -126,16 +126,35 @@ function isInsufficientCreditsError(lower: string) {
   )
 }
 
+const AUTH_KEYWORDS = [
+  'unauthorized',
+  'authentication',
+  'api key',
+  'invalid_api_key',
+  'incorrect api key',
+  'no auth',
+  'credentials',
+] as const
+
+/**
+ * A status error with no response body is a transport/proxy hiccup — a gateway
+ * overload or dropped connection — not an actionable auth/credit/context error.
+ * Real auth failures always carry a body describing the problem. Under heavy load
+ * the backend can return a bodyless `401`/`403`, which must NOT be surfaced as
+ * "Invalid API key" (a genuine invalid key fails every request, not just large
+ * ones). Treat a bodyless auth-status error with no auth keywords as a temporary,
+ * retryable provider issue.
+ */
+function isTransientTransportError(lower: string) {
+  if (!lower.includes('no body')) {
+    return false
+  }
+  const authStatus = lower.includes('401') || lower.includes('403')
+  return authStatus && !containsAny(lower, AUTH_KEYWORDS)
+}
+
 function isAuthError(lower: string) {
-  return containsAny(lower, [
-    '401',
-    '403',
-    'unauthorized',
-    'authentication',
-    'api key',
-    'invalid_api_key',
-    'incorrect api key',
-  ])
+  return containsAny(lower, ['401', '403', ...AUTH_KEYWORDS])
 }
 
 function isRuntimePackageManagerError(lower: string) {
@@ -191,6 +210,11 @@ const ERROR_CLASSIFICATION_RULES: readonly ErrorClassificationRule[] = [
   {
     code: 'insufficient-credits',
     matches: isInsufficientCreditsError,
+  },
+  {
+    // Must precede the auth rule: a bodyless 401/403 is transient, not a bad key.
+    code: 'provider-down',
+    matches: isTransientTransportError,
   },
   {
     code: 'api-key-invalid',
