@@ -17,14 +17,11 @@ describe('Quality Council built-in preset', () => {
     expect(preset?.config.stop.primary).toBe('consensus')
   })
 
-  it('has the full expert panel ending with a reconciling Chief Reviewer', () => {
+  it('is a two-agent Reviewer -> Auditor panel (the engine converges pairwise)', () => {
     const labels = preset?.config.agents.map((agent) => agent.label) ?? []
-    expect(labels).toEqual([
-      'Design & UX Critic',
-      'Accessibility & Frontend Engineer',
-      'Reliability & Security Engineer',
-      'Chief Reviewer',
-    ])
+    // The waggle consensus check compares the last two turns, so a council here
+    // must be exactly two alternating experts to converge instead of burning turns.
+    expect(labels).toEqual(['Reviewer', 'Auditor'])
   })
 
   it('gives each expert a distinct color', () => {

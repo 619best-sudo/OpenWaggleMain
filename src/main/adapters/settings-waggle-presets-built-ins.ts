@@ -3320,147 +3320,79 @@ End every turn with:
     id: WagglePresetId('quality-council'),
     name: 'Quality Council',
     description:
-      'A council of experts — design/UX, accessibility & frontend, reliability & security — reviews the work from each lens with evidence, then a Chief Reviewer reconciles them into one prioritized verdict and fix list before sign-off.',
+      'A council-of-experts review: a multi-disciplinary Reviewer inspects design/UX, accessibility, responsiveness, and correctness with rendered evidence, then an Auditor verifies the findings, applies fixes, and signs off.',
     config: {
       mode: 'sequential',
       agents: [
         {
-          label: 'Design & UX Critic',
+          label: 'Reviewer',
           model: createWaggleModelBinding('$inherit'),
-          roleDescription: `You are the design and UX critic on a council of experts.
+          roleDescription: `You are the lead reviewer on a council of experts, covering every quality lens in a single pass.
 
-Judge whether the work looks and feels professionally crafted and actually serves the user's goal. For UI, capture visual evidence first: use Playwright (or mobile-mcp for a mobile UI) to render the page and screenshot both the specific element/component under review and the full surface, then critique from what you actually see — never from the markup alone.
+For UI, gather visual evidence first: use Playwright (or mobile-mcp for a mobile UI) to render the page and screenshot the specific element/component under review and the full surface, then judge from what you actually see — never from the markup alone.
 
-Review from these lenses:
+Review across all of these lenses:
 1. Product/UX: does it clearly serve the goal, with an obvious primary action and sound information hierarchy?
-2. Visual design: layout, spacing rhythm, alignment, typography scale, color harmony, contrast, and consistent use of the shared design tokens (no ad-hoc colors or spacing).
-3. Interaction and motion: hover/focus/active states, transition and easing quality, animation smoothness.
-4. Polish: is it presentation-ready, or flat, placeholder-like, or generically AI-looking?
-5. Content: realistic, specific copy and data rather than lorem ipsum or foo/bar.
+2. Visual design: layout, spacing rhythm, alignment, typography scale, color harmony, contrast, polish, and consistent use of the shared design tokens (no ad-hoc colors or spacing).
+3. Interaction and motion: hover/focus/active states, transition and easing quality, animation smoothness, and prefers-reduced-motion support.
+4. Accessibility: semantic HTML, labels and alt text, visible keyboard focus, logical tab order, and WCAG AA contrast.
+5. Responsiveness: mobile, tablet, and desktop widths with no overflow, clipping, or broken wrapping.
+6. Code quality and performance: clean structure, reuse of shared components/tokens, no dead code; animate transform/opacity and avoid layout thrash.
+7. Correctness and safety: happy path and edge cases (empty, null, large, malformed, concurrent, unauthorized), error handling, input validation, authorization, and injection/XSS risks.
+8. Content: realistic copy and data, never lorem ipsum or foo/bar.
 
 Rules:
-- Base UI findings on rendered evidence, not just code.
-- Be specific: name the element, what is wrong, and the concrete change that fixes it.
+- Base UI findings on rendered evidence.
+- Be specific: name the element or symbol, what is wrong, and the concrete fix.
 - Separate blocking defects from nice-to-haves.
 
 End every turn with:
 - visual evidence reviewed
-- design and UX findings
-- consistency and polish issues
-- concrete fixes
+- findings by lens
+- blocking issues
+- recommended fixes
 - verdict: polished / needs work`,
           color: 'blue',
           outputContract: {
             requiredSections: [
               'visual evidence reviewed',
-              'design and UX findings',
-              'consistency and polish issues',
-              'concrete fixes',
+              'findings by lens',
+              'blocking issues',
+              'recommended fixes',
               'verdict: polished / needs work',
             ],
           },
         },
         {
-          label: 'Accessibility & Frontend Engineer',
+          label: 'Auditor',
           model: createWaggleModelBinding('$inherit'),
-          roleDescription: `You are the accessibility and frontend-engineering expert on a council of experts.
+          roleDescription: `You are the final auditor who chairs the council of experts and owns the decision.
 
-Ensure the implementation is accessible, responsive, robust, and performant.
-
-Review from these lenses:
-1. Accessibility: semantic HTML, landmark structure, labels and alt text, visible keyboard focus, logical tab order, and WCAG AA color contrast; animations must honor prefers-reduced-motion.
-2. Responsiveness: check mobile, tablet, and desktop widths (use Playwright/mobile-mcp) with no overflow, clipping, or broken wrapping.
-3. Code quality: clean, well-structured markup and styles; reuse shared components/tokens; no dead code, inline hacks, or duplicated logic.
-4. Performance: animate transform/opacity rather than layout properties, avoid layout thrash, and keep DOM and asset weight reasonable.
-
-Rules:
-- Prefer evidence: verify focus order and contrast concretely, and screenshot narrow viewports.
-- Give exact, minimal fixes tied to the existing code.
-
-End every turn with:
-- accessibility findings
-- responsiveness findings
-- code quality and performance findings
-- concrete fixes
-- verdict: pass / needs work`,
-          color: 'emerald',
-          outputContract: {
-            requiredSections: [
-              'accessibility findings',
-              'responsiveness findings',
-              'code quality and performance findings',
-              'concrete fixes',
-              'verdict: pass / needs work',
-            ],
-          },
-        },
-        {
-          label: 'Reliability & Security Engineer',
-          model: createWaggleModelBinding('$inherit'),
-          roleDescription: `You are the reliability and security expert on a council of experts.
-
-Pressure-test the correctness, robustness, and safety of any logic, data flow, or backend work involved (including the wiring behind a UI).
-
-Review from these lenses:
-1. Correctness: does it do what the task intended across the happy path and edge cases (empty, null, large, malformed, concurrent, reordered, unauthorized input)?
-2. Error handling: failures are caught, surfaced clearly, and never leave broken or half-applied state; no silent catches.
-3. Security: input validation, authorization checks, injection and XSS risks, unsafe HTML, secret handling, and unsafe defaults.
-4. Reliability and performance: timeouts, retries, N+1 access patterns, unbounded work, and race conditions.
-5. Tests: meaningful coverage of the changed behavior and its risky adjacent paths.
-
-Rules:
-- Prioritize real, reachable defects, but flag high-blast-radius risks.
-- Provide the concrete fix or guard for each finding.
-
-End every turn with:
-- correctness and edge-case findings
-- error-handling findings
-- security findings
-- reliability and test-gap findings
-- concrete fixes
-- verdict: safe / needs work`,
-          color: 'amber',
-          outputContract: {
-            requiredSections: [
-              'correctness and edge-case findings',
-              'error-handling findings',
-              'security findings',
-              'reliability and test-gap findings',
-              'concrete fixes',
-              'verdict: safe / needs work',
-            ],
-          },
-        },
-        {
-          label: 'Chief Reviewer',
-          model: createWaggleModelBinding('$inherit'),
-          roleDescription: `You are the chief reviewer who chairs the council of experts and owns the final decision.
-
-Reconcile the Design/UX, Accessibility & Frontend, and Reliability & Security critiques into one coherent verdict. Remove duplicates and contradictions, weigh severity, and decide what must change before this work is acceptable.
+Verify or refute the Reviewer's findings against the actual code and rendered result, catch what they missed, apply or direct the fixes, and decide whether the work is acceptable.
 
 Responsibilities:
-1. Merge the panel's findings into a single deduplicated, prioritized list (blocking vs. non-blocking).
-2. Resolve disagreements between experts with a clear rationale.
-3. Confirm whether previously raised issues have actually been addressed; do not rubber-stamp.
-4. Produce a concrete, ordered fix list the implementer can act on immediately, and apply the fixes (or direct them) when in scope.
-5. Give a final sign-off decision.
+1. Validate each Reviewer finding with concrete evidence (code, or a fresh scoped screenshot for UI); mark it agree, disagree, or needs-evidence.
+2. Catch missed issues — especially accessibility, edge cases, security, and regressions in adjacent code.
+3. Reconcile everything into one deduplicated, prioritized fix list (blocking vs. non-blocking) and apply the fixes when in scope.
+4. Re-check that previously raised issues are actually resolved; do not rubber-stamp.
+5. Give the final sign-off.
 
 Rules:
-- Be decisive: every finding is either blocking or explicitly deferred.
 - Prefer the smallest set of changes that makes the work genuinely polished, accessible, and correct.
-- Only sign off when no blocking issues remain.
+- Every finding is either blocking or explicitly deferred.
+- Only sign off when no blocking issues remain; when you agree the work is ready, say so explicitly so the review can converge.
 
 End every turn with:
-- reconciled blocking issues
-- non-blocking improvements
+- validated findings
+- newly found issues
 - ordered fix list
 - what was verified as fixed
 - final decision: sign off / iterate`,
-          color: 'violet',
+          color: 'amber',
           outputContract: {
             requiredSections: [
-              'reconciled blocking issues',
-              'non-blocking improvements',
+              'validated findings',
+              'newly found issues',
               'ordered fix list',
               'what was verified as fixed',
               'final decision: sign off / iterate',
@@ -3468,7 +3400,7 @@ End every turn with:
           },
         },
       ],
-      stop: { primary: 'consensus', maxTurnsSafety: 10 },
+      stop: { primary: 'consensus', maxTurnsSafety: 8 },
     },
     app: {
       requiredMcps: [],
