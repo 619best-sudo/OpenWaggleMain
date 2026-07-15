@@ -4,6 +4,7 @@ import * as Effect from 'effect/Effect'
 import type { Exit as ExitType } from 'effect/Exit'
 import * as Layer from 'effect/Layer'
 import * as ManagedRuntime from 'effect/ManagedRuntime'
+import { MachinePlanFileStoreLive } from './adapters/machine-plan-file-store-adapter'
 import { PiAgentKernelLive } from './adapters/pi/pi-agent-kernel-adapter'
 import { PiMcpConfigServiceLive } from './adapters/pi/pi-mcp-config-service'
 import { PiProviderAuthLive } from './adapters/pi/pi-provider-auth-service'
@@ -36,6 +37,7 @@ const AppLayer = Layer.mergeAll(
   ProviderServiceLive,
   PiSessionTreePreferencesLive,
   SettingsWagglePresetsRepositoryLive,
+  MachinePlanFileStoreLive,
 )
 
 function makeAppRuntime() {

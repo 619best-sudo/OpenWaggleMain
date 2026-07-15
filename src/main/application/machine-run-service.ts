@@ -15,6 +15,7 @@ import { isRecord } from '@shared/utils/validation'
 import { formatErrorMessage } from '@shared/utils/node-error'
 import * as Effect from 'effect/Effect'
 import { createLogger } from '../logger'
+import { MachinePlanFileStore } from '../ports/machine-plan-file-store'
 import { SessionRepository } from '../ports/session-repository'
 import { executeAgentRun, type AgentRunResult } from './agent-run-service'
 import type { AgentRunInput } from './agent-run/types'
@@ -557,19 +558,42 @@ function resolveBranchContext(
   })
 }
 
+/**
+ * Keep each task's `isCompleted` flag in sync with its status. This is the single
+ * choke point (via `persistMachineState`) so the persisted state, the timeline
+ * card, and the on-disk plan file always agree — orchestration logic itself keeps
+ * using `status`, so this flag can never drift the run.
+ */
+export function normalizeMachineState(state: MachineExecutionState): MachineExecutionState {
+  return {
+    ...state,
+    tasks: state.tasks.map((task) => ({ ...task, isCompleted: task.status === 'completed' })),
+  }
+}
+
 function persistMachineState(
   sessionId: SessionId,
   branchContext: MutableMachineBranchContext,
   machineState: MachineExecutionState | null,
-): Effect.Effect<void, Error, SessionRepository> {
+): Effect.Effect<void, Error, SessionRepository | MachinePlanFileStore> {
   return Effect.gen(function* () {
+    const normalized = machineState ? normalizeMachineState(machineState) : null
     const sessionRepo = yield* SessionRepository
-    branchContext.uiStateJson = mergeMachineStateIntoUiState(branchContext.uiStateJson, machineState)
+    branchContext.uiStateJson = mergeMachineStateIntoUiState(branchContext.uiStateJson, normalized)
     yield* sessionRepo.updateBranchUiState(
       sessionId,
       branchContext.branchId,
       branchContext.uiStateJson,
     )
+
+    // Mirror the plan to a file while the run is in progress; remove it once the
+    // whole run has completed (or the plan was cleared).
+    const planFileStore = yield* MachinePlanFileStore
+    if (normalized && normalized.phase !== 'completed') {
+      yield* planFileStore.write(sessionId, normalized)
+    } else {
+      yield* planFileStore.remove(sessionId)
+    }
   })
 }
 
@@ -805,5 +829,7 @@ export function discardMachinePlan(sessionId: SessionId) {
     const sessionRepo = yield* SessionRepository
     const nextUiStateJson = mergeMachineStateIntoUiState(branchContext.uiStateJson, null)
     yield* sessionRepo.updateBranchUiState(sessionId, branchContext.branchId, nextUiStateJson)
+    const planFileStore = yield* MachinePlanFileStore
+    yield* planFileStore.remove(sessionId)
   })
 }

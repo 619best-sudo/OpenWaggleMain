@@ -29,6 +29,13 @@ export const machineExecutionTaskSchema = Schema.Struct({
   prompt: Schema.String.pipe(Schema.minLength(1)),
   dependsOn: Schema.optional(Schema.Array(Schema.String)),
   status: machineTaskStatusSchema,
+  /**
+   * Convenience mirror of `status === 'completed'`. Kept in sync whenever the
+   * machine state is persisted so consumers (the timeline card and the on-disk
+   * plan file) have an explicit completion flag. Optional for backward-compatible
+   * decoding of states persisted before this field existed.
+   */
+  isCompleted: Schema.optional(Schema.Boolean),
   messageIds: Schema.optional(Schema.Array(Schema.String.pipe(Schema.minLength(1)))),
   lastError: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
 })
@@ -52,6 +59,9 @@ export type MachinePlan = SchemaType<typeof machinePlanSchema>
 export type MachineTaskStatus = SchemaType<typeof machineTaskStatusSchema>
 export type MachineExecutionPhase = SchemaType<typeof machineExecutionPhaseSchema>
 export type MachineExecutionTask = SchemaType<typeof machineExecutionTaskSchema>
-export type MachineExecutionState = Omit<SchemaType<typeof machineExecutionStateSchema>, 'model'> & {
+export type MachineExecutionState = Omit<
+  SchemaType<typeof machineExecutionStateSchema>,
+  'model'
+> & {
   readonly model: SupportedModelId
 }
