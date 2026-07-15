@@ -78,6 +78,7 @@ function appendToolResultPart(input: {
   readonly args?: JsonValue
   readonly result: JsonValue
   readonly isError: boolean
+  readonly details?: JsonValue
 }): MessagePart[] {
   const withoutPreviousResult = input.parts.filter(
     (part) => part.type !== 'tool-result' || String(part.toolResult.id) !== input.toolCallId,
@@ -93,6 +94,7 @@ function appendToolResultPart(input: {
         result: input.result,
         isError: input.isError,
         duration: 0,
+        details: input.details,
       },
     },
   ]
@@ -174,6 +176,10 @@ function applyToolExecutionEndToStreamBuffer(
       args: value.args,
       result: value.result,
       isError: value.isError,
+      details:
+        typeof value.result === 'object' && value.result !== null && !Array.isArray(value.result)
+          ? ('details' in value.result ? (value.result as { details?: JsonValue }).details : undefined)
+          : undefined,
     }),
   )
 }

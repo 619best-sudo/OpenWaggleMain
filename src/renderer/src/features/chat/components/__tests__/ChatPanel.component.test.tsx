@@ -267,7 +267,7 @@ describe('ChatPanel', () => {
     expect(screen.getByRole('button', { name: 'Dismiss permission dialog' })).toBeInTheDocument()
   })
 
-  it('does not show the tool permission dialog while the routed session is switching', () => {
+  it('keeps showing the current tool permission dialog while the routed session is switching', () => {
     const sections = createSections({
       activeSessionId: SessionId('session-1'),
       pendingToolPermissionRequest: {
@@ -293,8 +293,8 @@ describe('ChatPanel', () => {
       </QueryClientProvider>,
     )
 
-    expect(screen.queryByText('Permission')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Approve' })).toBeNull()
+    expect(screen.getByText('Permission')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
   })
 
   it('routes custom branch-summary submission through send instead of enqueue while loading', () => {

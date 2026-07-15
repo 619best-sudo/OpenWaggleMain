@@ -1,6 +1,6 @@
 const DEFAULT_TOOL_EXECUTION_MODEL = 'poolside/laguna-xs-2.1'
 const READ_TOOL_EXECUTION_MODEL = 'bytedance-seed/seed-2.0-mini'
-const CODE_EDITING_TOOL_EXECUTION_MODEL = 'tencent/hy3'
+const CODE_EDITING_TOOL_EXECUTION_MODEL = 'poolside/laguna-xs-2.1'
 
 const READ_TOOL_NAMES = new Set(['read'])
 const CODE_EDITING_TOOL_NAMES = new Set(['edit', 'write', 'patch', 'multiedit'])

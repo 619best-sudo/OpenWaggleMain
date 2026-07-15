@@ -60,6 +60,7 @@ export interface AgentAssistantToolCallStartEvent {
   readonly toolCallId: string
   readonly toolName: string
   readonly input?: JsonValue
+  readonly summary?: string
 }
 
 export interface AgentAssistantToolCallDeltaEvent {
@@ -68,6 +69,7 @@ export interface AgentAssistantToolCallDeltaEvent {
   readonly toolCallId: string
   readonly delta: string
   readonly input?: JsonValue
+  readonly summary?: string
 }
 
 export interface AgentAssistantToolCallEndEvent {
@@ -76,6 +78,7 @@ export interface AgentAssistantToolCallEndEvent {
   readonly toolCallId: string
   readonly toolName: string
   readonly input: JsonValue
+  readonly summary?: string
 }
 
 export interface AgentAssistantDoneEvent {
@@ -153,6 +156,7 @@ export interface AgentTransportToolExecutionStartEvent extends TransportEventBas
   readonly toolCallId: string
   readonly toolName: string
   readonly args: JsonValue
+  readonly summary?: string
   readonly parentMessageId?: string
 }
 
@@ -161,6 +165,7 @@ export interface AgentTransportToolExecutionUpdateEvent extends TransportEventBa
   readonly toolCallId: string
   readonly toolName: string
   readonly args: JsonValue
+  readonly summary?: string
   readonly partialResult: JsonValue
 }
 
@@ -169,6 +174,7 @@ export interface AgentTransportToolExecutionEndEvent extends TransportEventBase 
   readonly toolCallId: string
   readonly toolName: string
   readonly args?: JsonValue
+  readonly summary?: string
   readonly result: JsonValue
   readonly isError: boolean
 }

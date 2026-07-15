@@ -1,7 +1,7 @@
 import { SessionId, SupportedModelId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
-import { render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { UseMessageCollapseResult } from '../../hooks/useMessageCollapse'
 
 type MessagePart = UIMessage['parts'][number]
@@ -77,8 +77,15 @@ function textPart(content: string) {
   return { type: 'text', content }
 }
 
-function toolCallPart(name: string, id = 'tc-1') {
-  return { type: 'tool-call', id, name, arguments: '{}', state: 'output-available' }
+function toolCallPart(name: string, id = 'tc-1', summary?: string, argumentsText = '{}') {
+  return {
+    type: 'tool-call',
+    id,
+    name,
+    arguments: argumentsText,
+    ...(summary ? { summary } : {}),
+    state: 'output-available',
+  }
 }
 
 function toolResultPart(toolCallId: string) {
@@ -91,7 +98,7 @@ function toolResultPart(toolCallId: string) {
 }
 
 function thinkingPart() {
-  return { type: 'thinking', content: 'internal reasoning' }
+  return { type: 'thinking', content: 'internal reasoning', stepId: 'thinking-1' }
 }
 
 function createMessage(id: string, parts: MessagePart[]) {
@@ -121,6 +128,10 @@ function resetCollapse() {
 describe('AssistantMessageBubble', () => {
   beforeEach(() => {
     resetCollapse()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('renders AgentLabel when waggle prop provided', () => {
@@ -160,9 +171,53 @@ describe('AssistantMessageBubble', () => {
     const { container } = render(
       <AssistantMessageBubble message={message} sessionId={defaultSessionId} />,
     )
-    expect(container.querySelectorAll('[data-testid="streaming-text"]')).toHaveLength(3)
-    expect(screen.getByText('internal reasoning')).toBeInTheDocument()
+    expect(container.querySelectorAll('[data-testid="streaming-text"]')).toHaveLength(2)
+    expect(screen.getByTestId('reasoning-summary-list')).toBeInTheDocument()
+    expect(screen.getByText('Planning the next step')).toBeInTheDocument()
     expect(screen.getByText('Tool result · output-available')).toBeInTheDocument()
+  })
+
+  it('renders compact reasoning summaries instead of raw thinking text', () => {
+    const message = createMessage('m1', [
+      thinkingPart(),
+      toolCallPart('read', 'tc-1', 'Read src/app.ts', '{"path":"src/app.ts"}'),
+      textPart('Done'),
+    ])
+
+    render(<AssistantMessageBubble message={message} sessionId={defaultSessionId} />)
+
+    expect(screen.getByTestId('reasoning-summary')).toHaveTextContent('Inspecting source code')
+    expect(screen.queryByText('internal reasoning')).toBeNull()
+  })
+
+  it('shows a soft reasoning timer while the active reasoning step is still running', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-15T10:00:00.000Z'))
+
+    const message = {
+      ...createMessage('m-running', [thinkingPart()]),
+      createdAt: new Date('2026-07-15T09:59:35.000Z'),
+    }
+
+    render(
+      <AssistantMessageBubble
+        message={message}
+        sessionId={defaultSessionId}
+        isStreaming
+      />,
+    )
+
+    expect(screen.getByTestId('reasoning-summary')).toHaveTextContent('Planning the next step')
+    expect(screen.getByTestId('reasoning-summary-timer')).toHaveTextContent('00:25')
+
+    act(() => {
+      vi.advanceTimersByTime(20_000)
+    })
+
+    expect(screen.getByTestId('reasoning-summary-timer')).toHaveTextContent('00:45')
+    expect(screen.getByTestId('reasoning-summary-note')).toHaveTextContent(
+      'Taking a little longer to understand the code better.',
+    )
   })
 
   it('renders all parts when canCollapseDetails=false', () => {

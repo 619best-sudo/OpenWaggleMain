@@ -163,6 +163,7 @@ export function ensureToolCall(
   toolCallId: string,
   toolName: string,
   input?: unknown,
+  summary?: string,
 ) {
   const ensuredMessages = ensureAssistantMessage(messages, messageId)
   return updateAssistantParts(ensuredMessages, messageId, (parts) => {
@@ -177,6 +178,7 @@ export function ensureToolCall(
         id: toolCallId,
         name: toolName,
         arguments: stringifyToolInput(input),
+        ...(summary ? { summary } : {}),
         state: input === undefined ? 'input-streaming' : 'input-complete',
       },
     ]
@@ -216,10 +218,12 @@ export function updateToolCallInput(
   toolCallId: string,
   input: unknown,
   state: string,
+  summary?: string,
 ) {
   return updateToolCall(messages, toolCallId, (part) => ({
     ...part,
     arguments: stringifyToolInput(input),
+    ...(summary ? { summary } : {}),
     state,
   }))
 }
@@ -228,10 +232,12 @@ export function finalizeToolCallInput(
   messages: readonly UIMessage[],
   toolCallId: string,
   input: unknown,
+  summary?: string,
 ) {
   return updateToolCall(messages, toolCallId, (part) => ({
     ...part,
     arguments: stringifyToolInput(input),
+    ...(summary ? { summary } : {}),
     state: 'input-complete',
   }))
 }

@@ -5,16 +5,19 @@ import type { AgentTransportEvent } from '@shared/types/stream'
 
 export interface SessionListenerInput {
   readonly model: SupportedModelId
+  readonly cwd?: string
   readonly onEvent: (event: AgentTransportEvent) => void
 }
 
 export interface SessionListenerState {
   readonly input: SessionListenerInput
   readonly runId: string
+  readonly cwd: string
   currentMessageId: string | null
   readonly thinkingSteps: Set<string>
   readonly startedToolCalls: Set<string>
   readonly toolCallInputs: Map<string, JsonValue>
+  readonly toolCallSummaries: Map<string, string>
 }
 
 export interface PiAssistantToolCall {

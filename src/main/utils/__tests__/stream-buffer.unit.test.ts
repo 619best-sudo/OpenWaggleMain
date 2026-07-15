@@ -118,6 +118,75 @@ describe('stream-buffer', () => {
     })
   })
 
+  it('preserves structured tool-result details for background reconnect snapshots', () => {
+    startStreamBuffer(SESSION_ID, MODEL, 'classic')
+
+    applyEventToStreamBuffer(SESSION_ID, {
+      type: 'tool_execution_end',
+      toolCallId: 'tool-1',
+      toolName: 'edit',
+      args: { path: 'src/app.ts' },
+      result: {
+        content: [{ type: 'text', text: 'Permission required before running edit: src/app.ts' }],
+        details: {
+          request: {
+            model: 'tencent/hy3',
+            permission: {
+              kind: 'user-approval',
+              toolName: 'edit',
+              input: { path: 'src/app.ts' },
+              title: 'Approve Edit',
+            },
+          },
+        },
+      },
+      isError: false,
+      timestamp: 1,
+    })
+
+    expect(getStreamBuffer(SESSION_ID)?.parts).toMatchObject([
+      {
+        type: 'tool-call',
+        toolCall: {
+          id: 'tool-1',
+          name: 'edit',
+          args: { path: 'src/app.ts' },
+        },
+      },
+      {
+        type: 'tool-result',
+        toolResult: {
+          id: 'tool-1',
+          name: 'edit',
+          result: {
+            details: {
+              request: {
+                model: 'tencent/hy3',
+                permission: {
+                  kind: 'user-approval',
+                  toolName: 'edit',
+                  input: { path: 'src/app.ts' },
+                  title: 'Approve Edit',
+                },
+              },
+            },
+          },
+          details: {
+            request: {
+              model: 'tencent/hy3',
+              permission: {
+                kind: 'user-approval',
+                toolName: 'edit',
+                input: { path: 'src/app.ts' },
+                title: 'Approve Edit',
+              },
+            },
+          },
+        },
+      },
+    ])
+  })
+
   it('resets buffered parts when a new assistant message starts', () => {
     startStreamBuffer(SESSION_ID, MODEL, 'classic')
     applyEventToStreamBuffer(SESSION_ID, {

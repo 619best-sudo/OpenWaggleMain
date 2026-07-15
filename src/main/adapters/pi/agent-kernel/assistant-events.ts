@@ -1,6 +1,7 @@
 import { matchBy } from '@diegogbrisa/ts-match'
 import type { AgentSessionEvent } from '@mariozechner/pi-coding-agent'
 import { createStreamingMessageId, toJsonValue } from '../pi-message-mapper'
+import { renderPiToolCallSummary } from './pi-tool-call-summary'
 import type {
   MessageStartSessionEvent,
   MessageUpdateSessionEvent,
@@ -154,6 +155,29 @@ function emitThinkingDeltaUpdate(
     model: state.input.model,
   })
 }
+
+function getToolCallSummary(
+  state: SessionListenerState,
+  toolCall: PiAssistantToolCall,
+  toolInput: ReturnType<typeof toJsonValue>,
+) {
+  const cachedSummary = state.toolCallSummaries.get(toolCall.id)
+  if (cachedSummary) {
+    return cachedSummary
+  }
+
+  const summary = renderPiToolCallSummary({
+    toolCallId: toolCall.id,
+    toolName: toolCall.name,
+    args: toolInput,
+    cwd: state.cwd,
+  })
+  if (summary) {
+    state.toolCallSummaries.set(toolCall.id, summary)
+  }
+  return summary
+}
+
 function emitToolCallStart(
   state: SessionListenerState,
   messageId: string,
@@ -165,6 +189,7 @@ function emitToolCallStart(
   }
 
   const toolInput = toJsonValue(toolCall.arguments)
+  const summary = getToolCallSummary(state, toolCall, toolInput)
   state.startedToolCalls.add(toolCall.id)
   state.toolCallInputs.set(toolCall.id, toolInput)
   emitEvent(state.input.onEvent, {
@@ -177,6 +202,7 @@ function emitToolCallStart(
       toolCallId: toolCall.id,
       toolName: toolCall.name,
       input: toolInput,
+      ...(summary ? { summary } : {}),
     },
     timestamp: Date.now(),
     model: state.input.model,
@@ -208,6 +234,7 @@ function emitToolCallDeltaUpdate(
 
   emitToolCallStart(state, messageId, assistantEvent.contentIndex, toolCall)
   const toolInput = toJsonValue(toolCall.arguments)
+  const summary = getToolCallSummary(state, toolCall, toolInput)
   state.toolCallInputs.set(toolCall.id, toolInput)
   emitEvent(state.input.onEvent, {
     type: 'message_update',
@@ -219,6 +246,7 @@ function emitToolCallDeltaUpdate(
       toolCallId: toolCall.id,
       delta: assistantEvent.delta,
       input: toolInput,
+      ...(summary ? { summary } : {}),
     },
     timestamp: Date.now(),
     model: state.input.model,
@@ -238,6 +266,7 @@ function emitToolCallEndUpdate(
 
   emitToolCallStart(state, messageId, assistantEvent.contentIndex, toolCall)
   const toolInput = toJsonValue(toolCall.arguments)
+  const summary = getToolCallSummary(state, toolCall, toolInput)
   state.toolCallInputs.set(toolCall.id, toolInput)
   emitEvent(state.input.onEvent, {
     type: 'message_update',
@@ -249,6 +278,7 @@ function emitToolCallEndUpdate(
       toolCallId: toolCall.id,
       toolName: toolCall.name,
       input: toolInput,
+      ...(summary ? { summary } : {}),
     },
     timestamp: Date.now(),
     model: state.input.model,

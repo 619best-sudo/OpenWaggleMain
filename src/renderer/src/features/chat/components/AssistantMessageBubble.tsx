@@ -7,12 +7,23 @@ import { GitBranch } from 'lucide-react'
 import React from 'react'
 import { Button } from '@/shared/ui/Button'
 import { useMessageCollapse } from '../hooks/useMessageCollapse'
+import { buildReasoningSummaries } from '../lib/reasoning-summary'
 import { AgentLabel } from './AgentLabel'
 import { CollapsibleDetails } from './CollapsibleDetails'
 import { StreamingText } from './StreamingText'
 import { ToolCallRouter } from './ToolCallRouter'
 
 const JSON_STRINGIFY_INDENT = 2
+const REASONING_TIMER_TICK_MS = 1_000
+const REASONING_ENCOURAGEMENT_INTERVAL_MS = 45_000
+const DEBUG_SERVER_URL = 'http://127.0.0.1:7777/event'
+const DEBUG_RUN_ID = 'post-fix'
+const REASONING_ENCOURAGEMENTS = [
+  'Taking a little longer to understand the code better.',
+  'A deeper pass now usually leads to a cleaner execution.',
+  'Working carefully through the context to avoid shallow fixes.',
+  'Staying thorough here helps the next steps land more reliably.',
+] as const
 
 export interface WaggleInfo {
   agentLabel: string
@@ -29,6 +40,41 @@ function stringifyToolResultContent(content: unknown) {
   } catch {
     return String(content)
   }
+}
+
+function getMessageCreatedAtMs(message: UIMessage) {
+  if (message.createdAt instanceof Date) {
+    return Number.isFinite(message.createdAt.getTime()) ? message.createdAt.getTime() : null
+  }
+
+  return null
+}
+
+function formatElapsedTimer(elapsedMs: number) {
+  const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1_000))
+  const seconds = totalSeconds % 60
+  const totalMinutes = Math.floor(totalSeconds / 60)
+  const minutes = totalMinutes % 60
+  const hours = Math.floor(totalMinutes / 60)
+
+  if (hours > 0) {
+    return `${String(hours)}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  }
+
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
+function getReasoningEncouragement(elapsedMs: number) {
+  const intervalIndex = Math.floor(elapsedMs / REASONING_ENCOURAGEMENT_INTERVAL_MS) - 1
+  if (intervalIndex < 0) {
+    return null
+  }
+
+  return (
+    REASONING_ENCOURAGEMENTS[
+      Math.min(intervalIndex, REASONING_ENCOURAGEMENTS.length - 1)
+    ] ?? null
+  )
 }
 
 function StandaloneToolResult({
@@ -85,13 +131,78 @@ export function AssistantMessageBubble({
   message,
   isStreaming,
   isRunActive,
-  assistantModel,
   sessionId,
   waggle,
   hideAgentLabel,
   onBranchFromMessage,
 }: AssistantMessageBubbleProps) {
   const collapse = useMessageCollapse(message, isStreaming, isRunActive, !!waggle)
+  const reasoningSummaries = buildReasoningSummaries(message.parts, !!isStreaming)
+  const hasRunningReasoning = reasoningSummaries.some((summary) => summary.isRunning)
+  const activeReasoningSummaryId = React.useMemo(() => {
+    for (let index = reasoningSummaries.length - 1; index >= 0; index -= 1) {
+      const summary = reasoningSummaries[index]
+      if (summary?.isRunning) {
+        return summary.id
+      }
+    }
+    return null
+  }, [reasoningSummaries])
+  const messageCreatedAtMs = React.useMemo(() => getMessageCreatedAtMs(message), [message.createdAt])
+  const [reasoningElapsedMs, setReasoningElapsedMs] = React.useState(0)
+
+  React.useEffect(() => {
+    if (!hasRunningReasoning || messageCreatedAtMs == null) {
+      setReasoningElapsedMs(0)
+      return
+    }
+
+    const tick = () => {
+      setReasoningElapsedMs(Math.max(0, Date.now() - messageCreatedAtMs))
+    }
+
+    tick()
+    const interval = window.setInterval(tick, REASONING_TIMER_TICK_MS)
+    return () => window.clearInterval(interval)
+  }, [hasRunningReasoning, messageCreatedAtMs, message.id])
+
+  const reasoningElapsedLabel = formatElapsedTimer(reasoningElapsedMs)
+  const reasoningEncouragement = getReasoningEncouragement(reasoningElapsedMs)
+  const reasoningCheckpoint = Math.floor(reasoningElapsedMs / REASONING_ENCOURAGEMENT_INTERVAL_MS)
+
+  React.useEffect(() => {
+    // #region debug-point A:reasoning-running-state
+    void fetch(DEBUG_SERVER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'permission-transcript-shift',
+        runId: DEBUG_RUN_ID,
+        hypothesisId: 'A',
+        location: 'AssistantMessageBubble.tsx:reasoningEffect',
+        msg: hasRunningReasoning
+          ? '[DEBUG] Assistant reasoning status is running'
+          : '[DEBUG] Assistant reasoning status is idle',
+        data: {
+          messageId: message.id,
+          summaryCount: reasoningSummaries.length,
+          activeReasoningSummaryId,
+          reasoningElapsedLabel: hasRunningReasoning ? formatElapsedTimer(reasoningCheckpoint * REASONING_ENCOURAGEMENT_INTERVAL_MS) : null,
+          hasEncouragement: Boolean(reasoningEncouragement),
+          reasoningCheckpoint,
+        },
+        ts: Date.now(),
+      }),
+    }).catch(() => {})
+    // #endregion
+  }, [
+    activeReasoningSummaryId,
+    hasRunningReasoning,
+    message.id,
+    reasoningCheckpoint,
+    reasoningEncouragement,
+    reasoningSummaries.length,
+  ])
 
   const toolResults = new Map<
     string,
@@ -137,6 +248,50 @@ export function AssistantMessageBubble({
           </div>
         ) : null}
 
+        {reasoningSummaries.length > 0 ? (
+          <div
+            data-testid="reasoning-summary-list"
+            className="flex flex-col gap-1.5 mb-1"
+          >
+            {reasoningSummaries.map((summary) => {
+              const showRunningStatus =
+                summary.isRunning && summary.id === activeReasoningSummaryId
+
+              return (
+                <div
+                  key={summary.id}
+                  data-testid="reasoning-summary"
+                  className="animate-in fade-in slide-in-from-bottom-1 duration-300 ease-out"
+                >
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-[15px] font-semibold leading-6 tracking-[-0.008em] text-transcript-heading">
+                      {summary.text}
+                    </span>
+                    {showRunningStatus ? (
+                      <span className="inline-flex min-w-[64px] items-center justify-center gap-1.5 rounded-full bg-bg-secondary/70 px-2 py-0.5 text-[11px] font-medium leading-4 text-text-secondary/85">
+                        <span
+                          aria-hidden="true"
+                          className="size-1.5 rounded-full bg-current/55 animate-[pulse_2.8s_ease-in-out_infinite] motion-reduce:animate-none"
+                        />
+                        <span data-testid="reasoning-summary-timer" className="tabular-nums">
+                          {reasoningElapsedLabel}
+                        </span>
+                      </span>
+                    ) : null}
+                  </div>
+                  {showRunningStatus ? (
+                    <div className="mt-1 min-h-4 text-[11px] leading-4 text-text-tertiary">
+                      {reasoningEncouragement ? (
+                        <span data-testid="reasoning-summary-note">{reasoningEncouragement}</span>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })}
+          </div>
+        ) : null}
+
         {message.parts.map((part, i) => {
           const divider =
             collapse.canCollapseDetails && i === collapse.lastRenderableTextPartIndex ? (
@@ -171,16 +326,7 @@ export function AssistantMessageBubble({
                       onBranchFromMessage={onBranchFromMessage}
                     />
                   ))
-                  .with('thinking', (value) =>
-                    value.content.trim() ? (
-                      <StreamingText
-                        key={`${message.id}-thinking-${value.stepId ?? String(i)}`}
-                        text={value.content}
-                        isStreaming={!!isStreaming}
-                        className="prose-thinking"
-                      />
-                    ) : null,
-                  )
+                  .with('thinking', () => null)
                   .with('tool-result', (value) =>
                     messageToolCallIds.has(value.toolCallId) ? null : (
                       <StandaloneToolResult content={value.content} state={value.state} />

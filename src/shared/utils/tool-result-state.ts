@@ -4,6 +4,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+function isApprovalPermission(value: unknown): boolean {
+  return isRecord(value) && value.kind === 'user-approval' && typeof value.toolName === 'string'
+}
+
 export function isToolPermissionRequestPayload(value: unknown): boolean {
   const normalized = normalizeToolResultPayload(value)
   if (!isRecord(normalized)) {
@@ -11,7 +15,21 @@ export function isToolPermissionRequestPayload(value: unknown): boolean {
   }
 
   const details = normalized.details
-  return isRecord(details) && details.kind === 'tool_permission_request'
+  if (isRecord(details) && details.kind === 'tool_permission_request') {
+    return true
+  }
+
+  if (isRecord(details) && isApprovalPermission(details.permission)) {
+    return true
+  }
+
+  const detailRequest = isRecord(details) && isRecord(details.request) ? details.request : null
+  if (detailRequest && isApprovalPermission(detailRequest.permission)) {
+    return true
+  }
+
+  const request = isRecord(normalized.request) ? normalized.request : null
+  return request ? isApprovalPermission(request.permission) : false
 }
 
 export function parseSerializedToolPayload(value: unknown): unknown {

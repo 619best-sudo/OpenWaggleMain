@@ -34,6 +34,29 @@ import { useSteerWorkflow } from './useSteerWorkflow'
 import { useTranscriptSection } from './useTranscriptSection'
 
 const logger = createRendererLogger('chat-panel')
+const DEBUG_SERVER_URL = 'http://127.0.0.1:7777/event'
+const DEBUG_RUN_ID = 'post-fix'
+
+function reportPermissionShiftDebug(
+  hypothesisId: 'A' | 'D' | 'E',
+  location: string,
+  msg: string,
+  data: Record<string, unknown>,
+) {
+  void fetch(DEBUG_SERVER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: 'permission-transcript-shift',
+      runId: DEBUG_RUN_ID,
+      hypothesisId,
+      location,
+      msg,
+      data,
+      ts: Date.now(),
+    }),
+  }).catch(() => {})
+}
 
 export function useChatPanelSections(): ChatPanelSections {
   // ── Intent-driven scroll flag ──
@@ -415,11 +438,37 @@ export function useChatPanelSections(): ChatPanelSections {
   const latestToolPermissionId = latestToolPermissionRequest?.toolCallId ?? null
 
   useEffect(() => {
+    // #region debug-point D:permission-state-change
+    reportPermissionShiftDebug(
+      pendingToolPermissionRequest ? 'A' : 'D',
+      'use-chat-panel-controller.ts:pendingToolPermissionRequestEffect',
+      pendingToolPermissionRequest
+        ? '[DEBUG] Pending tool permission request is active in controller state'
+        : '[DEBUG] Pending tool permission request cleared in controller state',
+      {
+        activeSessionId: activeSessionId ? String(activeSessionId) : null,
+        latestToolPermissionId,
+        pendingToolCallId: pendingToolPermissionRequest?.toolCallId ?? null,
+        suppressedToolPermissionId,
+        dismissedCount: dismissedToolPermissionIds.size,
+        toolPermissionBusy,
+        toolPermissionError,
+      },
+    )
+    // #endregion
     if (!pendingToolPermissionRequest) {
       setToolPermissionBusy(false)
       setToolPermissionError(null)
     }
-  }, [pendingToolPermissionRequest])
+  }, [
+    activeSessionId,
+    dismissedToolPermissionIds,
+    latestToolPermissionId,
+    pendingToolPermissionRequest,
+    suppressedToolPermissionId,
+    toolPermissionBusy,
+    toolPermissionError,
+  ])
 
   useEffect(() => {
     if (latestToolPermissionId && latestToolPermissionId !== suppressedToolPermissionId) {
@@ -432,11 +481,22 @@ export function useChatPanelSections(): ChatPanelSections {
       if (!latestToolPermissionId) {
         return
       }
+      // #region debug-point D:permission-dismiss
+      reportPermissionShiftDebug(
+        'D',
+        'use-chat-panel-controller.ts:dismissCurrentToolPermission',
+        '[DEBUG] Permission dialog dismissed from controller',
+        {
+          latestToolPermissionId,
+          activeSessionId: activeSessionId ? String(activeSessionId) : null,
+        },
+      )
+      // #endregion
       setSuppressedToolPermissionId(latestToolPermissionId)
       setToolPermissionBusy(false)
       setToolPermissionError(null)
     },
-    [latestToolPermissionId],
+    [activeSessionId, latestToolPermissionId],
   )
 
   async function handleResolveToolPermission(decision: 'approved' | 'denied') {
@@ -450,25 +510,19 @@ export function useChatPanelSections(): ChatPanelSections {
     setSuppressedToolPermissionId(currentRequest.toolCallId)
     setToolPermissionBusy(true)
     setToolPermissionError(null)
-    // #region debug-point A:renderer-permission-submit
-    void fetch('http://127.0.0.1:7779/event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'tool-model-routing',
-        runId: 'pre-fix',
-        hypothesisId: 'A',
-        location: 'use-chat-panel-controller.ts:handleResolveToolPermission',
-        msg: '[DEBUG] Renderer submitted tool permission resolution',
-        data: {
-          decision,
-          toolCallId: currentRequest.toolCallId,
-          toolName: currentRequest.toolName,
-          model: currentRequest.model ?? null,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
+    // #region debug-point E:permission-submit
+    reportPermissionShiftDebug(
+      'E',
+      'use-chat-panel-controller.ts:handleResolveToolPermission',
+      '[DEBUG] Renderer submitted tool permission resolution',
+      {
+        decision,
+        toolCallId: currentRequest.toolCallId,
+        toolName: currentRequest.toolName,
+        model: currentRequest.model ?? null,
+        activeSessionId: String(activeSessionId),
+      },
+    )
     // #endregion
     try {
       await resolveToolPermission({
@@ -487,9 +541,34 @@ export function useChatPanelSections(): ChatPanelSections {
         next.add(currentRequest.toolCallId)
         return next
       })
+      // #region debug-point E:permission-submit-success
+      reportPermissionShiftDebug(
+        'E',
+        'use-chat-panel-controller.ts:handleResolveToolPermission',
+        '[DEBUG] Tool permission resolution completed successfully',
+        {
+          decision,
+          toolCallId: currentRequest.toolCallId,
+          toolName: currentRequest.toolName,
+        },
+      )
+      // #endregion
       setToolPermissionBusy(false)
     } catch (permissionError) {
       const message = permissionError instanceof Error ? permissionError.message : String(permissionError)
+      // #region debug-point E:permission-submit-failure
+      reportPermissionShiftDebug(
+        'E',
+        'use-chat-panel-controller.ts:handleResolveToolPermission',
+        '[DEBUG] Tool permission resolution failed',
+        {
+          decision,
+          toolCallId: currentRequest.toolCallId,
+          toolName: currentRequest.toolName,
+          error: message,
+        },
+      )
+      // #endregion
       setSuppressedToolPermissionId((current) => (current === currentRequest.toolCallId ? null : current))
       setToolPermissionBusy(false)
       setToolPermissionError(message)

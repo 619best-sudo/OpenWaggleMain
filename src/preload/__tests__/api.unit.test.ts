@@ -23,6 +23,7 @@ describe('preload api surface contract', () => {
     'sendMachineMessage',
     'approveMachinePlan',
     'discardMachinePlan',
+    'resolveToolPermission',
     'cancelAgent',
     'cancelMachine',
     'steerAgent',
@@ -110,6 +111,7 @@ describe('preload api surface contract', () => {
     'openLogsDir',
     'getLogsPath',
     'openPath',
+    'openBillingOverlay',
     // Dialog
     'showConfirm',
     // Waggle

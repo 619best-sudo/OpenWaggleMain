@@ -30,11 +30,24 @@ export function applyAssistantMessageEvent(
     )
     .with('thinking_end', cloneMessages)
     .with('toolcall_start', (value) =>
-      ensureToolCall(messages, event.messageId, value.toolCallId, value.toolName, value.input),
+      ensureToolCall(
+        messages,
+        event.messageId,
+        value.toolCallId,
+        value.toolName,
+        value.input,
+        value.summary,
+      ),
     )
     .with('toolcall_delta', (value) =>
       value.input !== undefined
-        ? updateToolCallInput(messages, value.toolCallId, value.input, 'input-streaming')
+        ? updateToolCallInput(
+            messages,
+            value.toolCallId,
+            value.input,
+            'input-streaming',
+            value.summary,
+          )
         : appendToolCallArgs(messages, value.toolCallId, value.delta),
     )
     .with('toolcall_end', (value) => {
@@ -44,8 +57,9 @@ export function applyAssistantMessageEvent(
         value.toolCallId,
         value.toolName,
         value.input,
+        value.summary,
       )
-      return finalizeToolCallInput(ensuredMessages, value.toolCallId, value.input)
+      return finalizeToolCallInput(ensuredMessages, value.toolCallId, value.input, value.summary)
     })
     .with('done', 'error', cloneMessages)
     .exhaustive()

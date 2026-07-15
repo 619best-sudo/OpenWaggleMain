@@ -16,6 +16,7 @@ export interface ChatToolCallPart {
   readonly id: string
   readonly name: string
   readonly arguments: string
+  readonly summary?: string
   readonly state: string
   readonly output?: unknown
   readonly partialOutput?: unknown

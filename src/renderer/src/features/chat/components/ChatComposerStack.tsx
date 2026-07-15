@@ -13,12 +13,22 @@ import { WaggleCollaborationStatus as WaggleCollaborationStatusBanner } from '@/
 import { useApplyPendingWaggleLaunchPrompt } from '@/features/waggle/hooks'
 import { Button } from '@/shared/ui/Button'
 import loaderGif from '../../../../../assets/loader.gif'
+import type { PendingToolPermissionRequest } from '../lib/tool-permission-request'
 import type { ChatComposerSectionState } from '../model'
 import { SessionForkSelector } from './SessionForkSelector'
+import { ToolPermissionDialog } from './ToolPermissionDialog'
 
 interface ChatComposerStackProps {
   readonly section: ChatComposerSectionState
   readonly onOpenSessionTree?: () => void
+  readonly toolPermission?: {
+    readonly request: PendingToolPermissionRequest
+    readonly busy: boolean
+    readonly error: string | null
+    readonly onClose: () => void
+    readonly onApprove: () => Promise<void>
+    readonly onDeny: () => Promise<void>
+  }
 }
 
 function noOp() {}
@@ -36,7 +46,11 @@ function machinePhaseLabel(phase: NonNullable<ChatComposerSectionState['machineP
   }
 }
 
-export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerStackProps) {
+export function ChatComposerStack({
+  section,
+  onOpenSessionTree,
+  toolPermission,
+}: ChatComposerStackProps) {
   const {
     activeSessionId,
     machineModeEnabled,
@@ -194,29 +208,45 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
           onCustomSummary={onStartCustomBranchSummary}
           onCancel={onCancelBranchSummary}
         />
-        <Composer
-          onSend={onSendWithWaggle}
-          onEnqueue={(payload) => {
-            if (activeSessionId) {
-              enqueue(activeSessionId, payload)
-            }
-          }}
-          onCancel={onCancel}
-          isLoading={isLoading}
-          mode={{
-            disabled: composerDisabledForBranchSummary,
-            placeholder: composerPlaceholder,
-            requiresText: branchSummaryMode === 'custom',
-            clearOnSubmit: branchSummaryMode !== 'custom',
-            recordHistory: branchSummaryMode !== 'custom',
-            allowEnqueue: branchSummaryMode !== 'custom',
-            sendTitle: branchSummaryMode === 'custom' ? 'Summarize branch' : undefined,
-            machineModeEnabled,
-            machineModeRunning: machineStatus === 'running',
-            onSetMachineModeEnabled,
-          }}
-          onToast={onToast}
-        />
+        <div className="relative">
+          {toolPermission ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-full z-20 mb-2">
+              <div className="pointer-events-auto">
+                <ToolPermissionDialog
+                  request={toolPermission.request}
+                  busy={toolPermission.busy}
+                  error={toolPermission.error}
+                  onClose={toolPermission.onClose}
+                  onApprove={toolPermission.onApprove}
+                  onDeny={toolPermission.onDeny}
+                />
+              </div>
+            </div>
+          ) : null}
+          <Composer
+            onSend={onSendWithWaggle}
+            onEnqueue={(payload) => {
+              if (activeSessionId) {
+                enqueue(activeSessionId, payload)
+              }
+            }}
+            onCancel={onCancel}
+            isLoading={isLoading}
+            mode={{
+              disabled: composerDisabledForBranchSummary,
+              placeholder: composerPlaceholder,
+              requiresText: branchSummaryMode === 'custom',
+              clearOnSubmit: branchSummaryMode !== 'custom',
+              recordHistory: branchSummaryMode !== 'custom',
+              allowEnqueue: branchSummaryMode !== 'custom',
+              sendTitle: branchSummaryMode === 'custom' ? 'Summarize branch' : undefined,
+              machineModeEnabled,
+              machineModeRunning: machineStatus === 'running',
+              onSetMachineModeEnabled,
+            }}
+            onToast={onToast}
+          />
+        </div>
         <ActionDialog onToast={onToast} />
       </div>
     </>

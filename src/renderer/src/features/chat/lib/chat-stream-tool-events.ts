@@ -15,12 +15,20 @@ export function startToolExecution(
 ) {
   const targetAssistantId = event.parentMessageId ?? findLatestAssistantMessageId(messages)
   const ensuredMessages = targetAssistantId
-    ? ensureToolCall(messages, targetAssistantId, event.toolCallId, event.toolName, event.args)
+    ? ensureToolCall(
+        messages,
+        targetAssistantId,
+        event.toolCallId,
+        event.toolName,
+        event.args,
+        event.summary,
+      )
     : [...messages]
 
   return updateToolCall(ensuredMessages, event.toolCallId, (part) => ({
     ...part,
     arguments: stringifyToolInput(event.args),
+    ...(event.summary ? { summary: event.summary } : {}),
     state: 'executing',
   }))
 }
@@ -33,12 +41,20 @@ export function updateToolExecution(
     findAssistantMessageIdForToolCall(messages, event.toolCallId) ??
     findLatestAssistantMessageId(messages)
   const ensuredMessages = targetAssistantId
-    ? ensureToolCall(messages, targetAssistantId, event.toolCallId, event.toolName, event.args)
+    ? ensureToolCall(
+        messages,
+        targetAssistantId,
+        event.toolCallId,
+        event.toolName,
+        event.args,
+        event.summary,
+      )
     : [...messages]
 
   return updateToolCall(ensuredMessages, event.toolCallId, (part) => ({
     ...part,
     arguments: stringifyToolInput(event.args),
+    ...(event.summary ? { summary: event.summary } : {}),
     state: 'executing',
     partialOutput: event.partialResult,
   }))
@@ -52,13 +68,21 @@ export function finishToolExecution(
     findAssistantMessageIdForToolCall(messages, event.toolCallId) ??
     findLatestAssistantMessageId(messages)
   const ensuredMessages = targetAssistantId
-    ? ensureToolCall(messages, targetAssistantId, event.toolCallId, event.toolName, event.args)
+    ? ensureToolCall(
+        messages,
+        targetAssistantId,
+        event.toolCallId,
+        event.toolName,
+        event.args,
+        event.summary,
+      )
     : [...messages]
 
   const finalState = event.isError ? 'error' : 'complete'
   const updatedMessages = updateToolCall(ensuredMessages, event.toolCallId, (part) => ({
     ...part,
     arguments: event.args === undefined ? part.arguments : stringifyToolInput(event.args),
+    ...(event.summary ? { summary: event.summary } : {}),
     state: finalState,
     output: event.result,
     partialOutput: undefined,

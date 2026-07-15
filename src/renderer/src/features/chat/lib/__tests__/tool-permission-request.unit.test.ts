@@ -58,7 +58,7 @@ describe('findLatestPendingToolPermissionRequest', () => {
     expect(request).toBeNull()
   })
 
-  it('does not resurrect an older permission request when newer transcript content exists', () => {
+  it('keeps the latest unresolved permission request even when newer transcript content exists', () => {
     const request = findLatestPendingToolPermissionRequest(
       [
         makePermissionMessage(),
@@ -72,6 +72,53 @@ describe('findLatestPendingToolPermissionRequest', () => {
       new Set(),
     )
 
-    expect(request).toBeNull()
+    expect(request).toMatchObject({
+      messageId: 'assistant-1',
+      toolCallId: 'tool-1',
+      toolName: 'bash',
+    })
+  })
+
+  it('extracts a permission request when only nested approval payload is preserved', () => {
+    const request = findLatestPendingToolPermissionRequest(
+      [
+        makePermissionMessage({
+          parts: [
+            {
+              type: 'tool-result',
+              toolCallId: 'tool-2',
+              state: 'complete',
+              content: {
+                content: [{ type: 'text', text: 'Permission required before running edit: src/app.ts' }],
+                details: {
+                  request: {
+                    model: 'tencent/hy3',
+                    permission: {
+                      kind: 'user-approval',
+                      toolName: 'edit',
+                      input: { path: 'src/app.ts' },
+                      title: 'Approve Edit',
+                      description: 'OpenWaggle requested permission before running edit.',
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        }),
+      ],
+      new Set(),
+    )
+
+    expect(request).toEqual({
+      messageId: 'assistant-1',
+      toolCallId: 'tool-2',
+      toolName: 'edit',
+      input: { path: 'src/app.ts' },
+      title: 'Approve Edit',
+      description: 'OpenWaggle requested permission before running edit.',
+      model: 'tencent/hy3',
+      summary: 'Permission required before running edit: src/app.ts',
+    })
   })
 })

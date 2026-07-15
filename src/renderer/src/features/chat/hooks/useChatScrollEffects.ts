@@ -2,6 +2,9 @@ import { useLayoutEffect } from 'react'
 import { saveScrollCache } from './chat-scroll-cache'
 import type { MutableValueRef, ScrollActions } from './chat-scroll-types'
 
+const DEBUG_SERVER_URL = 'http://127.0.0.1:7777/event'
+const DEBUG_RUN_ID = 'post-fix'
+
 export interface ScrollEffectRefs {
   readonly scrollerRef: MutableValueRef<HTMLDivElement | null>
   readonly contentRef: MutableValueRef<HTMLDivElement | null>
@@ -164,6 +167,29 @@ export function useChatScrollEffects(params: UseChatScrollEffectsParams) {
         return
       }
       if (!refs.shouldAutoScrollRef.current) return
+      // #region debug-point A:resize-observer-stick
+      void fetch(DEBUG_SERVER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'permission-transcript-shift',
+          runId: DEBUG_RUN_ID,
+          hypothesisId: 'A',
+          location: 'useChatScrollEffects.ts:ResizeObserver',
+          msg: '[DEBUG] Transcript resize observer scheduled stick-to-bottom',
+          data: {
+            activeSessionId,
+            rowsLength,
+            streamVersion,
+            isLoading,
+            scrollTop: refs.scrollerRef.current?.scrollTop ?? null,
+            scrollHeight: refs.scrollerRef.current?.scrollHeight ?? null,
+            clientHeight: refs.scrollerRef.current?.clientHeight ?? null,
+          },
+          ts: Date.now(),
+        }),
+      }).catch(() => {})
+      // #endregion
       actions.scheduleStickToBottom()
     })
 

@@ -266,6 +266,7 @@ export async function runPiWaggle(input: PiWaggleKernelRunInput) {
     createSessionListener(
       {
         ...input,
+        cwd: projectPath,
         model: initialRuntimeModel,
         onEvent: (event) => {
           const transportEvent = withTransportEventModel(event, currentMeta)

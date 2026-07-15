@@ -18,6 +18,7 @@ import type {
   ToolExecutionStartSessionEvent,
   ToolExecutionUpdateSessionEvent,
 } from './listener-types'
+import { renderPiToolCallSummary } from './pi-tool-call-summary'
 import { emitEvent } from './transport-emitter'
 
 function classifyAgentEndTransportError(input: {
@@ -47,17 +48,48 @@ function emitAgentStart(state: SessionListenerState) {
   })
 }
 
+function getToolCallSummary(
+  state: SessionListenerState,
+  input: {
+    readonly toolCallId: string
+    readonly toolName: string
+    readonly args: JsonValue | undefined
+  },
+) {
+  const cachedSummary = state.toolCallSummaries.get(input.toolCallId)
+  if (cachedSummary) {
+    return cachedSummary
+  }
+
+  const summary = renderPiToolCallSummary({
+    toolCallId: input.toolCallId,
+    toolName: input.toolName,
+    args: input.args,
+    cwd: state.cwd,
+  })
+  if (summary) {
+    state.toolCallSummaries.set(input.toolCallId, summary)
+  }
+  return summary
+}
+
 function handleToolExecutionStart(
   state: SessionListenerState,
   event: ToolExecutionStartSessionEvent,
 ) {
   const toolInput = toJsonValue(event.args)
+  const summary = getToolCallSummary(state, {
+    toolCallId: event.toolCallId,
+    toolName: event.toolName,
+    args: toolInput,
+  })
   state.toolCallInputs.set(event.toolCallId, toolInput)
   emitEvent(state.input.onEvent, {
     type: 'tool_execution_start',
     toolCallId: event.toolCallId,
     toolName: event.toolName,
     args: toolInput,
+    ...(summary ? { summary } : {}),
     parentMessageId: state.currentMessageId ?? undefined,
     timestamp: Date.now(),
     model: state.input.model,
@@ -69,12 +101,18 @@ function handleToolExecutionUpdate(
   event: ToolExecutionUpdateSessionEvent,
 ) {
   const toolInput = toJsonValue(event.args)
+  const summary = getToolCallSummary(state, {
+    toolCallId: event.toolCallId,
+    toolName: event.toolName,
+    args: toolInput,
+  })
   state.toolCallInputs.set(event.toolCallId, toolInput)
   emitEvent(state.input.onEvent, {
     type: 'tool_execution_update',
     toolCallId: event.toolCallId,
     toolName: event.toolName,
     args: toolInput,
+    ...(summary ? { summary } : {}),
     partialResult: toJsonValue(event.partialResult),
     timestamp: Date.now(),
     model: state.input.model,
@@ -82,11 +120,18 @@ function handleToolExecutionUpdate(
 }
 
 function handleToolExecutionEnd(state: SessionListenerState, event: ToolExecutionEndSessionEvent) {
+  const args = state.toolCallInputs.get(event.toolCallId)
+  const summary = getToolCallSummary(state, {
+    toolCallId: event.toolCallId,
+    toolName: event.toolName,
+    args,
+  })
   emitEvent(state.input.onEvent, {
     type: 'tool_execution_end',
     toolCallId: event.toolCallId,
     toolName: event.toolName,
-    args: state.toolCallInputs.get(event.toolCallId),
+    args,
+    ...(summary ? { summary } : {}),
     result: toJsonValue(event.result),
     isError: event.isError,
     timestamp: Date.now(),
@@ -205,10 +250,12 @@ export function createSessionListener(input: SessionListenerInput, runId: string
   const state: SessionListenerState = {
     input,
     runId,
+    cwd: input.cwd ?? process.cwd(),
     currentMessageId: null,
     thinkingSteps: new Set<string>(),
     startedToolCalls: new Set<string>(),
     toolCallInputs: new Map<string, JsonValue>(),
+    toolCallSummaries: new Map<string, string>(),
   }
 
   return (event: AgentSessionEvent) => handleSessionEvent(state, event)

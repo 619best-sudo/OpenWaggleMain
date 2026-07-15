@@ -40,4 +40,23 @@ describe('tool-result-state', () => {
     expect(isToolPermissionRequestPayload(payload)).toBe(true)
     expect(hasConcreteToolOutput(payload)).toBe(false)
   })
+
+  it('treats nested approval payloads as non-concrete tool output', () => {
+    const payload = {
+      content: [{ type: 'text', text: 'Permission required before running edit: src/app.ts' }],
+      details: {
+        request: {
+          model: 'tencent/hy3',
+          permission: {
+            kind: 'user-approval',
+            toolName: 'edit',
+            input: { path: 'src/app.ts' },
+          },
+        },
+      },
+    }
+
+    expect(isToolPermissionRequestPayload(payload)).toBe(true)
+    expect(hasConcreteToolOutput(payload)).toBe(false)
+  })
 })

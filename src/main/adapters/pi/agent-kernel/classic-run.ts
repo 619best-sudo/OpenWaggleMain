@@ -30,7 +30,9 @@ export async function runPiSession(input: AgentKernelRunInput) {
     watchdog.observe(event)
     input.onEvent(event)
   }
-  const unsubscribe = session.subscribe(createSessionListener({ ...input, onEvent }, input.runId))
+  const unsubscribe = session.subscribe(
+    createSessionListener({ ...input, cwd: projectPath, onEvent }, input.runId),
+  )
 
   try {
     return await runSubscribedPiOperation({
