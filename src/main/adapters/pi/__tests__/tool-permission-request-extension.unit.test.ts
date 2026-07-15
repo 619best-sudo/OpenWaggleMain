@@ -1,12 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  clearApprovedToolPermissions,
   createToolPermissionRequestExtension,
   registerApprovedToolPermission,
 } from '../tool-permission-request-extension'
-import {
-  clearApprovedToolExecutionModels,
-  consumeApprovedToolExecutionModel,
-} from '../tool-execution-model-state'
 
 type ToolCallHandler = (event: { toolName: string; input: unknown }) => Promise<unknown>
 
@@ -30,7 +27,7 @@ function createExtensionHarness() {
 
 describe('createToolPermissionRequestExtension', () => {
   afterEach(() => {
-    clearApprovedToolExecutionModels()
+    clearApprovedToolPermissions()
   })
 
   it('returns a request envelope for bash tool calls', async () => {
@@ -65,16 +62,41 @@ describe('createToolPermissionRequestExtension', () => {
     )
   })
 
-  it('does not intercept non-guarded tools', async () => {
+  it('does not intercept non-guarded tools with no routed phase', async () => {
     const harness = createExtensionHarness()
     createToolPermissionRequestExtension({ toolNames: ['bash'] })(harness.pi as never)
 
+    // grep has the default route (no authoring, no reasoning) and is not guarded.
+    await expect(
+      harness.getToolCallHandler()({
+        toolName: 'grep',
+        input: { pattern: 'TODO' },
+      }),
+    ).resolves.toBeUndefined()
+  })
+
+  it('surfaces the read route for post-execution reasoning even when unguarded', async () => {
+    const harness = createExtensionHarness()
+    createToolPermissionRequestExtension({
+      toolNames: ['bash'],
+      getPermissionMode: () => 'allow-all',
+    })(harness.pi as never)
+
+    // read is not guarded here, but its route requests post-execution reasoning,
+    // so the runtime must still be handed the routed model.
     await expect(
       harness.getToolCallHandler()({
         toolName: 'read',
         input: { path: 'src/main.ts' },
       }),
-    ).resolves.toBeUndefined()
+    ).resolves.toEqual({
+      route: {
+        id: 'read',
+        model: 'bytedance-seed/seed-2.0-mini',
+        authorFinalArgs: false,
+        reasonOverResult: true,
+      },
+    })
   })
 
   it('matches guarded tool names after normalization', async () => {
@@ -137,7 +159,7 @@ describe('createToolPermissionRequestExtension', () => {
     )
   })
 
-  it('routes code-editing tools to the edit model', async () => {
+  it('carries the routed model on the permission request for editing tools', async () => {
     const harness = createExtensionHarness()
     createToolPermissionRequestExtension({ toolNames: ['write'] })(harness.pi as never)
 
@@ -151,11 +173,12 @@ describe('createToolPermissionRequestExtension', () => {
         request: expect.objectContaining({
           model: 'tencent/hy3',
         }),
+        route: { id: 'editing', model: 'tencent/hy3', authorFinalArgs: true, reasonOverResult: false },
       }),
     )
   })
 
-  it('allows the next approved matching tool call through', async () => {
+  it('allows the next approved tool call through, then re-guards', async () => {
     const harness = createExtensionHarness()
     createToolPermissionRequestExtension({ toolNames: ['bash'] })(harness.pi as never)
     registerApprovedToolPermission({
@@ -164,10 +187,12 @@ describe('createToolPermissionRequestExtension', () => {
       input: { command: 'ls -la', timeout: 5000 },
     })
 
+    // Approval is tool-name-scoped, so a resumed re-proposal matches even if the
+    // arguments differ from the intercepted proposal.
     await expect(
       harness.getToolCallHandler()({
         toolName: 'bash',
-        input: { command: 'ls -la', timeout: 5000 },
+        input: { command: 'ls -la --color', timeout: 9000 },
       }),
     ).resolves.toBeUndefined()
 
@@ -181,6 +206,27 @@ describe('createToolPermissionRequestExtension', () => {
         terminate: true,
       }),
     )
+  })
+
+  it('emits a routed authoring directive once a mutation is approved', async () => {
+    const harness = createExtensionHarness()
+    createToolPermissionRequestExtension({ toolNames: ['write'] })(harness.pi as never)
+    registerApprovedToolPermission({
+      toolCallId: 'tool-1',
+      toolName: 'write',
+      input: { path: 'src/main.ts', content: 'console.log("hi")' },
+    })
+
+    // The resumed run re-proposes the tool: permission is satisfied, so the
+    // extension converges on the routed authoring directive instead of pausing.
+    await expect(
+      harness.getToolCallHandler()({
+        toolName: 'write',
+        input: { path: 'src/main.ts', content: 'console.log("hi")' },
+      }),
+    ).resolves.toEqual({
+      route: { id: 'editing', model: 'tencent/hy3', authorFinalArgs: true, reasonOverResult: false },
+    })
   })
 
   it('skips permission requests when allow-all mode is active', async () => {
@@ -198,21 +244,37 @@ describe('createToolPermissionRequestExtension', () => {
     ).resolves.toBeUndefined()
   })
 
-  it('queues a tool execution model when allow-all mode is active', async () => {
+  it('emits a routed authoring directive for mutations in allow-all mode', async () => {
     const harness = createExtensionHarness()
     createToolPermissionRequestExtension({
-      toolNames: ['bash', 'read'],
+      toolNames: ['bash', 'read', 'write'],
       getPermissionMode: () => 'allow-all',
     })(harness.pi as never)
 
+    // Read surfaces its route for post-execution reasoning (seed reads the file).
     await expect(
       harness.getToolCallHandler()({
         toolName: 'read',
         input: { path: 'src/main.ts' },
       }),
-    ).resolves.toBeUndefined()
+    ).resolves.toEqual({
+      route: {
+        id: 'read',
+        model: 'bytedance-seed/seed-2.0-mini',
+        authorFinalArgs: false,
+        reasonOverResult: true,
+      },
+    })
 
-    expect(consumeApprovedToolExecutionModel()).toBe('bytedance-seed/seed-2.0-mini')
+    // Write is a routed mutation → authoring directive even without permission.
+    await expect(
+      harness.getToolCallHandler()({
+        toolName: 'write',
+        input: { path: 'src/main.ts', content: 'x' },
+      }),
+    ).resolves.toEqual({
+      route: { id: 'editing', model: 'tencent/hy3', authorFinalArgs: true, reasonOverResult: false },
+    })
   })
 
   it('only intercepts code-editing tools when ask-edit mode is active', async () => {
@@ -244,21 +306,28 @@ describe('createToolPermissionRequestExtension', () => {
     )
   })
 
-  it('queues the routed execution model for non-edit tools in ask-edit mode', async () => {
+  it('does not gate read for permission in ask-edit mode but still routes reasoning', async () => {
     const harness = createExtensionHarness()
     createToolPermissionRequestExtension({
       toolNames: ['bash', 'read', 'write', 'edit', 'patch', 'multiedit'],
       getPermissionMode: () => 'ask-edit',
     })(harness.pi as never)
 
+    // ask-edit does not require permission for read, but the read route still asks
+    // the runtime to run post-execution reasoning on seed.
     await expect(
       harness.getToolCallHandler()({
         toolName: 'read',
         input: { path: 'src/main.ts' },
       }),
-    ).resolves.toBeUndefined()
-
-    expect(consumeApprovedToolExecutionModel()).toBe('bytedance-seed/seed-2.0-mini')
+    ).resolves.toEqual({
+      route: {
+        id: 'read',
+        model: 'bytedance-seed/seed-2.0-mini',
+        authorFinalArgs: false,
+        reasonOverResult: true,
+      },
+    })
   })
 
   it('intercepts edit aliases when edit-family tools are guarded', async () => {

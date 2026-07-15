@@ -1,8 +1,117 @@
 diff --git a/dist/agent-loop.js b/dist/agent-loop.js
-index 39ab91df1832ede1cdefd02a736f97b7e0b36dcc..8929972248052331912ffce8734739cb2dd5b1ca 100644
+index 39ab91df1832ede1cdefd02a736f97b7e0b36dcc..402cda678c02d8098a79626b9335e160c0150e57 100644
 --- a/dist/agent-loop.js
 +++ b/dist/agent-loop.js
-@@ -344,6 +344,13 @@ async function prepareToolCall(currentContext, assistantMessage, toolCall, confi
+@@ -112,7 +112,7 @@ async function runLoop(currentContext, newMessages, config, signal, emit, stream
+             const toolResults = [];
+             hasMoreToolCalls = false;
+             if (toolCalls.length > 0) {
+-                const executedToolBatch = await executeToolCalls(currentContext, message, config, signal, emit);
++                const executedToolBatch = await executeToolCalls(currentContext, message, config, signal, emit, streamFn);
+                 toolResults.push(...executedToolBatch.messages);
+                 hasMoreToolCalls = !executedToolBatch.terminate;
+                 for (const result of toolResults) {
+@@ -221,15 +221,15 @@ async function streamAssistantResponse(context, config, signal, emit, streamFn)
+ /**
+  * Execute tool calls from an assistant message.
+  */
+-async function executeToolCalls(currentContext, assistantMessage, config, signal, emit) {
++async function executeToolCalls(currentContext, assistantMessage, config, signal, emit, streamFn) {
+     const toolCalls = assistantMessage.content.filter((c) => c.type === "toolCall");
+     const hasSequentialToolCall = toolCalls.some((tc) => currentContext.tools?.find((t) => t.name === tc.name)?.executionMode === "sequential");
+     if (config.toolExecution === "sequential" || hasSequentialToolCall) {
+-        return executeToolCallsSequential(currentContext, assistantMessage, toolCalls, config, signal, emit);
++        return executeToolCallsSequential(currentContext, assistantMessage, toolCalls, config, signal, emit, streamFn);
+     }
+-    return executeToolCallsParallel(currentContext, assistantMessage, toolCalls, config, signal, emit);
++    return executeToolCallsParallel(currentContext, assistantMessage, toolCalls, config, signal, emit, streamFn);
+ }
+-async function executeToolCallsSequential(currentContext, assistantMessage, toolCalls, config, signal, emit) {
++async function executeToolCallsSequential(currentContext, assistantMessage, toolCalls, config, signal, emit, streamFn) {
+     const finalizedCalls = [];
+     const messages = [];
+     for (const toolCall of toolCalls) {
+@@ -239,7 +239,7 @@ async function executeToolCallsSequential(currentContext, assistantMessage, tool
+             toolName: toolCall.name,
+             args: toolCall.arguments,
+         });
+-        const preparation = await prepareToolCall(currentContext, assistantMessage, toolCall, config, signal);
++        const preparation = await prepareToolCall(currentContext, assistantMessage, toolCall, config, signal, streamFn);
+         let finalized;
+         if (preparation.kind === "immediate") {
+             finalized = {
+@@ -251,6 +251,15 @@ async function executeToolCallsSequential(currentContext, assistantMessage, tool
+         else {
+             const executed = await executePreparedToolCall(preparation, signal, emit);
+             finalized = await finalizeExecutedToolCall(currentContext, assistantMessage, preparation, executed, config, signal);
++            finalized = await applyRoutedResultReasoning({
++                finalized,
++                preparation,
++                assistantMessage,
++                currentContext,
++                config,
++                signal,
++                streamFn,
++            });
+         }
+         await emitToolExecutionEnd(finalized, emit);
+         const toolResultMessage = createToolResultMessage(finalized);
+@@ -263,7 +272,7 @@ async function executeToolCallsSequential(currentContext, assistantMessage, tool
+         terminate: shouldTerminateToolBatch(finalizedCalls),
+     };
+ }
+-async function executeToolCallsParallel(currentContext, assistantMessage, toolCalls, config, signal, emit) {
++async function executeToolCallsParallel(currentContext, assistantMessage, toolCalls, config, signal, emit, streamFn) {
+     const finalizedCalls = [];
+     for (const toolCall of toolCalls) {
+         await emit({
+@@ -272,7 +281,7 @@ async function executeToolCallsParallel(currentContext, assistantMessage, toolCa
+             toolName: toolCall.name,
+             args: toolCall.arguments,
+         });
+-        const preparation = await prepareToolCall(currentContext, assistantMessage, toolCall, config, signal);
++        const preparation = await prepareToolCall(currentContext, assistantMessage, toolCall, config, signal, streamFn);
+         if (preparation.kind === "immediate") {
+             const finalized = {
+                 toolCall,
+@@ -285,7 +294,16 @@ async function executeToolCallsParallel(currentContext, assistantMessage, toolCa
+         }
+         finalizedCalls.push(async () => {
+             const executed = await executePreparedToolCall(preparation, signal, emit);
+-            const finalized = await finalizeExecutedToolCall(currentContext, assistantMessage, preparation, executed, config, signal);
++            let finalized = await finalizeExecutedToolCall(currentContext, assistantMessage, preparation, executed, config, signal);
++            finalized = await applyRoutedResultReasoning({
++                finalized,
++                preparation,
++                assistantMessage,
++                currentContext,
++                config,
++                signal,
++                streamFn,
++            });
+             await emitToolExecutionEnd(finalized, emit);
+             return finalized;
+         });
+@@ -318,7 +336,7 @@ function prepareToolCallArguments(tool, toolCall) {
+         arguments: preparedArguments,
+     };
+ }
+-async function prepareToolCall(currentContext, assistantMessage, toolCall, config, signal) {
++async function prepareToolCall(currentContext, assistantMessage, toolCall, config, signal, streamFn) {
+     const tool = currentContext.tools?.find((t) => t.name === toolCall.name);
+     if (!tool) {
+         return {
+@@ -329,7 +347,8 @@ async function prepareToolCall(currentContext, assistantMessage, toolCall, confi
+     }
+     try {
+         const preparedToolCall = prepareToolCallArguments(tool, toolCall);
+-        const validatedArgs = validateToolArguments(tool, preparedToolCall);
++        let validatedArgs = validateToolArguments(tool, preparedToolCall);
++        let routeDirective = null;
+         if (config.beforeToolCall) {
+             const beforeResult = await config.beforeToolCall({
+                 assistantMessage,
+@@ -344,12 +363,42 @@ async function prepareToolCall(currentContext, assistantMessage, toolCall, confi
                      isError: true,
                  };
              }
@@ -13,10 +122,295 @@ index 39ab91df1832ede1cdefd02a736f97b7e0b36dcc..8929972248052331912ffce8734739cb
 +                    isError: beforeResult?.isError ?? false,
 +                };
 +            }
++            // Capture the routing directive so post-execution phases (e.g. routed
++            // reasoning over the result) can act on it after the tool runs.
++            routeDirective = beforeResult?.route ?? null;
++            // Routed authoring: the host routed this tool to another model and asked
++            // that model to author the final, executable arguments. This is the
++            // ownership model for mutation tools — the orchestrator only proposed an
++            // intent; the routed model produces the payload that actually runs. The
++            // tool then executes locally with those arguments, so permission and
++            // skip-permission paths converge on the same routed execution.
++            if (shouldAuthorWithRoutedModel(beforeResult)) {
++                validatedArgs = await authorRoutedToolArguments({
++                    currentContext,
++                    assistantMessage,
++                    tool,
++                    toolCall,
++                    proposedArgs: validatedArgs,
++                    routedModel: beforeResult.route.model,
++                    config,
++                    signal,
++                    streamFn,
++                });
++            }
          }
          return {
              kind: "prepared",
-@@ -422,6 +429,39 @@ function createErrorToolResult(message) {
+             toolCall,
+             tool,
+             args: validatedArgs,
++            route: routeDirective,
+         };
+     }
+     catch (error) {
+@@ -360,6 +409,255 @@ async function prepareToolCall(currentContext, assistantMessage, toolCall, confi
+         };
+     }
+ }
++function shouldAuthorWithRoutedModel(beforeResult) {
++    return Boolean(beforeResult &&
++        !beforeResult.request &&
++        beforeResult.route &&
++        typeof beforeResult.route.model === "string" &&
++        beforeResult.route.model.trim().length > 0 &&
++        beforeResult.route.authorFinalArgs === true);
++}
++/**
++ * Run a forced, single-tool completion on the routed model so it authors the
++ * final arguments for `tool`. The routed model shares the orchestrator's provider
++ * gateway, so it is reached by cloning the loop model with the routed id — the
++ * routed model is passed explicitly, never inferred from a prompt.
++ *
++ * Returns the routed model's validated arguments. On any failure it falls back to
++ * the orchestrator's proposed arguments so a routing hiccup degrades to today's
++ * behavior instead of failing the tool call.
++ */
++async function authorRoutedToolArguments(input) {
++    const { currentContext, assistantMessage, tool, toolCall, proposedArgs, routedModel, config, signal, streamFn, } = input;
++    try {
++        const routedModelConfig = { ...config.model, id: routedModel };
++        // Exclude the pending assistant tool-call message: it carries an unfulfilled
++        // tool call that would make the fresh completion an invalid conversation.
++        const historyMessages = currentContext.messages.filter((message) => message !== assistantMessage);
++        const llmMessages = config.convertToLlm
++            ? await config.convertToLlm(historyMessages)
++            : historyMessages;
++        const authoringInstruction = {
++            role: "user",
++            content: [
++                {
++                    type: "text",
++                    text: [
++                        `The planner selected the \`${tool.name}\` tool for the current step.`,
++                        `You are the specialist model responsible for authoring the FINAL, correct arguments for this single tool call.`,
++                        ``,
++                        `Planner's proposed arguments (treat as intent, not as final — correct and complete them using the full context):`,
++                        JSON.stringify(proposedArgs, null, 2),
++                        ``,
++                        `Call \`${tool.name}\` exactly once with the final arguments. Do not call any other tool and do not produce any other output.`,
++                        `Provide only the arguments defined by the tool's schema — do not add extra fields such as "description". Structured values (arrays and objects) must be emitted as real JSON arrays/objects, never as stringified JSON.`,
++                    ].join("\n"),
++                },
++            ],
++        };
++        const authoringSystemPrompt = [
++            currentContext.systemPrompt ?? "",
++            `You are authoring the final arguments for a single \`${tool.name}\` tool call. Emit exactly one call to \`${tool.name}\`.`,
++        ]
++            .filter(Boolean)
++            .join("\n\n");
++        const llmContext = {
++            systemPrompt: authoringSystemPrompt,
++            messages: [...llmMessages, authoringInstruction],
++            tools: [tool],
++        };
++        const resolvedApiKey = (config.getApiKey ? await config.getApiKey(routedModelConfig.provider) : undefined) ||
++            config.apiKey;
++        const streamFunction = streamFn || streamSimple;
++        const response = await streamFunction(routedModelConfig, llmContext, {
++            ...config,
++            apiKey: resolvedApiKey,
++            signal,
++            toolChoice: { type: "function", function: { name: tool.name } },
++        });
++        // Drain the stream so `result()` resolves with the final message.
++        for await (const _event of response) {
++            void _event;
++        }
++        const finalMessage = await response.result();
++        const authoredCall = finalMessage.content.find((block) => block.type === "toolCall" && block.name === tool.name);
++        if (!authoredCall) {
++            return proposedArgs;
++        }
++        // Normalize the routed model's output exactly like a first-class tool call:
++        // run the tool's own `prepareArguments` (e.g. the edit tool parses `edits`
++        // sent as a JSON string), then drop any keys the strict schema forbids
++        // (routed models sometimes add stray fields like `description`). Without
++        // this, valid-but-loosely-shaped output would fail validation and the tool
++        // would silently fall back to the orchestrator's arguments.
++        const preparedAuthoredCall = prepareToolCallArguments(tool, authoredCall);
++        const sanitizedArgs = stripSchemaUnknownRootKeys(tool, preparedAuthoredCall.arguments);
++        return validateToolArguments(tool, { ...preparedAuthoredCall, arguments: sanitizedArgs });
++    }
++    catch (error) {
++        if (signal?.aborted) {
++            throw error;
++        }
++        // Degrade gracefully to the orchestrator's proposed arguments.
++        return proposedArgs;
++    }
++}
++/**
++ * Drop top-level keys the tool schema does not allow. Only applies when the
++ * schema is a closed object (`additionalProperties: false`) with declared
++ * `properties`; otherwise the arguments are returned unchanged.
++ */
++function stripSchemaUnknownRootKeys(tool, args) {
++    const schema = tool?.parameters;
++    if (!isPlainObject(args) || !isPlainObject(schema)) {
++        return args;
++    }
++    if (schema.additionalProperties !== false || !isPlainObject(schema.properties)) {
++        return args;
++    }
++    const allowedKeys = new Set(Object.keys(schema.properties));
++    let removedKey = false;
++    const result = {};
++    for (const [key, value] of Object.entries(args)) {
++        if (allowedKeys.has(key)) {
++            result[key] = value;
++        }
++        else {
++            removedKey = true;
++        }
++    }
++    return removedKey ? result : args;
++}
++function shouldReasonOverRoutedResult(route) {
++    return Boolean(route &&
++        route.reasonOverResult === true &&
++        typeof route.model === "string" &&
++        route.model.trim().length > 0);
++}
++function extractTextFromContentBlocks(content) {
++    if (typeof content === "string") {
++        return content;
++    }
++    if (!Array.isArray(content)) {
++        return "";
++    }
++    return content
++        .map((block) => (isPlainObject(block) && block.type === "text" && typeof block.text === "string" ? block.text : ""))
++        .filter(Boolean)
++        .join("\n");
++}
++function describeRoutedToolTarget(toolCall) {
++    const args = toolCall?.arguments;
++    if (!isPlainObject(args)) {
++        return "";
++    }
++    const path = typeof args.path === "string" ? args.path : typeof args.filePath === "string" ? args.filePath : "";
++    return path;
++}
++/**
++ * Post-execution routed reasoning. When a route requests `reasonOverResult`, run
++ * the routed model over the (already executed) tool result and append its
++ * analysis to the result the orchestrator sees. The tool itself still executed
++ * with the orchestrator's arguments — only the reading/reasoning is delegated.
++ * Any failure degrades to the unaugmented result.
++ */
++async function applyRoutedResultReasoning(input) {
++    const { finalized, preparation, assistantMessage, currentContext, config, signal, streamFn } = input;
++    const route = preparation?.route;
++    if (!shouldReasonOverRoutedResult(route) || finalized.isError) {
++        return finalized;
++    }
++    try {
++        const reasoning = await reasonOverRoutedToolResult({
++            currentContext,
++            assistantMessage,
++            tool: preparation.tool,
++            toolCall: preparation.toolCall,
++            result: finalized.result,
++            routedModel: route.model,
++            config,
++            signal,
++            streamFn,
++        });
++        if (!reasoning) {
++            return finalized;
++        }
++        const existingContent = Array.isArray(finalized.result?.content) ? finalized.result.content : [];
++        return {
++            ...finalized,
++            result: {
++                ...finalized.result,
++                content: [...existingContent, { type: "text", text: reasoning }],
++            },
++        };
++    }
++    catch (error) {
++        if (signal?.aborted) {
++            throw error;
++        }
++        // Degrade gracefully to the unaugmented tool result.
++        return finalized;
++    }
++}
++async function reasonOverRoutedToolResult(input) {
++    const { currentContext, assistantMessage, tool, toolCall, result, routedModel, config, signal, streamFn } = input;
++    const resultText = extractTextFromContentBlocks(result?.content);
++    if (!resultText.trim()) {
++        return null;
++    }
++    const routedModelConfig = { ...config.model, id: routedModel };
++    // Exclude the pending assistant tool-call message: its tool call has no
++    // matching tool result yet, which would make a fresh completion invalid.
++    const historyMessages = currentContext.messages.filter((message) => message !== assistantMessage);
++    const llmMessages = config.convertToLlm
++        ? await config.convertToLlm(historyMessages)
++        : historyMessages;
++    const target = describeRoutedToolTarget(toolCall);
++    const reasoningInstruction = {
++        role: "user",
++        content: [
++            {
++                type: "text",
++                text: [
++                    `The \`${tool.name}\` tool was executed${target ? ` for ${target}` : ""}.`,
++                    `Read the result below and reason about it for the current task. Produce a concise, focused analysis: what the content contains and the parts most relevant to the current task. Respond with text only; do not call any tool.`,
++                    ``,
++                    `--- ${tool.name} result ---`,
++                    resultText,
++                ].join("\n"),
++            },
++        ],
++    };
++    const reasoningSystemPrompt = [
++        currentContext.systemPrompt ?? "",
++        `You are a specialist reader. Analyze the provided tool result and return a concise reasoning summary. Do not call tools; respond with text only.`,
++    ]
++        .filter(Boolean)
++        .join("\n\n");
++    const llmContext = {
++        systemPrompt: reasoningSystemPrompt,
++        messages: [...llmMessages, reasoningInstruction],
++        tools: [],
++    };
++    const resolvedApiKey = (config.getApiKey ? await config.getApiKey(routedModelConfig.provider) : undefined) ||
++        config.apiKey;
++    const streamFunction = streamFn || streamSimple;
++    const response = await streamFunction(routedModelConfig, llmContext, {
++        ...config,
++        apiKey: resolvedApiKey,
++        signal,
++    });
++    // Drain the stream so `result()` resolves with the final message.
++    for await (const _event of response) {
++        void _event;
++    }
++    const finalMessage = await response.result();
++    const text = extractTextFromContentBlocks(finalMessage?.content).trim();
++    if (!text) {
++        return null;
++    }
++    return `Analysis by ${routedModel}:\n${text}`;
++}
+ async function executePreparedToolCall(prepared, signal, emit) {
+     const updateEvents = [];
+     try {
+@@ -422,6 +720,39 @@ function createErrorToolResult(message) {
          details: {},
      };
  }
@@ -57,10 +451,10 @@ index 39ab91df1832ede1cdefd02a736f97b7e0b36dcc..8929972248052331912ffce8734739cb
      await emit({
          type: "tool_execution_end",
 diff --git a/dist/types.d.ts b/dist/types.d.ts
-index af4599795035cdb76758e0d560d3c69970ce2670..f57ffaf7df6e099d03380eae0e77b4d29d1ebe8b 100644
+index af4599795035cdb76758e0d560d3c69970ce2670..3452d4bbe823e1ee5715ff37c4b58342bf17f83c 100644
 --- a/dist/types.d.ts
 +++ b/dist/types.d.ts
-@@ -23,15 +23,47 @@ export type ToolExecutionMode = "sequential" | "parallel";
+@@ -23,15 +23,76 @@ export type ToolExecutionMode = "sequential" | "parallel";
  export type AgentToolCall = Extract<AssistantMessage["content"][number], {
      type: "toolCall";
  }>;
@@ -92,10 +486,39 @@ index af4599795035cdb76758e0d560d3c69970ce2670..f57ffaf7df6e099d03380eae0e77b4d2
 + * runtimes that want to surface a tool proposal to the host for permission,
 + * delegation, or external fulfillment before continuing.
   */
++export interface BeforeToolCallRoute {
++    /**
++     * The model responsible for this tool call. When `authorFinalArgs` is true the
++     * runtime runs a forced single-tool completion on this model to author the
++     * final, executable arguments before the tool runs.
++     */
++    model: string;
++    /**
++     * When true, the routed model authors the final tool arguments (the runtime
++     * ignores the orchestrator's proposed arguments as anything more than intent).
++     * When false/absent the route is informational and the tool executes with the
++     * orchestrator's arguments.
++     */
++    authorFinalArgs?: boolean;
++    /**
++     * When true, the routed model reasons over the tool result after execution and
++     * its analysis is appended to the result the caller sees. The tool still
++     * executes with the orchestrator's arguments — only the reading/reasoning is
++     * delegated.
++     */
++    reasonOverResult?: boolean;
++}
  export interface BeforeToolCallResult {
      block?: boolean;
      reason?: string;
 +    request?: BeforeToolCallRequest;
++    /**
++     * Routing directive. When present without `request`, and `authorFinalArgs` is
++     * true, the runtime has the routed model re-author the final arguments and then
++     * executes the tool locally. This lets permission and skip-permission paths
++     * converge on the same routed execution logic.
++     */
++    route?: BeforeToolCallRoute;
 +    content?: (TextContent | ImageContent)[];
 +    details?: unknown;
 +    isError?: boolean;

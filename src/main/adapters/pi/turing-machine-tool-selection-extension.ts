@@ -1,8 +1,6 @@
 import path from 'node:path'
-import type { AuthStorage, ExtensionFactory, SessionEntry, ToolInfo } from '@mariozechner/pi-coding-agent'
-import { TOOL_PERMISSION_CUSTOM_TYPE } from '@shared/types/tool-permission'
+import type { AuthStorage, ExtensionFactory, ToolInfo } from '@mariozechner/pi-coding-agent'
 import { parseModelRef } from '@shared/types/llm'
-import { consumeApprovedToolExecutionModel } from './tool-execution-model-state'
 
 const TURING_MACHINE_PROVIDER_ID = 'turing-machine'
 const MAX_SELECTION_CACHE_ENTRIES = 64
@@ -20,9 +18,6 @@ type ProviderPayload = JsonRecord & {
 type TuringMachineExtensionContext = {
   readonly getModel: () => { readonly provider?: string } | undefined
   readonly getAllTools: () => ToolInfo[]
-  readonly sessionManager?: {
-    readonly getEntries: () => readonly SessionEntry[]
-  }
 }
 
 type ToolSelectionResponse = {
@@ -51,7 +46,11 @@ function isRecord(value: unknown): value is JsonRecord {
 }
 
 function normalizeToken(value: string) {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }
 
 function uniqueStrings(values: readonly string[]) {
@@ -242,9 +241,15 @@ function classifyToolRouting(input: {
       })
       .map(({ token }) => token)
 
-    if (toolName === 'mcp' || sourcePath.includes('pi-mcp-adapter') || matchingServerNames.length > 0) {
+    if (
+      toolName === 'mcp' ||
+      sourcePath.includes('pi-mcp-adapter') ||
+      matchingServerNames.length > 0
+    ) {
       categories.add('mcp')
-      for (const serverName of matchingServerNames.length > 0 ? matchingServerNames : mcpServerNames) {
+      for (const serverName of matchingServerNames.length > 0
+        ? matchingServerNames
+        : mcpServerNames) {
         categories.add(normalizeToken(serverName))
       }
       return {
@@ -323,7 +328,9 @@ export function annotateTuringMachineTools(input: {
 function mergeSelectedExternalCategories(metadata: unknown, categories: readonly string[]) {
   const normalizedCategories = uniqueStrings(categories)
   const baseMetadata = isRecord(metadata) ? metadata : {}
-  const existingToolSelection = isRecord(baseMetadata.toolSelection) ? baseMetadata.toolSelection : {}
+  const existingToolSelection = isRecord(baseMetadata.toolSelection)
+    ? baseMetadata.toolSelection
+    : {}
 
   return {
     ...baseMetadata,
@@ -380,7 +387,9 @@ async function fetchToolSelection(input: {
   const payload = await response.json()
   const selectedExternalCategories = isRecord(payload)
     ? Array.isArray(payload.selectedExternalCategories)
-      ? payload.selectedExternalCategories.filter((value): value is string => typeof value === 'string')
+      ? payload.selectedExternalCategories.filter(
+          (value): value is string => typeof value === 'string',
+        )
       : []
     : []
   return {
@@ -420,68 +429,6 @@ function annotatePayloadTools(input: {
   }
 }
 
-function resolveToolPermissionOverrideModel(ctx: TuringMachineExtensionContext) {
-  const entries = ctx.sessionManager?.getEntries()
-  const latestEntry = entries?.at(-1)
-  // #region debug-point A:provider-context-inspection
-  ;(() => {
-    const fallbackUrl = 'http://127.0.0.1:7779/event'
-    const fallbackSession = 'tool-model-routing'
-    let debugServerUrl = fallbackUrl
-    let debugSessionId = fallbackSession
-    try {
-      const fs = require('node:fs')
-      const env = fs.readFileSync('.dbg/tool-model-routing.env', 'utf8') as string
-      debugServerUrl = env.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? fallbackUrl
-      debugSessionId = env.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? fallbackSession
-    } catch {}
-    void fetch(debugServerUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: debugSessionId,
-        runId: 'pre-fix',
-        hypothesisId: 'A',
-        location: 'turing-machine-tool-selection-extension.ts:resolveToolPermissionOverrideModel',
-        msg: '[DEBUG] Provider hook inspected latest session entry for approved tool model',
-        data: {
-          hasSessionEntries: Array.isArray(entries),
-          latestEntryType: latestEntry?.type ?? null,
-          latestCustomType: latestEntry && 'customType' in latestEntry ? latestEntry.customType : null,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
-  })()
-  // #endregion
-  if (!Array.isArray(entries)) {
-    return null
-  }
-
-  for (let index = entries.length - 1; index >= 0; index -= 1) {
-    const entry = entries[index]
-    if (!entry || (entry.type !== 'custom_message' && entry.type !== 'custom')) {
-      continue
-    }
-
-    if (entry.customType !== TOOL_PERMISSION_CUSTOM_TYPE || !isRecord(entry.details)) {
-      continue
-    }
-
-    if (entry.details.kind !== 'tool-permission-resolution' || entry.details.decision !== 'approved') {
-      continue
-    }
-
-    const model =
-      typeof entry.details.requestedToolModel === 'string'
-        ? entry.details.requestedToolModel
-        : entry.details.model
-    return typeof model === 'string' && model.trim().length > 0 ? model.trim() : null
-  }
-
-  return null
-}
-
 export function createTuringMachineToolSelectionExtension(input: {
   readonly authStorage: AuthStorage
   readonly baseUrl: string
@@ -513,46 +460,11 @@ export function createTuringMachineToolSelectionExtension(input: {
         ctx: extensionContext,
         mcpServerNames,
       })
-      const approvedToolModelOverride =
-        consumeApprovedToolExecutionModel() ?? resolveToolPermissionOverrideModel(extensionContext)
-      const routedPayload = approvedToolModelOverride
-        ? {
-            ...annotatedPayload,
-            model: approvedToolModelOverride,
-          }
-        : annotatedPayload
-      // #region debug-point C:provider-payload-model
-      ;(() => {
-        const fallbackUrl = 'http://127.0.0.1:7779/event'
-        const fallbackSession = 'tool-model-routing'
-        let debugServerUrl = fallbackUrl
-        let debugSessionId = fallbackSession
-        try {
-          const fs = require('node:fs')
-          const env = fs.readFileSync('.dbg/tool-model-routing.env', 'utf8') as string
-          debugServerUrl = env.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? fallbackUrl
-          debugSessionId = env.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? fallbackSession
-        } catch {}
-        void fetch(debugServerUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: debugSessionId,
-            runId: 'pre-fix',
-            hypothesisId: approvedToolModelOverride ? 'C' : 'A',
-            location: 'turing-machine-tool-selection-extension.ts:before_provider_request',
-            msg: '[DEBUG] Prepared Turing Machine provider payload model',
-            data: {
-              incomingPayloadModel: payload.model ?? null,
-              approvedToolModelOverride,
-              outgoingPayloadModel: routedPayload.model ?? null,
-              latestUserMessageFound: Boolean(extractLatestUserMessageText(annotatedPayload.messages)),
-            },
-            ts: Date.now(),
-          }),
-        }).catch(() => {})
-      })()
-      // #endregion
+      // Model routing is no longer applied to the orchestrator turn here. Routed
+      // tool authoring is performed per tool call by the runtime (see
+      // `tool-model-route.ts` and the patched pi-agent-core loop), so this hook
+      // only annotates tools and runs tool selection.
+      const routedPayload = annotatedPayload
       const latestUserMessage = extractLatestUserMessageText(annotatedPayload.messages)
       if (!latestUserMessage) {
         return routedPayload

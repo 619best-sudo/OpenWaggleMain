@@ -1,10 +1,5 @@
 import { AuthStorage, type ToolInfo } from '@mariozechner/pi-coding-agent'
-import { TOOL_PERMISSION_CUSTOM_TYPE } from '@shared/types/tool-permission'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  clearApprovedToolExecutionModels,
-  registerApprovedToolExecutionModel,
-} from '../tool-execution-model-state'
 import {
   annotateTuringMachineTools,
   buildToolSelectionCacheKey,
@@ -17,9 +12,6 @@ type BeforeProviderRequestHandler = (
   ctx: {
     getModel: () => { provider: string; id: string } | undefined
     getAllTools: () => ToolInfo[]
-    sessionManager?: {
-      getEntries: () => readonly unknown[]
-    }
   },
 ) => Promise<unknown>
 
@@ -56,7 +48,6 @@ function createExtensionHarness() {
 
 afterEach(() => {
   vi.unstubAllGlobals()
-  clearApprovedToolExecutionModels()
 })
 
 describe('turing-machine tool selection extension helpers', () => {
@@ -188,9 +179,6 @@ describe('createTuringMachineToolSelectionExtension', () => {
             origin: 'package',
           }),
         ] satisfies ToolInfo[],
-      sessionManager: {
-        getEntries: () => [],
-      },
     }
     const payload = {
       model: 'turing-machine',
@@ -284,9 +272,6 @@ describe('createTuringMachineToolSelectionExtension', () => {
         {
           getModel: () => ({ provider: 'openai', id: 'gpt-5.5' }),
           getAllTools: () => [],
-          sessionManager: {
-            getEntries: () => [],
-          },
         },
       ),
     ).resolves.toBe(payload)
@@ -321,9 +306,6 @@ describe('createTuringMachineToolSelectionExtension', () => {
         {
           getModel: () => undefined,
           getAllTools: () => [],
-          sessionManager: {
-            getEntries: () => [],
-          },
         },
       ),
     ).resolves.toEqual(
@@ -333,58 +315,11 @@ describe('createTuringMachineToolSelectionExtension', () => {
     )
   })
 
-  it('overrides the provider payload model for approved tool permission resumes', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ selectedExternalCategories: [] }),
-      }),
-    )
-
-    const authStorage = AuthStorage.inMemory()
-    const harness = createExtensionHarness()
-    createTuringMachineToolSelectionExtension({
-      authStorage,
-      baseUrl: 'https://backend.example.com/turing-machine',
-    })(harness.pi as never)
-
-    const handler = harness.getBeforeProviderRequestHandler()
-    const payload = {
-      model: 'turing-machine',
-      messages: [],
-      tools: [],
-    }
-
-    await expect(
-      handler(
-        { payload },
-        {
-          getModel: () => ({ provider: 'turing-machine', id: 'turing-machine' }),
-          getAllTools: () => [],
-          sessionManager: {
-            getEntries: () => [
-              {
-                type: 'custom',
-                customType: TOOL_PERMISSION_CUSTOM_TYPE,
-                details: {
-                  kind: 'tool-permission-resolution',
-                  decision: 'approved',
-                  model: 'tencent/hy3',
-                },
-              },
-            ],
-          },
-        },
-      ),
-    ).resolves.toEqual(
-      expect.objectContaining({
-        model: 'tencent/hy3',
-      }),
-    )
-  })
-
-  it('accepts requestedToolModel from the hidden permission-resolution entry', async () => {
+  it('does not override the provider payload model (routing happens per tool call)', async () => {
+    // The orchestrator turn is never re-routed here anymore. Tool-model routing
+    // is applied per tool call by the runtime's routed-authoring step, so this
+    // hook must leave the payload model untouched even when the session contains
+    // an approved tool-permission resolution.
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -406,74 +341,18 @@ describe('createTuringMachineToolSelectionExtension', () => {
         {
           payload: {
             model: 'turing-machine',
-            messages: [],
+            messages: [{ role: 'user', content: 'Edit the file.' }],
             tools: [],
           },
         },
         {
           getModel: () => ({ provider: 'turing-machine', id: 'turing-machine' }),
           getAllTools: () => [],
-          sessionManager: {
-            getEntries: () => [
-              {
-                type: 'custom',
-                customType: TOOL_PERMISSION_CUSTOM_TYPE,
-                details: {
-                  kind: 'tool-permission-resolution',
-                  decision: 'approved',
-                  requestedToolModel: 'bytedance-seed/seed-2.0-mini',
-                },
-              },
-            ],
-          },
         },
       ),
     ).resolves.toEqual(
       expect.objectContaining({
-        model: 'bytedance-seed/seed-2.0-mini',
-      }),
-    )
-  })
-
-  it('uses a queued approved tool model override before falling back to session entries', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ selectedExternalCategories: [] }),
-      }),
-    )
-
-    registerApprovedToolExecutionModel('bytedance-seed/seed-2.0-mini')
-
-    const authStorage = AuthStorage.inMemory()
-    const harness = createExtensionHarness()
-    createTuringMachineToolSelectionExtension({
-      authStorage,
-      baseUrl: 'https://backend.example.com/turing-machine',
-    })(harness.pi as never)
-
-    const handler = harness.getBeforeProviderRequestHandler()
-    await expect(
-      handler(
-        {
-          payload: {
-            model: 'turing-machine',
-            messages: [],
-            tools: [],
-          },
-        },
-        {
-          getModel: () => ({ provider: 'turing-machine', id: 'turing-machine' }),
-          getAllTools: () => [],
-          sessionManager: {
-            getEntries: () => [],
-          },
-        },
-      ),
-    ).resolves.toEqual(
-      expect.objectContaining({
-        model: 'bytedance-seed/seed-2.0-mini',
+        model: 'turing-machine',
       }),
     )
   })

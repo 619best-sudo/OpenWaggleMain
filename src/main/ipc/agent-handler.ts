@@ -14,11 +14,13 @@ import { agentSendPayloadSchema, toolPermissionResolutionSchema } from '@shared/
 import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionId } from '@shared/types/brand'
 import type { SupportedModelId } from '@shared/types/llm'
-import { TOOL_PERMISSION_CUSTOM_TYPE, type ToolPermissionResolution } from '@shared/types/tool-permission'
 import type { AgentTransportEvent } from '@shared/types/stream'
+import {
+  TOOL_PERMISSION_CUSTOM_TYPE,
+  type ToolPermissionResolution,
+} from '@shared/types/tool-permission'
 import * as Effect from 'effect/Effect'
 import { registerApprovedToolPermission } from '../adapters/pi/tool-permission-request-extension'
-import { registerApprovedToolExecutionModel } from '../adapters/pi/tool-execution-model-state'
 import { getPhaseForSession } from '../agent/phase-tracker'
 import { cleanupSessionRun } from '../agent/session-cleanup'
 import { type AgentRunResult, executeAgentRun } from '../application/agent-run-service'
@@ -88,8 +90,11 @@ function buildToolPermissionResolutionPrompt(resolution: ToolPermissionResolutio
     return [
       'Resume the run from the suspended tool decision.',
       'Do not mention the permission approval to the user.',
-      'If the exact same tool call is still required, run it now using the same arguments without re-explaining the approval.',
-      'Do not ask for permission again for this exact request.',
+      'The user approved the requested action below — proceed with it now by calling the tool.',
+      'Permission has already been granted for this tool, so do not ask again.',
+      // The routed model re-authors the final arguments for mutation tools, so
+      // exact-argument fidelity here is not required for correctness; this is
+      // context for which action was approved, not the source of truth.
       '',
       requestJson,
     ].join('\n')
@@ -201,38 +206,6 @@ function registerAgentRunHandlers() {
     'agent:resolve-tool-permission',
     (_event, sessionId: SessionId, resolution: ToolPermissionResolution, model: SupportedModelId) =>
       Effect.gen(function* () {
-        // #region debug-point A:ipc-handler-entry
-        ;(() => {
-          const fallbackUrl = 'http://127.0.0.1:7779/event'
-          const fallbackSession = 'tool-model-routing'
-          let debugServerUrl = fallbackUrl
-          let debugSessionId = fallbackSession
-          try {
-            const fs = require('node:fs')
-            const env = fs.readFileSync('.dbg/tool-model-routing.env', 'utf8') as string
-            debugServerUrl = env.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? fallbackUrl
-            debugSessionId = env.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? fallbackSession
-          } catch {}
-          void fetch(debugServerUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              sessionId: debugSessionId,
-              runId: 'pre-fix',
-              hypothesisId: 'A',
-              location: 'agent-handler.ts:resolve-tool-permission',
-              msg: '[DEBUG] Main process entered resolve-tool-permission handler',
-              data: {
-                sessionId,
-                resolutionModel: resolution.request?.model ?? null,
-                decision: resolution.decision,
-                activeModel: model,
-              },
-              ts: Date.now(),
-            }),
-          }).catch(() => {})
-        })()
-        // #endregion
         const validatedResolution = decodeUnknownOrThrow(toolPermissionResolutionSchema, resolution)
 
         if (cancelSessionRuns(sessionId)) {
@@ -240,44 +213,11 @@ function registerAgentRunHandlers() {
         }
 
         if (validatedResolution.decision === 'approved') {
+          // Record the approval so the resumed run's re-proposal of this tool is
+          // not re-prompted. Model routing is applied per tool call by the runtime
+          // (routed authoring), so no model override is registered here.
           registerApprovedToolPermission(validatedResolution.request)
-          if (validatedResolution.request.model) {
-            registerApprovedToolExecutionModel(validatedResolution.request.model)
-          }
         }
-        // #region debug-point A:permission-resolution-resume
-        ;(() => {
-          const fallbackUrl = 'http://127.0.0.1:7779/event'
-          const fallbackSession = 'tool-model-routing'
-          let debugServerUrl = fallbackUrl
-          let debugSessionId = fallbackSession
-          try {
-            const fs = require('node:fs')
-            const env = fs.readFileSync('.dbg/tool-model-routing.env', 'utf8') as string
-            debugServerUrl = env.match(/DEBUG_SERVER_URL=(.+)/)?.[1] ?? fallbackUrl
-            debugSessionId = env.match(/DEBUG_SESSION_ID=(.+)/)?.[1] ?? fallbackSession
-          } catch {}
-          void fetch(debugServerUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              sessionId: debugSessionId,
-              runId: 'pre-fix',
-              hypothesisId: 'A',
-              location: 'agent-handler.ts',
-              msg: '[DEBUG] Tool permission resolution resumed agent run',
-              data: {
-                sessionId,
-                decision: validatedResolution.decision,
-                requestedToolName: validatedResolution.request.toolName,
-                requestedModel: validatedResolution.request.model ?? null,
-                activeRunModel: model,
-              },
-              ts: Date.now(),
-            }),
-          }).catch(() => {})
-        })()
-        // #endregion
 
         const abortController = new AbortController()
         const runId = randomUUID()

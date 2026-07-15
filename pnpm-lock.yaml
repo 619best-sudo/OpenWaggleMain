@@ -19,7 +19,7 @@ overrides:
 
 patchedDependencies:
   '@mariozechner/pi-agent-core@0.70.2':
-    hash: d7ba362823d222d8d978363b9f841f2c8a7ba859994e9ffee6e0890edc0ae1cb
+    hash: 6dd8c3c1c948bbe172d5ee3886665068926b88012b7fba3efc1695a221ab2525
     path: patches/@mariozechner__pi-agent-core@0.70.2.patch
   '@mariozechner/pi-coding-agent@0.70.2':
     hash: 89c67e7a7d1059bc226f24974ddac3b02d42eab9ab807a1b19785ccfbac61f5c
@@ -9194,7 +9194,7 @@ snapshots:
       std-env: 3.10.0
       yoctocolors: 2.1.2
 
-  '@mariozechner/pi-agent-core@0.70.2(patch_hash=d7ba362823d222d8d978363b9f841f2c8a7ba859994e9ffee6e0890edc0ae1cb)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)':
+  '@mariozechner/pi-agent-core@0.70.2(patch_hash=6dd8c3c1c948bbe172d5ee3886665068926b88012b7fba3efc1695a221ab2525)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)':
     dependencies:
       '@mariozechner/pi-ai': 0.70.2(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
       typebox: 1.1.33
@@ -9232,7 +9232,7 @@ snapshots:
   '@mariozechner/pi-coding-agent@0.70.2(patch_hash=89c67e7a7d1059bc226f24974ddac3b02d42eab9ab807a1b19785ccfbac61f5c)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)':
     dependencies:
       '@mariozechner/jiti': 2.6.5
-      '@mariozechner/pi-agent-core': 0.70.2(patch_hash=d7ba362823d222d8d978363b9f841f2c8a7ba859994e9ffee6e0890edc0ae1cb)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+      '@mariozechner/pi-agent-core': 0.70.2(patch_hash=6dd8c3c1c948bbe172d5ee3886665068926b88012b7fba3efc1695a221ab2525)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
       '@mariozechner/pi-ai': 0.70.2(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
       '@mariozechner/pi-tui': 0.70.2
       '@silvia-odwyer/photon-node': 0.3.4
