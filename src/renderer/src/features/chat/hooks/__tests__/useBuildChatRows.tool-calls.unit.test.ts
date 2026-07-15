@@ -55,6 +55,74 @@ describe('buildChatRows tool-call rendering', () => {
     ])
   })
 
+  it('replaces a persisted permission-request placeholder once the real tool result arrives later', () => {
+    const messages = [
+      createUserMessage('user-1', 'run command'),
+      {
+        id: 'assistant-1',
+        role: 'assistant',
+        parts: [
+          {
+            type: 'tool-call',
+            id: 'tool-a',
+            name: 'bash',
+            arguments: '{"command":"ls -la"}',
+            state: 'input-complete',
+          },
+        ],
+      },
+      {
+        id: 'tool-result-request',
+        role: 'assistant',
+        parts: [
+          {
+            type: 'tool-result',
+            toolCallId: 'tool-a',
+            content: {
+              content: [{ type: 'text', text: 'Permission required before running bash: ls -la' }],
+              details: {
+                kind: 'tool_permission_request',
+                toolName: 'bash',
+                input: { command: 'ls -la' },
+              },
+            },
+            state: 'complete',
+          },
+        ],
+      },
+      {
+        id: 'assistant-2',
+        role: 'assistant',
+        parts: [{ type: 'text', content: 'Continuing after approval.' }],
+      },
+      {
+        id: 'tool-result-final',
+        role: 'assistant',
+        parts: [
+          {
+            type: 'tool-result',
+            toolCallId: 'tool-a',
+            content: { kind: 'text', text: 'total 8' },
+            state: 'complete',
+          },
+        ],
+      },
+    ]
+
+    const assistantRows = getAssistantMessageRows(messages)
+    expect(assistantRows).toHaveLength(2)
+    expect(assistantRows[0]?.message.parts).toMatchObject([
+      { type: 'tool-call', id: 'tool-a' },
+      {
+        type: 'tool-result',
+        toolCallId: 'tool-a',
+        content: { kind: 'text', text: 'total 8' },
+        sourceMessageId: 'tool-result-final',
+      },
+    ])
+    expect(assistantRows[0]?.message.parts).toHaveLength(2)
+  })
+
   it('keeps repeated tool calls when they belong to different user turns', () => {
     const messages = [
       createUserMessage('user-1', 'run command'),

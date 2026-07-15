@@ -263,4 +263,5 @@ describe('session-details transcript projection', () => {
       { type: 'text', text: 'Compaction summary\n\nCondensed package metadata findings.' },
     ])
   })
+
 })

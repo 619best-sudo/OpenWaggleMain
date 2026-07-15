@@ -2,6 +2,7 @@
 
 import { act } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import { SESSION_RESTORE_RETRY_MS } from '../chat-scroll-cache'
 import {
   createDefaultParams,
   createTestLayout,
@@ -94,5 +95,29 @@ describe('useChatScrollBehaviour auto-scroll behavior', () => {
     expect(layout.getScrollTop()).toBe(500)
     expect(result.current.showScrollToBottom).toBe(false)
     expect(layout.scrollToMock).toHaveBeenCalledWith({ top: 1000, behavior: 'smooth' })
+  })
+
+  it('does not keep forcing bottom scroll when a cached restore target exceeds the current transcript height', () => {
+    localStorage.setItem(
+      'openwaggle:scroll-positions',
+      JSON.stringify([['session-1', 900]]),
+    )
+    const layout = createTestLayout({
+      naturalScrollHeight: 600,
+      clientHeight: 500,
+      scrollTop: 0,
+    })
+    const { result } = renderScrollHook(createDefaultParams(), layout)
+
+    expect(layout.getScrollTop()).toBe(100)
+
+    act(() => {
+      layout.setScrollTop(20)
+      result.current.handleScroll()
+      vi.advanceTimersByTime(SESSION_RESTORE_RETRY_MS * 2)
+    })
+
+    expect(layout.getScrollTop()).toBe(20)
+    expect(result.current.showScrollToBottom).toBe(true)
   })
 })

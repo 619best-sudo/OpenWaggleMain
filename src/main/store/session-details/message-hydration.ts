@@ -3,6 +3,7 @@ import { Schema, type SchemaType, safeDecodeUnknown } from '@shared/schema'
 import { waggleMetadataSchema } from '@shared/schemas/waggle'
 import type { Message } from '@shared/types/agent'
 import { MessageId, SupportedModelId, ToolCallId } from '@shared/types/brand'
+import { TOOL_PERMISSION_CUSTOM_TYPE } from '@shared/types/tool-permission'
 import { isRecord } from '@shared/utils/validation'
 import { createLogger } from '../../logger'
 import { buildPiWorkingContextPath } from '../session-working-context'
@@ -14,6 +15,7 @@ import {
   sessionJsonObjectSchema,
   sessionJsonValueSchema,
 } from './json'
+import { CUSTOM_MESSAGE_ENTRY_TYPE } from '../sessions/constants'
 import type { SessionNodeRow, SessionRow } from './types'
 
 const logger = createLogger('session-details')
@@ -66,6 +68,11 @@ const messageNodeContentSchema = Schema.Struct({
 })
 
 type ParsedPart = SchemaType<typeof messagePartSchema>
+type ApprovedToolPermissionResolution = {
+  readonly originalToolCallId: string
+  readonly toolName: string
+  readonly input: Readonly<Record<string, unknown>>
+}
 
 function transformPart(part: ParsedPart) {
   return matchBy(part, 'type')
@@ -95,6 +102,143 @@ function transformPart(part: ParsedPart) {
       },
     }))
     .exhaustive()
+}
+
+function stableJson(value: unknown): string {
+  if (value === null) {
+    return 'null'
+  }
+  if (typeof value === 'string') {
+    return JSON.stringify(value)
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableJson(entry)).join(',')}]`
+  }
+  if (!isRecord(value)) {
+    return JSON.stringify(String(value))
+  }
+
+  const entries = Object.entries(value).sort(([left], [right]) => left.localeCompare(right))
+  return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${stableJson(entry)}`).join(',')}}`
+}
+
+function buildToolFingerprint(toolName: string, input: Readonly<Record<string, unknown>>) {
+  return `${toolName.trim().toLowerCase()}::${stableJson(input)}`
+}
+
+function readApprovedToolPermissionResolution(
+  row: SessionNodeRow,
+): ApprovedToolPermissionResolution | null {
+  if (row.pi_entry_type !== CUSTOM_MESSAGE_ENTRY_TYPE) {
+    return null
+  }
+
+  const content = parseJsonValue(row.content_json)
+  if (!isRecord(content) || content.customType !== TOOL_PERMISSION_CUSTOM_TYPE) {
+    return null
+  }
+
+  const details = content.details
+  if (
+    !isRecord(details) ||
+    details.kind !== 'tool-permission-resolution' ||
+    details.decision !== 'approved'
+  ) {
+    return null
+  }
+
+  const toolCallId = typeof details.toolCallId === 'string' ? details.toolCallId : null
+  const toolName = typeof details.toolName === 'string' ? details.toolName : null
+  const input = isRecord(details.input) ? details.input : null
+  if (!toolCallId || !toolName || !input) {
+    return null
+  }
+
+  return {
+    originalToolCallId: toolCallId,
+    toolName,
+    input,
+  }
+}
+
+function remapMessageToolReferences(
+  message: Message,
+  toolCallIdMap: ReadonlyMap<string, string>,
+): Message {
+  if (toolCallIdMap.size === 0) {
+    return message
+  }
+
+  let changed = false
+  const parts = message.parts.map((part) => {
+    if (part.type === 'tool-call') {
+      const nextId = toolCallIdMap.get(part.toolCall.id)
+      if (!nextId || nextId === part.toolCall.id) {
+        return part
+      }
+      changed = true
+      return {
+        ...part,
+        toolCall: {
+          ...part.toolCall,
+          id: ToolCallId(nextId),
+        },
+      }
+    }
+
+    if (part.type === 'tool-result') {
+      const nextId = toolCallIdMap.get(part.toolResult.id)
+      if (!nextId || nextId === part.toolResult.id) {
+        return part
+      }
+      changed = true
+      return {
+        ...part,
+        toolResult: {
+          ...part.toolResult,
+          id: ToolCallId(nextId),
+        },
+      }
+    }
+
+    return part
+  })
+
+  return changed ? { ...message, parts } : message
+}
+
+function consumeMatchingApprovedResolution(
+  message: Message,
+  pendingResolutions: ApprovedToolPermissionResolution[],
+) {
+  for (const part of message.parts) {
+    if (part.type !== 'tool-call') {
+      continue
+    }
+
+    const fingerprint = buildToolFingerprint(part.toolCall.name, part.toolCall.args)
+    const matchIndex = pendingResolutions.findIndex(
+      (resolution) => buildToolFingerprint(resolution.toolName, resolution.input) === fingerprint,
+    )
+    if (matchIndex < 0) {
+      continue
+    }
+
+    const [resolution] = pendingResolutions.splice(matchIndex, 1)
+    if (!resolution) {
+      return null
+    }
+
+    return {
+      originalToolCallId: resolution.originalToolCallId,
+      resumedToolCallId: part.toolCall.id,
+    }
+  }
+
+  return null
 }
 
 function hydrateMessageMetadata(raw: string) {
@@ -192,8 +336,16 @@ export function hydrateStructuralSessionMessage(row: SessionNodeRow): Message | 
 
 export function hydrateSessionMessages(nodeRows: readonly SessionNodeRow[]) {
   const messages: Message[] = []
+  const pendingApprovedResolutions: ApprovedToolPermissionResolution[] = []
+  const remappedToolCallIds = new Map<string, string>()
 
   for (const row of nodeRows) {
+    const approvedResolution = readApprovedToolPermissionResolution(row)
+    if (approvedResolution) {
+      pendingApprovedResolutions.push(approvedResolution)
+      continue
+    }
+
     if (row.kind === 'branch_summary' || row.kind === 'compaction_summary') {
       const structuralMessage = hydrateStructuralSessionMessage(row)
       if (structuralMessage) messages.push(structuralMessage)
@@ -201,7 +353,7 @@ export function hydrateSessionMessages(nodeRows: readonly SessionNodeRow[]) {
     }
 
     if (row.kind === TOOL_RESULT_KIND) {
-      messages.push(hydrateSessionMessage(row))
+      messages.push(remapMessageToolReferences(hydrateSessionMessage(row), remappedToolCallIds))
       continue
     }
 
@@ -213,7 +365,22 @@ export function hydrateSessionMessages(nodeRows: readonly SessionNodeRow[]) {
       continue
     }
 
-    if (row.role !== null) messages.push(hydrateSessionMessage(row))
+    if (row.role !== null) {
+      const hydratedMessage = hydrateSessionMessage(row)
+      const matchedResolution = consumeMatchingApprovedResolution(
+        hydratedMessage,
+        pendingApprovedResolutions,
+      )
+      if (matchedResolution) {
+        remappedToolCallIds.set(
+          matchedResolution.resumedToolCallId,
+          matchedResolution.originalToolCallId,
+        )
+        continue
+      }
+
+      messages.push(remapMessageToolReferences(hydratedMessage, remappedToolCallIds))
+    }
   }
 
   return messages

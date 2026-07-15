@@ -26,13 +26,15 @@ function hydrateSessionSummary(row: SessionSummaryRow) {
 
 function hydrateSessionDetail(sessionRow: SessionRow, nodeRows: readonly SessionNodeRow[]) {
   try {
+    const activePathRows = getActivePathRows(sessionRow.last_active_node_id, nodeRows)
+    const messages = hydrateSessionMessages(activePathRows)
     return {
       id: SessionId(sessionRow.id),
       title: sessionRow.title,
       projectPath: sessionRow.project_path,
       piSessionId: sessionRow.pi_session_id,
       piSessionFile: sessionRow.pi_session_file ?? undefined,
-      messages: hydrateSessionMessages(getActivePathRows(sessionRow.last_active_node_id, nodeRows)),
+      messages,
       waggleConfig: hydrateWaggleConfig(parseJsonValue(sessionRow.waggle_config_json)),
       archived: sessionRow.archived === 1 ? true : undefined,
       createdAt: sessionRow.created_at,

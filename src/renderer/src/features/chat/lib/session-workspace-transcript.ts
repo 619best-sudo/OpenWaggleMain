@@ -4,15 +4,12 @@ import type { UIMessage } from '@shared/types/chat-ui'
 import { machinePlanSchema, type MachineExecutionState } from '@shared/types/machine'
 import type { SessionWorkspace } from '@shared/types/session'
 import { messagePartToUIParts } from '@/features/chat/lib/useAgentChat.utils'
-import { createRendererLogger } from '@/shared/lib/logger'
 import {
   getUIMessageText,
   isInternalToolHandoffAssistantText,
   isInternalMachinePlannerPromptText,
   isInternalTeamOrchestrationPromptText,
 } from './chat-message-text'
-
-const logger = createRendererLogger('session-workspace-transcript')
 
 function normalizeMachineRequestText(text: string) {
   return text.replace(/\s+/g, ' ').trim()
@@ -138,15 +135,6 @@ function appendLiveTailWhenViewingHeadOrDraftSource(
   }
 
   const tail = liveTailOutsideWorkspacePath(workspaceMessages, messages, lastWorkspaceMessageIndex)
-  logger.debug('Resolved transcript live tail against workspace path', {
-    workspaceMessageCount: workspaceMessages.length,
-    rawMessageCount: messages.length,
-    lastWorkspaceMessageId: workspaceMessages[workspaceMessages.length - 1]?.id ?? null,
-    appendedTail: tail.map((message) => ({
-      id: message.id,
-      role: message.role,
-    })),
-  })
   return tail.length > 0 ? [...workspaceMessages, ...tail] : workspaceMessages
 }
 
@@ -212,20 +200,6 @@ function filterHiddenInternalMachineAndTeamMessages(
 
     return true
   })
-
-  if (filteredMessages.length !== messages.length) {
-    logger.debug('Filtered hidden orchestration prompts from transcript', {
-      removedMessages: messages
-        .filter(
-          (message) =>
-            !filteredMessages.some((filteredMessage) => filteredMessage.id === message.id),
-        )
-        .map((message) => ({
-          id: message.id,
-          role: message.role,
-        })),
-    })
-  }
 
   return filteredMessages
 }
@@ -342,15 +316,5 @@ export function resolveTranscriptMessages({
     machinePlan,
     hadHiddenMachinePlannerPrompt,
   )
-  logger.debug('Resolved transcript messages', {
-    sessionId: String(activeSessionId),
-    rawMessageCount: messages.length,
-    workspaceMessageCount: workspaceMessages.length,
-    lastWorkspaceMessageId: workspaceMessages[workspaceMessages.length - 1]?.id ?? null,
-    transcriptMessages: transcriptMessages.map((message) => ({
-      id: message.id,
-      role: message.role,
-    })),
-  })
   return transcriptMessages
 }

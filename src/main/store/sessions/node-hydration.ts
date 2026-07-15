@@ -3,6 +3,7 @@ import {
   PI_WAGGLE_TURN_CUSTOM_TYPE,
 } from '@openwaggle/pi-waggle/protocol'
 import { SessionBranchId, SessionId, SessionNodeId } from '@shared/types/brand'
+import { TOOL_PERMISSION_CUSTOM_TYPE } from '@shared/types/tool-permission'
 import { isRecord } from '@shared/utils/validation'
 import {
   hydrateSessionMessage,
@@ -13,11 +14,12 @@ import { CUSTOM_MESSAGE_ENTRY_TYPE, MESSAGE_ENTRY_TYPE } from './constants'
 import { parseJson } from './json'
 
 export function buildSessionNodes(nodeRows: readonly SessionNodeRow[]) {
+  const rowById = new Map(nodeRows.map((row) => [row.id, row]))
   const visibleParentById = buildVisibleParentByRowId(nodeRows)
   const visibleDepthById = new Map<string, number>()
 
   return nodeRows
-    .filter((row) => !isHiddenProjectionRow(row))
+    .filter((row) => !isHiddenProjectionRow(row, rowById))
     .map((row) => hydrateSessionNode(row, visibleParentById, visibleDepthById))
 }
 
@@ -30,12 +32,19 @@ export function visibleNodeIdForHead(
   const rowById = new Map(nodeRows.map((row) => [row.id, row]))
   const headRow = rowById.get(headNodeId)
   if (!headRow) return null
-  if (!isHiddenProjectionRow(headRow)) return headNodeId
+  if (!isHiddenProjectionRow(headRow, rowById)) return headNodeId
   return findVisibleParentId(headRow.parent_id, rowById)
 }
 
-function isHiddenProjectionRow(row: SessionNodeRow) {
-  return isHiddenCustomMessageRow(row) || isHiddenCustomStateRow(row)
+function isHiddenProjectionRow(
+  row: SessionNodeRow,
+  rowById: ReadonlyMap<string, SessionNodeRow>,
+) {
+  return (
+    isHiddenCustomMessageRow(row) ||
+    isHiddenCustomStateRow(row) ||
+    isHiddenPermissionResumeAssistantRow(row, rowById)
+  )
 }
 
 function isHiddenCustomMessageRow(row: SessionNodeRow) {
@@ -53,12 +62,58 @@ function isHiddenCustomStateRow(row: SessionNodeRow) {
   return isRecord(content) && content.customType === PI_WAGGLE_MODE_STATE_CUSTOM_TYPE
 }
 
+function isApprovedToolPermissionResolutionRow(row: SessionNodeRow) {
+  if (row.pi_entry_type !== CUSTOM_MESSAGE_ENTRY_TYPE) {
+    return false
+  }
+
+  const content = parseJson(row.content_json, `node:${row.id}:content`)
+  if (!isRecord(content) || content.customType !== TOOL_PERMISSION_CUSTOM_TYPE) {
+    return false
+  }
+
+  const details = content.details
+  return (
+    isRecord(details) &&
+    details.kind === 'tool-permission-resolution' &&
+    details.decision === 'approved'
+  )
+}
+
+function isHiddenPermissionResumeAssistantRow(
+  row: SessionNodeRow,
+  rowById: ReadonlyMap<string, SessionNodeRow>,
+) {
+  if (
+    row.role !== 'assistant' ||
+    (row.pi_entry_type !== MESSAGE_ENTRY_TYPE &&
+      row.kind !== 'assistant_message' &&
+      row.kind !== 'user_message')
+  ) {
+    return false
+  }
+
+  const directParent = row.parent_id ? rowById.get(row.parent_id) : null
+  if (!directParent || !isApprovedToolPermissionResolutionRow(directParent)) {
+    return false
+  }
+
+  try {
+    const message = hydrateSessionMessage(row)
+    const hasToolCall = message.parts.some((part) => part.type === 'tool-call')
+    const hasVisibleText = message.parts.some((part) => part.type === 'text')
+    return hasToolCall && !hasVisibleText
+  } catch {
+    return false
+  }
+}
+
 function buildVisibleParentByRowId(rows: readonly SessionNodeRow[]) {
   const rowById = new Map(rows.map((row) => [row.id, row]))
   const visibleParentById = new Map<string, string | null>()
 
   for (const row of rows) {
-    if (!isHiddenProjectionRow(row)) {
+    if (!isHiddenProjectionRow(row, rowById)) {
       visibleParentById.set(row.id, findVisibleParentId(row.parent_id, rowById))
     }
   }
@@ -73,7 +128,7 @@ function findVisibleParentId(
   while (currentParentId) {
     const parent = rowById.get(currentParentId)
     if (!parent) return null
-    if (!isHiddenProjectionRow(parent)) return currentParentId
+    if (!isHiddenProjectionRow(parent, rowById)) return currentParentId
     currentParentId = parent.parent_id
   }
   return null
@@ -118,10 +173,11 @@ function hydrateSessionNode(
 
 function hydrateNodeMessage(row: SessionNodeRow) {
   if (
-    row.role !== null &&
-    (row.pi_entry_type === MESSAGE_ENTRY_TYPE ||
-      row.kind === 'user_message' ||
-      row.kind === 'assistant_message')
+    row.kind === 'tool_result' ||
+    (row.role !== null &&
+      (row.pi_entry_type === MESSAGE_ENTRY_TYPE ||
+        row.kind === 'user_message' ||
+        row.kind === 'assistant_message'))
   ) {
     return hydrateSessionMessage(row)
   }

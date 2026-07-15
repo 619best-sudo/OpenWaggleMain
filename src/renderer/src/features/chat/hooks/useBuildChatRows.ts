@@ -105,11 +105,11 @@ function canNestToolResultMessage(target: UIMessage, toolResults: readonly ToolR
 }
 
 function appendToolResultParts(target: UIMessage, toolResults: readonly ToolResultPart[]) {
-  const existingResultIds = new Set(
-    target.parts.filter((part) => part.type === 'tool-result').map((part) => part.toolCallId),
+  const incomingResultIds = new Set(toolResults.map((part) => part.toolCallId))
+  const retainedParts = target.parts.filter(
+    (part) => part.type !== 'tool-result' || !incomingResultIds.has(part.toolCallId),
   )
-  const nextResults = toolResults.filter((part) => !existingResultIds.has(part.toolCallId))
-  return nextResults.length > 0 ? { ...target, parts: [...target.parts, ...nextResults] } : target
+  return { ...target, parts: [...retainedParts, ...toolResults] }
 }
 
 function attachToolResultSource(toolResults: readonly ToolResultPart[], sourceMessageId: string) {
@@ -144,21 +144,26 @@ function tryNestToolResultMessage(rows: ChatRow[], message: UIMessage) {
     return false
   }
 
-  const previousRow = rows[rows.length - 1]
   const toolResults = message.parts.filter((part) => part.type === 'tool-result')
   const sourcedToolResults = attachToolResultSource(toolResults, message.id)
-  if (
-    previousRow?.type !== 'message' ||
-    !canNestToolResultMessage(previousRow.message, sourcedToolResults)
-  ) {
-    return false
+
+  for (let index = rows.length - 1; index >= 0; index -= 1) {
+    const candidateRow = rows[index]
+    if (candidateRow?.type !== 'message') {
+      continue
+    }
+    if (!canNestToolResultMessage(candidateRow.message, sourcedToolResults)) {
+      continue
+    }
+
+    rows[index] = {
+      ...candidateRow,
+      message: appendToolResultParts(candidateRow.message, sourcedToolResults),
+    }
+    return true
   }
 
-  rows[rows.length - 1] = {
-    ...previousRow,
-    message: appendToolResultParts(previousRow.message, sourcedToolResults),
-  }
-  return true
+  return false
 }
 
 function createMessageRow({

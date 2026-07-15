@@ -183,7 +183,9 @@ export function useChatScrollBehaviour(
     syncButtonVisibility()
 
     if (!fullyRestored) {
-      return true
+      // Keep the pending target so future content growth can restore it, but do not
+      // loop retries against a shorter transcript and pin the user at the bottom.
+      return false
     }
 
     pendingRestoreScrollTopRef.current = null

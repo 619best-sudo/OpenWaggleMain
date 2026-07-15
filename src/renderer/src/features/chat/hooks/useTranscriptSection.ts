@@ -8,12 +8,9 @@ import { useState } from 'react'
 import type { useStreamingPhase } from '@/features/chat/hooks/useStreamingPhase'
 import { useWaggleMetadataLookup } from '@/features/chat/hooks/useWaggleMetadataLookup'
 import { useSessionStore } from '@/features/sessions/state'
-import { createRendererLogger } from '@/shared/lib/logger'
 import { resolveTranscriptMessages } from '../lib/session-workspace-transcript'
 import type { ChatTranscriptSectionState } from '../model'
 import { useChatRows } from './useChatRows'
-
-const logger = createRendererLogger('use-transcript-section')
 
 function resolveLastUserMessage(messages: UIMessage[]) {
   let lastUserMessage: UIMessage | undefined
@@ -108,15 +105,6 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     machinePlan,
     draftBranchSourceNodeId,
   })
-  logger.debug('Prepared transcript messages before row building', {
-    sessionId: activeSessionId ? String(activeSessionId) : null,
-    rawMessageCount: messages.length,
-    workspaceMessageCount: activeWorkspace?.transcriptPath.length ?? 0,
-    transcriptMessages: transcriptMessages.map((message) => ({
-      id: message.id,
-      role: message.role,
-    })),
-  })
   const waggleMetadataLookup = useWaggleMetadataLookup(activeSession, messages)
 
   const lastUserMessage = resolveLastUserMessage(transcriptMessages)
@@ -139,17 +127,6 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     waggleMetadataLookup,
     phase,
     interruptedRun,
-  })
-  logger.debug('Built transcript rows', {
-    sessionId: activeSessionId ? String(activeSessionId) : null,
-    transcriptMessageCount: transcriptMessages.length,
-    chatRowCount: chatRows.length,
-    renderedMessageRows: chatRows
-      .filter((row) => row.type === 'message')
-      .map((row) => ({
-        id: row.message.id,
-        role: row.message.role,
-      })),
   })
 
   // Compute lastUserMessageId for session-restore identity gating, not send anchoring.
