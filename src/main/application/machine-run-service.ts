@@ -10,11 +10,14 @@ import {
   type MachineExecutionTask,
   type MachinePlan,
   type MachinePlannerTask,
+  type MachineTaskComplexity,
+  type MachineTaskKind,
 } from '@shared/types/machine'
 import { isRecord } from '@shared/utils/validation'
 import { formatErrorMessage } from '@shared/utils/node-error'
 import * as Effect from 'effect/Effect'
 import { createLogger } from '../logger'
+import { enterMachineTaskRoutingContext } from '../adapters/pi/tool-model-route'
 import { MachinePlanFileStore } from '../ports/machine-plan-file-store'
 import { SessionRepository } from '../ports/session-repository'
 import { executeAgentRun, type AgentRunResult } from './agent-run-service'
@@ -149,6 +152,9 @@ function plannerPrompt(goal: string) {
     'Do not explain your reasoning.',
     'Do not include any conversational text.',
     'Do not say what you are about to do.',
+    'Classify every task with "kind" and "complexity" — these drive which model reads and edits files while the task runs:',
+    '- "kind" is one of: "ui" (HTML/CSS/layout/styling/interaction work), "svg" (SVG artwork, illustrations, icons, and vector graphics), or "logic" (JavaScript/TypeScript, backend, data, algorithms, config, tests, and everything non-visual). Choose the single best fit.',
+    '- "complexity" is one of: "low" (small, mechanical, or boilerplate change), "medium" (a typical self-contained task), or "high" (intricate, correctness-critical, or large-surface work). Judge the effort and risk of the individual task, not the whole project.',
     'Use this JSON shape:',
     '{',
     '  "goal": "string",',
@@ -157,7 +163,9 @@ function plannerPrompt(goal: string) {
     '      "id": "task-1",',
     '      "title": "short title",',
     '      "prompt": "the exact instruction to execute next",',
-    '      "dependsOn": ["task ids this task depends on"]',
+    '      "dependsOn": ["task ids this task depends on"],',
+    '      "kind": "ui | svg | logic",',
+    '      "complexity": "low | medium | high"',
     '    }',
     '  ]',
     '}',
@@ -165,6 +173,7 @@ function plannerPrompt(goal: string) {
     '- Keep tasks sequential, dependency-aware, and implementation-focused.',
     '- Favor the smallest atomic tasks: one artifact or one behavior each; never combine several elements or behaviors in one task.',
     '- Every task prompt must be rich, concrete, and standalone — ready to send directly to the coding agent and detailed enough to produce simple, clean, presentation-ready output.',
+    '- Every task must include an accurate "kind" (ui, svg, or logic) and "complexity" (low, medium, or high).',
     '- Reflect the shared memory and orchestration context in the task prompts when it matters for correctness.',
     '- Include acceptance intent and validation expectations inside task prompts whenever that improves execution quality.',
     '- Do not include markdown fences.',
@@ -359,7 +368,13 @@ export function parseMachinePlan(text: string): MachinePlan {
       throw new Error(`Task ${String(index + 1)} is missing id, title, or prompt.`)
     }
 
-    return { id, title, prompt, dependsOn }
+    // `kind`/`complexity` drive model routing but must never fail a plan: the
+    // schema validates any provided value, and we fall back to safe defaults when
+    // the planner omits them.
+    const kind: MachineTaskKind = task.kind ?? 'logic'
+    const complexity: MachineTaskComplexity = task.complexity ?? 'medium'
+
+    return { id, title, prompt, dependsOn, kind, complexity }
   })
 
   if (tasks.length === 0) {
@@ -468,6 +483,8 @@ function createAwaitingApprovalState(
       title: task.title,
       prompt: task.prompt,
       dependsOn: task.dependsOn,
+      kind: task.kind,
+      complexity: task.complexity,
       status: 'pending',
       messageIds: [],
     })),
@@ -641,20 +658,34 @@ function runTask(
     taskId: task.id,
     title: task.title,
   })
-  return executeAgentRun({
-    sessionId: input.sessionId,
-    runId: `${input.runId}:${task.id}`,
-    payload: {
-      text: machineTaskExecutionPrompt(task, plan.goal),
-      thinkingLevel,
-      attachments: [],
-    },
-    model,
-    runMode: 'machine',
-    promptDelivery: hiddenPromptDelivery(task),
-    signal: input.signal,
-    onEvent: input.onEvent,
-  })
+  // Establish per-task tool→model routing (kind + complexity) for the duration of
+  // this task's run, then clear it. `resolveToolRoute` reads this context when the
+  // routed read/mutation models are chosen. `kind`/`complexity` may be absent on
+  // plans persisted before these fields existed, so fall back to safe defaults.
+  return Effect.acquireUseRelease(
+    Effect.sync(() =>
+      enterMachineTaskRoutingContext({
+        kind: task.kind ?? 'logic',
+        complexity: task.complexity ?? 'medium',
+      }),
+    ),
+    () =>
+      executeAgentRun({
+        sessionId: input.sessionId,
+        runId: `${input.runId}:${task.id}`,
+        payload: {
+          text: machineTaskExecutionPrompt(task, plan.goal),
+          thinkingLevel,
+          attachments: [],
+        },
+        model,
+        runMode: 'machine',
+        promptDelivery: hiddenPromptDelivery(task),
+        signal: input.signal,
+        onEvent: input.onEvent,
+      }),
+    () => Effect.sync(() => enterMachineTaskRoutingContext(null)),
+  )
 }
 
 export function executeMachineRun(input: ExecuteMachineRunInput) {

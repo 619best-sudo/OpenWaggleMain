@@ -95,14 +95,6 @@ export function MachineTimelineBubble({
                     <td className="border border-border px-3 py-3 align-top">
                       <div className="min-w-0">
                         <div className="font-medium text-text-primary">{task.title}</div>
-                        <div className="mt-1 text-[12px] leading-5 text-text-secondary">
-                          {task.prompt}
-                        </div>
-                        {task.dependsOn && task.dependsOn.length > 0 ? (
-                          <div className="mt-2 text-[11px] text-text-tertiary">
-                            Depends on: {task.dependsOn.join(', ')}
-                          </div>
-                        ) : null}
                         {task.lastError ? (
                           <div className="mt-2 text-[12px] text-red-400">{task.lastError}</div>
                         ) : null}

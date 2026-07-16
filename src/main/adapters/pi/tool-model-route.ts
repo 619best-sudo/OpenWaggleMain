@@ -31,12 +31,89 @@
  * route through `resolveToolRoute`, so the registry is the single source of truth.
  */
 
+import type { MachineTaskComplexity, MachineTaskKind } from '@shared/types/machine'
+
 const DEFAULT_TOOL_EXECUTION_MODEL = 'poolside/laguna-xs-2.1'
 const READ_TOOL_EXECUTION_MODEL = 'bytedance-seed/seed-2.0-mini'
 const CODE_EDITING_TOOL_EXECUTION_MODEL = 'tencent/hy3'
 
 const READ_TOOL_NAMES = new Set(['read'])
 const CODE_EDITING_TOOL_NAMES = new Set(['edit', 'write', 'patch', 'multiedit'])
+
+/**
+ * Per-machine-task routing input: what the currently executing plan task is doing
+ * (`kind`) and how demanding it is (`complexity`). Machine mode establishes this
+ * around each task run (see `machine-run-service`), and the read/mutation model is
+ * chosen from `MACHINE_TASK_MODEL_MATRIX` accordingly. Outside a machine task (or
+ * for old plans without these fields) the context is absent and routing falls back
+ * to the flat defaults above.
+ */
+export interface MachineTaskRoutingContext {
+  readonly kind: MachineTaskKind
+  readonly complexity: MachineTaskComplexity
+}
+
+/** A matrix cell: which model reads files and which authors mutations. */
+interface MachineTaskModelCell {
+  readonly read: string
+  readonly mutation: string
+}
+
+/**
+ * Full kind × complexity → { read, mutation } routing matrix. Every cell is an
+ * explicit, independently tunable choice.
+ *
+ * NOTE: only three tool-execution models are currently wired end-to-end
+ * (`READ_TOOL_EXECUTION_MODEL`, `CODE_EDITING_TOOL_EXECUTION_MODEL`,
+ * `DEFAULT_TOOL_EXECUTION_MODEL`), so several cells intentionally reuse them. The
+ * assignments below are sensible defaults — complexity acts as the capability dial
+ * and kind as the specialty tiebreaker. Swap any cell's model id for a
+ * purpose-built one without touching the routing logic.
+ */
+const MACHINE_TASK_MODEL_MATRIX: Record<
+  MachineTaskKind,
+  Record<MachineTaskComplexity, MachineTaskModelCell>
+> = {
+  ui: {
+    low: { read: READ_TOOL_EXECUTION_MODEL, mutation: DEFAULT_TOOL_EXECUTION_MODEL },
+    medium: { read: READ_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
+    high: { read: DEFAULT_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
+  },
+  svg: {
+    low: { read: READ_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
+    medium: { read: READ_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
+    high: { read: READ_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
+  },
+  logic: {
+    low: { read: READ_TOOL_EXECUTION_MODEL, mutation: DEFAULT_TOOL_EXECUTION_MODEL },
+    medium: { read: DEFAULT_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
+    high: { read: DEFAULT_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
+  },
+}
+
+/**
+ * The routing context for the machine task currently executing, or null. Set
+ * around each task run by `machine-run-service` (which resets it deterministically
+ * in a release step) and read synchronously by `resolveToolRoute` when the pi
+ * runtime resolves a tool's model.
+ *
+ * This is intentionally process-global, matching the existing flat routing (the
+ * per-category model constants are global too). Machine mode runs tasks strictly
+ * one at a time, so within a run there is a single active context. Two machine
+ * runs executing concurrently in the same process would share this slot — no worse
+ * than today's shared routing, and each task overwrites it on entry.
+ */
+let activeMachineTaskRoutingContext: MachineTaskRoutingContext | null = null
+
+/** Set (or, with `null`, clear) the active machine-task routing context. */
+export function enterMachineTaskRoutingContext(context: MachineTaskRoutingContext | null) {
+  activeMachineTaskRoutingContext = context
+}
+
+/** The active machine-task routing context, or null when none is set. */
+export function getActiveMachineTaskRoutingContext(): MachineTaskRoutingContext | null {
+  return activeMachineTaskRoutingContext
+}
 
 export interface ToolExecutionRoute {
   /** The model responsible for this tool. */
@@ -80,18 +157,30 @@ export function isCodeEditingTool(toolName: string) {
 /**
  * Resolve the full routing decision for a tool. First match wins.
  *
- * - Read tools: the orchestrator executes the read; seed reasons over the result
- *   (`reasonOverResult`). No argument re-authoring (the path is trivial).
+ * - Read tools: the orchestrator executes the read; the routed model reasons over
+ *   the result (`reasonOverResult`). No argument re-authoring (the path is trivial).
  * - Mutation tools: the routed model authors the final arguments
  *   (`authorFinalArgs`) — correctness-critical, the routed model owns the payload.
  * - Everything else: a model assignment with no routed phase. Flip a flag to opt
  *   a route into a routed phase.
+ *
+ * The read/mutation *model* depends on the active machine-task routing context
+ * (`kind` + `complexity`) when one is set — resolved through the
+ * `MACHINE_TASK_MODEL_MATRIX`. With no context (non-machine runs, or legacy plans
+ * missing the fields) it falls back to the flat per-category defaults. Pass an
+ * explicit `context` to resolve deterministically (tests); otherwise the ambient
+ * async-local context is used.
  */
-export function resolveToolRoute(toolName: string): ToolExecutionRoute {
+export function resolveToolRoute(
+  toolName: string,
+  context: MachineTaskRoutingContext | null = getActiveMachineTaskRoutingContext(),
+): ToolExecutionRoute {
+  const cell = context ? MACHINE_TASK_MODEL_MATRIX[context.kind][context.complexity] : null
+
   if (isReadTool(toolName)) {
     return {
       id: 'read',
-      model: READ_TOOL_EXECUTION_MODEL,
+      model: cell?.read ?? READ_TOOL_EXECUTION_MODEL,
       authorFinalArgs: false,
       reasonOverResult: true,
     }
@@ -100,7 +189,7 @@ export function resolveToolRoute(toolName: string): ToolExecutionRoute {
   if (isCodeEditingTool(toolName)) {
     return {
       id: 'editing',
-      model: CODE_EDITING_TOOL_EXECUTION_MODEL,
+      model: cell?.mutation ?? CODE_EDITING_TOOL_EXECUTION_MODEL,
       authorFinalArgs: true,
       reasonOverResult: false,
     }

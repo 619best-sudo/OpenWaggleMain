@@ -1,7 +1,6 @@
 import type { ExtensionFactory } from '@mariozechner/pi-coding-agent'
 import type { ToolPermissionMode } from '@shared/types/settings'
 import type { ToolPermissionRequestEnvelope } from '@shared/types/tool-permission'
-import { registerEarlyToolAuthoringBridge } from './early-tool-authoring-bridge'
 import { isCodeEditingTool, normalizeToolName, resolveToolRoute } from './tool-model-route'
 
 type JsonRecord = Record<string, unknown>
@@ -209,9 +208,15 @@ export function createToolPermissionRequestExtension(
   options: ToolPermissionRequestOptions = {},
 ): ExtensionFactory {
   const guardedToolNames = normalizeToolNames(options.toolNames)
-  // Expose the early-authoring plan to the runtime so it can interrupt the
-  // orchestrator before a routed mutation generates its whole payload.
-  registerEarlyToolAuthoringBridge()
+  // NOTE: the early-authoring bridge (registerEarlyToolAuthoringBridge) is
+  // intentionally NOT installed. Cutting the orchestrator stream as soon as a
+  // mutation tool's path appears discards the payload the orchestrator was about
+  // to author, leaving only intent args (e.g. `{ path }`). Correctness then
+  // depends entirely on the routed model re-authoring a valid payload; when that
+  // routing is unreliable, the promised fallback degrades to unusable intent-only
+  // args and every edit/write fails to apply. Leaving the bridge unregistered
+  // keeps the orchestrator as the author of a valid payload (strict validation),
+  // with routed authoring still available downstream and a real fallback.
 
   return (pi) => {
     ;(pi.on as (event: 'tool_call', handler: ToolCallHandler) => void)(

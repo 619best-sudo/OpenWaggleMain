@@ -2,11 +2,23 @@ import { Schema, type SchemaType } from '@shared/schema'
 import type { SupportedModelId } from './llm'
 import { THINKING_LEVELS } from './settings'
 
+/**
+ * What kind of work a task performs. Together with `complexity` this drives
+ * per-task tool→model routing (which model reads and mutates files while the task
+ * executes). See `resolveToolRoute` in the pi tool-model-route adapter.
+ */
+export const machineTaskKindSchema = Schema.Literal('ui', 'svg', 'logic')
+
+/** How demanding a task is; the second input to per-task model routing. */
+export const machineTaskComplexitySchema = Schema.Literal('low', 'medium', 'high')
+
 export const machinePlannerTaskSchema = Schema.Struct({
   id: Schema.String.pipe(Schema.minLength(1)),
   title: Schema.String.pipe(Schema.minLength(1)),
   prompt: Schema.String.pipe(Schema.minLength(1)),
   dependsOn: Schema.optional(Schema.Array(Schema.String)),
+  kind: Schema.optional(machineTaskKindSchema),
+  complexity: Schema.optional(machineTaskComplexitySchema),
 })
 
 export const machinePlanSchema = Schema.Struct({
@@ -28,6 +40,8 @@ export const machineExecutionTaskSchema = Schema.Struct({
   title: Schema.String.pipe(Schema.minLength(1)),
   prompt: Schema.String.pipe(Schema.minLength(1)),
   dependsOn: Schema.optional(Schema.Array(Schema.String)),
+  kind: Schema.optional(machineTaskKindSchema),
+  complexity: Schema.optional(machineTaskComplexitySchema),
   status: machineTaskStatusSchema,
   /**
    * Convenience mirror of `status === 'completed'`. Kept in sync whenever the
@@ -54,6 +68,8 @@ export const machineExecutionStateSchema = Schema.Struct({
   lastError: Schema.optional(Schema.String.pipe(Schema.minLength(1))),
 })
 
+export type MachineTaskKind = SchemaType<typeof machineTaskKindSchema>
+export type MachineTaskComplexity = SchemaType<typeof machineTaskComplexitySchema>
 export type MachinePlannerTask = SchemaType<typeof machinePlannerTaskSchema>
 export type MachinePlan = SchemaType<typeof machinePlanSchema>
 export type MachineTaskStatus = SchemaType<typeof machineTaskStatusSchema>

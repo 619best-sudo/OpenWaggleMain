@@ -44,9 +44,28 @@ Let me know if you want a more detailed breakdown.`),
           title: 'Create the main component',
           prompt: 'Implement the main feature component and wire it into the page.',
           dependsOn: [],
+          kind: 'logic',
+          complexity: 'medium',
         },
       ],
     })
+  })
+
+  it('carries planner-provided kind and complexity through', () => {
+    const plan = parseMachinePlan(`{
+  "goal": "Draw the sun",
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Add the sun SVG",
+      "prompt": "Add a richly shaded sun as an SVG.",
+      "dependsOn": [],
+      "kind": "svg",
+      "complexity": "high"
+    }
+  ]
+}`)
+    expect(plan.tasks[0]).toMatchObject({ kind: 'svg', complexity: 'high' })
   })
 
   it('recognizes internal tool handoff assistant payloads', () => {

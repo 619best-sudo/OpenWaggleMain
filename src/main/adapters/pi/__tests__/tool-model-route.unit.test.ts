@@ -1,5 +1,8 @@
+import * as Effect from 'effect/Effect'
 import { describe, expect, it } from 'vitest'
 import {
+  enterMachineTaskRoutingContext,
+  getActiveMachineTaskRoutingContext,
   isCodeEditingTool,
   isReadTool,
   resolveEarlyToolAuthoringPlan,
@@ -55,6 +58,52 @@ describe('resolveToolRoute', () => {
     for (const toolName of ['read', 'edit', 'bash']) {
       expect(resolveToolExecutionModel(toolName)).toBe(resolveToolRoute(toolName).model)
     }
+  })
+
+  it('selects read/mutation models from the kind × complexity matrix when a task context is given', () => {
+    const logicHigh = { kind: 'logic', complexity: 'high' } as const
+    expect(resolveToolRoute('read', logicHigh).model).toBe('poolside/laguna-xs-2.1')
+    expect(resolveToolRoute('edit', logicHigh).model).toBe('tencent/hy3')
+
+    const uiLow = { kind: 'ui', complexity: 'low' } as const
+    // A low-complexity UI mutation is cheap enough for the default model.
+    expect(resolveToolRoute('write', uiLow).model).toBe('poolside/laguna-xs-2.1')
+
+    // The routed phase flags are unaffected by the context.
+    expect(resolveToolRoute('edit', uiLow).authorFinalArgs).toBe(true)
+    expect(resolveToolRoute('read', uiLow).reasonOverResult).toBe(true)
+  })
+
+  it('leaves non-read/mutation tools on the default model regardless of task context', () => {
+    expect(resolveToolRoute('bash', { kind: 'ui', complexity: 'high' }).model).toBe(
+      'poolside/laguna-xs-2.1',
+    )
+  })
+})
+
+describe('machine-task routing context', () => {
+  it('propagates the context through an Effect run across await boundaries, then clears it', async () => {
+    // Mirrors how machine-run-service establishes routing around a task: enter the
+    // context in `acquire`, resolve a model deep inside an awaited continuation
+    // (as the pi runtime does when a tool call fires), and clear it in `release`.
+    const model = await Effect.runPromise(
+      Effect.acquireUseRelease(
+        Effect.sync(() => enterMachineTaskRoutingContext({ kind: 'logic', complexity: 'high' })),
+        () =>
+          Effect.promise(async () => {
+            await Promise.resolve()
+            return resolveToolRoute('read').model
+          }),
+        () => Effect.sync(() => enterMachineTaskRoutingContext(null)),
+      ),
+    )
+
+    // logic/high reads route to the default (more capable) model per the matrix —
+    // distinct from the flat read fallback, so this proves the context propagated.
+    expect(model).toBe('poolside/laguna-xs-2.1')
+    // Context is cleared after the run, so routing falls back to the flat defaults.
+    expect(getActiveMachineTaskRoutingContext()).toBeNull()
+    expect(resolveToolRoute('write').model).toBe('tencent/hy3')
   })
 })
 
