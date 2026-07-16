@@ -22,7 +22,7 @@ patchedDependencies:
     hash: beb44018dbf164b24212f4f8a3a6ba8752088a9634772bd8a42224ce0e6b6681
     path: patches/@mariozechner__pi-agent-core@0.70.2.patch
   '@mariozechner/pi-coding-agent@0.70.2':
-    hash: 89c67e7a7d1059bc226f24974ddac3b02d42eab9ab807a1b19785ccfbac61f5c
+    hash: 73f709622a973e49483b0cb8aefd7e4c42a39b38be1d5b703f5a79b68fbda02a
     path: patches/@mariozechner__pi-coding-agent@0.70.2.patch
 
 importers:
@@ -46,7 +46,7 @@ importers:
         version: 1.87.0
       '@mariozechner/pi-coding-agent':
         specifier: 0.70.2
-        version: 0.70.2(patch_hash=89c67e7a7d1059bc226f24974ddac3b02d42eab9ab807a1b19785ccfbac61f5c)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+        version: 0.70.2(patch_hash=73f709622a973e49483b0cb8aefd7e4c42a39b38be1d5b703f5a79b68fbda02a)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
       '@openwaggle/pi-waggle':
         specifier: workspace:*
         version: link:packages/pi-waggle
@@ -290,7 +290,7 @@ importers:
     dependencies:
       '@mariozechner/pi-coding-agent':
         specifier: '*'
-        version: 0.70.2(patch_hash=89c67e7a7d1059bc226f24974ddac3b02d42eab9ab807a1b19785ccfbac61f5c)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
+        version: 0.70.2(patch_hash=73f709622a973e49483b0cb8aefd7e4c42a39b38be1d5b703f5a79b68fbda02a)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)
       '@mariozechner/pi-tui':
         specifier: '*'
         version: 0.70.2
@@ -9229,7 +9229,7 @@ snapshots:
       - ws
       - zod
 
-  '@mariozechner/pi-coding-agent@0.70.2(patch_hash=89c67e7a7d1059bc226f24974ddac3b02d42eab9ab807a1b19785ccfbac61f5c)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)':
+  '@mariozechner/pi-coding-agent@0.70.2(patch_hash=73f709622a973e49483b0cb8aefd7e4c42a39b38be1d5b703f5a79b68fbda02a)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)':
     dependencies:
       '@mariozechner/jiti': 2.6.5
       '@mariozechner/pi-agent-core': 0.70.2(patch_hash=beb44018dbf164b24212f4f8a3a6ba8752088a9634772bd8a42224ce0e6b6681)(@modelcontextprotocol/sdk@1.27.1(zod@4.3.6))(ws@8.19.0)(zod@4.3.6)

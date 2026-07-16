@@ -60,18 +60,31 @@ describe('resolveToolRoute', () => {
     }
   })
 
-  it('selects read/mutation models from the kind × complexity matrix when a task context is given', () => {
+  it('selects the READ model from the kind × complexity matrix when a task context is given', () => {
     const logicHigh = { kind: 'logic', complexity: 'high' } as const
     expect(resolveToolRoute('read', logicHigh).model).toBe('poolside/laguna-xs-2.1')
-    expect(resolveToolRoute('edit', logicHigh).model).toBe('tencent/hy3')
 
-    const uiLow = { kind: 'ui', complexity: 'low' } as const
-    // A low-complexity UI mutation is cheap enough for the default model.
-    expect(resolveToolRoute('write', uiLow).model).toBe('poolside/laguna-xs-2.1')
+    const uiMedium = { kind: 'ui', complexity: 'medium' } as const
+    expect(resolveToolRoute('read', uiMedium).model).toBe('bytedance-seed/seed-2.0-mini')
 
     // The routed phase flags are unaffected by the context.
-    expect(resolveToolRoute('edit', uiLow).authorFinalArgs).toBe(true)
-    expect(resolveToolRoute('read', uiLow).reasonOverResult).toBe(true)
+    expect(resolveToolRoute('read', uiMedium).reasonOverResult).toBe(true)
+  })
+
+  it('always routes mutations to the proven edit-author model, regardless of task context', () => {
+    // Weaker task models produced malformed edit payloads; the mutation model is
+    // fixed so editing never breaks when the task model is switched.
+    for (const ctx of [
+      { kind: 'ui', complexity: 'low' },
+      { kind: 'logic', complexity: 'low' },
+      { kind: 'svg', complexity: 'high' },
+    ] as const) {
+      for (const toolName of ['edit', 'write', 'multiedit', 'patch']) {
+        const route = resolveToolRoute(toolName, ctx)
+        expect(route.model).toBe('tencent/hy3')
+        expect(route.authorFinalArgs).toBe(true)
+      }
+    }
   })
 
   it('leaves non-read/mutation tools on the default model regardless of task context', () => {

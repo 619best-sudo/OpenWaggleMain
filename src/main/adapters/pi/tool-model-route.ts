@@ -43,51 +43,48 @@ const CODE_EDITING_TOOL_NAMES = new Set(['edit', 'write', 'patch', 'multiedit'])
 /**
  * Per-machine-task routing input: what the currently executing plan task is doing
  * (`kind`) and how demanding it is (`complexity`). Machine mode establishes this
- * around each task run (see `machine-run-service`), and the read/mutation model is
- * chosen from `MACHINE_TASK_MODEL_MATRIX` accordingly. Outside a machine task (or
- * for old plans without these fields) the context is absent and routing falls back
- * to the flat defaults above.
+ * around each task run (see `machine-run-service`), and the read model is chosen
+ * from `MACHINE_TASK_READ_MODEL_MATRIX` accordingly. Outside a machine task (or for
+ * old plans without these fields) the context is absent and routing falls back to
+ * the flat defaults above.
  */
 export interface MachineTaskRoutingContext {
   readonly kind: MachineTaskKind
   readonly complexity: MachineTaskComplexity
 }
 
-/** A matrix cell: which model reads files and which authors mutations. */
-interface MachineTaskModelCell {
-  readonly read: string
-  readonly mutation: string
-}
-
 /**
- * Full kind × complexity → { read, mutation } routing matrix. Every cell is an
- * explicit, independently tunable choice.
+ * kind × complexity → read model. Only reads vary by task: complexity acts as the
+ * capability dial and kind as the specialty tiebreaker.
  *
- * NOTE: only three tool-execution models are currently wired end-to-end
- * (`READ_TOOL_EXECUTION_MODEL`, `CODE_EDITING_TOOL_EXECUTION_MODEL`,
- * `DEFAULT_TOOL_EXECUTION_MODEL`), so several cells intentionally reuse them. The
- * assignments below are sensible defaults — complexity acts as the capability dial
- * and kind as the specialty tiebreaker. Swap any cell's model id for a
- * purpose-built one without touching the routing logic.
+ * Mutations (edit/write/patch) are intentionally NOT part of this matrix — they
+ * always route to `CODE_EDITING_TOOL_EXECUTION_MODEL`, the one model proven to
+ * author correct, schema-valid edit payloads. Routing mutations to a weaker model
+ * caused malformed `edits` (e.g. `edits.0: must be object`) and failed applies, so
+ * the editor is fixed regardless of task. Widen this to a per-cell mutation model
+ * again only once every candidate model reliably authors edit arguments.
+ *
+ * NOTE: only three tool-execution models are wired end-to-end today, so several
+ * cells reuse them; swap any cell's model id without touching the routing logic.
  */
-const MACHINE_TASK_MODEL_MATRIX: Record<
+const MACHINE_TASK_READ_MODEL_MATRIX: Record<
   MachineTaskKind,
-  Record<MachineTaskComplexity, MachineTaskModelCell>
+  Record<MachineTaskComplexity, string>
 > = {
   ui: {
-    low: { read: READ_TOOL_EXECUTION_MODEL, mutation: DEFAULT_TOOL_EXECUTION_MODEL },
-    medium: { read: READ_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
-    high: { read: DEFAULT_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
+    low: READ_TOOL_EXECUTION_MODEL,
+    medium: READ_TOOL_EXECUTION_MODEL,
+    high: DEFAULT_TOOL_EXECUTION_MODEL,
   },
   svg: {
-    low: { read: READ_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
-    medium: { read: READ_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
-    high: { read: READ_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
+    low: READ_TOOL_EXECUTION_MODEL,
+    medium: READ_TOOL_EXECUTION_MODEL,
+    high: READ_TOOL_EXECUTION_MODEL,
   },
   logic: {
-    low: { read: READ_TOOL_EXECUTION_MODEL, mutation: DEFAULT_TOOL_EXECUTION_MODEL },
-    medium: { read: DEFAULT_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
-    high: { read: DEFAULT_TOOL_EXECUTION_MODEL, mutation: CODE_EDITING_TOOL_EXECUTION_MODEL },
+    low: READ_TOOL_EXECUTION_MODEL,
+    medium: DEFAULT_TOOL_EXECUTION_MODEL,
+    high: DEFAULT_TOOL_EXECUTION_MODEL,
   },
 }
 
@@ -164,23 +161,26 @@ export function isCodeEditingTool(toolName: string) {
  * - Everything else: a model assignment with no routed phase. Flip a flag to opt
  *   a route into a routed phase.
  *
- * The read/mutation *model* depends on the active machine-task routing context
- * (`kind` + `complexity`) when one is set — resolved through the
- * `MACHINE_TASK_MODEL_MATRIX`. With no context (non-machine runs, or legacy plans
- * missing the fields) it falls back to the flat per-category defaults. Pass an
- * explicit `context` to resolve deterministically (tests); otherwise the ambient
- * async-local context is used.
+ * The *read* model depends on the active machine-task routing context (`kind` +
+ * `complexity`) when one is set — resolved through `MACHINE_TASK_READ_MODEL_MATRIX`.
+ * The *mutation* model is always `CODE_EDITING_TOOL_EXECUTION_MODEL` (the proven
+ * edit-author) — it never varies by task, so a weaker task model can't produce
+ * malformed edit payloads. With no context (non-machine runs, or legacy plans
+ * missing the fields) reads fall back to the flat default. Pass an explicit
+ * `context` to resolve deterministically (tests); otherwise the ambient context
+ * is used.
  */
 export function resolveToolRoute(
   toolName: string,
   context: MachineTaskRoutingContext | null = getActiveMachineTaskRoutingContext(),
 ): ToolExecutionRoute {
-  const cell = context ? MACHINE_TASK_MODEL_MATRIX[context.kind][context.complexity] : null
-
   if (isReadTool(toolName)) {
+    const readModel = context
+      ? MACHINE_TASK_READ_MODEL_MATRIX[context.kind][context.complexity]
+      : READ_TOOL_EXECUTION_MODEL
     return {
       id: 'read',
-      model: cell?.read ?? READ_TOOL_EXECUTION_MODEL,
+      model: readModel,
       authorFinalArgs: false,
       reasonOverResult: true,
     }
@@ -189,7 +189,7 @@ export function resolveToolRoute(
   if (isCodeEditingTool(toolName)) {
     return {
       id: 'editing',
-      model: cell?.mutation ?? CODE_EDITING_TOOL_EXECUTION_MODEL,
+      model: CODE_EDITING_TOOL_EXECUTION_MODEL,
       authorFinalArgs: true,
       reasonOverResult: false,
     }

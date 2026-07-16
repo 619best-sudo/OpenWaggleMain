@@ -46,3 +46,32 @@ index 736c6550522fcffa71ca3e6d2f7cb5f13f5331f3..f0779b0dd0f5b1841b008fd822182a7c
  }
  /** Result from user_bash event handler */
  export interface UserBashEventResult {
+diff --git a/dist/core/tools/edit.js b/dist/core/tools/edit.js
+index c0991daf4b1075a66f275bc086f6e9e966aa2aed..d7f49443b5058e67e05fc871b4657c4e22489996 100644
+--- a/dist/core/tools/edit.js
++++ b/dist/core/tools/edit.js
+@@ -39,6 +39,24 @@ function prepareEditArguments(input) {
+         }
+         catch { }
+     }
++    // Some routed/switched models emit each edit as a stringified object
++    // (e.g. ["{\"oldText\":...}"]) rather than a real object. Parse those entries so
++    // the array validates as edits[] instead of failing with "edits.0: must be object".
++    if (Array.isArray(args.edits)) {
++        args.edits = args.edits.map((entry) => {
++            if (typeof entry !== "string")
++                return entry;
++            try {
++                const parsedEntry = JSON.parse(entry);
++                return parsedEntry && typeof parsedEntry === "object" && !Array.isArray(parsedEntry)
++                    ? parsedEntry
++                    : entry;
++            }
++            catch {
++                return entry;
++            }
++        });
++    }
+     const legacy = args;
+     if (typeof legacy.oldText !== "string" || typeof legacy.newText !== "string") {
+         return args;
