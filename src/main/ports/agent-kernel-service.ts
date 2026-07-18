@@ -35,6 +35,8 @@ export interface AgentKernelRunInput {
   readonly model: SupportedModelId
   readonly promptDelivery?: AgentKernelPromptDelivery
   readonly skillToggles?: Readonly<Record<string, boolean>>
+  /** Restrict the tool set for this run (see `AgentRunInput.noTools`). */
+  readonly noTools?: 'all' | 'builtin'
   readonly signal: AbortSignal
   readonly onEvent: (event: AgentTransportEvent) => void
   readonly waggle?: AgentKernelWaggleRunOptions

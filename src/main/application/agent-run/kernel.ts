@@ -30,6 +30,7 @@ export function runAgentKernel(
       payload,
       model: input.model,
       ...(input.promptDelivery ? { promptDelivery: input.promptDelivery } : {}),
+      ...(input.noTools ? { noTools: input.noTools } : {}),
       signal: input.signal,
       onEvent: input.onEvent,
       ...(preflight.skillToggles ? { skillToggles: preflight.skillToggles } : {}),

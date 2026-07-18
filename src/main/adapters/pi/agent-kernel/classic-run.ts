@@ -17,6 +17,7 @@ export async function runPiSession(input: AgentKernelRunInput) {
     modelReference: input.model,
     payload: input.payload,
     skillToggles: input.skillToggles,
+    ...(input.noTools ? { noTools: input.noTools } : {}),
   })
 
   const abortWarning = 'Failed to abort Pi session cleanly'

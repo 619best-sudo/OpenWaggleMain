@@ -54,19 +54,23 @@ async function createPiSessionForRun(input: {
   readonly model: PiModel
   readonly sessionManager: SessionManager
   readonly thinkingLevel: ThinkingLevel
+  readonly noTools?: 'all' | 'builtin'
 }) {
   const hasExistingMessages = input.sessionManager.buildSessionContext().messages.length > 0
+  const noToolsOption = input.noTools ? { noTools: input.noTools } : {}
   const result = hasExistingMessages
     ? await createOpenWaggleAgentSessionFromServices({
         services: input.services,
         model: input.model,
         sessionManager: input.sessionManager,
+        ...noToolsOption,
       })
     : await createOpenWaggleAgentSessionFromServices({
         services: input.services,
         model: input.model,
         thinkingLevel: input.thinkingLevel,
         sessionManager: input.sessionManager,
+        ...noToolsOption,
       })
 
   if (hasExistingMessages) {
@@ -83,6 +87,7 @@ export async function createPiRunSessionRuntime(input: {
   readonly modelReference: AgentKernelRunInput['model']
   readonly skillToggles?: Readonly<Record<string, boolean>>
   readonly extensionFactories?: readonly ExtensionFactory[]
+  readonly noTools?: 'all' | 'builtin'
 }): Promise<PiRunSessionRuntime> {
   const { model, services } = await createPiProjectModelRuntime({
     projectPath: input.projectPath,
@@ -97,6 +102,7 @@ export async function createPiRunSessionRuntime(input: {
     model,
     sessionManager,
     thinkingLevel,
+    ...(input.noTools ? { noTools: input.noTools } : {}),
   })
 
   return { model, session }

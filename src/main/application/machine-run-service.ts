@@ -708,6 +708,10 @@ export function executeMachineRun(input: ExecuteMachineRunInput) {
       },
       model: input.model,
       runMode: 'machine',
+      // The planner must only emit a JSON plan as text. Offering it tools makes it
+      // try to `write` the plan to a file and stall on the permission gate, so no
+      // plan is ever parsed. Run it tool-free.
+      noTools: 'all',
       signal: input.signal,
       onEvent: input.onEvent,
       onTitleAssigned: input.onTitleAssigned,

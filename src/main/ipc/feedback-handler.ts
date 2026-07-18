@@ -278,18 +278,19 @@ export function registerFeedbackHandlers(): void {
   typedHandle('feedback:check-gh', () =>
     Effect.gen(function* () {
       const env = getGhCliEnv()
-      const ghAvailable = yield* Effect.tryPromise({
-        try: () => execFilePromise('gh', ['--version'], { env }).then(() => true),
-        catch: () => false,
-      })
+      // `Effect.tryPromise`'s `catch` routes to the *error* channel, so a missing
+      // or failing `gh` CLI must be recovered to a plain boolean here — otherwise
+      // the whole handler fails with `false` and surfaces as "Error: false".
+      const ghAvailable = yield* Effect.tryPromise(() =>
+        execFilePromise('gh', ['--version'], { env }).then(() => true),
+      ).pipe(Effect.orElseSucceed(() => false))
       if (!ghAvailable) {
         return { available: false, authenticated: false }
       }
 
-      const authenticated = yield* Effect.tryPromise({
-        try: () => execFilePromise('gh', ['auth', 'status'], { env }).then(() => true),
-        catch: () => false,
-      })
+      const authenticated = yield* Effect.tryPromise(() =>
+        execFilePromise('gh', ['auth', 'status'], { env }).then(() => true),
+      ).pipe(Effect.orElseSucceed(() => false))
       return { available: true, authenticated }
     }),
   )
