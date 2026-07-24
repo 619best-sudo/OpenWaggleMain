@@ -23,7 +23,7 @@ export function refreshSessionStoreForSession(
 ) {
   const sessionStore = useSessionStore.getState()
   if (isSameSessionId(activeSessionId, sessionId)) {
-    void sessionStore.refreshSessionsAndTree(toSessionId(sessionId))
+    void sessionStore.refreshSessionsAndWorkspace(toSessionId(sessionId))
     return
   }
 

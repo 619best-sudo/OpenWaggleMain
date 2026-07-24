@@ -24,6 +24,13 @@ const envSchema = Schema.Struct({
   OPENWAGGLE_LOG_LEVEL: Schema.optional(Schema.Literal('debug', 'info', 'warn', 'error')),
   OPENWAGGLE_APP_AUTH_GOOGLE_DESKTOP_CLIENT_ID: Schema.optional(Schema.String),
   OPENWAGGLE_APP_AUTH_GOOGLE_DESKTOP_CLIENT_SECRET: Schema.optional(Schema.String),
+  OPENWAGGLE_OPENROUTER_API_KEY: Schema.optional(Schema.String),
+  OPENROUTER_API_KEY: Schema.optional(Schema.String),
+  OPENWAGGLE_OPENROUTER_BASE_URL: optionalUrlSchema,
+  OPENROUTER_BASE_URL: optionalUrlSchema,
+  OPENWAGGLE_TURING_MODE: Schema.optional(
+    Schema.Literal('chain', 'prepare', 'plan', 'perform', 'perfect'),
+  ),
 })
 
 export type Env = SchemaType<typeof envSchema>

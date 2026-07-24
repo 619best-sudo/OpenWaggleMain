@@ -51,8 +51,9 @@ import type {
   TeammateAgentGenerationResult,
   TeammateDefinition,
 } from './teammate'
-import type { ToolPermissionResolution } from './tool-permission'
+import type { PendingToolPermissionRequest, ToolPermissionResolution } from './tool-permission'
 import type { UpdateStatus } from './updater'
+import type { PendingUserQuestionRequest, UserQuestionResolution } from './user-question'
 import type { VoiceTranscriptionRequest, VoiceTranscriptionResult } from './voice'
 import type {
   WaggleAppInstallResult,
@@ -88,6 +89,9 @@ export interface OpenWaggleApi {
     resolution: ToolPermissionResolution,
     model: SupportedModelId,
   ): Promise<void>
+  getPendingToolPermission(sessionId: SessionId): Promise<PendingToolPermissionRequest | null>
+  resolveUserQuestion(sessionId: SessionId, resolution: UserQuestionResolution): Promise<void>
+  getPendingUserQuestion(sessionId: SessionId): Promise<PendingUserQuestionRequest | null>
   /** Subscribe to live Pi-shaped runtime events from the main process */
   onAgentEvent(callback: (payload: IpcEventPayload<'agent:event'>) => void): () => void
 

@@ -3,6 +3,10 @@ import { Schema, type SchemaType, safeDecodeUnknown } from '@shared/schema'
 import { waggleMetadataSchema } from '@shared/schemas/waggle'
 import type { Message } from '@shared/types/agent'
 import { MessageId, SupportedModelId, ToolCallId } from '@shared/types/brand'
+import {
+  PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE,
+  type PersistedPhaseTranscript,
+} from '@shared/types/phase'
 import { isRecord } from '@shared/utils/validation'
 import { createLogger } from '../../logger'
 import { buildPiWorkingContextPath } from '../session-working-context'
@@ -58,6 +62,41 @@ const messagePartSchema = Schema.Union(
 
 const messageMetadataSchema = Schema.Struct({
   waggle: Schema.optional(waggleMetadataSchema),
+})
+
+const persistedPhaseTranscriptToolSchema = Schema.Struct({
+  toolCallId: Schema.String,
+  toolName: Schema.String,
+  status: Schema.Literal('running', 'completed', 'failed'),
+})
+
+const pendingUserQuestionSchema = Schema.Struct({
+  phase: Schema.Literal('prepare', 'plan', 'perform', 'perfect'),
+  question: Schema.String,
+  kind: Schema.optional(Schema.Literal('clarification', 'plan_review')),
+  reason: Schema.optional(Schema.String),
+  placeholder: Schema.optional(Schema.String),
+  answerMode: Schema.optional(Schema.Literal('text', 'single-select', 'multi-select')),
+  options: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
+})
+
+const persistedPhaseTranscriptPhaseSchema = Schema.Struct({
+  id: Schema.Literal('prepare', 'plan', 'perform', 'perfect'),
+  label: Schema.String,
+  activityText: Schema.String,
+  status: Schema.Literal('pending', 'running', 'completed', 'failed'),
+  elapsedMs: Schema.Number,
+  summary: Schema.optional(Schema.String),
+  planJson: Schema.optional(sessionJsonValueSchema),
+  planSet: Schema.optional(sessionJsonValueSchema),
+  qaPlan: Schema.optional(sessionJsonValueSchema),
+  pendingUserQuestion: Schema.optional(pendingUserQuestionSchema),
+  tools: Schema.mutable(Schema.Array(persistedPhaseTranscriptToolSchema)),
+})
+
+const persistedPhaseTranscriptSchema = Schema.Struct({
+  version: Schema.Literal(1),
+  phases: Schema.mutable(Schema.Array(persistedPhaseTranscriptPhaseSchema)),
 })
 
 const messageNodeContentSchema = Schema.Struct({
@@ -157,8 +196,32 @@ function getNumberField(value: unknown, key: string) {
   return typeof field === 'number' && Number.isFinite(field) ? field : null
 }
 
+function hydratePersistedPhaseTranscript(content: unknown): PersistedPhaseTranscript | null {
+  if (!isRecord(content) || content.customType !== PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE) {
+    return null
+  }
+
+  const parsedTranscript = safeDecodeUnknown(persistedPhaseTranscriptSchema, content.data)
+  if (!parsedTranscript.success) {
+    return null
+  }
+
+  return parsedTranscript.data as PersistedPhaseTranscript
+}
+
 export function hydrateStructuralSessionMessage(row: SessionNodeRow): Message | null {
   const content = parseJsonValue(row.content_json)
+  const phaseTranscript = hydratePersistedPhaseTranscript(content)
+  if (phaseTranscript) {
+    return {
+      id: MessageId(row.id),
+      role: 'assistant',
+      parts: [],
+      metadata: { phaseTranscript },
+      createdAt: row.timestamp_ms,
+    }
+  }
+
   const summary = getStringField(content, 'summary')
   if (!summary) {
     return null
@@ -194,7 +257,11 @@ export function hydrateSessionMessages(nodeRows: readonly SessionNodeRow[]) {
   const messages: Message[] = []
 
   for (const row of nodeRows) {
-    if (row.kind === 'branch_summary' || row.kind === 'compaction_summary') {
+    if (
+      row.kind === 'branch_summary' ||
+      row.kind === 'compaction_summary' ||
+      row.kind === 'custom'
+    ) {
       const structuralMessage = hydrateStructuralSessionMessage(row)
       if (structuralMessage) messages.push(structuralMessage)
       continue

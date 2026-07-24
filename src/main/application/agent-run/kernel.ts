@@ -1,4 +1,5 @@
 import type { AgentSendPayload, HydratedAgentSendPayload } from '@shared/types/agent'
+import type { ToolPermissionMode } from '@shared/types/settings'
 import type { SessionDetail } from '@shared/types/session'
 import * as Effect from 'effect/Effect'
 import { AgentKernelService } from '../../ports/agent-kernel-service'
@@ -20,6 +21,7 @@ export function runAgentKernel(
   preflight: {
     readonly session: SessionDetail
     readonly skillToggles?: Record<string, boolean>
+    readonly toolPermissionMode: ToolPermissionMode
   },
 ) {
   return Effect.gen(function* () {
@@ -29,6 +31,7 @@ export function runAgentKernel(
       runId: input.runId,
       payload,
       model: input.model,
+      toolPermissionMode: preflight.toolPermissionMode,
       ...(input.promptDelivery ? { promptDelivery: input.promptDelivery } : {}),
       ...(input.noTools ? { noTools: input.noTools } : {}),
       signal: input.signal,

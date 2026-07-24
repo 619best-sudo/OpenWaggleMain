@@ -10,6 +10,22 @@ export interface ToolPermissionRequestEnvelope {
   readonly title?: string
   readonly description?: string
   readonly model?: string
+  readonly option?: string
+}
+
+export interface ToolPermissionRequestOption {
+  readonly id: string
+  readonly label: string
+  readonly allow: boolean
+}
+
+export interface PendingToolPermissionRequest extends ToolPermissionRequestEnvelope {
+  readonly summary: string
+  readonly messageId?: string
+  readonly complexityScore?: number
+  readonly complexityRating?: 'low' | 'medium' | 'high'
+  readonly complexitySource?: string
+  readonly options?: readonly ToolPermissionRequestOption[]
 }
 
 export interface ToolPermissionResolution {

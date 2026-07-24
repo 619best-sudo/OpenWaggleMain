@@ -7,6 +7,8 @@ type JsonRecord = Record<string, unknown>
 export interface PendingToolPermissionRequest extends ToolPermissionRequestEnvelope {
   readonly messageId: string
   readonly summary: string
+  readonly complexityRating?: 'low' | 'medium' | 'high'
+  readonly complexitySource?: string
 }
 
 function isRecord(value: unknown): value is JsonRecord {

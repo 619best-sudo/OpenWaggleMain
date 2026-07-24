@@ -66,7 +66,7 @@ function resolveWorkspaceNode(
 }
 
 function buildTranscriptPath(tree: SessionTree, activeNodeId: SessionNode['id'] | null) {
-  return buildPiWorkingContextPath(activeNodeId ? String(activeNodeId) : null, tree.nodes, {
+  const activePath = buildPiWorkingContextPath(activeNodeId ? String(activeNodeId) : null, tree.nodes, {
     getId: (node) => String(node.id),
     getParentId: (node) => (node.parentId ? String(node.parentId) : null),
     getKind: (node) => node.kind,
@@ -76,6 +76,34 @@ function buildTranscriptPath(tree: SessionTree, activeNodeId: SessionNode['id'] 
     branchId: node.branchId,
     isActive: node.id === activeNodeId,
   }))
+
+  const activeBranchId = activePath[activePath.length - 1]?.branchId ?? null
+  if (!activeBranchId) {
+    return activePath
+  }
+
+  const activePathIds = new Set(activePath.map((entry) => String(entry.node.id)))
+  const latestPhaseTranscriptEntry = tree.nodes.reduce<(typeof activePath)[number] | null>((latest, node) => {
+    if (
+      node.branchId !== activeBranchId ||
+      !node.message?.metadata?.phaseTranscript ||
+      activePathIds.has(String(node.id))
+    ) {
+      return latest
+    }
+
+    if (!latest || node.createdOrder > latest.node.createdOrder) {
+      return {
+        node,
+        branchId: node.branchId,
+        isActive: false,
+      }
+    }
+
+    return latest
+  }, null)
+
+  return latestPhaseTranscriptEntry ? [...activePath, latestPhaseTranscriptEntry] : activePath
 }
 
 export function buildSessionWorkspace(tree: SessionTree, selection?: SessionWorkspaceSelection) {

@@ -37,6 +37,11 @@ function setPhase(state: SessionPhaseState, label: AgentPhaseState['label'], sta
   return { changed: true, phase: next }
 }
 
+function hasNamedPhase(state: SessionPhaseState) {
+  const label = state.current?.label
+  return label !== null && label !== undefined && label !== 'Thinking' && label !== 'Writing'
+}
+
 function clearPhase(sessionId: SessionId) {
   const key = String(sessionId)
   const state = states.get(key)
@@ -61,14 +66,26 @@ export function updatePhaseFromTransportEvent(
       state.runStatus = 'running'
       return setPhase(state, 'Thinking', now)
     })
+    .with('phase_start', (value) => setPhase(state, value.label, now))
+    .with('phase_end', () => {
+      if (state.current === null) {
+        return { changed: false, phase: null }
+      }
+      state.current = null
+      return { changed: true, phase: null }
+    })
     .with('message_update', (value) =>
       matchBy(value.assistantMessageEvent, 'type')
         .with('text_delta', () =>
-          state.runStatus === 'running'
+          state.runStatus === 'running' && !hasNamedPhase(state)
             ? setPhase(state, 'Writing', now)
             : { changed: false, phase: state.current },
         )
-        .with('toolcall_start', 'toolcall_end', () => setPhase(state, 'Thinking', now))
+        .with('toolcall_start', 'toolcall_end', () =>
+          hasNamedPhase(state)
+            ? { changed: false, phase: state.current }
+            : setPhase(state, 'Thinking', now),
+        )
         .with(
           'text_start',
           'text_end',

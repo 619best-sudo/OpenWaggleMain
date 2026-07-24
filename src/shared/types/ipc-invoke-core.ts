@@ -15,7 +15,8 @@ import type {
   SessionWorkspaceSelection,
 } from './session'
 import type { Settings } from './settings'
-import type { ToolPermissionResolution } from './tool-permission'
+import type { PendingToolPermissionRequest, ToolPermissionResolution } from './tool-permission'
+import type { PendingUserQuestionRequest, UserQuestionResolution } from './user-question'
 
 // ─── IPC Channel Map ─────────────────────────────────────────
 // Single source of truth for every IPC channel.
@@ -37,6 +38,18 @@ export interface IpcCoreInvokeChannelMap {
   'agent:resolve-tool-permission': {
     args: [sessionId: SessionId, resolution: ToolPermissionResolution, model: SupportedModelId]
     return: undefined
+  }
+  'agent:resolve-user-question': {
+    args: [sessionId: SessionId, resolution: UserQuestionResolution]
+    return: undefined
+  }
+  'agent:get-pending-tool-permission': {
+    args: [sessionId: SessionId]
+    return: PendingToolPermissionRequest | null
+  }
+  'agent:get-pending-user-question': {
+    args: [sessionId: SessionId]
+    return: PendingUserQuestionRequest | null
   }
   'agent:get-context-usage': {
     args: [sessionId: SessionId, model: SupportedModelId]

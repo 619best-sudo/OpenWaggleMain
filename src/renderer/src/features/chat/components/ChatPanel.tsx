@@ -3,7 +3,7 @@ import { useChatPanelSections } from '../hooks/use-chat-panel-controller'
 import type { ChatPanelSections } from '../model'
 import { ChatComposerStack } from './ChatComposerStack'
 import { ChatTranscript } from './ChatTranscript'
-import { ToolPermissionDialog } from './ToolPermissionDialog'
+import { ToolPermissionInlineCard } from './ToolPermissionInlineCard'
 
 interface ChatPanelContentProps {
   readonly sections: ChatPanelSections
@@ -32,14 +32,17 @@ export function ChatPanelContent({
           <ChatTranscript section={sections.transcript} />
         </PanelErrorBoundary>
         {shouldRenderToolPermission && (
-          <ToolPermissionDialog
-            request={pendingToolPermissionRequest}
-            busy={sections.transcript.toolPermissionBusy}
-            error={sections.transcript.toolPermissionError}
-            onClose={sections.transcript.onDismissToolPermission}
-            onApprove={sections.transcript.onApproveToolPermission}
-            onDeny={sections.transcript.onDenyToolPermission}
-          />
+          <div className="px-5 pb-3">
+            <div className="mx-auto w-full max-w-[960px]">
+              <ToolPermissionInlineCard
+                request={pendingToolPermissionRequest}
+                busy={sections.transcript.toolPermissionBusy}
+                error={sections.transcript.toolPermissionError}
+                onApprove={sections.transcript.onApproveToolPermission}
+                onDeny={sections.transcript.onDenyToolPermission}
+              />
+            </div>
+          </div>
         )}
 
         <PanelErrorBoundary name="Composer">

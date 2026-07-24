@@ -13,6 +13,7 @@ const mockApi = {
   listSessionDetails: vi.fn(),
   listSessions: vi.fn(async () => []),
   getSessionTree: vi.fn(async () => null),
+  getSessionWorkspace: vi.fn(async () => null),
   getSessionDetail: vi.fn(),
   createSession: vi.fn(),
   deleteSession: vi.fn(),
@@ -23,6 +24,7 @@ vi.mock('@/shared/lib/ipc', () => ({
     listSessionDetails: (...args: unknown[]) => mockApi.listSessionDetails(...args),
     listSessions: (...args: unknown[]) => mockApi.listSessions(...args),
     getSessionTree: (...args: unknown[]) => mockApi.getSessionTree(...args),
+    getSessionWorkspace: (...args: unknown[]) => mockApi.getSessionWorkspace(...args),
     getSessionDetail: (...args: unknown[]) => mockApi.getSessionDetail(...args),
     createSession: (...args: unknown[]) => mockApi.createSession(...args),
     deleteSession: (...args: unknown[]) => mockApi.deleteSession(...args),
@@ -80,10 +82,13 @@ describe('useChatStore integration', () => {
     mockApi.createSession.mockResolvedValue(session)
 
     const id = await useChatStore.getState().createSession('/repo')
+    await Promise.resolve()
+    await Promise.resolve()
 
     expect(id).toBe('session-1')
     expect(useChatStore.getState().activeSessionId).toBe('session-1')
     expect(mockApi.createSession).toHaveBeenCalledWith('/repo')
+    expect(mockApi.getSessionWorkspace).toHaveBeenCalledWith(SessionId('session-1'), undefined)
   })
 
   it('sets activeSessionId synchronously', () => {
@@ -95,6 +100,18 @@ describe('useChatStore integration', () => {
 
     expect(useChatStore.getState().activeSessionId).toBe(id)
     expect(useChatStore.getState().activeSession).toBe(session)
+  })
+
+  it('refreshes the active workspace when switching sessions', async () => {
+    const id = SessionId('session-2')
+    const session = makeSessionDetail(id)
+    useChatStore.getState().upsertSession(session)
+
+    useChatStore.getState().setActiveSession(id)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(mockApi.getSessionWorkspace).toHaveBeenCalledWith(id, undefined)
   })
 
   it('startDraftSession clears activeSessionId and keeps the target project path', () => {

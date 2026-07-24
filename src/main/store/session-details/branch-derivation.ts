@@ -1,4 +1,5 @@
 import type { ProjectedSessionNodeInput } from '../../ports/session-repository'
+import { STRUCTURAL_SESSION_NODE_CUSTOM_TYPES } from '@shared/types/structural-nodes'
 import { deriveBranchForHead } from './branch-head'
 import {
   buildChildCounts,
@@ -12,6 +13,22 @@ import {
 } from './branch-utils'
 import { EMPTY_INDEX, MAIN_BRANCH_NAME } from './constants'
 import type { DerivedSessionBranch, SessionBranchRow } from './types'
+
+function isStructuralArtifactNode(node: ProjectedSessionNodeInput) {
+  if (node.kind !== 'custom') {
+    return false
+  }
+
+  try {
+    const parsed = JSON.parse(node.contentJson) as { customType?: unknown }
+    return (
+      typeof parsed.customType === 'string' &&
+      STRUCTURAL_SESSION_NODE_CUSTOM_TYPES.has(parsed.customType)
+    )
+  } catch {
+    return false
+  }
+}
 
 function resolveMainHeadId(input: {
   readonly activeHeadId: string | null
@@ -67,6 +84,28 @@ interface BranchDerivationContext {
   readonly nodeById: ReadonlyMap<string, ProjectedSessionNodeInput>
 }
 
+function resolveDerivationActiveHeadId(input: {
+  readonly allNodes: readonly ProjectedSessionNodeInput[]
+  readonly derivationNodeById: ReadonlyMap<string, ProjectedSessionNodeInput>
+  readonly requestedActiveNodeId: string | null
+}) {
+  if (!input.requestedActiveNodeId) {
+    return input.allNodes[input.allNodes.length - 1]?.id ?? null
+  }
+
+  const allNodeById = new Map(input.allNodes.map((node) => [node.id, node]))
+  let currentId: string | null = input.requestedActiveNodeId
+
+  while (currentId) {
+    if (input.derivationNodeById.has(currentId)) {
+      return currentId
+    }
+    currentId = allNodeById.get(currentId)?.parentId ?? null
+  }
+
+  return input.allNodes[input.allNodes.length - 1]?.id ?? null
+}
+
 function leafIdsForNodes(
   nodes: readonly ProjectedSessionNodeInput[],
   childCounts: ReadonlyMap<string, number>,
@@ -76,13 +115,18 @@ function leafIdsForNodes(
 
 function buildBranchDerivationContext(input: {
   readonly nodes: readonly ProjectedSessionNodeInput[]
+  readonly allNodes: readonly ProjectedSessionNodeInput[]
   readonly activeNodeId: string | null
   readonly mainBranchRow: SessionBranchRow | undefined
 }) {
   const childCounts = buildChildCounts(input.nodes)
   const nodeById = new Map(input.nodes.map((node) => [node.id, node]))
   const leafIds = leafIdsForNodes(input.nodes, childCounts)
-  const activeHeadId = input.activeNodeId ?? input.nodes[input.nodes.length - 1]?.id ?? null
+  const activeHeadId = resolveDerivationActiveHeadId({
+    allNodes: input.allNodes,
+    derivationNodeById: nodeById,
+    requestedActiveNodeId: input.activeNodeId,
+  })
 
   return {
     activeHeadId,
@@ -147,12 +191,15 @@ function deriveSessionBranches(input: {
   readonly existingBranches: readonly SessionBranchRow[]
 }) {
   const mainBranchRow = input.existingBranches.find((branch) => branch.is_main === 1)
-  if (input.nodes.length === 0) {
+  const derivationNodes = input.nodes.filter((node) => !isStructuralArtifactNode(node))
+
+  if (derivationNodes.length === 0) {
     return emptyBranchResult(input.sessionId, mainBranchRow)
   }
 
   const context = buildBranchDerivationContext({
-    nodes: input.nodes,
+    nodes: derivationNodes,
+    allNodes: input.nodes,
     activeNodeId: input.activeNodeId,
     mainBranchRow,
   })
@@ -203,6 +250,8 @@ function normalizeDerivedBranches(input: {
   readonly branches: readonly DerivedSessionBranch[]
   readonly sessionId: string
   readonly activeBranchId: string
+  readonly requestedActiveNodeId: string | null
+  readonly nodes: readonly ProjectedSessionNodeInput[]
 }) {
   const branches = ensureMainBranch(input.branches, input.sessionId)
   const activeBranchId = branches.some(
@@ -211,7 +260,12 @@ function normalizeDerivedBranches(input: {
     ? input.activeBranchId
     : mainBranchId(input.sessionId)
   const activeBranch = branches.find((branch) => branch.id === activeBranchId)
-  return { branches, activeBranchId, activeNodeId: activeBranch?.headNodeId ?? null }
+  const nodeIds = new Set(input.nodes.map((node) => node.id))
+  const activeNodeId =
+    input.requestedActiveNodeId && nodeIds.has(input.requestedActiveNodeId)
+      ? input.requestedActiveNodeId
+      : activeBranch?.headNodeId ?? null
+  return { branches, activeBranchId, activeNodeId }
 }
 
 export function deriveSessionBranchesForSnapshot(input: {
@@ -220,7 +274,12 @@ export function deriveSessionBranchesForSnapshot(input: {
   readonly activeNodeId: string | null
   readonly existingBranches: readonly SessionBranchRow[]
 }) {
-  return normalizeDerivedBranches({ ...deriveSessionBranches(input), sessionId: input.sessionId })
+  return normalizeDerivedBranches({
+    ...deriveSessionBranches(input),
+    sessionId: input.sessionId,
+    requestedActiveNodeId: input.activeNodeId,
+    nodes: input.nodes,
+  })
 }
 
 export function deriveBranchHints(input: {
@@ -239,6 +298,22 @@ export function deriveBranchHints(input: {
     const pathIds = getPathIds(nodeById, branch.headNodeId)
     for (const nodeId of pathIds) {
       if (!activePathIds.has(nodeId)) branchHintByNodeId.set(nodeId, branch.id)
+    }
+  }
+
+  for (const node of input.nodes) {
+    if (branchHintByNodeId.has(node.id)) {
+      continue
+    }
+
+    let parentId = node.parentId
+    while (parentId) {
+      const inheritedBranchId = branchHintByNodeId.get(parentId)
+      if (inheritedBranchId) {
+        branchHintByNodeId.set(node.id, inheritedBranchId)
+        break
+      }
+      parentId = nodeById.get(parentId)?.parentId ?? null
     }
   }
 

@@ -38,6 +38,10 @@ import {
 import {
   activeCompactions,
   activeRuns,
+  getPendingToolPermission,
+  getPendingUserQuestion,
+  resolvePendingToolPermission,
+  resolvePendingUserQuestion,
   cancelAllSessionRuns,
   cancelSessionRuns,
   hasAnyActiveRun,
@@ -159,6 +163,39 @@ function registerAgentRunHandlers() {
         startStreamBuffer(sessionId, model, 'classic')
 
         function onEventWithUsageCapture(event: AgentTransportEvent) {
+          // #region debug-point B:main-transport-events
+          if (
+            event.type === 'phase_start' ||
+            event.type === 'phase_end' ||
+            event.type === 'agent_end' ||
+            (event.type === 'custom' &&
+              (event.name === 'openwaggle:user-question:request' ||
+                event.name === 'openwaggle:user-question:resolved'))
+          ) {
+            void fetch('http://127.0.0.1:7777/event', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId: 'phase-flow-missing',
+                runId: 'pre-fix',
+                hypothesisId: 'B',
+                location: 'agent-handler.ts:onEventWithUsageCapture',
+                msg: '[DEBUG] Main process forwarded transport event',
+                data: {
+                  sessionId: String(sessionId),
+                  model,
+                  eventType: event.type,
+                  phaseId:
+                    event.type === 'phase_start' || event.type === 'phase_end'
+                      ? event.phaseId
+                      : null,
+                  customName: event.type === 'custom' ? event.name : null,
+                },
+                ts: Date.now(),
+              }),
+            }).catch(() => {})
+          }
+          // #endregion
           emitTransportEvent(sessionId, event)
         }
 
@@ -174,6 +211,27 @@ function registerAgentRunHandlers() {
             broadcastToWindows('sessions:title-updated', { sessionId, title })
           },
         })
+
+        // #region debug-point B:main-run-result
+        void fetch('http://127.0.0.1:7777/event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: 'phase-flow-missing',
+            runId: 'pre-fix',
+            hypothesisId: 'B',
+            location: 'agent-handler.ts:agent-send-message',
+            msg: '[DEBUG] Main process completed executeAgentRun',
+            data: {
+              sessionId: String(sessionId),
+              model,
+              outcome: result.outcome,
+              transportEmitted: 'transportEmitted' in result ? result.transportEmitted : null,
+            },
+            ts: Date.now(),
+          }),
+        }).catch(() => {})
+        // #endregion
 
         // ─── Transport: respond based on outcome ─────────
         handleRunResult(sessionId, result)
@@ -207,6 +265,10 @@ function registerAgentRunHandlers() {
     (_event, sessionId: SessionId, resolution: ToolPermissionResolution, model: SupportedModelId) =>
       Effect.gen(function* () {
         const validatedResolution = decodeUnknownOrThrow(toolPermissionResolutionSchema, resolution)
+
+        if (resolvePendingToolPermission(sessionId, validatedResolution)) {
+          return
+        }
 
         if (cancelSessionRuns(sessionId)) {
           clearSessionTransportState(sessionId)
@@ -255,11 +317,27 @@ function registerAgentRunHandlers() {
         }
       }),
   )
+
+  typedHandle('agent:resolve-user-question', (_event, sessionId: SessionId, resolution) =>
+    Effect.sync(() => {
+      if (!resolvePendingUserQuestion(sessionId, resolution)) {
+        throw new Error('No pending user question for this session.')
+      }
+    }),
+  )
 }
 
 function registerAgentStateHandlers() {
   typedHandle('agent:get-phase', (_event, sessionId: SessionId) =>
     Effect.sync(() => getPhaseForSession(sessionId)),
+  )
+
+  typedHandle('agent:get-pending-user-question', (_event, sessionId: SessionId) =>
+    Effect.sync(() => getPendingUserQuestion(sessionId)),
+  )
+
+  typedHandle('agent:get-pending-tool-permission', (_event, sessionId: SessionId) =>
+    Effect.sync(() => getPendingToolPermission(sessionId)),
   )
 
   typedHandle('agent:get-background-run', (_event, sessionId: SessionId) =>

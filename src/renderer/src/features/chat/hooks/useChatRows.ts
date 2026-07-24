@@ -1,8 +1,10 @@
 import type { SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
-import type { MachineExecutionState } from '@shared/types/machine'
 import type { SupportedModelId } from '@shared/types/llm'
+import type { MachineExecutionState } from '@shared/types/machine'
 import type { SessionInterruptedRun } from '@shared/types/session'
+import type { AgentTransportPhaseEndEvent } from '@shared/types/stream'
+import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import type { WaggleMessageMetadata } from '@shared/types/waggle'
 import type { useStreamingPhase } from '@/features/chat/hooks/useStreamingPhase'
 import type { ChatRow } from '../lib/types-chat-row'
@@ -21,6 +23,8 @@ export function useChatRows(inputs: {
   waggleMetadataLookup: Readonly<Record<string, WaggleMessageMetadata>>
   phase: ReturnType<typeof useStreamingPhase>
   interruptedRun?: SessionInterruptedRun
+  pendingUserQuestionRequest?: PendingUserQuestionRequest | null
+  livePhaseEvents?: readonly AgentTransportPhaseEndEvent[]
 }): ChatRow[] {
   return buildChatRows({
     messages: inputs.messages,
@@ -34,5 +38,7 @@ export function useChatRows(inputs: {
     waggleMetadataLookup: inputs.waggleMetadataLookup,
     phase: inputs.phase,
     interruptedRun: inputs.interruptedRun,
+    pendingUserQuestionRequest: inputs.pendingUserQuestionRequest,
+    livePhaseEvents: inputs.livePhaseEvents,
   })
 }

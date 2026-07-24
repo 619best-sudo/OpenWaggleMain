@@ -9,6 +9,7 @@ import {
   type ForkAgentKernelSessionInput,
   type NavigateAgentKernelSessionInput,
 } from '../../ports/agent-kernel-service'
+import { runTuringSession } from '../turing/turing-classic-run'
 import { runPiSession } from './agent-kernel/classic-run'
 import {
   compactPiSession,
@@ -30,6 +31,10 @@ function hasWaggleRunOptions(
   return Boolean(input.waggle)
 }
 
+function isTuringHarnessModel(model: AgentKernelRunInput['model']) {
+  return model === 'turing-machine/turing-machine'
+}
+
 export const PiAgentKernelLive = Layer.succeed(
   AgentKernelService,
   AgentKernelService.of({
@@ -41,7 +46,15 @@ export const PiAgentKernelLive = Layer.succeed(
 
     run: (input: AgentKernelRunInput) =>
       Effect.tryPromise({
-        try: () => (hasWaggleRunOptions(input) ? runPiWaggle(input) : runPiSession(input)),
+        try: () => {
+          if (hasWaggleRunOptions(input)) {
+            return runPiWaggle(input)
+          }
+          if (isTuringHarnessModel(input.model)) {
+            return runTuringSession(input)
+          }
+          return runPiSession(input)
+        },
         catch: toAgentKernelError,
       }),
 

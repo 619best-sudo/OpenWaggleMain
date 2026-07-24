@@ -1,11 +1,20 @@
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { MachineExecutionState } from '@shared/types/machine'
+import { getAgentPhaseTitle } from '@shared/types/phase-titles'
 import type { SessionInterruptedRun } from '@shared/types/session'
+import type { AgentTransportPhaseEndEvent } from '@shared/types/stream'
+import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import type { WaggleMessageMetadata } from '@shared/types/waggle'
 import type { StreamingPhaseState } from '@/features/chat/hooks/useStreamingPhase'
-import type { ChatRow, MessageChatRow } from '../lib/types-chat-row'
+import type {
+  ChatRow,
+  MessageChatRow,
+  PhaseTimelineChatRow,
+  PhaseTimelineToolDetail,
+} from '../lib/types-chat-row'
 
 type ToolResultPart = Extract<UIMessage['parts'][number], { type: 'tool-result' }>
+type ToolCallPart = Extract<UIMessage['parts'][number], { type: 'tool-call' }>
 type SummaryRow = Extract<ChatRow, { type: 'branch-summary' | 'compaction-summary' }>
 
 function isToolResultOnlyMessage(message: UIMessage) {
@@ -139,6 +148,159 @@ function getSummaryRow(message: UIMessage): SummaryRow | null {
   return null
 }
 
+function buildToolDetailLookup(messages: readonly UIMessage[]) {
+  const toolCalls = new Map<string, ToolCallPart>()
+  const toolResults = new Map<string, ToolResultPart>()
+
+  for (const message of messages) {
+    for (const part of message.parts) {
+      if (part.type === 'tool-call') {
+        toolCalls.set(part.id, part)
+        continue
+      }
+
+      if (part.type === 'tool-result') {
+        toolResults.set(part.toolCallId, part)
+      }
+    }
+  }
+
+  return { toolCalls, toolResults }
+}
+
+function createPhaseRows(
+  message: UIMessage,
+  toolLookup: ReturnType<typeof buildToolDetailLookup>,
+): PhaseTimelineChatRow[] {
+  const phaseTranscript = message.metadata?.phaseTranscript
+  if (!phaseTranscript) {
+    return []
+  }
+
+  return phaseTranscript.phases.map((phase) => ({
+    type: 'phase',
+    id: `${message.id}:${phase.id}`,
+    sourceMessageId: message.id,
+    phase: {
+      ...phase,
+      tools: phase.tools.map<PhaseTimelineToolDetail>((tool) => ({
+        ...tool,
+        toolCall: toolLookup.toolCalls.get(tool.toolCallId),
+        toolResult: toolLookup.toolResults.get(tool.toolCallId),
+      })),
+      ...(phase.pendingUserQuestion ? { pendingUserQuestion: phase.pendingUserQuestion } : {}),
+    },
+  }))
+}
+
+function createLivePhaseRows(
+  livePhaseEvents: readonly AgentTransportPhaseEndEvent[],
+  toolLookup: ReturnType<typeof buildToolDetailLookup>,
+): PhaseTimelineChatRow[] {
+  return livePhaseEvents.map((event) => ({
+    type: 'phase',
+    id: `live-phase:${event.phaseId}`,
+    sourceMessageId: `live-phase:${event.phaseId}`,
+    phase: {
+      id: event.phaseId,
+      label: event.label,
+      activityText:
+        event.summary ?? event.pendingUserQuestion?.reason ?? `${event.label} completed.`,
+      status: event.status,
+      elapsedMs: 0,
+      ...(event.summary ? { summary: event.summary } : {}),
+      ...(event.planJson !== undefined ? { planJson: event.planJson } : {}),
+      ...(event.planSet !== undefined ? { planSet: event.planSet } : {}),
+      ...(event.qaPlan !== undefined ? { qaPlan: event.qaPlan } : {}),
+      ...(event.pendingUserQuestion ? { pendingUserQuestion: event.pendingUserQuestion } : {}),
+      tools: (event.toolCallIds ?? []).map<PhaseTimelineToolDetail>((toolCallId) => ({
+        toolCallId,
+        toolName:
+          toolLookup.toolCalls.get(toolCallId)?.name ??
+          toolLookup.toolResults.get(toolCallId)?.toolName ??
+          'tool',
+        status: toolLookup.toolResults.has(toolCallId) ? 'completed' : 'running',
+        toolCall: toolLookup.toolCalls.get(toolCallId),
+        toolResult: toolLookup.toolResults.get(toolCallId),
+      })),
+    },
+  }))
+}
+
+function createLivePendingQuestionPhaseRow(
+  request: PendingUserQuestionRequest,
+  phase: StreamingPhaseState,
+): PhaseTimelineChatRow {
+  const livePhaseLabel = phase.current?.label ?? getAgentPhaseTitle(request.phase)
+
+  return {
+    type: 'phase',
+    id: `live-pending-question:${request.phase}`,
+    sourceMessageId: `live-pending-question:${request.phase}`,
+    phase: {
+      id: request.phase,
+      label: livePhaseLabel,
+      activityText: request.reason ?? 'Waiting for your answer to continue.',
+      status: 'running',
+      elapsedMs: phase.current?.elapsedMs ?? 0,
+      tools: [],
+      pendingUserQuestion: request,
+    },
+  }
+}
+
+function computePhaseBackedAssistantMessageIds(messages: readonly UIMessage[]) {
+  const suppressedIds = new Set<string>()
+
+  for (let index = 0; index < messages.length; index += 1) {
+    const message = messages[index]
+    if (!message.metadata?.phaseTranscript) {
+      continue
+    }
+
+    for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+      const candidate = messages[cursor]
+      if (candidate.role === 'user') {
+        break
+      }
+      if (
+        candidate.metadata?.phaseTranscript ||
+        candidate.metadata?.branchSummary ||
+        candidate.metadata?.compactionSummary
+      ) {
+        break
+      }
+
+      if (candidate.role === 'assistant') {
+        suppressedIds.add(candidate.id)
+      }
+    }
+  }
+
+  return suppressedIds
+}
+
+function hasLegacyToolTranscriptContent(message: UIMessage) {
+  return message.parts.some(
+    (part) => part.type === 'thinking' || part.type === 'tool-call' || part.type === 'tool-result',
+  )
+}
+
+function hasRenderableAssistantBubbleContent(message: UIMessage) {
+  return message.parts.some((part) => {
+    if (part.type === 'text') {
+      return part.content.trim().length > 0
+    }
+
+    return (
+      part.type === 'image' ||
+      part.type === 'audio' ||
+      part.type === 'video' ||
+      part.type === 'document'
+    )
+  })
+}
+
 function tryNestToolResultMessage(rows: ChatRow[], message: UIMessage) {
   if (!isToolResultOnlyMessage(message)) {
     return false
@@ -197,6 +359,22 @@ function createMessageRow({
 }
 
 function appendStatusRows(rows: ChatRow[], params: BuildChatRowsParams) {
+  const waitingForUserQuestion =
+    params.pendingUserQuestionRequest !== null && params.pendingUserQuestionRequest !== undefined
+
+  if (waitingForUserQuestion) {
+    if (params.error && !params.isLoading) {
+      rows.push({
+        type: 'error',
+        error: params.error,
+        lastUserMessage: params.lastUserMessage,
+        dismissedError: params.dismissedError,
+        sessionId: params.sessionId ? String(params.sessionId) : null,
+      })
+    }
+    return
+  }
+
   if (params.phase.current) {
     rows.push({
       type: 'phase-indicator',
@@ -242,6 +420,8 @@ interface BuildChatRowsParams {
   waggleMetadataLookup: Readonly<Record<string, WaggleMessageMetadata>>
   phase: StreamingPhaseState
   interruptedRun?: SessionInterruptedRun
+  pendingUserQuestionRequest?: PendingUserQuestionRequest | null
+  livePhaseEvents?: readonly AgentTransportPhaseEndEvent[]
 }
 
 function appendInterruptedRunRow(rows: ChatRow[], params: BuildChatRowsParams) {
@@ -260,7 +440,9 @@ function appendInterruptedRunRow(rows: ChatRow[], params: BuildChatRowsParams) {
 
 function messageText(message: UIMessage) {
   return message.parts
-    .filter((part): part is Extract<UIMessage['parts'][number], { type: 'text' }> => part.type === 'text')
+    .filter(
+      (part): part is Extract<UIMessage['parts'][number], { type: 'text' }> => part.type === 'text',
+    )
     .map((part) => part.content)
     .join('\n')
     .trim()
@@ -291,8 +473,31 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
   const rows: ChatRow[] = []
   appendInterruptedRunRow(rows, params)
   let lastUserRowIndex = -1
-  const machineOriginalRequest = params.machinePlan?.originalRequest?.replace(/\s+/g, ' ').trim() ?? null
+  let renderedPendingQuestionPhase = false
+  const hasPhaseTranscriptMessages = params.messages.some(
+    (message) => !!message.metadata?.phaseTranscript,
+  )
+  const phaseBackedAssistantMessageIds = computePhaseBackedAssistantMessageIds(params.messages)
+  const toolLookup = buildToolDetailLookup(params.allMessages)
+  const livePhaseRows = hasPhaseTranscriptMessages
+    ? []
+    : createLivePhaseRows(params.livePhaseEvents ?? [], toolLookup)
+  const machineOriginalRequest =
+    params.machinePlan?.originalRequest?.replace(/\s+/g, ' ').trim() ?? null
   let hasVisibleOriginalRequest = false
+  const lastUserMessageIndex = (() => {
+    for (let index = params.messages.length - 1; index >= 0; index -= 1) {
+      if (params.messages[index]?.role === 'user') {
+        return index
+      }
+    }
+    return -1
+  })()
+  const hideCurrentTurnAssistantMessages =
+    params.isLoading &&
+    (livePhaseRows.length > 0 ||
+      (params.pendingUserQuestionRequest !== null &&
+        params.pendingUserQuestionRequest !== undefined))
 
   const lastMessage = params.messages[params.messages.length - 1]
   const lastIsStreaming = params.isLoading && lastMessage?.role === 'assistant'
@@ -300,12 +505,48 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
 
   for (let index = 0; index < params.messages.length; index += 1) {
     const message = params.messages[index]
+    const phaseRows = createPhaseRows(message, toolLookup)
+    if (phaseRows.length > 0) {
+      if (
+        params.pendingUserQuestionRequest &&
+        phaseRows.some(
+          (row) =>
+            row.phase.id === params.pendingUserQuestionRequest?.phase &&
+            row.phase.pendingUserQuestion !== undefined,
+        )
+      ) {
+        renderedPendingQuestionPhase = true
+      }
+      rows.push(...phaseRows)
+      continue
+    }
+
     const summaryRow = getSummaryRow(message)
     if (summaryRow) {
       rows.push(summaryRow)
       continue
     }
     if (tryNestToolResultMessage(rows, message)) {
+      continue
+    }
+
+    if (message.role === 'assistant' && phaseBackedAssistantMessageIds.has(message.id)) {
+      continue
+    }
+
+    if (
+      message.role === 'assistant' &&
+      hasLegacyToolTranscriptContent(message) &&
+      (hasPhaseTranscriptMessages || !hasRenderableAssistantBubbleContent(message))
+    ) {
+      continue
+    }
+
+    if (
+      hideCurrentTurnAssistantMessages &&
+      message.role === 'assistant' &&
+      index > lastUserMessageIndex
+    ) {
       continue
     }
 
@@ -329,6 +570,24 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
     if (meta && message.role === 'assistant') {
       previousVisibleWaggleMeta = meta
     }
+  }
+
+  if (livePhaseRows.length > 0) {
+    if (
+      params.pendingUserQuestionRequest &&
+      livePhaseRows.some(
+        (row) =>
+          row.phase.id === params.pendingUserQuestionRequest?.phase &&
+          row.phase.pendingUserQuestion !== undefined,
+      )
+    ) {
+      renderedPendingQuestionPhase = true
+    }
+    rows.push(...livePhaseRows)
+  }
+
+  if (params.pendingUserQuestionRequest && !renderedPendingQuestionPhase) {
+    rows.push(createLivePendingQuestionPhaseRow(params.pendingUserQuestionRequest, params.phase))
   }
 
   if (params.machinePlan) {
@@ -374,5 +633,27 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
     })
   }
   const groupedRows = groupWaggleTurnRows(rows)
+  // #region debug-point E:chat-rows
+  void fetch('http://127.0.0.1:7777/event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: 'phase-flow-missing',
+      runId: 'pre-fix',
+      hypothesisId: 'E',
+      location: 'useBuildChatRows.ts:buildChatRows',
+      msg: '[DEBUG] Built chat rows for transcript render',
+      data: {
+        messageCount: params.messages.length,
+        hasPhaseTranscriptMessages,
+        phaseCurrentLabel: params.phase.current?.label ?? null,
+        completedPhaseCount: params.phase.completed.length,
+        pendingUserQuestionPhase: params.pendingUserQuestionRequest?.phase ?? null,
+        groupedRowTypes: groupedRows.map((row) => row.type),
+      },
+      ts: Date.now(),
+    }),
+  }).catch(() => {})
+  // #endregion
   return groupedRows
 }

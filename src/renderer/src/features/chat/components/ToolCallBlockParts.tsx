@@ -45,11 +45,13 @@ export function ToolArgs({
   args,
   rawArgs,
   path,
+  hiddenArgKeys,
 }: {
   name: string
   args: JsonObject
   rawArgs: string
   path: string | null
+  hiddenArgKeys?: ReadonlySet<string>
 }) {
   if (name === 'bash' && typeof args.command === 'string') {
     return (
@@ -60,7 +62,7 @@ export function ToolArgs({
     )
   }
 
-  const entries = Object.entries(args)
+  const entries = Object.entries(args).filter(([key]) => !hiddenArgKeys?.has(key))
   if (entries.length === 0) {
     return (
       <pre className="home-panel-frame-soft overflow-x-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-[color:var(--color-code-card-text)]">

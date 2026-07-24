@@ -247,7 +247,7 @@ describe('ChatPanel', () => {
     expect(document.querySelector('[data-user-message-id="u1"]')).toHaveClass('max-w-[960px]')
   })
 
-  it('shows the tool permission dialog when a pending request exists', () => {
+  it('shows the inline tool permission card when a pending request exists', () => {
     renderPanel({
       pendingToolPermissionRequest: {
         messageId: 'assistant-1',
@@ -260,11 +260,11 @@ describe('ChatPanel', () => {
       },
     })
 
-    expect(screen.getByText('Permission')).toBeInTheDocument()
-    expect(screen.getByText('bash')).toBeInTheDocument()
+    expect(screen.getByText(/allow/i)).toBeInTheDocument()
+    expect(screen.getByText('ls -la')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Deny' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Dismiss permission dialog' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Dismiss permission dialog' })).toBeNull()
   })
 
   it('does not show the tool permission dialog while the routed session is switching', () => {

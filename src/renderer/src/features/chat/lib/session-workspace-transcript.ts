@@ -52,7 +52,9 @@ function workspacePathToMessages(workspace: SessionWorkspace, messages: UIMessag
       role: message.role,
       parts: message.parts.flatMap(messagePartToUIParts),
       createdAt: new Date(message.createdAt),
-      ...(message.metadata?.branchSummary || message.metadata?.compactionSummary
+        ...(message.metadata?.branchSummary ||
+        message.metadata?.compactionSummary ||
+        message.metadata?.phaseTranscript
         ? {
             metadata: {
               ...(message.metadata.branchSummary
@@ -61,6 +63,9 @@ function workspacePathToMessages(workspace: SessionWorkspace, messages: UIMessag
               ...(message.metadata.compactionSummary
                 ? { compactionSummary: message.metadata.compactionSummary }
                 : {}),
+                ...(message.metadata.phaseTranscript
+                  ? { phaseTranscript: message.metadata.phaseTranscript }
+                  : {}),
             },
           }
         : {}),
@@ -352,5 +357,32 @@ export function resolveTranscriptMessages({
       role: message.role,
     })),
   })
+  // #region debug-point D:workspace-transcript
+  void fetch('http://127.0.0.1:7777/event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: 'phase-flow-missing',
+      runId: 'pre-fix',
+      hypothesisId: 'D',
+      location: 'session-workspace-transcript.ts:resolveTranscriptMessages',
+      msg: '[DEBUG] Resolved transcript messages for active workspace',
+      data: {
+        sessionId: activeSessionId ? String(activeSessionId) : null,
+        rawMessageCount: messages.length,
+        workspaceMessageCount: workspaceMessages.length,
+        transcriptMessageCount: transcriptMessages.length,
+        workspacePhaseTranscriptIds: workspaceMessages
+          .filter((message) => message.metadata?.phaseTranscript)
+          .map((message) => message.id),
+        transcriptPhaseTranscriptIds: transcriptMessages
+          .filter((message) => message.metadata?.phaseTranscript)
+          .map((message) => message.id),
+        activeWorkspaceNodeId: activeWorkspace?.activeNodeId ? String(activeWorkspace.activeNodeId) : null,
+      },
+      ts: Date.now(),
+    }),
+  }).catch(() => {})
+  // #endregion
   return transcriptMessages
 }

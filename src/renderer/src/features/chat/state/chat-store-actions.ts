@@ -74,7 +74,7 @@ async function createSession(projectPath: string, set: ChatSet, get: ChatGet) {
       ),
       error: null,
     })
-    void useSessionStore.getState().refreshSessionsAndTree(toSessionId(session.id))
+    void useSessionStore.getState().refreshSessionsAndWorkspace(toSessionId(session.id))
     return session.id
   } catch (err) {
     handleStoreError(err, 'create session', setError(set))
@@ -85,11 +85,13 @@ async function createSession(projectPath: string, set: ChatSet, get: ChatGet) {
 function setActiveSession(id: SessionId | null, set: ChatSet, get: ChatGet) {
   if (!id || get().missingSessionIds.has(id)) {
     set({ activeSessionId: null, activeSession: null, draftSession: null })
+    void useSessionStore.getState().refreshSessionWorkspace(null)
     return
   }
 
   const cached = get().sessionById.get(id) ?? null
   set({ activeSessionId: id, activeSession: cached, draftSession: null })
+  refreshSessionStoreForSession(id, id)
 
   if (!cached) {
     void get().refreshSession(id)
@@ -209,8 +211,10 @@ export function createChatActions(set: ChatSet, get: ChatGet): ChatActions {
   return {
     loadSessions: () => loadSessions(set, get),
     createSession: (projectPath) => createSession(projectPath, set, get),
-    startDraftSession: (projectPath = null) =>
-      set({ activeSessionId: null, activeSession: null, draftSession: { projectPath } }),
+    startDraftSession: (projectPath = null) => {
+      set({ activeSessionId: null, activeSession: null, draftSession: { projectPath } })
+      void useSessionStore.getState().refreshSessionWorkspace(null)
+    },
     setActiveSessionId: (id) => get().setActiveSession(id),
     setActiveSession: (id) => setActiveSession(id, set, get),
     refreshSession: (id) => refreshSession(id, set, get),

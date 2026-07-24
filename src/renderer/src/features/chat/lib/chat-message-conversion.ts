@@ -49,13 +49,16 @@ export function sessionToUIMessages(session: SessionDetail): UIMessage[] {
     role: msg.role,
     parts: msg.parts.flatMap(messagePartToUIParts),
     createdAt: new Date(msg.createdAt),
-    ...(msg.metadata?.branchSummary || msg.metadata?.compactionSummary
+      ...(msg.metadata?.branchSummary || msg.metadata?.compactionSummary || msg.metadata?.phaseTranscript
       ? {
           metadata: {
             ...(msg.metadata.branchSummary ? { branchSummary: msg.metadata.branchSummary } : {}),
             ...(msg.metadata.compactionSummary
               ? { compactionSummary: msg.metadata.compactionSummary }
               : {}),
+              ...(msg.metadata.phaseTranscript
+                ? { phaseTranscript: msg.metadata.phaseTranscript }
+                : {}),
           },
         }
       : {}),

@@ -1,6 +1,8 @@
 import { SessionId } from '@shared/types/brand'
+import type { AgentTransportPhaseEndEvent } from '@shared/types/stream'
+import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import type { WaggleCollaborationStatus } from '@shared/types/waggle'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAgentChat } from '@/features/chat/hooks/useAgentChat'
 import { useAutoSendQueue } from '@/features/chat/hooks/useAutoSendQueue'
 import { useSendMessage } from '@/features/chat/hooks/useSendMessage'
@@ -23,7 +25,10 @@ import { useWaggleLaunchPromptStore, useWaggleStore } from '@/features/waggle/st
 import { api } from '@/shared/lib/ipc'
 import { createRendererLogger } from '@/shared/lib/logger'
 import { reportAutoSendQueueFailure } from '../lib/queue-failure-feedback'
-import { findLatestPendingToolPermissionRequest } from '../lib/tool-permission-request'
+import {
+  findLatestPendingToolPermissionRequest,
+  type PendingToolPermissionRequest,
+} from '../lib/tool-permission-request'
 import type { ChatPanelSections } from '../model'
 import { useBranchSummaryWorkflow } from './useBranchSummaryWorkflow'
 import { useChatPanelEnvironment } from './useChatPanelEnvironment'
@@ -34,14 +39,63 @@ import { useSteerWorkflow } from './useSteerWorkflow'
 import { useTranscriptSection } from './useTranscriptSection'
 
 const logger = createRendererLogger('chat-panel')
+const TOOL_PERMISSION_REQUEST_EVENT = 'openwaggle:tool-permission:request'
+const TOOL_PERMISSION_RESOLVED_EVENT = 'openwaggle:tool-permission:resolved'
+const USER_QUESTION_REQUEST_EVENT = 'openwaggle:user-question:request'
+const USER_QUESTION_RESOLVED_EVENT = 'openwaggle:user-question:resolved'
+
+function isPendingToolPermissionRequest(value: unknown): value is PendingToolPermissionRequest {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'toolCallId' in value &&
+    'toolName' in value &&
+    'input' in value &&
+    typeof value.toolCallId === 'string' &&
+    typeof value.toolName === 'string'
+  )
+}
+
+function toLivePendingToolPermissionRequest(value: unknown): PendingToolPermissionRequest | null {
+  if (!isPendingToolPermissionRequest(value)) {
+    return null
+  }
+  return {
+    ...value,
+    messageId: typeof value.messageId === 'string' ? value.messageId : `live:${value.toolCallId}`,
+    summary: typeof value.summary === 'string' ? value.summary : '',
+  }
+}
+
+function isPendingUserQuestionRequest(value: unknown): value is PendingUserQuestionRequest {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'phase' in value &&
+    'question' in value &&
+    typeof value.phase === 'string' &&
+    typeof value.question === 'string'
+  )
+}
 
 export function useChatPanelSections(): ChatPanelSections {
   // ── Intent-driven scroll flag ──
   const [userDidSend, setUserDidSend] = useState(false)
-  const [dismissedToolPermissionIds, setDismissedToolPermissionIds] = useState<Set<string>>(() => new Set())
+  const [dismissedToolPermissionIds, setDismissedToolPermissionIds] = useState<Set<string>>(
+    () => new Set(),
+  )
   const [toolPermissionBusy, setToolPermissionBusy] = useState(false)
   const [toolPermissionError, setToolPermissionError] = useState<string | null>(null)
   const [suppressedToolPermissionId, setSuppressedToolPermissionId] = useState<string | null>(null)
+  const [livePendingToolPermissionRequest, setLivePendingToolPermissionRequest] =
+    useState<PendingToolPermissionRequest | null>(null)
+  const [liveCompletedPhases, setLiveCompletedPhases] = useState<
+    readonly AgentTransportPhaseEndEvent[]
+  >([])
+  const [pendingUserQuestionRequest, setPendingUserQuestionRequest] =
+    useState<PendingUserQuestionRequest | null>(null)
+  const pendingToolPermissionVersionRef = useRef(0)
+  const pendingUserQuestionVersionRef = useRef(0)
 
   function onUserDidSendConsumed() {
     setUserDidSend(false)
@@ -88,28 +142,28 @@ export function useChatPanelSections(): ChatPanelSections {
 
   const { handleSend, handleSendText, handleSendMachine, handleSendWaggle, handleSendTeam } =
     useSendMessage({
-    activeSessionId,
-    model,
-    projectPath,
-    thinkingLevel,
-    createSession,
-    sendMessage,
-    sendMachineMessage: async (payload) => {
-      if (!activeSessionId) {
-        throw new Error('No active session for Machine mode.')
-      }
-      await api.sendMachineMessage(activeSessionId, payload, model)
-    },
-    sendWaggleMessage,
-    sendTeamMessage: async (payload, teammate) => {
-      if (!activeSessionId) {
-        throw new Error('No active session for Team send.')
-      }
-      await api.sendTeamMessage(activeSessionId, payload, model, teammate)
-    },
-    onMachineSessionResolved: (sessionId) => {
-      useMachineModeStore.getState().startRun(sessionId)
-    },
+      activeSessionId,
+      model,
+      projectPath,
+      thinkingLevel,
+      createSession,
+      sendMessage,
+      sendMachineMessage: async (payload) => {
+        if (!activeSessionId) {
+          throw new Error('No active session for Machine mode.')
+        }
+        await api.sendMachineMessage(activeSessionId, payload, model)
+      },
+      sendWaggleMessage,
+      sendTeamMessage: async (payload, teammate) => {
+        if (!activeSessionId) {
+          throw new Error('No active session for Team send.')
+        }
+        await api.sendTeamMessage(activeSessionId, payload, model, teammate)
+      },
+      onMachineSessionResolved: (sessionId) => {
+        useMachineModeStore.getState().startRun(sessionId)
+      },
     })
 
   async function handleStarterPrompt(content: string) {
@@ -183,8 +237,99 @@ export function useChatPanelSections(): ChatPanelSections {
     return api.onRunCompleted(({ sessionId }) => {
       useTeamModeStore.getState().finishRun(sessionId)
       useMachineModeStore.getState().finishRun(sessionId)
+      if (activeSessionId && sessionId === activeSessionId) {
+        pendingToolPermissionVersionRef.current += 1
+        setLivePendingToolPermissionRequest(null)
+        pendingUserQuestionVersionRef.current += 1
+        setPendingUserQuestionRequest(null)
+      }
     })
-  }, [])
+  }, [activeSessionId])
+
+  useEffect(() => {
+    const sessionId = activeSessionId
+    pendingToolPermissionVersionRef.current += 1
+    setLivePendingToolPermissionRequest(null)
+    setLiveCompletedPhases([])
+    pendingUserQuestionVersionRef.current += 1
+    setPendingUserQuestionRequest(null)
+    if (sessionId === null) {
+      return
+    }
+  }, [activeSessionId])
+
+  useEffect(() => {
+    if (!activeSessionId) {
+      return
+    }
+
+    const phaseOrder = ['prepare', 'plan', 'perform', 'perfect'] as const
+
+    return api.onAgentEvent(({ sessionId, event }) => {
+      if (sessionId !== activeSessionId) {
+        return
+      }
+
+      if (event.type === 'agent_start') {
+        setLiveCompletedPhases([])
+        return
+      }
+
+      if (event.type !== 'phase_end') {
+        return
+      }
+
+      setLiveCompletedPhases((current) => {
+        const next = [...current.filter((phase) => phase.phaseId !== event.phaseId), event]
+        next.sort(
+          (left, right) => phaseOrder.indexOf(left.phaseId) - phaseOrder.indexOf(right.phaseId),
+        )
+        return next
+      })
+    })
+  }, [activeSessionId])
+
+  useEffect(() => {
+    if (!activeSessionId) {
+      return
+    }
+
+    let cancelled = false
+    const requestVersion = pendingUserQuestionVersionRef.current
+    void api
+      .getPendingUserQuestion(activeSessionId)
+      .then((request) => {
+        if (!cancelled && pendingUserQuestionVersionRef.current === requestVersion) {
+          setPendingUserQuestionRequest(request)
+        }
+      })
+      .catch(() => undefined)
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeSessionId])
+
+  useEffect(() => {
+    if (!activeSessionId) {
+      return
+    }
+
+    let cancelled = false
+    const requestVersion = pendingToolPermissionVersionRef.current
+    void api
+      .getPendingToolPermission(activeSessionId)
+      .then((request) => {
+        if (!cancelled && pendingToolPermissionVersionRef.current === requestVersion) {
+          setLivePendingToolPermissionRequest(toLivePendingToolPermissionRequest(request))
+        }
+      })
+      .catch(() => undefined)
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeSessionId])
 
   useEffect(() => {
     if (!activeSessionId) {
@@ -192,7 +337,82 @@ export function useChatPanelSections(): ChatPanelSections {
     }
 
     return api.onAgentEvent(({ sessionId, event }) => {
-      if (sessionId !== activeSessionId || event.type !== 'custom' || !event.name.startsWith('machine:')) {
+      if (sessionId !== activeSessionId || event.type !== 'custom') {
+        return
+      }
+
+      // #region debug-point R:permission-custom-event
+      if (
+        event.name === TOOL_PERMISSION_REQUEST_EVENT ||
+        event.name === TOOL_PERMISSION_RESOLVED_EVENT
+      ) {
+        void fetch('http://127.0.0.1:7777/event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: 'permission-flow',
+            runId: 'pre-fix',
+            hypothesisId: '2',
+            location: 'use-chat-panel-controller.ts:onAgentEvent',
+            msg: '[DEBUG] Renderer received tool permission custom event',
+            data: {
+              activeSessionId: String(activeSessionId),
+              sessionId: String(sessionId),
+              name: event.name,
+              value:
+                event.name === TOOL_PERMISSION_REQUEST_EVENT &&
+                isPendingToolPermissionRequest(event.value)
+                  ? {
+                      toolCallId: event.value.toolCallId,
+                      toolName: event.value.toolName,
+                    }
+                  : null,
+            },
+            ts: Date.now(),
+          }),
+        }).catch(() => {})
+      }
+      // #endregion
+
+      if (event.name === USER_QUESTION_REQUEST_EVENT && isPendingUserQuestionRequest(event.value)) {
+        pendingUserQuestionVersionRef.current += 1
+        setPendingUserQuestionRequest(event.value)
+        return
+      }
+
+      if (
+        event.name === TOOL_PERMISSION_REQUEST_EVENT &&
+        isPendingToolPermissionRequest(event.value)
+      ) {
+        pendingToolPermissionVersionRef.current += 1
+        setLivePendingToolPermissionRequest(toLivePendingToolPermissionRequest(event.value))
+        return
+      }
+
+      if (event.name === TOOL_PERMISSION_RESOLVED_EVENT) {
+        pendingToolPermissionVersionRef.current += 1
+        setLivePendingToolPermissionRequest(null)
+        return
+      }
+
+      if (event.name === USER_QUESTION_RESOLVED_EVENT) {
+        pendingUserQuestionVersionRef.current += 1
+        setPendingUserQuestionRequest(null)
+      }
+    })
+  }, [activeSessionId])
+
+  useEffect(() => {
+    if (!activeSessionId) {
+      return
+    }
+
+    return api.onAgentEvent(({ sessionId, event }) => {
+      if (
+        sessionId !== activeSessionId ||
+        event.type !== 'custom' ||
+        !event.name.startsWith('machine:')
+      ) {
         return
       }
 
@@ -395,6 +615,14 @@ export function useChatPanelSections(): ChatPanelSections {
     handleDiscardMachinePlan,
     openSettings,
     handleDismissInterruptedRun,
+    pendingUserQuestionRequest,
+    livePhaseEvents: liveCompletedPhases,
+    handleResolveUserQuestion: async (resolution) => {
+      if (!activeSessionId) {
+        throw new Error('No active session for user question resolution.')
+      }
+      await api.resolveUserQuestion(activeSessionId, resolution)
+    },
     handleBranchFromMessage,
     handleForkFromMessage,
     userDidSend,
@@ -406,13 +634,15 @@ export function useChatPanelSections(): ChatPanelSections {
     transcript.messages,
     dismissedToolPermissionIds,
   )
+  const visibleToolPermissionRequest =
+    livePendingToolPermissionRequest ?? latestToolPermissionRequest
   const pendingToolPermissionRequest =
-    latestToolPermissionRequest &&
-    latestToolPermissionRequest.toolCallId !== suppressedToolPermissionId
-      ? latestToolPermissionRequest
+    visibleToolPermissionRequest &&
+    visibleToolPermissionRequest.toolCallId !== suppressedToolPermissionId
+      ? visibleToolPermissionRequest
       : null
 
-  const latestToolPermissionId = latestToolPermissionRequest?.toolCallId ?? null
+  const latestToolPermissionId = visibleToolPermissionRequest?.toolCallId ?? null
 
   useEffect(() => {
     if (!pendingToolPermissionRequest) {
@@ -489,8 +719,11 @@ export function useChatPanelSections(): ChatPanelSections {
       })
       setToolPermissionBusy(false)
     } catch (permissionError) {
-      const message = permissionError instanceof Error ? permissionError.message : String(permissionError)
-      setSuppressedToolPermissionId((current) => (current === currentRequest.toolCallId ? null : current))
+      const message =
+        permissionError instanceof Error ? permissionError.message : String(permissionError)
+      setSuppressedToolPermissionId((current) =>
+        current === currentRequest.toolCallId ? null : current,
+      )
       setToolPermissionBusy(false)
       setToolPermissionError(message)
       showToast(message)
@@ -536,8 +769,8 @@ export function useChatPanelSections(): ChatPanelSections {
     isSteering,
     status,
     compactionStatus,
-        machineModeEnabled: scopedMachineModeEnabled,
-        machineStatus,
+    machineModeEnabled: scopedMachineModeEnabled,
+    machineStatus,
     machinePlan,
     activeTeammate: scopedActiveTeammate,
     teamStatus,
@@ -556,7 +789,7 @@ export function useChatPanelSections(): ChatPanelSections {
     handleUseFollowUpPrompt,
     handleStartWaggle: sendWorkflow.startWaggle,
     handleStartTeam: sendWorkflow.startTeam,
-        handleSetMachineModeEnabled: sendWorkflow.setMachineModeEnabled,
+    handleSetMachineModeEnabled: sendWorkflow.setMachineModeEnabled,
     handleApproveMachinePlan,
     handleDiscardMachinePlan,
     handleStopCollaboration: sendWorkflow.stopCollaboration,

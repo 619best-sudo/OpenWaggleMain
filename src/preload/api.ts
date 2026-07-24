@@ -62,6 +62,9 @@ export const api: OpenWaggleApi = {
   cancelMachine: send('agent:cancel-machine'),
   steerAgent: invoke('agent:steer'),
   resolveToolPermission: invoke('agent:resolve-tool-permission'),
+  getPendingToolPermission: invoke('agent:get-pending-tool-permission'),
+  resolveUserQuestion: invoke('agent:resolve-user-question'),
+  getPendingUserQuestion: invoke('agent:get-pending-user-question'),
   onAgentEvent: on('agent:event'),
 
   getAgentPhase: invoke('agent:get-phase'),

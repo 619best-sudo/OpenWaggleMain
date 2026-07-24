@@ -1,5 +1,6 @@
 import * as SqlClient from '@effect/sql/SqlClient'
 import { SessionId } from '@shared/types/brand'
+import { PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE } from '@shared/types/phase'
 import type { SessionDetail, SessionSummary } from '@shared/types/session'
 import * as Effect from 'effect/Effect'
 import { runStoreEffect } from '../store-runtime'
@@ -32,7 +33,7 @@ function hydrateSessionDetail(sessionRow: SessionRow, nodeRows: readonly Session
       projectPath: sessionRow.project_path,
       piSessionId: sessionRow.pi_session_id,
       piSessionFile: sessionRow.pi_session_file ?? undefined,
-      messages: hydrateSessionMessages(getActivePathRows(sessionRow.last_active_node_id, nodeRows)),
+      messages: hydrateSessionMessages(buildSessionDetailNodeRows(sessionRow, nodeRows)),
       waggleConfig: hydrateWaggleConfig(parseJsonValue(sessionRow.waggle_config_json)),
       archived: sessionRow.archived === 1 ? true : undefined,
       createdAt: sessionRow.created_at,
@@ -42,6 +43,50 @@ function hydrateSessionDetail(sessionRow: SessionRow, nodeRows: readonly Session
     logSessionHydrationFailure(sessionRow, error)
     return null
   }
+}
+
+function isPersistedPhaseTranscriptRow(row: SessionNodeRow) {
+  if (row.kind !== 'custom') {
+    return false
+  }
+
+  const content = parseJsonValue(row.content_json)
+  return (
+    typeof content === 'object' &&
+    content !== null &&
+    !Array.isArray(content) &&
+    (content as { customType?: unknown }).customType === PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE
+  )
+}
+
+export function buildSessionDetailNodeRows(
+  sessionRow: Pick<SessionRow, 'last_active_node_id' | 'last_active_branch_id'>,
+  nodeRows: readonly SessionNodeRow[],
+) {
+  const activePathRows = getActivePathRows(sessionRow.last_active_node_id, nodeRows)
+  const activePathIds = new Set(activePathRows.map((row) => row.id))
+  const activeBranchId = sessionRow.last_active_branch_id
+  if (!activeBranchId) {
+    return activePathRows
+  }
+
+  const latestPhaseTranscriptRow = nodeRows.reduce<SessionNodeRow | null>((latest, row) => {
+    if (!isPersistedPhaseTranscriptRow(row) || row.branch_hint_id !== activeBranchId) {
+      return latest
+    }
+
+    if (!latest || row.created_order > latest.created_order) {
+      return row
+    }
+
+    return latest
+  }, null)
+
+  if (!latestPhaseTranscriptRow || activePathIds.has(latestPhaseTranscriptRow.id)) {
+    return activePathRows
+  }
+
+  return [...activePathRows, latestPhaseTranscriptRow]
 }
 
 function isSessionDetail(session: SessionDetail | null) {

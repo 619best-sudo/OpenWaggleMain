@@ -29,6 +29,8 @@ interface TranscriptRowProps {
   onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   onBranchFromMessage: (messageId: string) => void
   onForkFromMessage: (messageId: string) => void
+  pendingUserQuestionRequest: ChatTranscriptSectionState['pendingUserQuestionRequest']
+  onResolveUserQuestion: ChatTranscriptSectionState['onResolveUserQuestion']
 }
 
 function TranscriptRow({
@@ -42,6 +44,8 @@ function TranscriptRow({
   onDismissInterruptedRun,
   onBranchFromMessage,
   onForkFromMessage,
+  pendingUserQuestionRequest,
+  onResolveUserQuestion,
 }: TranscriptRowProps) {
   return (
     <ChatRowRenderer
@@ -57,6 +61,8 @@ function TranscriptRow({
       onDismissInterruptedRun={onDismissInterruptedRun}
       onBranchFromMessage={onBranchFromMessage}
       onForkFromMessage={onForkFromMessage}
+      pendingUserQuestionRequest={pendingUserQuestionRequest}
+      onResolveUserQuestion={onResolveUserQuestion}
     />
   )
 }
@@ -65,6 +71,7 @@ function getChatRowKey(row: ChatRow) {
   return matchBy(row, 'type')
     .with('message', (value) => `message:${value.message.id}`)
     .with('waggle-turn', (value) => value.id)
+    .with('phase', (value) => value.id)
     .with('machine-timeline', (value) => value.id)
     .with('interrupted-run', (value) => `interrupted-run:${value.runId}`)
     .with('branch-summary', (value) => `branch-summary:${value.id}`)
@@ -88,6 +95,8 @@ interface RenderTranscriptRowsParams {
   onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   onBranchFromMessage: (messageId: string) => void
   onForkFromMessage: (messageId: string) => void
+  pendingUserQuestionRequest: ChatTranscriptSectionState['pendingUserQuestionRequest']
+  onResolveUserQuestion: ChatTranscriptSectionState['onResolveUserQuestion']
 }
 
 function TranscriptRows(params: RenderTranscriptRowsParams) {
@@ -102,6 +111,8 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
     onDismissInterruptedRun,
     onBranchFromMessage,
     onForkFromMessage,
+    pendingUserQuestionRequest,
+    onResolveUserQuestion,
   } = params
 
   return (
@@ -126,6 +137,8 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
               onDismissInterruptedRun={onDismissInterruptedRun}
               onBranchFromMessage={onBranchFromMessage}
               onForkFromMessage={onForkFromMessage}
+              pendingUserQuestionRequest={pendingUserQuestionRequest}
+              onResolveUserQuestion={onResolveUserQuestion}
             />
           </div>
         )
@@ -268,6 +281,8 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
     onDismissInterruptedRun,
     onBranchFromMessage,
     onForkFromMessage,
+    pendingUserQuestionRequest,
+    onResolveUserQuestion,
     lastUserMessageId,
     streamSignalVersion,
     userDidSend,
@@ -354,6 +369,8 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
             onDismissInterruptedRun={onDismissInterruptedRun}
             onBranchFromMessage={onBranchFromMessage}
             onForkFromMessage={onForkFromMessage}
+          pendingUserQuestionRequest={pendingUserQuestionRequest}
+          onResolveUserQuestion={onResolveUserQuestion}
           />
         </div>
       </div>

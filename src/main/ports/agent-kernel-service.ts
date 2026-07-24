@@ -2,6 +2,7 @@ import type { HydratedAgentSendPayload, Message } from '@shared/types/agent'
 import type { ContextCompactionResult, ContextUsageSnapshot } from '@shared/types/context-usage'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { SessionDetail } from '@shared/types/session'
+import type { ToolPermissionMode } from '@shared/types/settings'
 import type { AgentTransportEvent } from '@shared/types/stream'
 import type { WaggleConfig, WaggleStreamMetadata, WaggleTurnEvent } from '@shared/types/waggle'
 import { Context, type Effect } from 'effect'
@@ -33,6 +34,7 @@ export interface AgentKernelRunInput {
   readonly runId: string
   readonly payload: HydratedAgentSendPayload
   readonly model: SupportedModelId
+  readonly toolPermissionMode?: ToolPermissionMode
   readonly promptDelivery?: AgentKernelPromptDelivery
   readonly skillToggles?: Readonly<Record<string, boolean>>
   /** Restrict the tool set for this run (see `AgentRunInput.noTools`). */

@@ -6,6 +6,8 @@
  */
 
 import type { JsonValue } from './json'
+import type { AgentPhaseId, PersistedPhaseStatus } from './phase'
+import type { PendingUserQuestionRequest } from './user-question'
 
 interface TransportEventBase {
   readonly timestamp: number
@@ -179,6 +181,25 @@ export interface AgentTransportQueueUpdateEvent extends TransportEventBase {
   readonly followUp: readonly string[]
 }
 
+export interface AgentTransportPhaseStartEvent extends TransportEventBase {
+  readonly type: 'phase_start'
+  readonly phaseId: Exclude<AgentPhaseId, 'working'>
+  readonly label: string
+}
+
+export interface AgentTransportPhaseEndEvent extends TransportEventBase {
+  readonly type: 'phase_end'
+  readonly phaseId: Exclude<AgentPhaseId, 'working'>
+  readonly label: string
+  readonly status: PersistedPhaseStatus
+  readonly summary?: string
+  readonly planJson?: JsonValue
+  readonly planSet?: JsonValue
+  readonly qaPlan?: JsonValue
+  readonly pendingUserQuestion?: PendingUserQuestionRequest
+  readonly toolCallIds?: readonly string[]
+}
+
 export interface AgentTransportCompactionStartEvent extends TransportEventBase {
   readonly type: 'compaction_start'
   readonly reason: 'manual' | 'threshold' | 'overflow'
@@ -219,6 +240,8 @@ export type AgentTransportEvent =
   | AgentTransportAgentEndEvent
   | AgentTransportTurnStartEvent
   | AgentTransportTurnEndEvent
+  | AgentTransportPhaseStartEvent
+  | AgentTransportPhaseEndEvent
   | AgentTransportMessageStartEvent
   | AgentTransportMessageUpdateEvent
   | AgentTransportMessageEndEvent

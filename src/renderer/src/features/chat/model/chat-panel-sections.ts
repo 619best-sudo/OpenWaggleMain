@@ -10,6 +10,7 @@ import type { AgentChatStatus, AgentCompactionStatus } from '../hooks/useAgentCh
 import type { SessionForkTarget } from '../lib/session-fork-targets'
 import type { PendingToolPermissionRequest } from '../lib/tool-permission-request'
 import type { ChatRow } from '../lib/types-chat-row'
+import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 
 export interface ChatTranscriptSectionState {
   readonly messages: UIMessage[]
@@ -28,6 +29,7 @@ export interface ChatTranscriptSectionState {
   /** Clears userDidSend after the scroll effect processes it. */
   readonly onUserDidSendConsumed: () => void
   readonly pendingToolPermissionRequest: PendingToolPermissionRequest | null
+  readonly pendingUserQuestionRequest: PendingUserQuestionRequest | null
   readonly toolPermissionBusy: boolean
   readonly toolPermissionError: string | null
   onOpenProject: () => Promise<void>
@@ -39,6 +41,9 @@ export interface ChatTranscriptSectionState {
   onDismissToolPermission: () => void
   onApproveToolPermission: () => Promise<void>
   onDenyToolPermission: () => Promise<void>
+  onResolveUserQuestion: (
+    resolution: { request: PendingUserQuestionRequest; answer: string },
+  ) => Promise<void>
   onDismissError: (errorId: string | null) => void
   onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   onBranchFromMessage: (messageId: string) => void

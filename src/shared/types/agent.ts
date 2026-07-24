@@ -1,5 +1,6 @@
 import type { MessageId } from './brand'
 import type { SupportedModelId } from './llm'
+import type { PersistedPhaseTranscript } from './phase'
 import type { ThinkingLevel } from './settings'
 import type { ToolCallRequest, ToolCallResult } from './tools'
 import type { WaggleMessageMetadata } from './waggle'
@@ -88,6 +89,7 @@ export interface MessageMetadata {
   readonly waggle?: WaggleMessageMetadata
   readonly branchSummary?: BranchSummaryMetadata
   readonly compactionSummary?: CompactionSummaryMetadata
+  readonly phaseTranscript?: PersistedPhaseTranscript
 }
 
 export interface Message {

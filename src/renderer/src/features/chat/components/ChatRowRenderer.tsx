@@ -14,6 +14,7 @@ import { CompactionSummaryCard } from './CompactionSummaryCard'
 import { InterruptedRunNotice } from './InterruptedRunNotice'
 import { MachineTimelineBubble } from './MachineTimelineBubble'
 import { MessageBubble } from './MessageBubble'
+import { PhaseTimelineCard } from './PhaseTimelineCard'
 import { RunSummary } from './RunSummary'
 
 interface ChatRowRendererProps {
@@ -27,6 +28,13 @@ interface ChatRowRendererProps {
   onDiscardMachinePlan?: () => Promise<void>
   onBranchFromMessage?: (messageId: string) => void
   onForkFromMessage?: (messageId: string) => void
+  pendingUserQuestionRequest?: import('@shared/types/user-question').PendingUserQuestionRequest | null
+  onResolveUserQuestion?: (
+    resolution: {
+      request: import('@shared/types/user-question').PendingUserQuestionRequest
+      answer: string
+    },
+  ) => Promise<void>
 }
 
 export function ChatRowRenderer({
@@ -38,6 +46,8 @@ export function ChatRowRenderer({
   onDiscardMachinePlan,
   onBranchFromMessage,
   onForkFromMessage,
+  pendingUserQuestionRequest,
+  onResolveUserQuestion,
 }: ChatRowRendererProps) {
   const themeMode = usePreferencesStore((state) => state.settings.themeMode)
   const phaseLoaderSrc = isLightThemeMode(themeMode) ? lightLoaderGif : loaderGif
@@ -113,6 +123,13 @@ export function ChatRowRenderer({
           ))}
         </div>
       </section>
+    ))
+    .with('phase', (value) => (
+      <PhaseTimelineCard
+        row={value}
+        pendingUserQuestionRequest={pendingUserQuestionRequest}
+        onResolveUserQuestion={onResolveUserQuestion}
+      />
     ))
     .with('machine-timeline', (value) => (
       <MachineTimelineBubble

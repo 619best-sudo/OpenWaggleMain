@@ -3,6 +3,8 @@ import type { UIMessage } from '@shared/types/chat-ui'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { MachineExecutionState } from '@shared/types/machine'
 import type { SessionDetail } from '@shared/types/session'
+import type { AgentTransportPhaseEndEvent } from '@shared/types/stream'
+import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import type { WaggleCollaborationStatus } from '@shared/types/waggle'
 import { useState } from 'react'
 import type { useStreamingPhase } from '@/features/chat/hooks/useStreamingPhase'
@@ -57,6 +59,12 @@ export interface TranscriptSectionParams {
   readonly handleDiscardMachinePlan: () => Promise<void>
   readonly openSettings: () => void
   readonly handleDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
+  readonly handleResolveUserQuestion?: (resolution: {
+    request: PendingUserQuestionRequest
+    answer: string
+  }) => Promise<void>
+  readonly pendingUserQuestionRequest?: PendingUserQuestionRequest | null
+  readonly livePhaseEvents?: readonly AgentTransportPhaseEndEvent[]
   readonly handleBranchFromMessage: (messageId: string) => void
   readonly handleForkFromMessage: (messageId: string) => void
   readonly userDidSend: boolean
@@ -84,6 +92,9 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     handleDiscardMachinePlan,
     openSettings,
     handleDismissInterruptedRun,
+    handleResolveUserQuestion,
+    pendingUserQuestionRequest,
+    livePhaseEvents,
     handleBranchFromMessage,
     handleForkFromMessage,
     userDidSend,
@@ -139,6 +150,8 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     waggleMetadataLookup,
     phase,
     interruptedRun,
+    pendingUserQuestionRequest,
+    livePhaseEvents,
   })
   logger.debug('Built transcript rows', {
     sessionId: activeSessionId ? String(activeSessionId) : null,
@@ -183,10 +196,12 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     userDidSend,
     onUserDidSendConsumed,
     pendingToolPermissionRequest: null,
+    pendingUserQuestionRequest: pendingUserQuestionRequest ?? null,
     toolPermissionBusy: false,
     toolPermissionError: null,
     onDismissToolPermission: () => undefined,
     onApproveToolPermission: async () => undefined,
     onDenyToolPermission: async () => undefined,
+    onResolveUserQuestion: handleResolveUserQuestion ?? (async () => undefined),
   }
 }
