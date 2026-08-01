@@ -25,6 +25,7 @@ import type {
 } from './git'
 import type { SupportedModelId } from './llm'
 import type { AgentPhaseState } from './phase'
+import type { ProjectMemoryStatus } from './project-memory'
 import type {
   AgentsInstructionStatus,
   AgentsResolutionResult,
@@ -157,6 +158,23 @@ export interface IpcIntegrationInvokeChannelMap {
   'skills:import-from-url': {
     args: [projectPath: string, sourceUrl: string]
     return: SkillImportResult
+  }
+  'skills:remove': {
+    args: [projectPath: string, skillId: string]
+    return: undefined
+  }
+  // Project memory + turing-harness prewarm
+  'project-memory:get-status': {
+    args: [projectPath: string, modelRef?: string]
+    return: ProjectMemoryStatus
+  }
+  'project-memory:refresh': {
+    args: [projectPath: string, modelRef?: string, piSessionId?: string]
+    return: ProjectMemoryStatus
+  }
+  'project-memory:prewarm': {
+    args: [projectPath: string, modelRef?: string]
+    return: undefined
   }
   'dialog:confirm': {
     args: [message: string, detail?: string]
@@ -301,5 +319,11 @@ export interface IpcIntegrationInvokeChannelMap {
   'app:get-version': {
     args: []
     return: string
+  }
+  // Tool media preview — resolves a media file (image/video/audio/html) inside
+  // the active workspace to a data URL for inline rendering. See tool-media-handler.
+  'tool-media:resolve': {
+    args: [projectPath: string, mediaPath: string]
+    return: { dataUrl: string; mimeType: string } | { error: string }
   }
 }

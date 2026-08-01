@@ -4,6 +4,7 @@ import type { Highlighter, ThemedToken } from 'shiki'
 import { cn } from '@/shared/lib/cn'
 import { createRendererLogger } from '@/shared/lib/logger'
 import { DEFAULT_THEME, getHighlighter, resolveLanguage } from '@/shared/lib/shiki/highlighter'
+import type { WaggleCodeThemeName } from '@/shared/lib/shiki/waggle-code-theme'
 
 type TextareaVariant = 'default' | 'mono'
 type TextareaResize = 'none' | 'vertical' | 'both'
@@ -13,7 +14,7 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   readonly variant?: TextareaVariant
   readonly resize?: TextareaResize
   readonly highlightLanguage?: string
-  readonly highlightTheme?: 'github-light' | 'github-dark'
+  readonly highlightTheme?: WaggleCodeThemeName
 }
 
 interface HighlightedLine {
@@ -102,7 +103,7 @@ export function Textarea({
   variant = 'default',
   resize = 'vertical',
   highlightLanguage,
-  highlightTheme = DEFAULT_THEME as 'github-dark',
+  highlightTheme = DEFAULT_THEME,
   className,
   value,
   onScroll,
@@ -143,7 +144,10 @@ export function Textarea({
       highlightedLines = getHighlightedLines(
         highlighter.codeToTokensBase(textValue, {
           lang: resolvedLanguage,
-          theme: highlightTheme,
+          // Shiki types `theme` as one of its BUNDLED theme names; ours are
+          // registered by name at highlighter creation, so the lookup succeeds
+          // even though the name isn't in that union.
+          theme: highlightTheme as Parameters<Highlighter['codeToTokensBase']>[1]['theme'],
         }),
       )
     } catch (highlightError) {

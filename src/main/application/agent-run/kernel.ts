@@ -1,8 +1,12 @@
 import type { AgentSendPayload, HydratedAgentSendPayload } from '@shared/types/agent'
-import type { ToolPermissionMode } from '@shared/types/settings'
+import type { McpSettingsView } from '@shared/types/mcp'
 import type { SessionDetail } from '@shared/types/session'
+import type { ToolPermissionMode } from '@shared/types/settings'
 import * as Effect from 'effect/Effect'
-import { AgentKernelService } from '../../ports/agent-kernel-service'
+import {
+  AgentKernelService,
+  type AgentKernelStandardsContext,
+} from '../../ports/agent-kernel-service'
 import { hydratePayloadAttachments } from '../run-handler-utils'
 import type { AgentRunInput } from './types'
 
@@ -22,6 +26,8 @@ export function runAgentKernel(
     readonly session: SessionDetail
     readonly skillToggles?: Record<string, boolean>
     readonly toolPermissionMode: ToolPermissionMode
+    readonly mcpSettings?: McpSettingsView
+    readonly standardsContext?: AgentKernelStandardsContext
   },
 ) {
   return Effect.gen(function* () {
@@ -37,6 +43,8 @@ export function runAgentKernel(
       signal: input.signal,
       onEvent: input.onEvent,
       ...(preflight.skillToggles ? { skillToggles: preflight.skillToggles } : {}),
+      ...(preflight.mcpSettings ? { mcpSettings: preflight.mcpSettings } : {}),
+      ...(preflight.standardsContext ? { standardsContext: preflight.standardsContext } : {}),
     })
   })
 }

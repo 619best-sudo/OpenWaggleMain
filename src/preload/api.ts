@@ -64,6 +64,8 @@ export const api: OpenWaggleApi = {
   resolveToolPermission: invoke('agent:resolve-tool-permission'),
   getPendingToolPermission: invoke('agent:get-pending-tool-permission'),
   resolveUserQuestion: invoke('agent:resolve-user-question'),
+  resolvePlanReview: invoke('agent:resolve-plan-review'),
+  getPendingPlanReview: invoke('agent:get-pending-plan-review'),
   getPendingUserQuestion: invoke('agent:get-pending-user-question'),
   onAgentEvent: on('agent:event'),
 
@@ -156,9 +158,18 @@ export const api: OpenWaggleApi = {
   getSkillPreview: invoke('skills:get-preview'),
   importSkillFromUrl: (projectPath, sourceUrl) =>
     ipcRenderer.invoke('skills:import-from-url', projectPath, sourceUrl),
+  removeSkill: invoke('skills:remove'),
+
+  // Project memory + turing-harness prewarm
+  getProjectMemoryStatus: invoke('project-memory:get-status'),
+  refreshProjectMemory: invoke('project-memory:refresh'),
+  prewarmProjectMemory: invoke('project-memory:prewarm'),
+
+  resolveToolMediaFile: invoke('tool-media:resolve'),
 
   // Shell / App
   copyToClipboard: send('clipboard:write-text'),
+  forwardRendererLog: send('log:renderer'),
   openLogsDir: invoke('app:open-logs-dir'),
   getLogsPath: invoke('app:get-logs-path'),
   openPath: invoke('shell:open-path'),

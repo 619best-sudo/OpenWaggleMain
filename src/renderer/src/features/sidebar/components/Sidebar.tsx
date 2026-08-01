@@ -68,7 +68,6 @@ export function Sidebar() {
             onNewSession={controller.handleNewSession}
             onOpenMcp={controller.handleOpenMcp}
             onOpenSkills={controller.handleOpenSkills}
-            onOpenWaggle={controller.handleOpenWaggle}
           />
           <SidebarProjectsHeader
             sortMenuOpen={controller.sortMenuOpen}

@@ -95,6 +95,9 @@ importers:
       tesseract.js:
         specifier: ^6.0.1
         version: 6.0.1(encoding@0.1.13)
+      turing-harness:
+        specifier: file:../turing-harness
+        version: file:../turing-harness
       unified:
         specifier: ^11.0.5
         version: 11.0.5
@@ -7009,6 +7012,10 @@ packages:
 
   tunnel-agent@0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
+
+  turing-harness@file:../turing-harness:
+    resolution: {directory: ../turing-harness, type: directory}
+    engines: {node: '>=20'}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -15688,6 +15695,8 @@ snapshots:
   tunnel-agent@0.6.0:
     dependencies:
       safe-buffer: 5.2.1
+
+  turing-harness@file:../turing-harness: {}
 
   type-check@0.4.0:
     dependencies:

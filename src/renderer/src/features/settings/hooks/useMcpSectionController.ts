@@ -5,6 +5,7 @@ import type {
   McpConfigObject,
   McpConfigSourceId,
   McpConfigSourceSummary,
+  McpServerMap,
   McpServerSummary,
   McpSettingsView,
 } from '@shared/types/mcp'
@@ -239,6 +240,49 @@ export function useMcpSectionController(projectPath: string | null) {
     }
   }
 
+  async function removeServer(server: McpServerSummary) {
+    if (!view) return
+    const source = sourceById(view.sources, server.sourceId)
+    if (!source) {
+      showToast('Could not find the source for this server.', 'error')
+      return
+    }
+    if (!source.editable) {
+      showToast(`"${source.label}" is read-only and cannot be edited here.`, 'error')
+      return
+    }
+
+    let nextRawJson: string
+    try {
+      const parsed = parseMcpSource(rawEdits[source.id] ?? source.rawJson)
+      const nextConfig = removeServerFromConfig(parsed, server.name)
+      nextRawJson = JSON.stringify(nextConfig, null, MCP_CONFIG.JSON_INDENT_SPACES)
+      if (!nextRawJson.endsWith('\n')) {
+        nextRawJson = `${nextRawJson}\n`
+      }
+    } catch (error) {
+      const message = getErrorMessage(error)
+      dispatch({ type: 'mutation:error', error: message })
+      showToast(`Remove failed: ${message}`, 'error')
+      return
+    }
+
+    dispatch({ type: 'save:start' })
+    try {
+      const nextView = await api.writeMcpSourceConfig({
+        projectPath,
+        sourceId: source.id,
+        rawJson: nextRawJson,
+      })
+      dispatch({ type: 'source-save:success', view: nextView, sourceId: source.id })
+      showToast(`Removed MCP server "${server.name}".`, 'success')
+    } catch (saveError) {
+      const message = getErrorMessage(saveError)
+      dispatch({ type: 'mutation:error', error: message })
+      showToast(`Remove failed: ${message}`, 'error')
+    }
+  }
+
   const selectedSource = view ? getSelectedSource(view, selectedSourceId) : null
   const rawJson = selectedSource ? (rawEdits[selectedSource.id] ?? selectedSource.rawJson) : ''
 
@@ -251,6 +295,7 @@ export function useMcpSectionController(projectPath: string | null) {
     refresh,
     toggleAdapter,
     toggleServer,
+    removeServer,
     saveSelectedSource,
     addServer,
     selectSource: (sourceId: McpConfigSourceId) => dispatch({ type: 'source:select', sourceId }),
@@ -288,6 +333,48 @@ function buildConfigWithServer(config: McpConfigFile, input: AddMcpServerInput):
     ...config,
     mcpServers: existingServers,
   }
+}
+
+/**
+ * Strip a server entry from a parsed MCP config file. Removes it from both the
+ * active servers map (`mcpServers` / `mcp-servers`) and the disabled-servers
+ * map (`openwaggle.disabledMcpServers`) so a "removed" server cannot linger in
+ * the disabled set and reappear if re-enabled later. Throws if the server is
+ * not present in either map (the UI should not offer remove otherwise).
+ */
+function removeServerFromConfig(config: McpConfigFile, serverName: string): McpConfigFile {
+  const activeKey =
+    'mcpServers' in config && isRecord(config.mcpServers)
+      ? 'mcpServers'
+      : 'mcp-servers' in config && isRecord(config['mcp-servers'])
+        ? 'mcp-servers'
+        : null
+
+  const inActive = activeKey ? serverName in (config[activeKey] as Record<string, unknown>) : false
+  const openwaggle = isRecord(config.openwaggle) ? config.openwaggle : null
+  const disabledMap =
+    openwaggle && 'disabledMcpServers' in openwaggle && isRecord(openwaggle.disabledMcpServers)
+      ? (openwaggle.disabledMcpServers as Record<string, unknown>)
+      : null
+  const inDisabled = disabledMap ? serverName in disabledMap : false
+
+  if (!inActive && !inDisabled) {
+    throw new Error(`Server "${serverName}" is not defined in this source.`)
+  }
+
+  const next: McpConfigFile = { ...config }
+  if (inActive && activeKey) {
+    const servers: McpServerMap = { ...(config[activeKey] as McpServerMap) }
+    delete servers[serverName]
+    // Re-assign under whichever key the source actually used.
+    ;(next as Record<string, unknown>)[activeKey] = servers
+  }
+  if (inDisabled && disabledMap && openwaggle) {
+    const nextDisabled: McpServerMap = { ...(disabledMap as McpServerMap) }
+    delete nextDisabled[serverName]
+    next.openwaggle = { ...openwaggle, disabledMcpServers: nextDisabled }
+  }
+  return next
 }
 
 function buildHttpServerDefinition(input: AddMcpServerInput): McpConfigObject {

@@ -30,6 +30,40 @@ function isStructuralArtifactNode(node: ProjectedSessionNodeInput) {
   }
 }
 
+/**
+ * Drop structural artifact nodes from the tree used for branch derivation while
+ * keeping the conversational chain connected. Simply filtering them out is unsafe
+ * when a structural node sits BETWEEN two conversational nodes (e.g. the turing
+ * bridge-status node persisted between the user turn and the appended assistant
+ * messages): the surviving child would keep pointing at a now-missing parent, so
+ * `buildChildCounts` would read both the orphaned child and its former parent as
+ * leaves and derive a phantom extra branch. Re-link each survivor to its nearest
+ * non-structural ancestor so the chain stays linear regardless of where the
+ * artifact nodes were interleaved.
+ */
+function derivationNodesWithoutStructural(nodes: readonly ProjectedSessionNodeInput[]) {
+  const nodeById = new Map(nodes.map((node) => [node.id, node]))
+  const isStructuralId = (id: string | null) => {
+    const node = id ? nodeById.get(id) : undefined
+    return node ? isStructuralArtifactNode(node) : false
+  }
+  const nearestSurvivingAncestor = (parentId: string | null) => {
+    let currentId = parentId
+    while (currentId && isStructuralId(currentId)) {
+      currentId = nodeById.get(currentId)?.parentId ?? null
+    }
+    return currentId
+  }
+
+  return nodes
+    .filter((node) => !isStructuralArtifactNode(node))
+    .map((node) =>
+      isStructuralId(node.parentId)
+        ? { ...node, parentId: nearestSurvivingAncestor(node.parentId) }
+        : node,
+    )
+}
+
 function resolveMainHeadId(input: {
   readonly activeHeadId: string | null
   readonly leafIds: readonly string[]
@@ -191,7 +225,7 @@ function deriveSessionBranches(input: {
   readonly existingBranches: readonly SessionBranchRow[]
 }) {
   const mainBranchRow = input.existingBranches.find((branch) => branch.is_main === 1)
-  const derivationNodes = input.nodes.filter((node) => !isStructuralArtifactNode(node))
+  const derivationNodes = derivationNodesWithoutStructural(input.nodes)
 
   if (derivationNodes.length === 0) {
     return emptyBranchResult(input.sessionId, mainBranchRow)

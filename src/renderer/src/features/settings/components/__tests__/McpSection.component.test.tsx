@@ -9,11 +9,13 @@ const {
   setMcpAdapterEnabledMock,
   setMcpServerEnabledMock,
   writeMcpSourceConfigMock,
+  showConfirmMock,
 } = vi.hoisted(() => ({
   getMcpSettingsMock: vi.fn(),
   setMcpAdapterEnabledMock: vi.fn(),
   setMcpServerEnabledMock: vi.fn(),
   writeMcpSourceConfigMock: vi.fn(),
+  showConfirmMock: vi.fn(),
 }))
 
 Object.defineProperty(window, 'api', {
@@ -23,6 +25,7 @@ Object.defineProperty(window, 'api', {
     setMcpAdapterEnabled: setMcpAdapterEnabledMock,
     setMcpServerEnabled: setMcpServerEnabledMock,
     writeMcpSourceConfig: writeMcpSourceConfigMock,
+    showConfirm: showConfirmMock,
   },
 })
 
@@ -114,7 +117,7 @@ describe('McpSection', () => {
     setMcpAdapterEnabledMock.mockReset()
     setMcpServerEnabledMock.mockReset()
     writeMcpSourceConfigMock.mockReset()
-
+    showConfirmMock.mockReset()
     getMcpSettingsMock.mockResolvedValue(MCP_VIEW)
     setMcpAdapterEnabledMock.mockResolvedValue({
       ...MCP_VIEW,
@@ -339,5 +342,45 @@ describe('McpSection', () => {
     expect(await screen.findByText('MCP Connection')).toBeInTheDocument()
     expect(screen.getByText('Connected Servers')).toBeInTheDocument()
     expect(screen.queryByText('Effective servers')).not.toBeInTheDocument()
+  })
+
+  it('removes a server from its source after confirmation', async () => {
+    showConfirmMock.mockResolvedValue(true)
+    render(<McpSection />)
+
+    // The "alpha" server lives in the project-openwaggle source (editable).
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove alpha' }))
+
+    await waitFor(() => {
+      expect(showConfirmMock).toHaveBeenCalledWith(
+        'Remove this MCP server?',
+        expect.stringContaining('"alpha" will be removed from'),
+      )
+    })
+    await waitFor(() => {
+      expect(writeMcpSourceConfigMock).toHaveBeenCalledWith({
+        projectPath: PROJECT_PATH,
+        sourceId: 'project-openwaggle',
+        // The alpha entry is stripped from the project-openwaggle source, which
+        // originally held only alpha — so the resulting mcpServers is empty.
+        rawJson: '{\n  "mcpServers": {}\n}\n',
+      })
+    })
+    expect(useUIStore.getState().toastData).toMatchObject({
+      message: 'Removed MCP server "alpha".',
+      variant: 'success',
+    })
+  })
+
+  it('does not remove a server when the confirmation is cancelled', async () => {
+    showConfirmMock.mockResolvedValue(false)
+    render(<McpSection />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove alpha' }))
+
+    await waitFor(() => {
+      expect(showConfirmMock).toHaveBeenCalled()
+    })
+    expect(writeMcpSourceConfigMock).not.toHaveBeenCalled()
   })
 })

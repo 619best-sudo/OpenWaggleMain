@@ -1,12 +1,58 @@
 import type { HydratedAgentSendPayload, Message } from '@shared/types/agent'
 import type { ContextCompactionResult, ContextUsageSnapshot } from '@shared/types/context-usage'
 import type { SupportedModelId } from '@shared/types/llm'
+import type { McpSettingsView } from '@shared/types/mcp'
 import type { SessionDetail } from '@shared/types/session'
 import type { ToolPermissionMode } from '@shared/types/settings'
 import type { AgentTransportEvent } from '@shared/types/stream'
 import type { WaggleConfig, WaggleStreamMetadata, WaggleTurnEvent } from '@shared/types/waggle'
 import { Context, type Effect } from 'effect'
 import type { ProjectedSessionNodeInput } from './session-repository'
+
+/**
+ * A skill surfaced to the agent runtime as a turing-harness `defineSkill` provider.
+ * Describes the OpenWaggle skill body and its on-disk location so the agent can
+ * discover and invoke scoped instructions.
+ */
+export interface AgentKernelActiveSkill {
+  readonly id: string
+  readonly name: string
+  readonly description: string
+  readonly body: string
+  readonly skillPath: string
+  readonly folderPath: string
+  readonly hasScripts: boolean
+}
+
+/**
+ * Agent-instruction context assembled from AGENTS.md, scoped instructions, active
+ * skills, and standards warnings. Injected into the runtime prompt so the agent
+ * operates with the project's declared standards.
+ */
+export interface AgentKernelStandardsContext {
+  readonly agentsInstruction: string
+  readonly agentsScopedInstructions: readonly {
+    readonly scopeRelativeDir: string
+    readonly filePath: string
+    readonly content: string
+  }[]
+  readonly activeSkills: readonly AgentKernelActiveSkill[]
+  readonly warnings: readonly string[]
+}
+
+/**
+ * The answer to a previously-paused user question, used to resume a run that blocked
+ * on `ask_user_question`. When present, the runtime prompt carries the clarification
+ * so the model continues from the clarified plan instead of re-asking.
+ */
+export interface AgentKernelPendingUserQuestionResolution {
+  readonly request: {
+    readonly phase: 'prepare' | 'plan' | 'perform' | 'perfect'
+    readonly question: string
+    readonly reason?: string
+  }
+  readonly answer: string
+}
 
 export class AgentKernelMissingEntryError extends Error {
   readonly entryId: string
@@ -42,6 +88,14 @@ export interface AgentKernelRunInput {
   readonly signal: AbortSignal
   readonly onEvent: (event: AgentTransportEvent) => void
   readonly waggle?: AgentKernelWaggleRunOptions
+  /** MCP servers to attach to the run. Optional — absent means no MCP servers. */
+  readonly mcpSettings?: McpSettingsView
+  /** AGENTS.md / scoped instructions / active skills / warnings. Optional. */
+  readonly standardsContext?: AgentKernelStandardsContext
+  /** Prior persisted transcript nodes, used to resume/continue a thread. Optional. */
+  readonly persistedTranscriptNodes?: readonly ProjectedSessionNodeInput[]
+  /** Answer to a previously-paused user question, to resume the run. Optional. */
+  readonly pendingUserQuestionResolution?: AgentKernelPendingUserQuestionResolution
 }
 
 export interface HiddenCustomPromptDelivery {

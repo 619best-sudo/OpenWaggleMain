@@ -109,8 +109,15 @@ describe('preload api surface contract', () => {
     'setSkillEnabled',
     'getSkillPreview',
     'importSkillFromUrl',
+    'removeSkill',
+    // Project memory + turing-harness prewarm
+    'getProjectMemoryStatus',
+    'refreshProjectMemory',
+    'prewarmProjectMemory',
+    'resolveToolMediaFile',
     // Shell / App
     'copyToClipboard',
+    'forwardRendererLog',
     'openLogsDir',
     'getLogsPath',
     'openPath',

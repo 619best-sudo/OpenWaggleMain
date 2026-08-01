@@ -1,6 +1,10 @@
 import type { McpConfigSourceId, McpConfigSourceSummary } from '@shared/types/mcp'
 import { isLightThemeMode } from '@shared/types/settings'
 import { usePreferences } from '@/features/settings/hooks'
+import {
+  WAGGLE_CODE_THEME_DARK,
+  WAGGLE_CODE_THEME_LIGHT,
+} from '@/shared/lib/shiki/waggle-code-theme'
 import { Button } from '@/shared/ui/Button'
 import { Select } from '@/shared/ui/Select'
 import { Textarea } from '@/shared/ui/Textarea'
@@ -112,7 +116,9 @@ export function McpSourceEditor({
           resize="vertical"
           wrap="off"
           highlightLanguage="json"
-          highlightTheme={isLightThemeMode(settings.themeMode) ? 'github-light' : 'github-dark'}
+          highlightTheme={
+            isLightThemeMode(settings.themeMode) ? WAGGLE_CODE_THEME_LIGHT : WAGGLE_CODE_THEME_DARK
+          }
           onChange={(event) => {
             if (!selectedSource) return
             onRawJsonChange(selectedSource.id, event.target.value)

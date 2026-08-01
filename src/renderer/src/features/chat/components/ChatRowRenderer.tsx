@@ -1,7 +1,6 @@
 import { matchBy } from '@diegogbrisa/ts-match'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import { isLightThemeMode } from '@shared/types/settings'
-import { formatElapsed } from '@/features/chat/hooks/useStreamingPhase'
 import { usePreferencesStore } from '@/features/settings/state'
 import { TurnDivider } from '@/features/waggle/components'
 import { cn } from '@/shared/lib/cn'
@@ -165,12 +164,7 @@ export function ChatRowRenderer({
             className="size-7 object-contain"
           />
         </div>
-        <span className="text-sm text-text-secondary">{value.label}...</span>
-        {value.elapsedMs > 0 ? (
-          <span className="text-sm text-text-tertiary tabular-nums">
-            {formatElapsed(value.elapsedMs)}
-          </span>
-        ) : null}
+        <span className="text-sm text-text-secondary">{value.label}</span>
       </div>
     ))
     .with('run-summary', (value) => (

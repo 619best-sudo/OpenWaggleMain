@@ -1,5 +1,5 @@
 import type { McpServerSummary } from '@shared/types/mcp'
-import type { WaggleConfig, WagglePreset } from '@shared/types/waggle'
+import type { WaggleConfig } from '@shared/types/waggle'
 import type { ReactNode } from 'react'
 
 export interface CommandPaletteCallbacks {
@@ -24,10 +24,7 @@ export interface CommandPaletteItem {
 export interface CommandPaletteActionHandlers {
   readonly closeCommandPalette: () => void
   readonly configureMcp: () => void
-  readonly configureWaggle: () => void
   readonly toggleMcpServer: (server: McpServerSummary) => void
-  readonly selectPreset: (preset: WagglePreset) => void
-  readonly startWaggle: () => void
   readonly selectSkill: (skillId: string, skillName?: string) => void
   readonly openSessionTree?: () => void
   readonly forkToNewSession?: () => void

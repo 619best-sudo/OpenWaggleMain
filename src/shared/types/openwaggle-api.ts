@@ -28,6 +28,8 @@ import type { IpcEventPayload } from './ipc'
 import type { ProviderInfo, SupportedModelId } from './llm'
 import type { McpSetServerEnabledInput, McpSettingsView, McpWriteSourceConfigInput } from './mcp'
 import type { AgentPhaseState } from './phase'
+import type { PendingPlanReviewRequest, PlanReviewResolution } from './plan-review'
+import type { ProjectMemoryStatus } from './project-memory'
 import type {
   SessionCopyToNewResult,
   SessionDetail,
@@ -91,6 +93,10 @@ export interface OpenWaggleApi {
   ): Promise<void>
   getPendingToolPermission(sessionId: SessionId): Promise<PendingToolPermissionRequest | null>
   resolveUserQuestion(sessionId: SessionId, resolution: UserQuestionResolution): Promise<void>
+  /** Submit the user's verdict on a drafted plan (approve / revise / cancel). */
+  resolvePlanReview(sessionId: SessionId, resolution: PlanReviewResolution): Promise<void>
+  /** The plan currently awaiting review in this session, if any. */
+  getPendingPlanReview(sessionId: SessionId): Promise<PendingPlanReviewRequest | null>
   getPendingUserQuestion(sessionId: SessionId): Promise<PendingUserQuestionRequest | null>
   /** Subscribe to live Pi-shaped runtime events from the main process */
   onAgentEvent(callback: (payload: IpcEventPayload<'agent:event'>) => void): () => void
@@ -236,12 +242,41 @@ export interface OpenWaggleApi {
   setSkillEnabled(projectPath: string, skillId: string, enabled: boolean): Promise<void>
   getSkillPreview(projectPath: string, skillId: string): Promise<{ markdown: string }>
   importSkillFromUrl(projectPath: string, sourceUrl: string): Promise<SkillImportResult>
+  removeSkill(projectPath: string, skillId: string): Promise<void>
+
+  // Project memory + turing-harness prewarm.
+  // `prewarmProjectMemory` is fire-and-forget: it kicks background attachment of
+  // MCP servers + skills + file-memory indexing so the first message send in a
+  // project does not block on a full harness build.
+  getProjectMemoryStatus(projectPath: string, modelRef?: string): Promise<ProjectMemoryStatus>
+  refreshProjectMemory(
+    projectPath: string,
+    modelRef?: string,
+    piSessionId?: string,
+  ): Promise<ProjectMemoryStatus>
+  prewarmProjectMemory(projectPath: string, modelRef?: string): Promise<void>
+
+  /**
+   * Resolve a media file (image/video/audio/html) inside the active workspace
+   * to a data URL for inline preview in tool-result blocks. Returns an error
+   * object when the path is missing, outside the workspace, or too large.
+   */
+  resolveToolMediaFile(
+    projectPath: string,
+    mediaPath: string,
+  ): Promise<{ dataUrl: string; mimeType: string } | { error: string }>
 
   // Dialog
   showConfirm(message: string, detail?: string): Promise<boolean>
 
   // Shell / App
   copyToClipboard(text: string): void
+  forwardRendererLog(entry: {
+    namespace: string
+    level: string
+    message: string
+    data?: unknown
+  }): void
   openLogsDir(): Promise<void>
   getLogsPath(): Promise<string>
   openPath(path: string): Promise<void>

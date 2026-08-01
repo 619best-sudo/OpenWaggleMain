@@ -1,20 +1,14 @@
 import type { McpServerSummary } from '@shared/types/mcp'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
-import type { WagglePreset } from '@shared/types/waggle'
 import {
   Archive,
   Copy,
   GitBranch,
-  GitPullRequest,
   ListTree,
   MessageSquare,
   Plug,
   Settings,
   Shield,
-  ShieldAlert,
-  Swords,
-  User,
-  Waypoints,
 } from 'lucide-react'
 import { COMMAND_PALETTE } from '../constants/command-palette'
 import type {
@@ -24,9 +18,7 @@ import type {
 import { openFeedbackModal } from './command-palette-actions'
 import { truncateCommandDescription } from './command-palette-text'
 
-const PAIR_DISCOVERY_TERMS = ['panel', 'pair', 'waggle'] as const
 const MCP_DISCOVERY_TERMS = ['mcp', 'mcps', 'server', 'servers', 'tool', 'tools'] as const
-const VISIBLE_PANEL_PRESET_IDS: ReadonlySet<string> = new Set(['debate', 'red-team'])
 
 export function createBaseCommands(actions: CommandPaletteActionHandlers) {
   const optionalCommands: CommandPaletteItem[] = []
@@ -35,13 +27,6 @@ export function createBaseCommands(actions: CommandPaletteActionHandlers) {
   appendOptionalCommand(optionalCommands, createCloneCommand(actions))
 
   return [
-    {
-      id: 'waggle',
-      label: 'Council of Experts',
-      description: 'Start a Council of Experts session',
-      icon: <Waypoints className="size-3.5" />,
-      action: actions.startWaggle,
-    },
     {
       id: 'mcp',
       label: 'MCPs',
@@ -94,34 +79,6 @@ export function createSkillItems(
   return items
 }
 
-export function createPresetItems(
-  presets: readonly WagglePreset[],
-  lowerQuery: string,
-  selectPreset: CommandPaletteActionHandlers['selectPreset'],
-) {
-  const items: CommandPaletteItem[] = []
-  for (const preset of presets) {
-    if (!VISIBLE_PANEL_PRESET_IDS.has(String(preset.id))) continue
-    if (!presetMatchesQuery(preset, lowerQuery)) continue
-
-    items.push({
-      id: `waggle-preset-${preset.id}`,
-      label: preset.name,
-      description: truncateCommandDescription(
-        preset.description,
-        COMMAND_PALETTE.WAGGLE_PRESET_DESCRIPTION_LIMIT,
-      ),
-      icon: presetIcon(preset),
-      section: 'Council of Experts',
-      trailing: 'Sequential',
-      trailingBadge: preset.isBuiltIn ? undefined : 'Custom',
-      action: () => selectPreset(preset),
-    })
-  }
-
-  return items
-}
-
 export function createMcpItems(
   servers: readonly McpServerSummary[],
   lowerQuery: string,
@@ -154,20 +111,6 @@ export function createMcpItems(
   }
 
   return items
-}
-
-export function createConfigureWaggleItem(lowerQuery: string, configureWaggle: () => void) {
-  if (!isWaggleFilter(lowerQuery)) return []
-  return [
-    {
-      id: 'configure-waggle',
-      label: 'Configure Council of Experts...',
-      description: 'Open Council of Experts settings',
-      icon: <Settings className="size-3.5" />,
-      section: 'configure',
-      action: configureWaggle,
-    },
-  ]
 }
 
 export function createConfigureMcpItem(lowerQuery: string, configureMcp: () => void) {
@@ -252,36 +195,11 @@ function mcpMatchesQuery(server: McpServerSummary, lowerQuery: string) {
   )
 }
 
-function presetMatchesQuery(preset: WagglePreset, lowerQuery: string) {
-  return (
-    !lowerQuery ||
-    preset.name.toLowerCase().includes(lowerQuery) ||
-    PAIR_DISCOVERY_TERMS.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term))
-  )
-}
-
 function isMcpFilter(lowerQuery: string) {
   return (
     lowerQuery.length > 0 &&
     MCP_DISCOVERY_TERMS.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term))
   )
-}
-
-function isWaggleFilter(lowerQuery: string) {
-  return (
-    lowerQuery.length > 0 &&
-    PAIR_DISCOVERY_TERMS.some((term) => term.includes(lowerQuery) || lowerQuery.includes(term)) &&
-    !lowerQuery.startsWith(COMMAND_PALETTE.WAGGLE_COMMAND_PREFIX)
-  )
-}
-
-function presetIcon(preset: WagglePreset) {
-  const name = preset.name.toLowerCase()
-  if (name.includes('review')) return <GitPullRequest className="size-3.5" />
-  if (name.includes('debate')) return <Swords className="size-3.5" />
-  if (name.includes('red team')) return <ShieldAlert className="size-3.5" />
-  if (name.includes('qa') || name.includes('test')) return <Shield className="size-3.5" />
-  return <User className="size-3.5" />
 }
 
 function formatMcpTransport(server: McpServerSummary) {

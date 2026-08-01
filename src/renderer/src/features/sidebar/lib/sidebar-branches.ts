@@ -25,6 +25,23 @@ interface BuildSidebarBranchRowsInput {
   readonly draftBranch: SidebarDraftBranchInput | null
 }
 
+/**
+ * Resolve which branch id (if any) should render as "active" for a session row.
+ *
+ * Only the currently-active session can have an active branch — every session
+ * persists a non-null `lastActiveBranchId`, so falling back to it for inactive
+ * sessions would highlight one branch per session and make several sessions
+ * look active at once. Returning `null` for inactive sessions keeps the active
+ * highlight exclusive to the single active branch.
+ */
+export function resolveActiveBranchIdForSession(input: {
+  readonly sessionId: SessionId
+  readonly activeSessionId: SessionId | null
+  readonly activeBranchId: SessionBranchId | null | undefined
+}): SessionBranchId | null {
+  return input.sessionId === input.activeSessionId ? (input.activeBranchId ?? null) : null
+}
+
 function getSessionBranches(input: BuildSidebarBranchRowsInput) {
   if (input.activeSessionTree?.session.id === input.session.id) {
     return input.activeSessionTree.branches

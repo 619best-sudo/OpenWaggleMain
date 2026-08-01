@@ -75,6 +75,11 @@ function getToolActionText(name: string, args: JsonObject, isRunning: boolean) {
 }
 
 function formatToolTarget(name: string, args: JsonObject, primaryArg: string) {
+  // Structured tools with their own summary formatting — handled before the
+  // generic match so they don't have to fit the { name, args: {...} } shape.
+  if (name === 'project_memory') return formatProjectMemoryTarget(args)
+  if (name === 'ask_user_question') return formatAskUserQuestionTarget(args)
+
   return match({ name, args })
     .with(
       { name: 'bash', args: { command: P.select('command', P.string) } },
@@ -98,9 +103,43 @@ function formatToolTarget(name: string, args: JsonObject, primaryArg: string) {
       return path
     })
     .otherwise(() => {
-      const value = args[primaryArg]
-      return typeof value === 'string' ? value : ''
+      // Prefer the tool's declared primary arg when available.
+      const value = primaryArg ? args[primaryArg] : undefined
+      if (typeof value === 'string' && value.trim()) return value
+      // Unknown / MCP / structured tools: surface the most informative scalar
+      // field so the title carries useful detail instead of repeating the tool
+      // name. Scanned in priority order.
+      const informativeKeys = [
+        'action',
+        'key',
+        'query',
+        'pattern',
+        'command',
+        'url',
+        'name',
+        'path',
+        'filePath',
+      ]
+      for (const key of informativeKeys) {
+        const candidate = args[key]
+        if (typeof candidate === 'string' && candidate.trim()) {
+          return key === 'action' ? candidate : candidate.trim()
+        }
+      }
+      return ''
     })
+}
+
+/**
+ * One-line target summary for a tool call — the useful detail shown next to the
+ * tool's action chip (e.g. `` `git status` ``, `/TODO/ in src (*.ts)`,
+ * `src/app.ts:10-50`). Reused by the inline tool block and the phase card so
+ * both show the same per-tool detail. Returns '' when nothing meaningful can be
+ * derived from the args (caller then falls back to the tool name).
+ */
+export function summarizeToolTarget(name: string, args: JsonObject): string {
+  const entry = getToolEntry(name)
+  return formatToolTarget(name, args, entry.primaryArg)
 }
 
 function formatReadLineSuffix(args: JsonObject) {
@@ -116,6 +155,57 @@ function formatReadLineSuffix(args: JsonObject) {
   }
 
   return `:${String(startLine)}-${String(startLine + limit - 1)}`
+}
+
+const PROJECT_MEMORY_ACTION_LABEL: Record<string, string> = {
+  get: 'Get memory',
+  remember: 'Remember',
+  recall: 'Recall',
+  set_category: 'Set category',
+}
+
+function truncate(value: string, max: number) {
+  const trimmed = value.replace(/\s+/g, ' ').trim()
+  return trimmed.length > max ? `${trimmed.slice(0, Math.max(0, max - 1)).trim()}…` : trimmed
+}
+
+/**
+ * Title for a `project_memory` call. Combines the action verb with its operand
+ * (the remembered text, the recall query, or the category) so the chip reads
+ * like "Recall \"html\"" or "Remember: use Tailwind" instead of a bare action.
+ */
+function formatProjectMemoryTarget(args: JsonObject): string {
+  const rawAction = typeof args.action === 'string' ? args.action : ''
+  const action = rawAction in PROJECT_MEMORY_ACTION_LABEL ? rawAction : ''
+  const verb = action ? PROJECT_MEMORY_ACTION_LABEL[action] : 'Memory'
+
+  const text = typeof args.text === 'string' ? args.text.trim() : ''
+  const category = typeof args.category === 'string' ? args.category.trim() : ''
+  const tags = Array.isArray(args.tags)
+    ? args.tags.filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+    : []
+
+  if (action === 'remember' && text) return `${verb}: ${truncate(text, 60)}`
+  if (action === 'recall') {
+    if (text) return `${verb} "${truncate(text, 40)}"`
+    if (tags.length) return `${verb} #${tags[0]}`
+    return verb
+  }
+  if (action === 'set_category' && category) return `${verb}: ${category}`
+  // No/unknown action: infer from the operand (mirrors the tool's own inference).
+  if (category) return `Set category: ${category}`
+  if (text) return `Recall "${truncate(text, 40)}"`
+  if (tags.length) return `Recall #${tags[0]}`
+  return verb
+}
+
+/**
+ * Title for an `ask_user_question` call: a short version of the question.
+ */
+function formatAskUserQuestionTarget(args: JsonObject): string {
+  const question = typeof args.question === 'string' ? args.question.trim() : ''
+  if (!question) return ''
+  return truncate(question, 70)
 }
 
 interface ActionTextParams {

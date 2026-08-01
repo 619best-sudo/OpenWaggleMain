@@ -195,6 +195,17 @@ export function registerShellHandlers(): void {
 
   typedOn('clipboard:write-text', (_event, text) => Effect.sync(() => clipboard.writeText(text)))
 
+  // Forward renderer logs into the main-process log file so the full pipeline
+  // (renderer message-cache / hydration / chat-rows) is captured alongside the
+  // main-process logs in openwaggle-YYYY-MM-DD.log. Diagnostic only.
+  typedOn('log:renderer', (_event, entry) =>
+    Effect.sync(() => {
+      const rendererLogger = createLogger(`renderer:${entry.namespace}`)
+      const level = entry.level as 'debug' | 'info' | 'warn' | 'error'
+      rendererLogger[level](entry.message, entry.data as object | undefined)
+    }),
+  )
+
   typedHandle('shell:open-path', (_event, targetPath) =>
     Effect.gen(function* () {
       const trimmedPath = targetPath.trim()

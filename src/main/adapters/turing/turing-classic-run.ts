@@ -1,52 +1,71 @@
 import { randomUUID } from 'node:crypto'
 import type { Message } from '@shared/types/agent'
-import type { AgentTransportEvent } from '@shared/types/stream'
+import type { JsonObject, JsonValue } from '@shared/types/json'
 import {
   PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE,
   type PersistedPhaseTranscript,
   type PersistedPhaseTranscriptPhase,
 } from '@shared/types/phase'
 import { getAgentPhaseTitle } from '@shared/types/phase-titles'
-import { TURING_BRIDGE_STATUS_CUSTOM_TYPE } from '@shared/types/structural-nodes'
-import type { JsonObject, JsonValue } from '@shared/types/json'
+import {
+  type PendingPlanReviewRequest,
+  PLAN_REVIEW_REQUEST_EVENT,
+  PLAN_REVIEW_RESOLVED_EVENT,
+} from '@shared/types/plan-review'
 import type { ToolPermissionMode } from '@shared/types/settings'
+import type { AgentTransportEvent } from '@shared/types/stream'
+import { TURING_BRIDGE_STATUS_CUSTOM_TYPE } from '@shared/types/structural-nodes'
+import type { PendingToolPermissionRequest } from '@shared/types/tool-permission'
 import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import {
-  type PendingToolPermissionRequest,
-} from '@shared/types/tool-permission'
-import type { ProjectedSessionNodeInput } from '../../ports/session-repository'
-import { HarnessAgent, type HarnessAgentState, type Message as TuringMessage } from 'turing-harness'
+  HarnessAgent,
+  type HarnessAgentState,
+  type ThinkingLevel,
+  type Message as TuringMessage,
+} from 'turing-harness'
 import { env } from '../../env'
-import type { AgentKernelRunInput, AgentKernelRunResult } from '../../ports/agent-kernel-service'
-import { beginToolPermissionRequest, beginUserQuestionRequest } from '../../ipc/active-agent-runs'
 import {
-  attachOpenWaggleRuntime,
-  buildOpenWaggleRuntimeDebugValue,
-  buildOpenWaggleRuntimePrompt,
-} from './turing-openwaggle-bridge'
+  beginPlanReviewRequest,
+  beginToolPermissionRequest,
+  beginUserQuestionRequest,
+} from '../../ipc/active-agent-runs'
+import { createLogger } from '../../logger'
+import type { AgentKernelRunInput, AgentKernelRunResult } from '../../ports/agent-kernel-service'
+import type { ProjectedSessionNodeInput } from '../../ports/session-repository'
+
+const logger = createLogger('turing-classic-run')
+
+import {
+  buildAttachmentIntentSection,
+  detectAttachmentIntent,
+  toTuringAttachments,
+} from './turing-attachments'
 import { createTuringEventMapper } from './turing-event-mapper'
-import { resolveTuringLlmConfig } from './turing-llm-config'
+import { resolveTuringLlmConfig, toolModelCandidatesFor } from './turing-llm-config'
+import { checkoutWarmProjectSession, getSharedMcpPool } from './turing-memory-prewarm'
 import {
   buildCustomSessionNode,
-  reparentProjectedNodesToTail,
   buildSessionSnapshotFromTimeline,
-  buildTuringRunNewMessages,
+  buildTuringRunNewMessagesFromProjected,
+  reparentProjectedNodesToTail,
   turingAppendedToProjectedMessages,
 } from './turing-message-projection'
 import {
-  checkoutWarmProjectSession,
-  getSharedMcpPool
-} from './turing-memory-prewarm'
+  type BridgeResult,
+  buildOpenWaggleRuntimeDebugValue,
+  buildOpenWaggleRuntimePrompt,
+  connectMcpBackground,
+} from './turing-openwaggle-bridge'
+import {
+  resolveAgentEndReason,
+  resolveTerminalError,
+  runDispositionToStatus,
+} from './turing-run-classification'
 import {
   buildThreadSnapshotNode,
   createThreadSnapshotAgentHost,
   extractPersistedThreadSnapshot,
 } from './turing-thread-snapshot'
-import {
-  phaseResultToStatus,
-  resolveAgentEndReason,
-  resolveTerminalError,
-} from './turing-run-classification'
 
 /**
  * The 4P execution mode used for a classic (single-agent) run.
@@ -104,6 +123,21 @@ export function resolveSnapshotActiveNodeId(
  * (which the main process routes back to the in-flight tool via
  * `resolvePendingUserQuestion`).
  */
+/**
+ * Tool-call turns the harness work loop may take for one prompt.
+ *
+ * Outside plan mode `HarnessAgent.prompt` runs with `skipPlan: true`, so there is
+ * exactly ONE work loop per prompt and this budget covers the WHOLE task — the
+ * `create_plan` turn plus every step of the plan the user approved. The library
+ * default (12) is sized for a single step and truncated multi-step plans partway
+ * through, which surfaced as a run that "stopped after step 1".
+ *
+ * In plan mode (Machine toggle) the orchestrator runs a planning turn and then a
+ * sub-loop PER STEP, so this is a per-step budget there rather than a whole-task
+ * one — the same number buys considerably more work.
+ */
+const WORK_LOOP_MAX_TOOL_TURNS = 30
+
 const USER_QUESTION_REQUEST_EVENT = 'openwaggle:user-question:request'
 const USER_QUESTION_RESOLVED_EVENT = 'openwaggle:user-question:resolved'
 const TOOL_PERMISSION_REQUEST_EVENT = 'openwaggle:tool-permission:request'
@@ -134,61 +168,17 @@ function turingStopReasonToAgentEndReason(messages: readonly TuringMessage[]) {
   return null
 }
 
-function firstNonEmpty(values: Array<string | null | undefined>) {
-  for (const value of values) {
-    const trimmed = value?.trim()
-    if (trimmed) return trimmed
-  }
-  return undefined
-}
-
-function stripVerdictOnlyPrefix(summary: string | undefined) {
-  const trimmed = summary?.trim()
-  if (!trimmed) return undefined
-  const lines = trimmed
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-  if (lines.length <= 1) return trimmed
-  if (!/^VERDICT:\s*(PASS|FAIL)\b/i.test(lines[0] ?? '')) return trimmed
-  const remainder = lines.slice(1).join('\n').trim()
-  return remainder || trimmed
-}
-
-function resolvePersistedPhaseSummary(
-  phase: PersistedPhaseTranscriptPhase['id'],
-  result: NonNullable<
-    NonNullable<HarnessAgentState['lastPhaseResults']>[keyof NonNullable<HarnessAgentState['lastPhaseResults']>]
-  >,
-) {
-  // `uiSummary` is the harness's styled, user-facing short status (it replaced
-  // the old `CHAT SUMMARY` / `artifacts.chatSummary`). Prefer it for the chip.
-  const uiSummary = typeof result.uiSummary === 'string' ? result.uiSummary : undefined
-  const artifactChatSummary =
-    typeof result.artifacts?.chatSummary === 'string' ? result.artifacts.chatSummary : undefined
-  const artifactSummary =
-    typeof result.artifacts?.summary === 'string' ? result.artifacts.summary : undefined
-  const artifactFix =
-    typeof result.artifacts?.fix === 'string' ? result.artifacts.fix : undefined
-  const displaySummary = result.display?.summary?.trim()
-  if (uiSummary?.trim()) return uiSummary.trim()
-  if (displaySummary) return displaySummary
-  if (phase !== 'perfect') {
-    return firstNonEmpty([artifactChatSummary, artifactSummary, result.summary])
-  }
-  return firstNonEmpty([
-    artifactChatSummary,
-    stripVerdictOnlyPrefix(artifactSummary),
-    stripVerdictOnlyPrefix(result.summary),
-    artifactFix,
-    result.summary,
-  ])
-}
-
 function buildRunResult(input: {
   readonly runInput: AgentKernelRunInput
   readonly sessionId: string
   readonly appended: readonly TuringMessage[]
+  /**
+   * The messageIds the event mapper assigned to each streamed assistant turn, in
+   * stream order. The projection reuses them so the persisted snapshot's message
+   * ids agree with the live stream — otherwise the renderer can't dedup the
+   * streamed messages against the snapshot and every turn renders twice.
+   */
+  readonly streamedAssistantIds?: readonly string[]
   readonly bridgeDebugValue: ReturnType<typeof buildOpenWaggleRuntimeDebugValue>
   readonly bridgeDebugTimestamp: number
   readonly aborted: boolean
@@ -198,10 +188,18 @@ function buildRunResult(input: {
   readonly threadSnapshotNode?: ProjectedSessionNodeInput
 }) {
   const hidden = input.runInput.promptDelivery?.mode === 'hidden-custom-message'
-  const appendedMessages = turingAppendedToProjectedMessages(input.appended)
+  // Project the appended turing messages ONCE. The snapshot timeline (below) and
+  // the returned `newMessages` MUST share the same projection so their assistant/
+  // tool message ids agree — otherwise dedup-by-id fails in the renderer and every
+  // turn renders twice (the persisted snapshot copy + the returned-newMessages
+  // copy). Re-projecting would mint a second, disjoint id set.
+  const appendedMessages = turingAppendedToProjectedMessages(
+    input.appended,
+    input.streamedAssistantIds,
+  )
   const newMessages: Message[] = hidden
     ? appendedMessages
-    : buildTuringRunNewMessages(input.runInput.payload, input.appended)
+    : buildTuringRunNewMessagesFromProjected(input.runInput.payload, appendedMessages)
   const bridgeDebugNode = buildCustomSessionNode({
     customType: TURING_BRIDGE_STATUS_CUSTOM_TYPE,
     data: input.bridgeDebugValue,
@@ -211,15 +209,21 @@ function buildRunResult(input: {
   // The snapshot must carry the WHOLE conversation (prior turns + this run's new
   // messages), because persistSnapshot replaces the entire node tree. Reusing the
   // messages' own ids keeps node identity stable across runs.
+  //
+  // The bridge-status node is a non-conversational run artifact, so it must NOT be
+  // interleaved into the conversational chain. Emitting it between the user turn
+  // and the appended assistant messages leaves a structural node mid-chain; branch
+  // derivation strips structural nodes and would then read the user turn and the
+  // final assistant turn as two separate leaves, deriving a phantom extra branch
+  // ("main" + "Branch 2") and pushing the phase-transcript node off the active
+  // branch head (which un-suppresses the raw phase handoff messages in the UI).
+  // Keep it with the other trailing artifacts instead.
   const snapshotTimeline = [
     ...input.runInput.session.messages.map((message) => ({
       type: 'message' as const,
       message,
     })),
-    ...(!hidden && newMessages[0]
-      ? [{ type: 'message' as const, message: newMessages[0] }]
-      : []),
-    { type: 'node' as const, node: bridgeDebugNode },
+    ...(!hidden && newMessages[0] ? [{ type: 'message' as const, message: newMessages[0] }] : []),
     ...appendedMessages.map((message) => ({
       type: 'message' as const,
       message,
@@ -228,8 +232,21 @@ function buildRunResult(input: {
 
   const baseSnapshot = buildSessionSnapshotFromTimeline(snapshotTimeline)
   const transcriptNodes = input.runInput.persistedTranscriptNodes ?? []
+  const bridgeArtifactNode: ProjectedSessionNodeInput = {
+    id: bridgeDebugNode.id,
+    parentId: null,
+    piEntryType: bridgeDebugNode.piEntryType,
+    kind: bridgeDebugNode.kind,
+    role: bridgeDebugNode.role,
+    timestampMs: bridgeDebugNode.timestampMs,
+    contentJson: bridgeDebugNode.contentJson,
+    metadataJson: bridgeDebugNode.metadataJson,
+    pathDepth: 0,
+    createdOrder: 0,
+  }
   const reparentedTranscriptNodes = reparentProjectedNodesToTail(
     [
+      bridgeArtifactNode,
       ...transcriptNodes,
       ...(input.phaseTranscriptNode ? [input.phaseTranscriptNode] : []),
       ...(input.threadSnapshotNode ? [input.threadSnapshotNode] : []),
@@ -242,32 +259,43 @@ function buildRunResult(input: {
     reparentedTranscriptNodes,
   )
 
-  // #region debug-point C:snapshot-assembly
-  void fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sessionId: 'phase-flow-missing',
-      runId: 'pre-fix',
-      hypothesisId: 'C',
-      location: 'turing-classic-run.ts:buildRunResult',
-      msg: '[DEBUG] Built Turing session snapshot',
-      data: {
-        hidden,
-        priorMessageCount: input.runInput.session.messages.length,
-        appendedAssistantMessageCount: appendedMessages.length,
-        baseSnapshotNodeCount: baseSnapshot.nodes.length,
-        baseActiveNodeId: baseSnapshot.activeNodeId,
-        transcriptNodeCount: transcriptNodes.length,
-        appendedTranscriptNodeIds: reparentedTranscriptNodes.map((node) => node.id),
-        phaseTranscriptNodeId: input.phaseTranscriptNode?.id ?? null,
-        threadSnapshotNodeId: input.threadSnapshotNode?.id ?? null,
-        returnedActiveNodeId: snapshotActiveNodeId,
-      },
-      ts: Date.now(),
-    }),
-  }).catch(() => {})
-  // #endregion
+  // ORDER DEBUG: the full snapshot node tree as it will be persisted. This is
+  // what the renderer rehydrates from after the run, so its order must match the
+  // streamed message order. Prior-session messages come first, then this run's
+  // user turn + appended assistant/tool messages, then trailing artifact nodes.
+  logger.info('buildRunResult: snapshot node order', {
+    hidden,
+    priorSessionMessages: input.runInput.session.messages.map((message) => ({
+      id: message.id,
+      role: message.role,
+    })),
+    appendedProjected: appendedMessages.map((message) => ({ id: message.id, role: message.role })),
+    baseSnapshotNodes: baseSnapshot.nodes.map((node) => ({
+      id: node.id,
+      parentId: node.parentId,
+      role: node.role,
+      kind: node.kind,
+      depth: node.pathDepth,
+    })),
+    reparentedTailNodes: reparentedTranscriptNodes.map((node) => ({
+      id: node.id,
+      parentId: node.parentId,
+      kind: node.kind,
+      depth: node.pathDepth,
+    })),
+    activeNodeId: snapshotActiveNodeId,
+  })
+
+  // ORDER DEBUG: the newMessages returned to the renderer (what it merges live).
+  // Their ids MUST match the appendedProjected ids above, or dedup fails.
+  logger.info('buildRunResult: returned newMessages', {
+    hidden,
+    newMessageIds: newMessages.map((message) => ({ id: message.id, role: message.role })),
+    appendedProjectedIds: appendedMessages.map((message) => message.id),
+    idsMatchAppended: newMessages
+      .slice(hidden ? 0 : 1)
+      .every((message, index) => message.id === appendedMessages[index]?.id),
+  })
 
   return {
     newMessages,
@@ -300,67 +328,64 @@ function buildToolNameLookup(messages: readonly TuringMessage[]) {
   return lookup
 }
 
-function shouldPersistPhaseResult(
-  result: NonNullable<
-    NonNullable<HarnessAgentState['lastPhaseResults']>[keyof NonNullable<HarnessAgentState['lastPhaseResults']>]
+/**
+ * Build the persisted phase-transcript node for a flat-loop run. The 4P
+ * `lastPhaseResults` is gone (the loop leaves it undefined); instead this
+ * projects the whole run as ONE synthetic `'working'` phase, carrying the run
+ * summary (`lastRunSummary`), the structured plan (`lastPlanSet`) when present,
+ * the per-step progress (`lastSteps`), and the tool calls streamed this run.
+ * The node keeps the same custom type so the persisted-card renderer is
+ * unchanged — it just renders one "Working" entry instead of four phases.
+ */
+export function buildRunTranscriptNode(
+  state: Pick<
+    HarnessAgentState,
+    'lastRunSummary' | 'lastSteps' | 'lastPlanSet' | 'lastThreadSnapshot' | 'pendingUserQuestion'
   >,
-) {
-  return Boolean(
-    result.display ||
-      result.pendingUserQuestion ||
-      resolvePersistedPhaseSummary(result.phase, result) ||
-      result.artifacts?.planJson !== undefined ||
-      result.planSet !== undefined ||
-      result.qaPlan !== undefined ||
-      result.display?.toolCallIds?.length,
-  )
-}
-
-export function buildPhaseTranscriptNode(
-  phaseResults: HarnessAgentState['lastPhaseResults'],
   messages: readonly TuringMessage[],
   timestampMs: number,
 ) {
-  if (!phaseResults) return undefined
+  const snapshot = state.lastThreadSnapshot
+  const summary = state.lastRunSummary?.trim() || snapshot?.summary?.trim()
+  const planSet = state.lastPlanSet
+  const steps = state.lastSteps ?? []
+  // Persist a node when the run produced any signal worth showing: a summary,
+  // a plan, completed steps, or any streamed tool calls.
   const toolNameLookup = buildToolNameLookup(messages)
-  const order = ['prepare', 'plan', 'perform', 'perfect'] as const
-  const phases: PersistedPhaseTranscriptPhase[] = []
-  for (const phaseId of order) {
-    const result = phaseResults[phaseId]
-    if (!result || !shouldPersistPhaseResult(result)) continue
-    const summary = resolvePersistedPhaseSummary(result.phase, result)
-    phases.push({
-        id: result.phase,
-        label: getAgentPhaseTitle(result.phase),
-        activityText:
-          result.phase === 'prepare'
-            ? 'Analyzing project scope and dependencies'
-            : result.phase === 'plan'
-              ? 'Drafting execution strategy'
-              : result.phase === 'perform'
-                ? 'Applying code modifications'
-                : 'Verifying application state',
-        status: phaseResultToStatus(result),
-        elapsedMs: 0,
-        ...(summary ? { summary } : {}),
-        ...(result.artifacts?.planJson !== undefined
-          ? { planJson: result.artifacts.planJson as JsonValue }
-          : {}),
-        ...(result.planSet !== undefined ? { planSet: result.planSet as unknown as JsonValue } : {}),
-        ...(result.qaPlan !== undefined ? { qaPlan: result.qaPlan as unknown as JsonValue } : {}),
-        ...(result.pendingUserQuestion ? { pendingUserQuestion: result.pendingUserQuestion } : {}),
-        tools: (result.display?.toolCallIds ?? []).map((toolCallId: string) => ({
-          toolCallId,
-          toolName: toolNameLookup.get(toolCallId) ?? toolCallId,
-          status: 'completed' as const,
-        })),
-      } satisfies PersistedPhaseTranscriptPhase)
-  }
+  const toolCalls = [...toolNameLookup.entries()].map(([toolCallId, toolName]) => ({
+    toolCallId,
+    toolName,
+    status: 'completed' as const,
+  }))
+  const hasContent = Boolean(
+    summary || planSet || steps.length || state.pendingUserQuestion || toolCalls.length,
+  )
+  if (!hasContent) return undefined
 
-  if (phases.length === 0) return undefined
+  const status = runDispositionToStatus({
+    pendingUserQuestion: state.pendingUserQuestion,
+    error: snapshot?.error,
+    disposition: snapshot?.disposition,
+    success: snapshot?.disposition === 'completed',
+  })
+
+  const phase: PersistedPhaseTranscriptPhase = {
+    id: 'working',
+    label: getAgentPhaseTitle('working'),
+    activityText:
+      steps.length > 0
+        ? `Working through ${steps.length} step${steps.length === 1 ? '' : 's'}`
+        : 'Working on the task',
+    status,
+    elapsedMs: 0,
+    ...(summary ? { summary } : {}),
+    ...(planSet ? { planSet: planSet as unknown as JsonValue } : {}),
+    ...(state.pendingUserQuestion ? { pendingUserQuestion: state.pendingUserQuestion } : {}),
+    tools: toolCalls,
+  }
   const transcript: PersistedPhaseTranscript = {
     version: 1,
-    phases,
+    phases: [phase],
   }
   return buildCustomSessionNode({
     customType: PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE,
@@ -381,9 +406,10 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   const projectPath = resolveProjectPath(input.session)
   const llmConfig = resolveTuringLlmConfig(input.model)
   const sessionId = input.session.piSessionId ?? randomUUID()
-  // Pass the runtime so the prewarm path can attach MCP clients + skill
-  // providers ahead of time; on a hit, `attachOpenWaggleRuntime` below hits
-  // the WeakMap fast-path and returns in microseconds.
+  // Pass the runtime so the prewarm path can build harness + open memories
+  // ahead of time; on a hit, the checked-out session is ready instantly.
+  // `connectMcpBackground` below starts MCP servers asynchronously so the
+  // LLM begins thinking immediately while tools connect in the background.
   const warmProject = await checkoutWarmProjectSession(sessionId, projectPath, {
     modelRef: input.model,
     mcpSettings: input.mcpSettings,
@@ -393,29 +419,113 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   const turingSession = warmProject.session
   const persistedThreadSnapshot = extractPersistedThreadSnapshot(input.persistedTranscriptNodes)
   const mcpPool = getSharedMcpPool(projectPath)
-  const bridge = await attachOpenWaggleRuntime(turingSession, {
-    mcpSettings: input.mcpSettings,
-    standardsContext: input.standardsContext,
-  }, {
-    projectPath,
-    mcpPool,
-  })
+
+  // Start MCP connection. Skills register synchronously (instant); MCP servers
+  // borrow from the PERSISTENT shared pool, which `prewarmProjectMemory`
+  // (triggered on project open) prewarmed in the background. On the warm path
+  // (the common case — user opened the project before typing) the borrow is a
+  // Map lookup (microseconds), so awaiting here puts every MCP tool into the
+  // registry BEFORE turn 1 — no race condition. On the cold path (first prompt
+  // racing the prewarm), the pool's in-flight dedup means this borrow SHARES
+  // the prewarm's in-flight connection rather than spawning a duplicate, so it
+  // resolves as soon as that single spawn lands. BRIDGE_WAIT_MS is a safety cap
+  // for pathological cases; late arrivals still flow in via the loop's dynamic
+  // tool resolution (turn 2+). Kept modest so the first prompt doesn't freeze
+  // for the full cold-spawn duration — if MCP isn't ready within this window the
+  // model starts with built-in tools and MCP arrives mid-run via resolveTools.
+  const BRIDGE_WAIT_MS = 8000
+  const { ready: bridgeReady } = await connectMcpBackground(
+    turingSession,
+    {
+      mcpSettings: input.mcpSettings,
+      standardsContext: input.standardsContext,
+    },
+    {
+      projectPath,
+      mcpPool,
+    },
+  )
+  let bridge: BridgeResult | undefined
+  try {
+    bridge = await new Promise<BridgeResult | undefined>((resolve) => {
+      const timer = setTimeout(() => {
+        logger.warn(
+          'Bridge attach timed out — proceeding with built-in tools; MCP tools may arrive mid-run',
+          {
+            projectPath,
+            waitMs: BRIDGE_WAIT_MS,
+          },
+        )
+        resolve(undefined)
+      }, BRIDGE_WAIT_MS)
+      bridgeReady.then(
+        (b) => {
+          clearTimeout(timer)
+          resolve(b)
+        },
+        () => {
+          clearTimeout(timer)
+          resolve(undefined)
+        },
+      )
+    })
+  } catch {
+    bridge = undefined
+  }
+
   const agentHost = createThreadSnapshotAgentHost(turingSession, persistedThreadSnapshot)
   const agent: HarnessAgent = new HarnessAgent(agentHost, {
     model: llmConfig.modelSlug,
     thinkingLevel: input.payload.thinkingLevel,
     mode: runMode,
     transcriptMode: 'compact',
+    // `compact` alone seeds BOTH emission axes off, and the only thing that can
+    // turn them back on mid-run is a tool call's permission decision (the
+    // `emissionFlags` below). That is too late: the first turn has already
+    // streamed and been discarded, and a turn that calls no tools — a plain
+    // answer, or a final summary — never emits at all. Since the permission
+    // callback turns both on unconditionally anyway, seed them on here so turn 1
+    // is not silently dropped.
+    emitReasoning: true,
+    emitText: true,
+    maxStepsPerStep: WORK_LOOP_MAX_TOOL_TURNS,
   })
-  agent.setPhaseModel('prepare', llmConfig.modelSlug)
-  agent.setPhaseModel('plan', llmConfig.modelSlug)
+  // The flat loop driver only consults the 'perform' phase-model slug (the
+  // other three were 4P-specific and are inert under run()). The constructor's
+  // `model` already sets the orchestrator default; this pins the work-loop model.
   agent.setPhaseModel('perform', llmConfig.modelSlug)
-  agent.setPhaseModel('perfect', llmConfig.modelSlug)
+
+  // Build the runtime prompt WITH the resolved bridge so the model sees the
+  // exact "CONNECTED MCP TOOLS" / "UNAVAILABLE MCP SERVERS" sections at turn 1.
+  // This is what steers the model toward `browser_navigate` instead of
+  // `npm install playwright`: it both has the tool AND is told to prefer it.
   const runtimePrompt = buildOpenWaggleRuntimePrompt(input.payload.text, {
     standardsContext: input.standardsContext,
     bridge,
     pendingUserQuestionResolution: input.pendingUserQuestionResolution,
   })
+
+  // Attachments were previously dropped on the floor: `agent.prompt` was called
+  // with the text alone, so an attached mockup never reached the model and
+  // multimodal write/edit authoring could not fire. Map them into the harness
+  // shape, and append an explicit steer telling the model whether to ANALYZE the
+  // image or BUILD from it — listing the images (which the harness already does)
+  // is not enough to get them routed into write/edit's `images` argument.
+  const turingAttachments = toTuringAttachments(input.payload.attachments)
+  const attachmentIntentSection = buildAttachmentIntentSection(
+    input.payload.text,
+    input.payload.attachments,
+  )
+  const promptWithAttachments = attachmentIntentSection
+    ? `${runtimePrompt}\n\n${attachmentIntentSection}`
+    : runtimePrompt
+  if (turingAttachments.length > 0) {
+    logger.info('Forwarding attachments to turing-harness', {
+      count: turingAttachments.length,
+      imageCount: turingAttachments.filter((att) => att.type === 'image').length,
+      intent: detectAttachmentIntent(input.payload.text, input.payload.attachments),
+    })
+  }
 
   const onEvent = (event: AgentTransportEvent) => input.onEvent(event)
   // #region debug-point T:permission-mode
@@ -439,145 +549,285 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   }).catch(() => {})
   // #endregion
   turingSession.setPermissionMode(mapToolPermissionMode(input.toolPermissionMode ?? 'ask'))
-  turingSession.setPermissionCallback(
-    input.toolPermissionMode === 'allow-all'
-      ? undefined
-      : async (request) => {
-          if (request.kind !== 'tool') {
-            return { allowed: true }
-          }
+  // The candidate pool the harness selects from per call, ordered cheap → capable.
+  // It must be set per RUN, not at session creation: the session is warm-cached per
+  // project while the user can change models between runs, so a pool pinned at
+  // creation would go stale. This pool is also what lets the staged `read` escalate
+  // internally — with a single-entry pool there is no stronger tier to escalate to
+  // and the tool stays single-stage.
+  const escalationModel = llmConfig.escalationModelSlug
+  turingSession.setToolModelCandidates([...toolModelCandidatesFor(llmConfig)])
+  // Per-tool reasoning-effort overrides, keyed by exact tool name. A tool listed
+  // here runs the NEXT phase-model turn (the one after its result is processed)
+  // at this effort instead of the harness-wide `thinkingLevel` (medium). Use it
+  // to run a cheap/safe tool at "low"/"minimal", or a reasoning-heavy tool at
+  // "high"/"xhigh". Omit a tool to inherit the harness default. "off" disables
+  // reasoning for that tool's follow-up turn. Populate as needed.
+  const TOOL_THINKING_LEVEL_OVERRIDES: Record<string, ThinkingLevel> = {
+    // example: bash: 'low',
+    // example: aHeavyReasoningTool: 'high',
+  }
+  // Per-tool model overrides, keyed by exact tool name. A tool listed here has
+  // its RESULT consumed by this model on the NEXT phase-model turn (one turn
+  // only; the requesting phase model resumes after). Use it to hand a specific
+  // tool's output to a different model (e.g. a stronger reader for `read`). Any
+  // model the user picks in the permission UI for a gated call also flows through
+  // (see the user-gated return path). Omit a tool to inherit the phase model.
+  const TOOL_MODEL_OVERRIDES: Record<string, string> = {
+    // example: read: 'anthropic/claude-opus-4.8',
+  }
+  // The permission callback is ALWAYS installed (even in allow-all/bypass mode).
+  // turing-harness now consults it for every phase and tool call, so OpenWaggle
+  // owns the whole policy: per tool it decides whether the current permission
+  // mode already permits the call (auto-allow, no UI) or whether to surface the
+  // approval popup — and every decision carries the UI-emission flags.
+  turingSession.setPermissionCallback(async (request) => {
+    // Per-tool reasoning effort for the follow-up phase-model turn.
+    const thinkingLevel =
+      request.kind === 'tool' ? TOOL_THINKING_LEVEL_OVERRIDES[request.name] : undefined
+    // Per-tool model that consumes this tool's result (one turn only).
+    const model = request.kind === 'tool' ? TOOL_MODEL_OVERRIDES[request.name] : undefined
 
-          const pendingRequest: PendingToolPermissionRequest = {
-            toolCallId: `turing-permission-${randomUUID()}`,
-            toolName: request.name,
-            input: toJsonObject(request.args),
-            description: request.mutates
-              ? 'This action may modify files, state, or external systems.'
-              : 'This action needs approval before it can continue.',
-            // Complexity now flows from the harness (Prepare per-file / Plan
-            // per-task ratings inherited down the chain). Surface it so the UI can
-            // show how heavy this call is and where the rating came from.
-            ...(typeof request.complexity?.score === 'number'
-              ? { complexityScore: request.complexity.score }
-              : {}),
-            ...(request.complexityRating ? { complexityRating: request.complexityRating } : {}),
-            ...(request.complexitySource ? { complexitySource: request.complexitySource } : {}),
-            ...(request.options?.length
-              ? { options: request.options.map((o) => ({ id: o.id, label: o.label, allow: o.allow })) }
-              : {}),
-            summary: '',
-          }
-          const summary = buildToolPermissionSummary(pendingRequest)
-          const requestForUi: PendingToolPermissionRequest = {
-            ...pendingRequest,
-            summary,
-          }
+    // Escalate BYTE AUTHORING for a mutating call the harness rated `high`.
+    // By now the run's own model has already emitted its draft args, so this
+    // hands the actual write/edit content to the stronger model instead.
+    // The rating is evidence, not a guess: it is either inherited from the
+    // plan step or MEASURED by the staged `read` that loaded this same file
+    // earlier in the run (`complexitySource: 'tool-measured'`) — which is
+    // what closes the loop between reading a hard file and editing it.
+    //
+    // PRECEDENCE: this is now an operator OVERRIDE, not the normal path. It
+    // fires only when OPENWAGGLE_TURING_ESCALATION_MODEL is set (otherwise
+    // `escalationModel` is undefined). With it unset — the default — returning
+    // no `authorModel` lets the harness consult `turing-model-routing.ts`, which
+    // routes BOTH medium and high writes. Pinning a slug here suppresses that
+    // table for high writes, so set the env var only when you mean to bypass it.
+    const authorModel =
+      escalationModel &&
+      request.kind === 'tool' &&
+      request.mutates &&
+      (request.name === 'write' || request.name === 'edit') &&
+      request.complexityRating === 'high'
+        ? escalationModel
+        : undefined
 
-          // #region debug-point T:permission-request
-          void fetch('http://127.0.0.1:7777/event', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              sessionId: 'permission-flow',
-              runId: 'pre-fix',
-              hypothesisId: '2',
-              location: 'turing-classic-run.ts:permissionCallback',
-              msg: '[DEBUG] Turing emitted tool permission request',
-              data: {
-                sessionId: String(input.session.id),
-                toolCallId: requestForUi.toolCallId,
-                toolName: requestForUi.toolName,
-                mutates: request.mutates,
-                optionCount: request.options?.length ?? 0,
-              },
-              ts: Date.now(),
-            }),
-          }).catch(() => {})
-          // #endregion
-          emitCustomEvent(
-            onEvent,
-            input.model,
-            TOOL_PERMISSION_REQUEST_EVENT,
-            requestForUi as unknown as JsonValue,
-          )
+    // Stream BOTH the AI's non-reasoning text ("transcript") and its
+    // reasoning/thinking blocks for every phase and tool call.
+    const emissionFlags = { transcript: true, reasoning: true } as const
 
-          try {
-            const resolution = await beginToolPermissionRequest(
-              input.session.id,
-              requestForUi,
-              input.signal,
-            )
+    // Phases are never user-gated in OpenWaggle: auto-allow + apply flags.
+    if (request.kind !== 'tool') {
+      return { allowed: true, ...emissionFlags }
+    }
 
-            emitCustomEvent(onEvent, input.model, TOOL_PERMISSION_RESOLVED_EVENT, {
-              toolCallId: requestForUi.toolCallId,
-              decision: resolution.decision,
-            })
+    // Per-tool auto-allow policy from the session's permission mode:
+    // `allow-all` permits everything; `ask-edit` permits non-mutating calls
+    // and prompts for mutations; `ask` prompts for every tool. An already
+    // permitted call returns true WITHOUT any UI.
+    const permissionMode = input.toolPermissionMode ?? 'ask'
+    const autoAllow =
+      permissionMode === 'allow-all' || (permissionMode === 'ask-edit' && !request.mutates)
+    if (autoAllow) {
+      return {
+        allowed: true,
+        ...emissionFlags,
+        ...(thinkingLevel ? { thinkingLevel } : {}),
+        ...(model ? { model } : {}),
+        ...(authorModel ? { authorModel } : {}),
+      }
+    }
 
-            return {
-              allowed: resolution.decision === 'approved',
-              ...(resolution.decision === 'approved' && resolution.request.model
-                ? { model: resolution.request.model }
-                : {}),
-              ...(resolution.decision === 'approved' && resolution.request.option
-                ? { option: resolution.request.option }
-                : {}),
-            }
-          } catch (error) {
-            emitCustomEvent(onEvent, input.model, TOOL_PERMISSION_RESOLVED_EVENT, {
-              toolCallId: requestForUi.toolCallId,
-              decision: 'denied',
-            })
-            throw error
-          }
+    const pendingRequest: PendingToolPermissionRequest = {
+      toolCallId: `turing-permission-${randomUUID()}`,
+      toolName: request.name,
+      input: toJsonObject(request.args),
+      description: request.mutates
+        ? 'This action may modify files, state, or external systems.'
+        : 'This action needs approval before it can continue.',
+      // Complexity now flows from the harness (Prepare per-file / Plan
+      // per-task ratings inherited down the chain). Surface it so the UI can
+      // show how heavy this call is and where the rating came from.
+      ...(typeof request.complexity?.score === 'number'
+        ? { complexityScore: request.complexity.score }
+        : {}),
+      ...(request.complexityRating ? { complexityRating: request.complexityRating } : {}),
+      ...(request.complexitySource ? { complexitySource: request.complexitySource } : {}),
+      ...(request.options?.length
+        ? { options: request.options.map((o) => ({ id: o.id, label: o.label, allow: o.allow })) }
+        : {}),
+      summary: '',
+    }
+    const summary = buildToolPermissionSummary(pendingRequest)
+    const requestForUi: PendingToolPermissionRequest = {
+      ...pendingRequest,
+      summary,
+    }
+
+    // #region debug-point T:permission-request
+    void fetch('http://127.0.0.1:7777/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'permission-flow',
+        runId: 'pre-fix',
+        hypothesisId: '2',
+        location: 'turing-classic-run.ts:permissionCallback',
+        msg: '[DEBUG] Turing emitted tool permission request',
+        data: {
+          sessionId: String(input.session.id),
+          toolCallId: requestForUi.toolCallId,
+          toolName: requestForUi.toolName,
+          mutates: request.mutates,
+          optionCount: request.options?.length ?? 0,
         },
-  )
+        ts: Date.now(),
+      }),
+    }).catch(() => {})
+    // #endregion
+    emitCustomEvent(
+      onEvent,
+      input.model,
+      TOOL_PERMISSION_REQUEST_EVENT,
+      requestForUi as unknown as JsonValue,
+    )
+
+    try {
+      const resolution = await beginToolPermissionRequest(
+        input.session.id,
+        requestForUi,
+        input.signal,
+      )
+
+      emitCustomEvent(onEvent, input.model, TOOL_PERMISSION_RESOLVED_EVENT, {
+        toolCallId: requestForUi.toolCallId,
+        decision: resolution.decision,
+      })
+
+      return {
+        allowed: resolution.decision === 'approved',
+        // UI-emission axes for the AI's response to this tool's result:
+        // stream both the non-reasoning text ("transcript") and the
+        // reasoning/thinking blocks. Applied to the phase's subsequent
+        // model turns.
+        ...emissionFlags,
+        // Per-tool reasoning effort for the follow-up phase-model turn.
+        ...(thinkingLevel ? { thinkingLevel } : {}),
+        // Model that consumes this tool's result: prefer the UI-chosen
+        // model (explicit user decision at the gate), else the per-tool
+        // override map. One turn only; the phase model resumes after.
+        ...(resolution.decision === 'approved' && resolution.request.model
+          ? { model: resolution.request.model }
+          : model
+            ? { model }
+            : {}),
+        ...(resolution.decision === 'approved' && resolution.request.option
+          ? { option: resolution.request.option }
+          : {}),
+        // Byte authoring for an approved high-complexity write/edit goes to
+        // the stronger model. Only on approval — a denied call writes nothing,
+        // so pinning an author model for it would be meaningless.
+        ...(resolution.decision === 'approved' && authorModel ? { authorModel } : {}),
+      }
+    } catch (error) {
+      emitCustomEvent(onEvent, input.model, TOOL_PERMISSION_RESOLVED_EVENT, {
+        toolCallId: requestForUi.toolCallId,
+        decision: 'denied',
+      })
+      throw error
+    }
+  })
+
+  // Plan review: `create_plan` blocks here while the renderer shows the drafted
+  // plan. The user approves it, or sends it back with comments to be re-planned —
+  // and either way may attach notes/files to individual steps, which ride on the
+  // plan into that step's own execution.
+  turingSession.setPlanApprovalCallback(async (request) => {
+    const planReviewId = `turing-plan-${randomUUID()}`
+    const pending: PendingPlanReviewRequest = {
+      planReviewId,
+      planSet: request.planSet as unknown as PendingPlanReviewRequest['planSet'],
+      revision: request.revision,
+      task: request.task,
+      revisionsRemaining: request.revisionsRemaining,
+      ...(request.priorComments ? { priorComments: request.priorComments } : {}),
+    }
+    emitCustomEvent(
+      onEvent,
+      input.model,
+      PLAN_REVIEW_REQUEST_EVENT,
+      pending as unknown as JsonValue,
+    )
+
+    try {
+      const resolution = await beginPlanReviewRequest(input.session.id, pending, input.signal)
+      emitCustomEvent(onEvent, input.model, PLAN_REVIEW_RESOLVED_EVENT, {
+        planReviewId,
+        decision: resolution.decision,
+      })
+      return {
+        approved: resolution.decision === 'approved',
+        ...(resolution.decision === 'cancelled' ? { cancelled: true } : {}),
+        ...(resolution.comments ? { comments: resolution.comments } : {}),
+        ...(resolution.stepEdits?.length
+          ? {
+              stepEdits: resolution.stepEdits.map((edit) => ({
+                taskId: edit.taskId,
+                ...(edit.notes ? { notes: edit.notes } : {}),
+                ...(edit.attachments?.length
+                  ? { attachments: edit.attachments.map((a) => ({ ...a })) }
+                  : {}),
+              })),
+            }
+          : {}),
+      }
+    } catch (error) {
+      // An aborted run must not be reported as an approval — that would start
+      // executing a plan the user never accepted.
+      emitCustomEvent(onEvent, input.model, PLAN_REVIEW_RESOLVED_EVENT, {
+        planReviewId,
+        decision: 'cancelled',
+      })
+      logger.warn('Plan review did not resolve; treating as cancelled', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return { approved: false, cancelled: true }
+    }
+  })
 
   // Install the `ask_user_question` callback on the session. The harness's
   // built-in `ask_user_question` tool will await this when the LLM needs a
   // clarification, so the LLM continues in the SAME conversation context with
   // the user's answer as the tool result. No new run is required, so all prior
   // tool calls, file changes, and assistant messages are preserved.
-  turingSession.setAskUserQuestionCallback(
-    async (questionRequest) => {
-      emitCustomEvent(
-        onEvent,
-        input.model,
-        USER_QUESTION_REQUEST_EVENT,
-        questionRequest as unknown as JsonValue,
-      )
+  turingSession.setAskUserQuestionCallback(async (questionRequest) => {
+    emitCustomEvent(
+      onEvent,
+      input.model,
+      USER_QUESTION_REQUEST_EVENT,
+      questionRequest as unknown as JsonValue,
+    )
 
-      try {
-        const resolution = await beginUserQuestionRequest(
-          input.session.id,
-          questionRequest,
-          input.signal,
-        )
-        emitCustomEvent(
-          onEvent,
-          input.model,
-          USER_QUESTION_RESOLVED_EVENT,
-          {
-            phase: resolution.request.phase,
-            question: resolution.request.question,
-            answer: resolution.answer,
-          } as unknown as JsonValue,
-        )
-        return resolution.answer
-      } catch (error) {
-        emitCustomEvent(
-          onEvent,
-          input.model,
-          USER_QUESTION_RESOLVED_EVENT,
-          {
-            phase: questionRequest.phase,
-            question: questionRequest.question,
-            aborted: true,
-          } as unknown as JsonValue,
-        )
-        throw error
-      }
-    },
-  )
+    try {
+      const resolution = await beginUserQuestionRequest(
+        input.session.id,
+        questionRequest,
+        input.signal,
+      )
+      emitCustomEvent(onEvent, input.model, USER_QUESTION_RESOLVED_EVENT, {
+        phase: resolution.request.phase,
+        question: resolution.request.question,
+        answer: resolution.answer,
+      } as unknown as JsonValue)
+      return resolution.answer
+    } catch (error) {
+      emitCustomEvent(onEvent, input.model, USER_QUESTION_RESOLVED_EVENT, {
+        phase: questionRequest.phase,
+        question: questionRequest.question,
+        aborted: true,
+      } as unknown as JsonValue)
+      throw error
+    }
+  })
   const mapEvent = createTuringEventMapper({
     runId: input.runId,
     model: input.model,
@@ -598,23 +848,59 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     timestamp: Date.now(),
     model: input.model,
   })
+
+  // Emit the bridge status event. We already awaited `bridge` above, so emit
+  // synchronously — the renderer gets the connected/failed MCP picture up front.
+  // Hoist these into function scope so `buildRunResult` (below) can thread them
+  // into the persisted snapshot — referencing a block-scoped const from there
+  // was the `bridgeDebugValue is not defined` ReferenceError crashing the run.
+  // Always built, even when the bridge attach timed out (`bridge` undefined):
+  // `buildRunResult` persists this node unconditionally, and an absent bridge is
+  // itself the status worth recording — empty MCP lists say "built-in tools only".
+  const bridgeDebugValue: ReturnType<typeof buildOpenWaggleRuntimeDebugValue> =
+    buildOpenWaggleRuntimeDebugValue(turingSession, {
+      mcpSettings: input.mcpSettings,
+      standardsContext: input.standardsContext,
+      ...(bridge ? { bridge } : {}),
+    })
   const bridgeDebugTimestamp = Date.now()
-  const bridgeDebugValue = buildOpenWaggleRuntimeDebugValue(turingSession, {
-    mcpSettings: input.mcpSettings,
-    standardsContext: input.standardsContext,
-    bridge,
-  })
-  onEvent({
-    type: 'custom',
-    name: 'turing_bridge_status',
-    value: bridgeDebugValue,
-    timestamp: bridgeDebugTimestamp,
-    model: input.model,
-  })
+  if (bridge) {
+    onEvent({
+      type: 'custom',
+      name: 'turing_bridge_status',
+      value: bridgeDebugValue,
+      timestamp: bridgeDebugTimestamp,
+      model: input.model,
+    })
+  }
+  // If `bridge` is undefined (timed out), emit a final status once the
+  // background connection does resolve, so the UI still reflects late arrivals.
+  else {
+    void bridgeReady
+      .then((b) => {
+        onEvent({
+          type: 'custom',
+          name: 'turing_bridge_status',
+          value: buildOpenWaggleRuntimeDebugValue(turingSession, {
+            mcpSettings: input.mcpSettings,
+            standardsContext: input.standardsContext,
+            bridge: b,
+          }),
+          timestamp: Date.now(),
+          model: input.model,
+        })
+      })
+      .catch(() => undefined)
+  }
 
   let terminalError: string | undefined
   try {
-    await agent.prompt(runtimePrompt)
+    // Machine mode => plan mode: decompose, surface the plan for approval via
+    // the `planApproval` callback wired above (PLAN_REVIEW_REQUEST_EVENT), then
+    // run each approved step as its own sub-loop. Off => one flat work loop.
+    await agent.prompt(promptWithAttachments, turingAttachments, {
+      planMode: input.payload.planMode === true,
+    })
     terminalError = agent.state.error
   } catch (error) {
     terminalError = error instanceof Error ? error.message : String(error)
@@ -625,11 +911,30 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   }
 
   const appended: readonly TuringMessage[] = agent.state.messages
-  const phaseTranscriptNode = buildPhaseTranscriptNode(
-    agent.state.lastPhaseResults,
-    appended,
-    Date.now(),
-  )
+  // ORDER DEBUG: the raw turing messages the harness produced this run, in the
+  // order the harness stored them. This is the source of truth for projection.
+  logger.info('runTuringSession: raw appended turing messages', {
+    count: appended.length,
+    messages: appended.map((message) => ({
+      role: message.role,
+      ...(message.role === 'assistant'
+        ? {
+            stopReason: message.stopReason,
+            textBlocks: message.content
+              .filter((part) => part.type === 'text')
+              .map((part) => (part as { text: string }).text)
+              .map((text) => text.replace(/\s+/g, ' ').slice(0, 50)),
+            toolCalls: message.content
+              .filter((part) => part.type === 'toolCall')
+              .map((part) => (part as { id: string; name: string }).name),
+          }
+        : {}),
+      ...(message.role === 'toolResult'
+        ? { toolCallId: message.toolCallId, toolName: message.toolName, isError: message.isError }
+        : {}),
+    })),
+  })
+  const phaseTranscriptNode = buildRunTranscriptNode(agent.state, appended, Date.now())
   const threadSnapshotNode = buildThreadSnapshotPersistedNode(
     agent.state.lastThreadSnapshot,
     Date.now(),
@@ -656,10 +961,15 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     model: input.model,
   })
 
+  // The streamed assistant-turn ids the mapper recorded. Threaded into the
+  // projection so the persisted snapshot reuses them — matching the live stream.
+  const streamedAssistantIds =
+    typeof mapEvent.getStreamedMessageIds === 'function' ? mapEvent.getStreamedMessageIds() : []
   return buildRunResult({
     runInput: input,
     sessionId,
     appended,
+    streamedAssistantIds,
     bridgeDebugValue,
     bridgeDebugTimestamp,
     aborted,

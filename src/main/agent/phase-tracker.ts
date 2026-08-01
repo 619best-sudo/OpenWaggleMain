@@ -113,6 +113,7 @@ export function updatePhaseFromTransportEvent(
       'compaction_end',
       'auto_retry_start',
       'auto_retry_end',
+      'phase_summary',
       'custom',
       () => ({ changed: false, phase: state.current }),
     )

@@ -5,17 +5,17 @@ import type { Exit as ExitType } from 'effect/Exit'
 import * as Layer from 'effect/Layer'
 import * as ManagedRuntime from 'effect/ManagedRuntime'
 import { MachinePlanFileStoreLive } from './adapters/machine-plan-file-store-adapter'
-import { PiAgentKernelLive } from './adapters/pi/pi-agent-kernel-adapter'
-import { PiMcpConfigServiceLive } from './adapters/pi/pi-mcp-config-service'
-import { PiProviderAuthLive } from './adapters/pi/pi-provider-auth-service'
-import { PiProviderOAuthLive } from './adapters/pi/pi-provider-oauth-service'
-import { PiProviderProbeLive } from './adapters/pi/pi-provider-probe-adapter'
-import { ProviderServiceLive } from './adapters/pi/pi-provider-service'
-import { PiSessionTreePreferencesLive } from './adapters/pi/pi-session-tree-preferences-service'
+import { FilesystemStandardsLive } from './adapters/standards-adapter'
+import { TuringHarnessAgentKernelLive } from './adapters/turing/turing-agent-kernel-adapter'
+import { TuringSessionTreePreferencesLive } from './adapters/turing/turing-session-tree-preferences-service'
+import { TuringMcpConfigServiceLive } from './adapters/turing/mcp/turing-mcp-config-service'
+import { TuringProviderAuthLive } from './adapters/turing/providers/turing-provider-auth-service'
+import { TuringProviderOAuthLive } from './adapters/turing/providers/turing-provider-oauth-service'
+import { TuringProviderProbeLive } from './adapters/turing/providers/turing-provider-probe-service'
+import { TuringProviderServiceLive } from './adapters/turing/providers/turing-provider-service'
 import { SettingsWagglePresetsRepositoryLive } from './adapters/settings-waggle-presets-repository'
 import { SqliteSessionProjectionRepositoryLive } from './adapters/sqlite-session-projection-repository'
 import { SqliteSessionRepositoryLive } from './adapters/sqlite-session-repository'
-import { FilesystemStandardsLive } from './adapters/standards-adapter'
 import { AppDatabaseLive } from './services/database-service'
 import { AppLogger } from './services/logger-service'
 import { SettingsService } from './services/settings-service'
@@ -29,13 +29,13 @@ const AppLayer = Layer.mergeAll(
   SqliteSessionProjectionRepositoryLive,
   SqliteSessionRepositoryLive,
   FilesystemStandardsLive,
-  PiAgentKernelLive,
-  PiMcpConfigServiceLive,
-  PiProviderAuthLive,
-  PiProviderProbeLive,
-  PiProviderOAuthLive,
-  ProviderServiceLive,
-  PiSessionTreePreferencesLive,
+  TuringHarnessAgentKernelLive,
+  TuringMcpConfigServiceLive,
+  TuringProviderAuthLive,
+  TuringProviderProbeLive,
+  TuringProviderOAuthLive,
+  TuringProviderServiceLive,
+  TuringSessionTreePreferencesLive,
   SettingsWagglePresetsRepositoryLive,
   MachinePlanFileStoreLive,
 )

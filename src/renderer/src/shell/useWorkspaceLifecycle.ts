@@ -6,11 +6,13 @@ import { useChat } from '@/features/chat/hooks'
 import { useDiffRouteNavigation } from '@/features/diff-panel/hooks'
 import { useGit, useGitRefresh } from '@/features/git/hooks'
 import { useProject, useSessionStatusMonitor, useSessions } from '@/features/sessions/hooks'
+import { usePreferences } from '@/features/settings/hooks/useSettings'
 import { api } from '@/shared/lib/ipc'
 import { useUIStore } from '@/shell/ui-store'
 
 export function useWorkspaceLifecycle(): void {
   const { projectPath } = useProject()
+  const { settings } = usePreferences()
   const {
     activeSessionId,
     startDraftSession,
@@ -40,7 +42,14 @@ export function useWorkspaceLifecycle(): void {
   useEffect(() => {
     void refreshGitStatus(projectPath)
     void refreshGitBranches(projectPath)
-  }, [projectPath, refreshGitStatus, refreshGitBranches])
+    // Prewarm the turing-harness spare session in the background so the first
+    // message send in this project doesn't block on a full harness build
+    // (MCP client spawn + skill registration + file-memory index). Fire-and-
+    // forget and de-duped server-side; safe to call on every project change.
+    if (projectPath) {
+      void api.prewarmProjectMemory(projectPath, settings.selectedModel).catch(() => undefined)
+    }
+  }, [projectPath, settings.selectedModel, refreshGitStatus, refreshGitBranches])
 
   // Subscribe to LLM-generated title updates from main process
   useEffect(() => {

@@ -1,5 +1,6 @@
 import type { SessionId } from '@shared/types/brand'
 import type { SupportedModelId } from '@shared/types/llm'
+import type { PendingPlanReviewRequest, PlanReviewResolution } from '@shared/types/plan-review'
 import type {
   PendingToolPermissionRequest,
   ToolPermissionResolution,
@@ -35,6 +36,14 @@ const pendingUserQuestionResolvers = new Map<
     readonly reject: (error: Error) => void
   }
 >()
+const pendingPlanReviewResolvers = new Map<
+  SessionId,
+  {
+    readonly request: PendingPlanReviewRequest
+    readonly resolve: (resolution: PlanReviewResolution) => void
+    readonly reject: (error: Error) => void
+  }
+>()
 
 export { activeCompactions, activeMachineRuns, activeRuns, activeTeamRuns, activeWaggleRuns }
 
@@ -46,10 +55,7 @@ function rejectPendingResolver<T extends { readonly reject: (error: Error) => vo
   entry.reject(new Error(message))
 }
 
-function attachAbortCleanup(
-  signal: AbortSignal | undefined,
-  cleanup: () => void,
-) {
+function attachAbortCleanup(signal: AbortSignal | undefined, cleanup: () => void) {
   if (!signal) {
     return () => undefined
   }
@@ -86,7 +92,8 @@ function matchesPendingUserQuestionRequest(
     pending.reason === incoming.reason &&
     pending.placeholder === incoming.placeholder &&
     pending.answerMode === incoming.answerMode &&
-    JSON.stringify(pending.options ?? []) === JSON.stringify(incoming.options ?? [])
+    JSON.stringify(pending.options ?? []) === JSON.stringify(incoming.options ?? []) &&
+    JSON.stringify(pending.choices ?? []) === JSON.stringify(incoming.choices ?? [])
   )
 }
 
@@ -101,13 +108,10 @@ export function beginToolPermissionRequest(
   )
 
   return new Promise<ToolPermissionResolution>((resolve, reject) => {
-    const cleanupAbort = attachAbortCleanup(
-      signal,
-      () => {
-        pendingToolPermissionResolvers.delete(sessionId)
-        reject(new Error('aborted'))
-      },
-    )
+    const cleanupAbort = attachAbortCleanup(signal, () => {
+      pendingToolPermissionResolvers.delete(sessionId)
+      reject(new Error('aborted'))
+    })
 
     pendingToolPermissionResolvers.set(sessionId, {
       request,
@@ -151,13 +155,10 @@ export function beginUserQuestionRequest(
   )
 
   return new Promise<UserQuestionResolution>((resolve, reject) => {
-    const cleanupAbort = attachAbortCleanup(
-      signal,
-      () => {
-        pendingUserQuestionResolvers.delete(sessionId)
-        reject(new Error('aborted'))
-      },
-    )
+    const cleanupAbort = attachAbortCleanup(signal, () => {
+      pendingUserQuestionResolvers.delete(sessionId)
+      reject(new Error('aborted'))
+    })
 
     pendingUserQuestionResolvers.set(sessionId, {
       request,
@@ -194,7 +195,9 @@ export function getPendingUserQuestion(sessionId: SessionId): PendingUserQuestio
   return pendingUserQuestionResolvers.get(sessionId)?.request ?? null
 }
 
-export function getPendingToolPermission(sessionId: SessionId): PendingToolPermissionRequest | null {
+export function getPendingToolPermission(
+  sessionId: SessionId,
+): PendingToolPermissionRequest | null {
   const request = pendingToolPermissionResolvers.get(sessionId)?.request
   return request ? (request as PendingToolPermissionRequest) : null
 }
@@ -223,7 +226,9 @@ export function cancelSessionRuns(sessionId: SessionId): boolean {
   const cancelledWaggle = activeWaggleRuns.cancel(sessionId)
   const cancelledMachine = activeMachineRuns.cancel(sessionId)
   const cancelledTeam = activeTeamRuns.cancel(sessionId)
-  return cancelledAgent || cancelledCompaction || cancelledWaggle || cancelledMachine || cancelledTeam
+  return (
+    cancelledAgent || cancelledCompaction || cancelledWaggle || cancelledMachine || cancelledTeam
+  )
 }
 
 export function getAllActiveRunSessionIds(): SessionId[] {
@@ -258,4 +263,62 @@ export function cancelAllSessionRuns(): SessionId[] {
   activeMachineRuns.cancelAll()
   activeTeamRuns.cancelAll()
   return sessionIds
+}
+
+/**
+ * Park a drafted plan until the user rules on it. Mirrors the tool-permission
+ * resolver: the agent's `create_plan` call blocks on this promise while the
+ * renderer shows the plan.
+ */
+export function beginPlanReviewRequest(
+  sessionId: SessionId,
+  request: PendingPlanReviewRequest,
+  signal?: AbortSignal,
+): Promise<PlanReviewResolution> {
+  rejectPendingResolver(
+    pendingPlanReviewResolvers.get(sessionId),
+    'Plan review was replaced by a newer draft.',
+  )
+
+  return new Promise<PlanReviewResolution>((resolve, reject) => {
+    const cleanupAbort = attachAbortCleanup(signal, () => {
+      pendingPlanReviewResolvers.delete(sessionId)
+      reject(new Error('aborted'))
+    })
+
+    pendingPlanReviewResolvers.set(sessionId, {
+      request,
+      resolve: (resolution) => {
+        cleanupAbort()
+        pendingPlanReviewResolvers.delete(sessionId)
+        resolve(resolution)
+      },
+      reject: (error) => {
+        cleanupAbort()
+        pendingPlanReviewResolvers.delete(sessionId)
+        reject(error)
+      },
+    })
+  })
+}
+
+export function resolvePendingPlanReview(
+  sessionId: SessionId,
+  resolution: PlanReviewResolution,
+): boolean {
+  const pending = pendingPlanReviewResolvers.get(sessionId)
+  if (!pending) {
+    return false
+  }
+  // Match on the correlation id: a stale verdict from a superseded draft must
+  // not resolve the draft currently on screen.
+  if (pending.request.planReviewId !== resolution.planReviewId) {
+    return false
+  }
+  pending.resolve(resolution)
+  return true
+}
+
+export function getPendingPlanReview(sessionId: SessionId): PendingPlanReviewRequest | null {
+  return pendingPlanReviewResolvers.get(sessionId)?.request ?? null
 }

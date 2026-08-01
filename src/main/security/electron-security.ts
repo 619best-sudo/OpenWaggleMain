@@ -17,6 +17,10 @@ const SCRIPT_SRC_VALUES = ["'self'", VITE_REACT_PREAMBLE_HASH] as const
 const STYLE_SRC_VALUES = ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'] as const
 const FONT_SRC_VALUES = ["'self'", 'https://fonts.gstatic.com'] as const
 const IMG_SRC_VALUES = ["'self'", 'data:'] as const
+// Media previews (tool outputs: video/audio) are served as data: or blob:
+// URLs from the renderer. Without an explicit media-src directive they fall
+// back to default-src 'self' and would be blocked by CSP.
+const MEDIA_SRC_VALUES = ["'self'", 'data:', 'blob:'] as const
 const CONNECT_SRC_VALUES = [
   "'self'",
   'ws://localhost:*',
@@ -35,6 +39,7 @@ const CSP_DIRECTIVES = [
   ['style-src', STYLE_SRC_VALUES],
   ['font-src', FONT_SRC_VALUES],
   ['img-src', IMG_SRC_VALUES],
+  ['media-src', MEDIA_SRC_VALUES],
   ['connect-src', CONNECT_SRC_VALUES],
 ] as const
 

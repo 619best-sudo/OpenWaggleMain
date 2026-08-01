@@ -8,6 +8,8 @@ export const JSON_STRINGIFY_SPACES = 2
 export const LONG_ARGUMENT_PREVIEW_CHARS = 120
 export const LONG_ARGUMENT_MAX_HEIGHT_PX = 200
 export const RESULT_MAX_HEIGHT_PX = 300
+export const READ_VIEW_MAX_HEIGHT_PX = 320
+export const READ_VIEW_MAX_LINES = 2_000
 export const INLINE_DIFF_LINE_LIMIT = 32
 export const OUTPUT_PREVIEW_LINES = 6
 export const LINE_SPLIT_SEPARATOR = '\n'
@@ -61,6 +63,75 @@ function getToolResultDetails(content: unknown) {
   return match(parsed)
     .with({ details: P.select() }, (details) => details)
     .otherwise(() => undefined)
+}
+
+/** A mark_concern_lines result: the lines flagged for a file + optional reason. */
+export interface LineConcern {
+  readonly path: string
+  readonly lines: readonly number[]
+  readonly why?: string
+}
+
+/**
+ * Extract a {@link LineConcern} from a tool result payload. Only meaningful for
+ * `mark_concern_lines`, whose `details = { path, lines, why? }`. Returns null for
+ * any other shape so callers can scan a phase's tool results and collect
+ * concerns to overlay onto the matching read.
+ */
+export function getConcernLinesFromResult(content: unknown): LineConcern | null {
+  const details = getToolResultDetails(content)
+  if (!isRecord(details)) return null
+  const path = match(details.path)
+    .with(P.string, (value) => value)
+    .otherwise(() => null)
+  if (!path) return null
+  const rawLines = details.lines
+  if (!Array.isArray(rawLines)) return null
+  const lines = rawLines.filter(
+    (n): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 1,
+  )
+  if (lines.length === 0) return null
+  const why = match(details.why)
+    .with(P.string, (value) => value)
+    .otherwise(() => undefined)
+  return why ? { path, lines, why } : { path, lines }
+}
+
+/** The path the harness resolved for a successful read (details.path), if any. */
+export function getResultPath(content: unknown): string | null {
+  const details = getToolResultDetails(content)
+  if (!isRecord(details)) return null
+  return match(details.path)
+    .with(P.string, (value) => value)
+    .otherwise(() => null)
+}
+
+export interface NumberedLine {
+  /** 1-based line number shown in the gutter. */
+  readonly number: number
+  /** Line text with the harness's leading `<digits>\t` prefix stripped. */
+  readonly text: string
+}
+
+/**
+ * Split a read result into numbered lines. The harness `readTool` formats lines
+ * as `<n>\t<text>` (with `n` honoring the requested `offset`), so we prefer the
+ * embedded number when present and fall back to a 1-based index. A trailing
+ * empty line (from a final `\n`) is dropped.
+ */
+export function splitNumberedFileLines(content: string): readonly NumberedLine[] {
+  if (!content) return []
+  const rawLines = content.split(LINE_SPLIT_SEPARATOR)
+  if (rawLines.length > 0 && rawLines[rawLines.length - 1] === '') {
+    rawLines.pop()
+  }
+  return rawLines.map((line, index) => {
+    const match = /^(\d+)\t(.*)$/s.exec(line)
+    if (match) {
+      return { number: Number(match[1]), text: match[2] }
+    }
+    return { number: index + 1, text: line }
+  })
 }
 
 function textFromContentBlocks(content: readonly unknown[]) {
@@ -221,17 +292,24 @@ export function getToolDiffData(
     return null
   }
 
-  if (name === 'write') {
-    const rawContent = args?.content
-    return typeof rawContent === 'string' ? buildWriteSummary(rawContent) : null
-  }
-
+  // Prefer the harness-computed unified diff carried on the tool result. Both
+  // `edit` and `write` now return `details.diff` (write diffs the previous file
+  // contents against what was actually written). Using it shows the REAL added/
+  // removed lines and accurate +/- counts — crucially for authoring writes, where
+  // `args.content` is only the model's draft, not the bytes written to disk.
   const details = getToolResultDetails(content)
   const diff = match(details)
     .with({ diff: P.select('diff', P.string) }, ({ diff }) => diff)
     .otherwise(() => null)
   if (diff?.trim()) {
     return parseUnifiedDiff(diff)
+  }
+
+  if (name === 'write') {
+    // No result diff yet (e.g. the args are still streaming in, before the tool
+    // finished) — fall back to an all-additions summary from the drafted content.
+    const rawContent = args?.content
+    return typeof rawContent === 'string' ? buildWriteSummary(rawContent) : null
   }
 
   const parsed = parseResultPayload(content)

@@ -3,6 +3,7 @@ import type { SessionBranchId, SessionId, SessionNodeId } from './brand'
 import type { ContextCompactionResult, ContextUsageSnapshot } from './context-usage'
 import type { ProviderInfo, SupportedModelId } from './llm'
 import type { McpSetServerEnabledInput, McpSettingsView, McpWriteSourceConfigInput } from './mcp'
+import type { PendingPlanReviewRequest, PlanReviewResolution } from './plan-review'
 import type {
   SessionCopyToNewResult,
   SessionDetail,
@@ -42,6 +43,14 @@ export interface IpcCoreInvokeChannelMap {
   'agent:resolve-user-question': {
     args: [sessionId: SessionId, resolution: UserQuestionResolution]
     return: undefined
+  }
+  'agent:resolve-plan-review': {
+    args: [sessionId: SessionId, resolution: PlanReviewResolution]
+    return: undefined
+  }
+  'agent:get-pending-plan-review': {
+    args: [sessionId: SessionId]
+    return: PendingPlanReviewRequest | null
   }
   'agent:get-pending-tool-permission': {
     args: [sessionId: SessionId]

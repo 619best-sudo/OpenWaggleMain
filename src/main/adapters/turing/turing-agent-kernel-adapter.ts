@@ -46,11 +46,13 @@ export const TuringHarnessAgentKernelLive = Layer.succeed(
   AgentKernelService,
   AgentKernelService.of({
     createSession: (_input): Effect.Effect<CreateAgentKernelSessionResult, Error> =>
-      // Prewarming is driven from the renderer with the SELECTED model (on project
-      // open / model change) and replenished after each checkout with the model
-      // actually used. Prewarming here with a guessed default model ref would
-      // overwrite that correctly-keyed spare with a mismatched one, forcing a
-      // synchronous rebuild at run time — the very latency we're avoiding.
+      // Session creation only mints a piSessionId. The expensive harness build
+      // (MCP client spawn + skill registration + file-memory index) happens in
+      // `checkoutWarmProjectSession` at run time, OR eagerly in the background
+      // via the `project-memory:prewarm` IPC — fired from the renderer on
+      // project open / model change (see `useWorkspaceLifecycle`). Prewarming
+      // here with a guessed model ref would overwrite the correctly-keyed spare
+      // with a mismatched one, so we deliberately do NOT prewarm at create time.
       Effect.sync(() => ({ piSessionId: randomUUID() })),
 
     run: (input) =>

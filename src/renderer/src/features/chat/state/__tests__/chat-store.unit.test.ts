@@ -10,6 +10,7 @@ const mockApi = {
   listSessionDetails: vi.fn(),
   listSessions: vi.fn(async () => []),
   getSessionTree: vi.fn(async () => null),
+  getSessionWorkspace: vi.fn(async () => null),
   getSessionDetail: vi.fn(),
   createSession: vi.fn(),
   deleteSession: vi.fn(),
@@ -20,6 +21,7 @@ vi.mock('@/shared/lib/ipc', () => ({
     listSessionDetails: (...args: unknown[]) => mockApi.listSessionDetails(...args),
     listSessions: (...args: unknown[]) => mockApi.listSessions(...args),
     getSessionTree: (...args: unknown[]) => mockApi.getSessionTree(...args),
+    getSessionWorkspace: (...args: unknown[]) => mockApi.getSessionWorkspace(...args),
     getSessionDetail: (...args: unknown[]) => mockApi.getSessionDetail(...args),
     createSession: (...args: unknown[]) => mockApi.createSession(...args),
     deleteSession: (...args: unknown[]) => mockApi.deleteSession(...args),
@@ -185,7 +187,7 @@ describe('useChatStore unit', () => {
   })
 
   describe('updateSessionTitle', () => {
-    it('does not refresh the active tree for non-active session title updates', async () => {
+    it('does not refresh the active workspace for non-active session title updates', async () => {
       const activeId = SessionId('active-session-id')
       const inactiveId = SessionId('inactive-session-id')
       useChatStore.getState().upsertSession(makeSessionDetail(activeId, 'Active'))
@@ -196,10 +198,10 @@ describe('useChatStore unit', () => {
       await new Promise((resolve) => setTimeout(resolve, 0))
 
       expect(mockApi.listSessions).toHaveBeenCalled()
-      expect(mockApi.getSessionTree).not.toHaveBeenCalledWith(inactiveId)
+      expect(mockApi.getSessionWorkspace).not.toHaveBeenCalledWith(inactiveId, undefined)
     })
 
-    it('refreshes the active tree for active session title updates', async () => {
+    it('refreshes the active workspace for active session title updates', async () => {
       const activeId = SessionId('active-session-id')
       useChatStore.getState().upsertSession(makeSessionDetail(activeId, 'Active'))
       useChatStore.getState().setActiveSessionId(activeId)
@@ -207,7 +209,7 @@ describe('useChatStore unit', () => {
       useChatStore.getState().updateSessionTitle(activeId, 'Active renamed')
       await new Promise((resolve) => setTimeout(resolve, 0))
 
-      expect(mockApi.getSessionTree).toHaveBeenCalledWith(activeId)
+      expect(mockApi.getSessionWorkspace).toHaveBeenCalledWith(activeId, undefined)
     })
   })
 })

@@ -37,9 +37,33 @@ export function UserQuestionCard({
   helperText,
 }: UserQuestionCardProps) {
   const mode = resolveAnswerMode(request)
-  const options = useMemo(() => request.options?.filter((option) => option.trim().length > 0) ?? [], [request.options])
+  // The harness sends `options` (labels) and, when the agent named the trade-offs,
+  // `choices` (label + what picking it means + which one it recommends). Merge
+  // them into one list keyed by label so a label without a trade-off still shows,
+  // and a renderer bug can never drop an option entirely.
+  const choiceByLabel = useMemo(() => {
+    const map = new Map<string, { description?: string; recommended?: boolean }>()
+    for (const choice of request.choices ?? []) {
+      if (choice.label.trim().length === 0) continue
+      map.set(choice.label, {
+        ...(choice.description ? { description: choice.description } : {}),
+        ...(choice.recommended ? { recommended: true } : {}),
+      })
+    }
+    return map
+  }, [request.choices])
+  const options = useMemo(() => {
+    const labels = request.options?.length
+      ? request.options
+      : (request.choices ?? []).map((choice) => choice.label)
+    return labels.filter((option) => option.trim().length > 0)
+  }, [request.options, request.choices])
   const [textValue, setTextValue] = useState('')
-  const [selectedValue, setSelectedValue] = useState(options[0] ?? '')
+  const recommendedLabel = useMemo(
+    () => options.find((option) => choiceByLabel.get(option)?.recommended),
+    [options, choiceByLabel],
+  )
+  const [selectedValue, setSelectedValue] = useState(recommendedLabel ?? options[0] ?? '')
   const [selectedValues, setSelectedValues] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -47,12 +71,12 @@ export function UserQuestionCard({
 
   useEffect(() => {
     setTextValue('')
-    setSelectedValue(options[0] ?? '')
+    setSelectedValue(recommendedLabel ?? options[0] ?? '')
     setSelectedValues([])
     setError(null)
     setIsSubmitting(false)
     setSubmittedAnswer(null)
-  }, [options, request.question, request.answerMode, request.placeholder])
+  }, [options, recommendedLabel, request.question, request.answerMode, request.placeholder])
 
   async function handleSubmit() {
     const answer =
@@ -176,7 +200,21 @@ export function UserQuestionCard({
                       )}
                     />
                   </span>
-                  <span className="text-[14px] leading-[1.5]">{option}</span>
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="flex items-center gap-1.5 text-[14px] leading-[1.5]">
+                      {option}
+                      {choiceByLabel.get(option)?.recommended ? (
+                        <span className="rounded-full border border-accent/40 bg-accent/10 px-1.5 py-px text-[11px] leading-[1.4] text-accent">
+                          Recommended
+                        </span>
+                      ) : null}
+                    </span>
+                    {choiceByLabel.get(option)?.description ? (
+                      <span className="text-[13px] leading-[1.45] text-text-secondary">
+                        {choiceByLabel.get(option)?.description}
+                      </span>
+                    ) : null}
+                  </span>
                 </button>
               )
             })}
@@ -185,16 +223,25 @@ export function UserQuestionCard({
 
         {mode === 'multi-select' ? (
           <div className="flex flex-col gap-2 rounded-[12px] border border-border/35 bg-bg-primary/65 p-3">
-            {options.map((option) => (
-              <Checkbox
-                key={option}
-                checked={selectedValues.includes(option)}
-                onChange={(event) => toggleOption(option, event.target.checked)}
-                disabled={busy || isSubmitting}
-                label={option}
-                labelClassName="text-[14px] leading-[1.5] text-text-primary"
-              />
-            ))}
+            {options.map((option) => {
+              const choice = choiceByLabel.get(option)
+              return (
+                <div key={option} className="flex flex-col gap-0.5">
+                  <Checkbox
+                    checked={selectedValues.includes(option)}
+                    onChange={(event) => toggleOption(option, event.target.checked)}
+                    disabled={busy || isSubmitting}
+                    label={choice?.recommended ? `${option} · Recommended` : option}
+                    labelClassName="text-[14px] leading-[1.5] text-text-primary"
+                  />
+                  {choice?.description ? (
+                    <span className="pl-6 text-[13px] leading-[1.45] text-text-secondary">
+                      {choice.description}
+                    </span>
+                  ) : null}
+                </div>
+              )
+            })}
           </div>
         ) : null}
 

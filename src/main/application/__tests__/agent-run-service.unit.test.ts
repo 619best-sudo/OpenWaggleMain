@@ -1,10 +1,12 @@
 import { MessageId, SupportedModelId } from '@shared/types/brand'
+import type { McpSettingsView } from '@shared/types/mcp'
 import type { SessionDetail } from '@shared/types/session'
 import { DEFAULT_SETTINGS } from '@shared/types/settings'
 import { Layer } from 'effect'
 import * as Effect from 'effect/Effect'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { type AgentKernelRunInput, AgentKernelService } from '../../ports/agent-kernel-service'
+import { McpConfigService } from '../../ports/mcp-config-service'
 import { ProviderService } from '../../ports/provider-service'
 import { SessionProjectionRepository } from '../../ports/session-projection-repository'
 import { type PersistSessionSnapshotInput, SessionRepository } from '../../ports/session-repository'
@@ -64,6 +66,21 @@ const TestSettingsLayer = Layer.succeed(SettingsService, {
   update: () => Effect.void,
   initialize: () => Effect.void,
   flushForTests: () => Effect.void,
+})
+
+const emptyMcpView: McpSettingsView = {
+  adapter: { enabled: false, packageSource: '', runtimeConfigPath: null },
+  sources: [],
+  effective: { mcpServers: {}, disabledMcpServers: {}, settings: {}, imports: [] },
+  servers: [],
+  runtimeConfigPath: null,
+}
+
+const TestMcpConfigLayer = Layer.succeed(McpConfigService, {
+  getView: () => Effect.succeed(emptyMcpView),
+  setAdapterEnabled: () => Effect.succeed(emptyMcpView),
+  setServerEnabled: () => Effect.succeed(emptyMcpView),
+  writeSourceConfig: () => Effect.succeed(emptyMcpView),
 })
 
 const TestSessionLayer = Layer.succeed(SessionRepository, {
@@ -173,6 +190,7 @@ const TestLayer = Layer.mergeAll(
   TestSettingsLayer,
   TestSessionLayer,
   TestAgentKernelLayer,
+  TestMcpConfigLayer,
 )
 
 describe('executeAgentRun', () => {
@@ -338,6 +356,7 @@ describe('executeAgentRun', () => {
             TestSettingsLayer,
             TestSessionLayer,
             localAgentKernelLayer,
+            TestMcpConfigLayer,
           ),
         ),
       ),

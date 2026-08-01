@@ -16,6 +16,12 @@ interface ChatSendWorkflowParams {
     ReturnType<typeof useBranchSummaryWorkflow>['materializeDraftBranchForSend']
   >[0]
   readonly handleSend: (payload: AgentSendPayload) => Promise<void>
+  /**
+   * @deprecated The Machine toggle no longer routes here — it sends through
+   * `handleSend` with `planMode: true`. Retained so the standalone
+   * `sendMachineMessage` IPC + `machine-run-service` pipeline stays callable
+   * while it is being retired.
+   */
   readonly handleSendMachine: (
     payload: AgentSendPayload,
     targetSessionId?: SessionId | null,
@@ -118,11 +124,15 @@ function activeWaggleConfigForSend(params: ChatSendWorkflowParams): WaggleConfig
 
 async function sendThroughActiveMode(params: ChatSendWorkflowParams, payload: AgentSendPayload) {
   if (machineModeEnabledForSend(params)) {
+    // Machine mode IS plan mode: the run decomposes the request, surfaces the
+    // plan for approval, and executes it step by step. It rides the normal send
+    // path with `planMode` set rather than a parallel pipeline, so plan review,
+    // tool permissions, streaming and persistence all stay on one code path.
     const targetSessionId = params.activeSessionId ?? params.machineOwningId
     if (targetSessionId) {
       params.startMachineRun(targetSessionId)
     }
-    await params.handleSendMachine(payload, targetSessionId)
+    await params.handleSend({ ...payload, planMode: true })
     return
   }
   const waggleConfig = activeWaggleConfigForSend(params)
@@ -186,13 +196,17 @@ export function useChatSendWorkflow(params: ChatSendWorkflowParams) {
       }
     },
     cancelRun() {
+      // Machine mode now rides the normal run, so `params.stop()` below is what
+      // actually cancels it — `api.cancelMachine` would target the separate
+      // machine pipeline this no longer uses. Reset the run STATUS but leave the
+      // toggle enabled: the user cancelled a run, not the mode. (`clearMachineMode`
+      // here used to switch Machine off behind their back on every cancel.)
       if (
         params.activeSessionId &&
         params.machineStatus === 'running' &&
         params.machineOwningId === params.activeSessionId
       ) {
-        api.cancelMachine(params.activeSessionId)
-        params.clearMachineMode()
+        params.finishMachineRun(params.activeSessionId)
       }
       if (params.activeSessionId && params.waggleStatus !== 'idle') {
         api.cancelWaggle(params.activeSessionId)

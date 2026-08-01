@@ -1,7 +1,7 @@
 import { matchBy } from '@diegogbrisa/ts-match'
 import type { AgentSessionEvent } from '@mariozechner/pi-coding-agent'
 import type { JsonValue } from '@shared/types/json'
-import { toJsonValue } from '../pi-message-mapper'
+import { toJsonValue } from '../../message-projection/message-mapper'
 import { getAgentEndError, getAgentEndReason, getAgentEndUsage } from './agent-end-events'
 import { handleMessageStart, handleMessageUpdate } from './assistant-events'
 import type {

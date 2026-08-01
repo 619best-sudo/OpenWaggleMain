@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { piHistoryToProjectedMessages } from '../pi-message-mapper'
+import { historyToProjectedMessages } from '../../message-projection/message-mapper'
 
-describe('piHistoryToProjectedMessages', () => {
+describe('historyToProjectedMessages', () => {
   it('collapses assistant and following toolResult messages back into OpenWaggle assistant messages', () => {
-    const result = piHistoryToProjectedMessages([
+    const result = historyToProjectedMessages([
       {
         role: 'assistant',
         model: 'claude-sonnet-4-5',
@@ -49,7 +49,7 @@ describe('piHistoryToProjectedMessages', () => {
   })
 
   it('preserves Pi edit diff details when projecting tool results', () => {
-    const result = piHistoryToProjectedMessages([
+    const result = historyToProjectedMessages([
       {
         role: 'assistant',
         model: 'claude-sonnet-4-5',

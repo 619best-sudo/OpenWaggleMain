@@ -3,7 +3,7 @@ import type { MessagePart } from '@shared/types/agent'
 import { ToolCallId } from '@shared/types/brand'
 import type { JsonObject, JsonValue } from '@shared/types/json'
 import { isRecord } from '@shared/utils/validation'
-import { toJsonObject, toJsonValue } from '../pi-message-mapper'
+import { toJsonObject, toJsonValue } from '../../message-projection/message-mapper'
 import type { PiPromptInput } from '../pi-runtime-input'
 
 function textMessagePart(text: string): MessagePart {

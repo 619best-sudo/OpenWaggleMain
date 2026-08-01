@@ -2,6 +2,7 @@ import { matchBy } from '@diegogbrisa/ts-match'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import { X } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { Button } from '@/shared/ui/Button'
 import { useUIStore } from '@/shell/ui-store'
@@ -9,7 +10,10 @@ import { useChatScrollBehaviour } from '../hooks/useChatScrollBehaviour'
 import type { ChatRow } from '../lib/types-chat-row'
 import type { ChatTranscriptSectionState } from '../model'
 import { ChatRowRenderer } from './ChatRowRenderer'
+import { PlanReviewCard } from './PlanReviewCard'
 import { ScrollToBottomButton } from './ScrollToBottomButton'
+import { ToolPermissionInlineCard } from './ToolPermissionInlineCard'
+import { UserQuestionCard } from './UserQuestionCard'
 import { WelcomeScreen } from './WelcomeScreen'
 
 const PADDING_TOP = 20
@@ -97,6 +101,46 @@ interface RenderTranscriptRowsParams {
   onForkFromMessage: (messageId: string) => void
   pendingUserQuestionRequest: ChatTranscriptSectionState['pendingUserQuestionRequest']
   onResolveUserQuestion: ChatTranscriptSectionState['onResolveUserQuestion']
+  pendingPlanReviewRequest: ChatTranscriptSectionState['pendingPlanReviewRequest']
+  planReviewDecision: ChatTranscriptSectionState['planReviewDecision']
+  onResolvePlanReview: ChatTranscriptSectionState['onResolvePlanReview']
+  planReviewProjectPath: ChatTranscriptSectionState['planReviewProjectPath']
+  pendingToolPermissionRequest: ChatTranscriptSectionState['pendingToolPermissionRequest']
+  toolPermissionBusy: ChatTranscriptSectionState['toolPermissionBusy']
+  toolPermissionError: ChatTranscriptSectionState['toolPermissionError']
+  onApproveToolPermission: ChatTranscriptSectionState['onApproveToolPermission']
+  onDenyToolPermission: ChatTranscriptSectionState['onDenyToolPermission']
+}
+
+// Trailing row types that should stay *below* any inline popup (loader, run
+// summary, error). Inline permission / user-question cards are spliced in
+// before this tail so they always appear above the gif loader.
+const TAIL_ROW_TYPES = new Set<ChatRow['type']>(['phase-indicator', 'run-summary', 'error'])
+
+function splitTailStatusRows(rows: readonly ChatRow[]) {
+  let splitIndex = rows.length
+  while (splitIndex > 0 && TAIL_ROW_TYPES.has(rows[splitIndex - 1]?.type as ChatRow['type'])) {
+    splitIndex -= 1
+  }
+  return { head: rows.slice(0, splitIndex), tail: rows.slice(splitIndex) }
+}
+
+function rowWrapper(
+  key: string,
+  index: number,
+  children: ReactNode,
+  extraProps?: Record<string, string>,
+) {
+  return (
+    <div
+      key={key}
+      className="mx-auto w-full max-w-[960px] px-5 pb-6"
+      style={index === 0 ? { paddingTop: PADDING_TOP } : undefined}
+      {...extraProps}
+    >
+      {children}
+    </div>
+  )
 }
 
 function TranscriptRows(params: RenderTranscriptRowsParams) {
@@ -113,36 +157,118 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
     onForkFromMessage,
     pendingUserQuestionRequest,
     onResolveUserQuestion,
+    pendingPlanReviewRequest,
+    planReviewDecision,
+    onResolvePlanReview,
+    planReviewProjectPath,
+    pendingToolPermissionRequest,
+    toolPermissionBusy,
+    toolPermissionError,
+    onApproveToolPermission,
+    onDenyToolPermission,
   } = params
+
+  const { head, tail } = splitTailStatusRows(rows)
+  const inlinePopupIndex = head.length
+
+  const renderRow = (row: ChatRow, index: number) => {
+    const isUserMessage = row.type === 'message' && row.message.role === 'user'
+    return rowWrapper(
+      getChatRowKey(row),
+      index,
+      <TranscriptRow
+        row={row}
+        sessionId={activeSessionId}
+        onOpenSettings={onOpenSettings}
+        onRetryText={onRetryText}
+        onApproveMachinePlan={onApproveMachinePlan}
+        onDiscardMachinePlan={onDiscardMachinePlan}
+        onDismissError={onDismissError}
+        onDismissInterruptedRun={onDismissInterruptedRun}
+        onBranchFromMessage={onBranchFromMessage}
+        onForkFromMessage={onForkFromMessage}
+        pendingUserQuestionRequest={pendingUserQuestionRequest}
+        onResolveUserQuestion={onResolveUserQuestion}
+      />,
+      isUserMessage ? { 'data-user-message-id': row.message.id } : undefined,
+    )
+  }
+
+  // Inline popups (tool permission, user question) render above the trailing
+  // status rows (loader / run summary / error) so they're never buried under
+  // the gif loader.
+  // Returns one node per pending popup — plural on purpose: a plan review can be
+  // pending at the same time as a tool permission, and every pending popup must
+  // reach the screen or the run blocks on a card the user never sees.
+  const renderInlinePopups = (startIndex: number) => {
+    let index = startIndex
+    const nodes: ReactNode[] = []
+    if (pendingToolPermissionRequest) {
+      nodes.push(
+        rowWrapper(
+          `tool-permission:${pendingToolPermissionRequest.toolCallId}`,
+          index++,
+          <ToolPermissionInlineCard
+            request={pendingToolPermissionRequest}
+            busy={toolPermissionBusy}
+            error={toolPermissionError}
+            onApprove={onApproveToolPermission}
+            onDeny={onDenyToolPermission}
+          />,
+        ),
+      )
+    }
+    // Plan review sits above any user question: the plan is the bigger decision,
+    // and it gates whether the rest of the run happens at all.
+    if (pendingPlanReviewRequest) {
+      nodes.push(
+        rowWrapper(
+          `plan-review:${pendingPlanReviewRequest.planReviewId}`,
+          index++,
+          <PlanReviewCard
+            request={pendingPlanReviewRequest}
+            decision={planReviewDecision}
+            onResolve={onResolvePlanReview}
+            projectPath={planReviewProjectPath}
+            busy={toolPermissionBusy}
+          />,
+        ),
+      )
+    }
+    if (pendingUserQuestionRequest) {
+      nodes.push(
+        rowWrapper(
+          `user-question:${pendingUserQuestionRequest.phase}`,
+          index++,
+          <UserQuestionCard
+            request={pendingUserQuestionRequest}
+            onSubmit={async (answer) => {
+              await onResolveUserQuestion({
+                request: pendingUserQuestionRequest,
+                answer,
+              })
+            }}
+            busy={toolPermissionBusy}
+            title={pendingUserQuestionRequest.kind === 'plan_review' ? 'Review Plan' : undefined}
+            helperText={
+              pendingUserQuestionRequest.kind === 'plan_review'
+                ? 'Reply "approve" to begin, describe changes to edit, or "reject" to stop.'
+                : undefined
+            }
+          />,
+        ),
+      )
+    }
+    return nodes
+  }
+
+  const inlinePopups = renderInlinePopups(inlinePopupIndex)
 
   return (
     <>
-      {rows.map((row, index) => {
-        const isUserMessage = row.type === 'message' && row.message.role === 'user'
-        return (
-          <div
-            key={getChatRowKey(row)}
-            className="mx-auto w-full max-w-[960px] px-5 pb-6"
-            {...(isUserMessage ? { 'data-user-message-id': row.message.id } : {})}
-            style={index === 0 ? { paddingTop: PADDING_TOP } : undefined}
-          >
-            <TranscriptRow
-              row={row}
-              sessionId={activeSessionId}
-              onOpenSettings={onOpenSettings}
-              onRetryText={onRetryText}
-              onApproveMachinePlan={onApproveMachinePlan}
-              onDiscardMachinePlan={onDiscardMachinePlan}
-              onDismissError={onDismissError}
-              onDismissInterruptedRun={onDismissInterruptedRun}
-              onBranchFromMessage={onBranchFromMessage}
-              onForkFromMessage={onForkFromMessage}
-              pendingUserQuestionRequest={pendingUserQuestionRequest}
-              onResolveUserQuestion={onResolveUserQuestion}
-            />
-          </div>
-        )
-      })}
+      {head.map((row, index) => renderRow(row, index))}
+      {inlinePopups}
+      {tail.map((row, index) => renderRow(row, head.length + inlinePopups.length + index))}
     </>
   )
 }
@@ -283,6 +409,15 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
     onForkFromMessage,
     pendingUserQuestionRequest,
     onResolveUserQuestion,
+    pendingPlanReviewRequest,
+    planReviewDecision,
+    onResolvePlanReview,
+    planReviewProjectPath,
+    pendingToolPermissionRequest,
+    toolPermissionBusy,
+    toolPermissionError,
+    onApproveToolPermission,
+    onDenyToolPermission,
     lastUserMessageId,
     streamSignalVersion,
     userDidSend,
@@ -316,7 +451,8 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
     onUserDidSendConsumed,
   })
 
-  if (messages.length === 0 && rows.length === 0 && !isLoading) {
+  const hasPendingInlinePopup = Boolean(pendingToolPermissionRequest || pendingUserQuestionRequest)
+  if (messages.length === 0 && rows.length === 0 && !isLoading && !hasPendingInlinePopup) {
     return (
       <div className="flex-1 overflow-y-auto chat-scroll">
         <WelcomeScreen
@@ -369,8 +505,17 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
             onDismissInterruptedRun={onDismissInterruptedRun}
             onBranchFromMessage={onBranchFromMessage}
             onForkFromMessage={onForkFromMessage}
-          pendingUserQuestionRequest={pendingUserQuestionRequest}
-          onResolveUserQuestion={onResolveUserQuestion}
+            pendingUserQuestionRequest={pendingUserQuestionRequest}
+            onResolveUserQuestion={onResolveUserQuestion}
+            pendingPlanReviewRequest={pendingPlanReviewRequest}
+            planReviewDecision={planReviewDecision}
+            onResolvePlanReview={onResolvePlanReview}
+            planReviewProjectPath={planReviewProjectPath}
+            pendingToolPermissionRequest={pendingToolPermissionRequest}
+            toolPermissionBusy={toolPermissionBusy}
+            toolPermissionError={toolPermissionError}
+            onApproveToolPermission={onApproveToolPermission}
+            onDenyToolPermission={onDenyToolPermission}
           />
         </div>
       </div>

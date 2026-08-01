@@ -1,7 +1,10 @@
 import type { ExtensionFactory } from '@mariozechner/pi-coding-agent'
 import type { ToolPermissionMode } from '@shared/types/settings'
-import type { ToolPermissionRequestEnvelope } from '@shared/types/tool-permission'
-import { isCodeEditingTool, normalizeToolName, resolveToolRoute } from './tool-model-route'
+import {
+  consumeApprovedToolPermission,
+  registerApprovedToolPermission,
+} from '../../application/tool-permission-approvals'
+import { isCodeEditingTool, normalizeToolName, resolveToolRoute } from '../../application/tool-model-route'
 
 type JsonRecord = Record<string, unknown>
 type ToolCallEvent = {
@@ -28,21 +31,6 @@ interface ToolRouteDirective {
   readonly reasonOverResult: boolean
 }
 
-interface ApprovedToolPermission {
-  count: number
-  expiresAt: number
-}
-
-const APPROVED_PERMISSION_TTL_MS = 2 * 60 * 1000
-/**
- * Approvals are keyed by *normalized tool name*, not by exact arguments. When a
- * guarded tool is approved the run resumes and the orchestrator re-proposes the
- * tool; its arguments may differ slightly from the intercepted proposal (and for
- * routed mutation tools they are re-authored downstream anyway), so an
- * exact-argument match would spuriously re-prompt and the first edit would fail.
- * A tool-name-scoped, consume-once approval makes the resume deterministic.
- */
-const approvedToolPermissions = new Map<string, ApprovedToolPermission>()
 const CODE_EDITING_GUARDED_TOOL_NAMES = ['edit', 'write', 'patch', 'multiedit'] as const
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -100,46 +88,6 @@ function readToolTarget(input: JsonRecord) {
     return filePathValue
   }
   return undefined
-}
-
-function pruneExpiredApprovals(now = Date.now()) {
-  for (const [key, approval] of approvedToolPermissions) {
-    if (approval.expiresAt <= now) {
-      approvedToolPermissions.delete(key)
-    }
-  }
-}
-
-export function registerApprovedToolPermission(request: ToolPermissionRequestEnvelope) {
-  const now = Date.now()
-  pruneExpiredApprovals(now)
-  const key = normalizeToolName(request.toolName)
-  const existing = approvedToolPermissions.get(key)
-  approvedToolPermissions.set(key, {
-    count: (existing?.count ?? 0) + 1,
-    expiresAt: now + APPROVED_PERMISSION_TTL_MS,
-  })
-}
-
-function consumeApprovedToolPermission(toolName: string) {
-  const now = Date.now()
-  pruneExpiredApprovals(now)
-  const key = normalizeToolName(toolName)
-  const approval = approvedToolPermissions.get(key)
-  if (!approval) {
-    return false
-  }
-  if (approval.count <= 1) {
-    approvedToolPermissions.delete(key)
-  } else {
-    approval.count -= 1
-  }
-  return true
-}
-
-/** Test/reset seam. */
-export function clearApprovedToolPermissions() {
-  approvedToolPermissions.clear()
 }
 
 function buildPermissionRequestResult(

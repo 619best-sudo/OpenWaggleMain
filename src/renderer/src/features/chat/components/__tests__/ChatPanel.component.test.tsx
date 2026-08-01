@@ -210,7 +210,7 @@ describe('ChatPanel', () => {
     const loader = document.querySelector('[data-phase-loader="true"]')
     expect(loader).toBeInTheDocument()
     expect(loader).toHaveClass('size-7')
-    expect(screen.getByText('Thinking...')).toBeInTheDocument()
+    expect(screen.getByText('Thinking')).toBeInTheDocument()
   })
 
   it('uses the light loader in light theme', () => {
@@ -265,6 +265,51 @@ describe('ChatPanel', () => {
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Deny' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Dismiss permission dialog' })).toBeNull()
+  })
+
+  it('shows a human-readable prompt for structured tools instead of raw JSON', () => {
+    renderPanel({
+      pendingToolPermissionRequest: {
+        messageId: 'assistant-1',
+        toolCallId: 'tool-mem',
+        toolName: 'project_memory',
+        input: { action: 'get' },
+        title: 'Approve Project Memory',
+        description: 'Permission is required before reading project memory.',
+        summary: 'Permission required before reading project memory.',
+      },
+    })
+
+    // No raw JSON should leak into the prompt.
+    expect(screen.queryByText(/\{.*\}/)).toBeNull()
+    expect(screen.getByText(/read project memory/i)).toBeInTheDocument()
+    expect(screen.getByText('project_memory')).toBeInTheDocument()
+  })
+
+  it('renders the inline permission card above the gif loader', () => {
+    renderPanel({
+      isLoading: true,
+      chatRows: [{ type: 'phase-indicator', label: 'Working', elapsedMs: 0 }],
+      pendingToolPermissionRequest: {
+        messageId: 'assistant-1',
+        toolCallId: 'tool-1',
+        toolName: 'bash',
+        input: { command: 'ls -la' },
+        title: 'Approve Bash',
+        description: 'Permission is required before running bash.',
+        summary: 'Permission required before running bash: ls -la',
+      },
+    })
+
+    const loader = document.querySelector('[data-phase-loader="true"]')
+    const approveButton = screen.getByRole('button', { name: 'Approve' })
+    // Both should be present, and the permission card must come before the
+    // loader in DOM order (the Approve button precedes the loader).
+    expect(loader).toBeInTheDocument()
+    expect(approveButton).toBeInTheDocument()
+    expect(
+      Boolean(loader.compareDocumentPosition(approveButton) & Node.DOCUMENT_POSITION_PRECEDING),
+    ).toBe(true)
   })
 
   it('does not show the tool permission dialog while the routed session is switching', () => {
@@ -409,7 +454,7 @@ describe('ChatPanel', () => {
     const loader = document.querySelector('[data-phase-loader="true"]')
     expect(loader).toBeInTheDocument()
     expect(loader).toHaveClass('size-7')
-    expect(screen.getByText('Writing...')).toBeInTheDocument()
+    expect(screen.getByText('Writing')).toBeInTheDocument()
   })
 
   it('does not show phase indicator when not loading', () => {

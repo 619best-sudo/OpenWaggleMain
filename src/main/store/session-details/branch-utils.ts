@@ -165,21 +165,56 @@ function compactBranchName(text: string, fallback: string) {
     : words
 }
 
+function isUserMessage(node: ProjectedSessionNodeInput) {
+  return node.role === 'user'
+}
+
+function findUserTextInPath(
+  nodeById: ReadonlyMap<string, ProjectedSessionNodeInput>,
+  startId: string | null,
+): string | null {
+  let currentId: string | null = startId
+  while (currentId) {
+    const node = nodeById.get(currentId)
+    if (!node) {
+      return null
+    }
+    if (isUserMessage(node)) {
+      return parseMessageTextPreview(node.contentJson)
+    }
+    currentId = node.parentId
+  }
+  return null
+}
+
 export function deriveNewBranchName(input: {
   readonly sourceNodeId: string | null
   readonly headNodeId: string | null
   readonly nodeById: ReadonlyMap<string, ProjectedSessionNodeInput>
   readonly fallback: string
 }) {
-  const sourceNode = input.sourceNodeId ? input.nodeById.get(input.sourceNodeId) : null
-  const headNode = input.headNodeId ? input.nodeById.get(input.headNodeId) : null
-  const sourcePreview = sourceNode ? parseMessageTextPreview(sourceNode.contentJson) : null
-  if (sourcePreview) {
-    return compactBranchName(sourcePreview, input.fallback)
+  // Branches must be named from the user's prompt that produced them, never
+  // from assistant output (which may be a `PLAN_JSON: ...` payload, a tool
+  // transcript, or other machine-formatted text). Walk back from the branch
+  // head through the path until we hit a user message.
+  const userText = findUserTextInPath(input.nodeById, input.headNodeId)
+  if (userText) {
+    return compactBranchName(userText, input.fallback)
   }
 
-  const headPreview = headNode ? parseMessageTextPreview(headNode.contentJson) : null
-  return headPreview ? compactBranchName(headPreview, input.fallback) : input.fallback
+  // Defensive fallback: if the head is null/empty (very early session) but a
+  // source node exists and happens to be a user message, use it.
+  if (input.sourceNodeId) {
+    const sourceNode = input.nodeById.get(input.sourceNodeId)
+    if (sourceNode && isUserMessage(sourceNode)) {
+      const sourcePreview = parseMessageTextPreview(sourceNode.contentJson)
+      if (sourcePreview) {
+        return compactBranchName(sourcePreview, input.fallback)
+      }
+    }
+  }
+
+  return input.fallback
 }
 
 export function findExistingBranchForDerivedPath(input: {

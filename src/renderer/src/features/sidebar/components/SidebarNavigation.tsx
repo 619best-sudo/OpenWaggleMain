@@ -9,7 +9,6 @@ import {
   Network,
   Settings,
   Sparkles,
-  Users,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
@@ -102,13 +101,11 @@ export function SidebarPrimaryActions({
   onNewSession,
   onOpenMcp,
   onOpenSkills,
-  onOpenWaggle,
 }: {
   readonly activeView: SidebarView
   readonly onNewSession: () => void
   readonly onOpenMcp: () => void
   readonly onOpenSkills: () => void
-  readonly onOpenWaggle: () => void
 }) {
   return (
     <div className="mt-9 shrink-0 px-6">
@@ -123,12 +120,6 @@ export function SidebarPrimaryActions({
       </Button>
 
       <div className="mt-7 space-y-1">
-        <SidebarShortcut
-          active={activeView === 'waggle'}
-          icon={Users}
-          label="Council of Experts"
-          onClick={onOpenWaggle}
-        />
         <SidebarShortcut
           active={activeView === 'mcp'}
           icon={Network}

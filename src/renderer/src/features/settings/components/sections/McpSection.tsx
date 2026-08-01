@@ -1,8 +1,10 @@
+import type { McpServerSummary } from '@shared/types/mcp'
 import { Code2, Plus, X } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { useMcpSectionController } from '@/features/settings/hooks/useMcpSectionController'
 import { usePreferences } from '@/features/settings/hooks/useSettings'
 import { useEscapeHotkey } from '@/shared/hooks/useEscapeHotkey'
+import { api } from '@/shared/lib/ipc'
 import { Button } from '@/shared/ui/Button'
 import {
   McpAdapterCard,
@@ -82,6 +84,16 @@ export function McpSection({ showHeading = true }: { readonly showHeading?: bool
   const [showAddModal, setShowAddModal] = useState(false)
   const [showAdvancedModal, setShowAdvancedModal] = useState(false)
 
+  async function confirmRemoveServer(server: McpServerSummary) {
+    const confirmed = await api.showConfirm(
+      'Remove this MCP server?',
+      `Server "${server.name}" will be removed from ${server.sourceLabel}. This cannot be undone.`,
+    )
+    if (confirmed) {
+      await controller.removeServer(server)
+    }
+  }
+
   return (
     <div className="space-y-6 relative">
       {showHeading && (
@@ -132,8 +144,10 @@ export function McpSection({ showHeading = true }: { readonly showHeading?: bool
 
         <McpServersPanel
           servers={servers}
+          sources={sources}
           busy={controller.busy}
           onToggleServer={(server) => void controller.toggleServer(server)}
+          onRemoveServer={(server) => void confirmRemoveServer(server)}
         />
       </div>
 

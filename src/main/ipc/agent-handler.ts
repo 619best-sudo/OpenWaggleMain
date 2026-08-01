@@ -20,11 +20,11 @@ import {
   type ToolPermissionResolution,
 } from '@shared/types/tool-permission'
 import * as Effect from 'effect/Effect'
-import { registerApprovedToolPermission } from '../adapters/pi/tool-permission-request-extension'
 import { getPhaseForSession } from '../agent/phase-tracker'
 import { cleanupSessionRun } from '../agent/session-cleanup'
 import { type AgentRunResult, executeAgentRun } from '../application/agent-run-service'
 import { compactAgentSession, getAgentContextUsage } from '../application/agent-session-service'
+import { registerApprovedToolPermission } from '../application/tool-permission-approvals'
 import { broadcastToWindows } from '../utils/broadcast'
 import {
   clearAgentPhase,
@@ -38,13 +38,15 @@ import {
 import {
   activeCompactions,
   activeRuns,
-  getPendingToolPermission,
-  getPendingUserQuestion,
-  resolvePendingToolPermission,
-  resolvePendingUserQuestion,
   cancelAllSessionRuns,
   cancelSessionRuns,
+  getPendingPlanReview,
+  getPendingToolPermission,
+  getPendingUserQuestion,
   hasAnyActiveRun,
+  resolvePendingPlanReview,
+  resolvePendingToolPermission,
+  resolvePendingUserQuestion,
 } from './active-agent-runs'
 import { emitErrorAndFinish } from './run-handler-utils'
 import { typedHandle } from './typed-ipc'
@@ -324,6 +326,18 @@ function registerAgentRunHandlers() {
         throw new Error('No pending user question for this session.')
       }
     }),
+  )
+
+  typedHandle('agent:resolve-plan-review', (_event, sessionId: SessionId, resolution) =>
+    Effect.sync(() => {
+      if (!resolvePendingPlanReview(sessionId, resolution)) {
+        throw new Error('No pending plan review for this session.')
+      }
+    }),
+  )
+
+  typedHandle('agent:get-pending-plan-review', (_event, sessionId: SessionId) =>
+    Effect.sync(() => getPendingPlanReview(sessionId)),
   )
 }
 

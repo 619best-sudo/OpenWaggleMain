@@ -1,4 +1,6 @@
 import { SessionId } from '@shared/types/brand'
+import type { AgentPhaseId } from '@shared/types/phase'
+import type { PendingPlanReviewRequest, PlanReviewResolution } from '@shared/types/plan-review'
 import type { AgentTransportPhaseEndEvent } from '@shared/types/stream'
 import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import type { WaggleCollaborationStatus } from '@shared/types/waggle'
@@ -42,6 +44,8 @@ const logger = createRendererLogger('chat-panel')
 const TOOL_PERMISSION_REQUEST_EVENT = 'openwaggle:tool-permission:request'
 const TOOL_PERMISSION_RESOLVED_EVENT = 'openwaggle:tool-permission:resolved'
 const USER_QUESTION_REQUEST_EVENT = 'openwaggle:user-question:request'
+const PLAN_REVIEW_REQUEST_EVENT = 'openwaggle:plan-review:request'
+const PLAN_REVIEW_RESOLVED_EVENT = 'openwaggle:plan-review:resolved'
 const USER_QUESTION_RESOLVED_EVENT = 'openwaggle:user-question:resolved'
 
 function isPendingToolPermissionRequest(value: unknown): value is PendingToolPermissionRequest {
@@ -65,6 +69,39 @@ function toLivePendingToolPermissionRequest(value: unknown): PendingToolPermissi
     messageId: typeof value.messageId === 'string' ? value.messageId : `live:${value.toolCallId}`,
     summary: typeof value.summary === 'string' ? value.summary : '',
   }
+}
+
+/**
+ * Structural guard for a plan-review event payload. Keyed on `planReviewId` plus
+ * a well-formed `planSet`, so a malformed or partial payload never renders an
+ * un-resolvable card the user cannot dismiss.
+ */
+function isPendingPlanReviewRequest(value: unknown): value is PendingPlanReviewRequest {
+  if (typeof value !== 'object' || value === null) return false
+  const candidate = value as Partial<PendingPlanReviewRequest>
+  return (
+    typeof candidate.planReviewId === 'string' &&
+    candidate.planReviewId.length > 0 &&
+    typeof candidate.revision === 'number' &&
+    typeof candidate.task === 'string' &&
+    typeof candidate.planSet === 'object' &&
+    candidate.planSet !== null &&
+    Array.isArray(candidate.planSet.plans) &&
+    candidate.planSet.plans.length > 0
+  )
+}
+
+/**
+ * The verdict from a `plan-review:resolved` payload (`{ planReviewId, decision }`).
+ *
+ * Falls back to `'cancelled'` for anything unrecognized: the run is definitely
+ * not waiting on this card any more, and "cancelled" is the reading that never
+ * claims the user approved something they did not.
+ */
+function planReviewDecisionFromEvent(value: unknown): PlanReviewResolution['decision'] {
+  if (typeof value !== 'object' || value === null) return 'cancelled'
+  const decision = (value as Partial<PlanReviewResolution>).decision
+  return decision === 'approved' || decision === 'revise' ? decision : 'cancelled'
 }
 
 function isPendingUserQuestionRequest(value: unknown): value is PendingUserQuestionRequest {
@@ -92,6 +129,15 @@ export function useChatPanelSections(): ChatPanelSections {
   const [liveCompletedPhases, setLiveCompletedPhases] = useState<
     readonly AgentTransportPhaseEndEvent[]
   >([])
+  // The plan review currently ON SCREEN. It is NOT cleared when answered: once
+  // `planReviewDecision` is set the card stays as a read-only record of the plan
+  // and the verdict, because the approved plan is what the rest of the run is
+  // doing. A later draft replaces both (a new request resets the decision).
+  const [pendingPlanReviewRequest, setPendingPlanReviewRequest] =
+    useState<PendingPlanReviewRequest | null>(null)
+  const [planReviewDecision, setPlanReviewDecision] = useState<
+    PlanReviewResolution['decision'] | null
+  >(null)
   const [pendingUserQuestionRequest, setPendingUserQuestionRequest] =
     useState<PendingUserQuestionRequest | null>(null)
   const pendingToolPermissionVersionRef = useRef(0)
@@ -263,7 +309,9 @@ export function useChatPanelSections(): ChatPanelSections {
       return
     }
 
-    const phaseOrder = ['prepare', 'plan', 'perform', 'perfect'] as const
+    // The flat loop projects the whole run as a single 'working' phase, so it
+    // sorts first; the legacy 4P ids are kept for older persisted transcripts.
+    const phaseOrder: readonly AgentPhaseId[] = ['working', 'prepare', 'plan', 'perform', 'perfect']
 
     return api.onAgentEvent(({ sessionId, event }) => {
       if (sessionId !== activeSessionId) {
@@ -373,6 +421,21 @@ export function useChatPanelSections(): ChatPanelSections {
         }).catch(() => {})
       }
       // #endregion
+
+      if (event.name === PLAN_REVIEW_REQUEST_EVENT && isPendingPlanReviewRequest(event.value)) {
+        // A fresh draft supersedes the previous record and is interactive again.
+        setPendingPlanReviewRequest(event.value)
+        setPlanReviewDecision(null)
+        return
+      }
+
+      if (event.name === PLAN_REVIEW_RESOLVED_EVENT) {
+        // Keep the card; mark it answered. The main process reports the verdict it
+        // actually acted on, which is the one worth showing (it also covers the
+        // run being aborted, where the renderer never submitted anything).
+        setPlanReviewDecision(planReviewDecisionFromEvent(event.value))
+        return
+      }
 
       if (event.name === USER_QUESTION_REQUEST_EVENT && isPendingUserQuestionRequest(event.value)) {
         pendingUserQuestionVersionRef.current += 1
@@ -616,6 +679,19 @@ export function useChatPanelSections(): ChatPanelSections {
     openSettings,
     handleDismissInterruptedRun,
     pendingUserQuestionRequest,
+    pendingPlanReviewRequest,
+    planReviewDecision,
+    planReviewProjectPath: projectPath ?? null,
+    handleResolvePlanReview: async (resolution: PlanReviewResolution) => {
+      if (!activeSessionId) {
+        throw new Error('No active session for plan review resolution.')
+      }
+      await api.resolvePlanReview(activeSessionId, resolution)
+      // Mark it answered rather than clearing it: the card stays as a read-only
+      // record of the plan. It goes inert at the same time, so it cannot submit a
+      // second, unresolvable verdict for this draft.
+      setPlanReviewDecision(resolution.decision)
+    },
     livePhaseEvents: liveCompletedPhases,
     handleResolveUserQuestion: async (resolution) => {
       if (!activeSessionId) {

@@ -7,6 +7,7 @@ import { registerGitHandlers } from './git'
 import { registerMachineHandlers } from './machine-handler'
 import { registerMcpHandlers } from './mcp-handler'
 import { registerProjectHandlers } from './project-handler'
+import { registerProjectMemoryHandlers } from './project-memory-handler'
 import { registerProvidersHandlers } from './providers-handler'
 import { registerSessionDetailsHandlers } from './session-details-handler'
 import { registerSessionsHandlers } from './sessions-handler'
@@ -15,6 +16,7 @@ import { registerShellHandlers } from './shell-handler'
 import { registerSkillsHandlers } from './skills-handler'
 import { registerTeamHandlers } from './team-handler'
 import { registerTerminalHandlers } from './terminal-handler'
+import { registerToolMediaHandlers } from './tool-media-handler'
 import { registerUpdaterHandlers } from './updater-handler'
 import { registerVoiceHandlers } from './voice-handler'
 import { registerWaggleAppsHandlers } from './waggle-apps-handler'
@@ -34,6 +36,7 @@ export function registerAllIpcHandlers(): void {
   registerGitHandlers()
   registerMcpHandlers()
   registerProjectHandlers()
+  registerProjectMemoryHandlers()
   registerProvidersHandlers()
   registerTerminalHandlers()
   registerVoiceHandlers()
@@ -46,4 +49,5 @@ export function registerAllIpcHandlers(): void {
   registerFeedbackHandlers()
   registerUpdaterHandlers()
   registerComposerHandlers()
+  registerToolMediaHandlers()
 }

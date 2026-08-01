@@ -6,6 +6,7 @@ import type { AgentTransportPhaseEndEvent } from '@shared/types/stream'
 import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import type { WaggleMessageMetadata } from '@shared/types/waggle'
 import type { StreamingPhaseState } from '@/features/chat/hooks/useStreamingPhase'
+import { createRendererLogger } from '@/shared/lib/logger'
 import type {
   ChatRow,
   MessageChatRow,
@@ -16,6 +17,8 @@ import type {
 type ToolResultPart = Extract<UIMessage['parts'][number], { type: 'tool-result' }>
 type ToolCallPart = Extract<UIMessage['parts'][number], { type: 'tool-call' }>
 type SummaryRow = Extract<ChatRow, { type: 'branch-summary' | 'compaction-summary' }>
+
+const rendererLogger = createRendererLogger('use-build-chat-rows')
 
 function isToolResultOnlyMessage(message: UIMessage) {
   return message.parts.length > 0 && message.parts.every((part) => part.type === 'tool-result')
@@ -249,35 +252,14 @@ function createLivePendingQuestionPhaseRow(
   }
 }
 
-function computePhaseBackedAssistantMessageIds(messages: readonly UIMessage[]) {
-  const suppressedIds = new Set<string>()
-
-  for (let index = 0; index < messages.length; index += 1) {
-    const message = messages[index]
-    if (!message.metadata?.phaseTranscript) {
-      continue
-    }
-
-    for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
-      const candidate = messages[cursor]
-      if (candidate.role === 'user') {
-        break
-      }
-      if (
-        candidate.metadata?.phaseTranscript ||
-        candidate.metadata?.branchSummary ||
-        candidate.metadata?.compactionSummary
-      ) {
-        break
-      }
-
-      if (candidate.role === 'assistant') {
-        suppressedIds.add(candidate.id)
-      }
-    }
-  }
-
-  return suppressedIds
+function computePhaseBackedAssistantMessageIds(_messages: readonly UIMessage[]) {
+  // "Show all bubbles" policy: the raw per-phase assistant messages that precede
+  // a persisted phase-transcript node are NO LONGER suppressed — they render as
+  // normal chat bubbles next to the phase cards. (Previously this walked back
+  // from each phase-transcript message and hid the assistant turns behind it.)
+  // Kept as a no-op so the call sites and their intent stay explicit and this is
+  // a one-line revert if the phase-cards-only view is wanted again.
+  return new Set<string>()
 }
 
 function hasLegacyToolTranscriptContent(message: UIMessage) {
@@ -378,7 +360,7 @@ function appendStatusRows(rows: ChatRow[], params: BuildChatRowsParams) {
   if (params.phase.current) {
     rows.push({
       type: 'phase-indicator',
-      label: params.phase.current.label,
+      label: 'Working',
       elapsedMs: params.phase.current.elapsedMs,
     })
   }
@@ -410,7 +392,7 @@ function appendStatusRows(rows: ChatRow[], params: BuildChatRowsParams) {
 
 interface BuildChatRowsParams {
   messages: UIMessage[]
-  allMessages: UIMessage[]
+  allMessages?: readonly UIMessage[]
   machinePlan: MachineExecutionState | null
   isLoading: boolean
   error: Error | undefined
@@ -478,7 +460,7 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
     (message) => !!message.metadata?.phaseTranscript,
   )
   const phaseBackedAssistantMessageIds = computePhaseBackedAssistantMessageIds(params.messages)
-  const toolLookup = buildToolDetailLookup(params.allMessages)
+  const toolLookup = buildToolDetailLookup(params.allMessages ?? params.messages)
   const livePhaseRows = hasPhaseTranscriptMessages
     ? []
     : createLivePhaseRows(params.livePhaseEvents ?? [], toolLookup)
@@ -493,11 +475,10 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
     }
     return -1
   })()
-  const hideCurrentTurnAssistantMessages =
-    params.isLoading &&
-    (livePhaseRows.length > 0 ||
-      (params.pendingUserQuestionRequest !== null &&
-        params.pendingUserQuestionRequest !== undefined))
+  // UserQuestionCard and PlanReviewActions are now inline in the transcript
+  // (not inside a phase card), so assistant messages behind them should stay
+  // visible — the user can still see tools and context while answering.
+  const hideCurrentTurnAssistantMessages = false
 
   const lastMessage = params.messages[params.messages.length - 1]
   const lastIsStreaming = params.isLoading && lastMessage?.role === 'assistant'
@@ -507,17 +488,15 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
     const message = params.messages[index]
     const phaseRows = createPhaseRows(message, toolLookup)
     if (phaseRows.length > 0) {
-      if (
-        params.pendingUserQuestionRequest &&
-        phaseRows.some(
-          (row) =>
-            row.phase.id === params.pendingUserQuestionRequest?.phase &&
-            row.phase.pendingUserQuestion !== undefined,
-        )
-      ) {
+      // Phase cards are fully suppressed — tool calls render inline via
+      // AssistantMessageBubble's InlineToolBlock. UserQuestionCard and
+      // PlanReviewActions now render as standalone inline rows below.
+      const pendingRows = phaseRows.filter(
+        (row) => row.phase.pendingUserQuestion !== undefined,
+      )
+      if (pendingRows.length > 0) {
         renderedPendingQuestionPhase = true
       }
-      rows.push(...phaseRows)
       continue
     }
 
@@ -537,7 +516,8 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
     if (
       message.role === 'assistant' &&
       hasLegacyToolTranscriptContent(message) &&
-      (hasPhaseTranscriptMessages || !hasRenderableAssistantBubbleContent(message))
+      (hasPhaseTranscriptMessages || !hasRenderableAssistantBubbleContent(message)) &&
+      phaseBackedAssistantMessageIds.has(message.id)
     ) {
       continue
     }
@@ -573,23 +553,17 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
   }
 
   if (livePhaseRows.length > 0) {
-    if (
-      params.pendingUserQuestionRequest &&
-      livePhaseRows.some(
-        (row) =>
-          row.phase.id === params.pendingUserQuestionRequest?.phase &&
-          row.phase.pendingUserQuestion !== undefined,
-      )
-    ) {
+    // Phase cards are fully suppressed.
+    const livePendingRows = livePhaseRows.filter(
+      (row) => row.phase.pendingUserQuestion !== undefined,
+    )
+    if (livePendingRows.length > 0) {
       renderedPendingQuestionPhase = true
     }
-    rows.push(...livePhaseRows)
   }
 
-  if (params.pendingUserQuestionRequest && !renderedPendingQuestionPhase) {
-    rows.push(createLivePendingQuestionPhaseRow(params.pendingUserQuestionRequest, params.phase))
-  }
-
+  // UserQuestionCard and PlanReviewActions are rendered in ChatPanel
+  // (outside the transcript) — no phase card rows needed.
   if (params.machinePlan) {
     if (machineOriginalRequest && !hasVisibleOriginalRequest) {
       const syntheticUserRow = createMessageRow({
@@ -633,27 +607,30 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
     })
   }
   const groupedRows = groupWaggleTurnRows(rows)
-  // #region debug-point E:chat-rows
-  void fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sessionId: 'phase-flow-missing',
-      runId: 'pre-fix',
-      hypothesisId: 'E',
-      location: 'useBuildChatRows.ts:buildChatRows',
-      msg: '[DEBUG] Built chat rows for transcript render',
-      data: {
-        messageCount: params.messages.length,
-        hasPhaseTranscriptMessages,
-        phaseCurrentLabel: params.phase.current?.label ?? null,
-        completedPhaseCount: params.phase.completed.length,
-        pendingUserQuestionPhase: params.pendingUserQuestionRequest?.phase ?? null,
-        groupedRowTypes: groupedRows.map((row) => row.type),
-      },
-      ts: Date.now(),
+  // ORDER DEBUG: the final rendered row order — this is exactly what the user
+  // sees. Each entry shows the row type and, for message rows, the underlying
+  // message id + role + a short text preview so it can be correlated with the
+  // cache log and the projection log above.
+  rendererLogger.info('built chat rows', {
+    messageCount: params.messages.length,
+    isLoading: params.isLoading,
+    hasPhaseTranscriptMessages,
+    completedPhaseCount: params.phase.completed.length,
+    pendingUserQuestionPhase: params.pendingUserQuestionRequest?.phase ?? null,
+    rows: groupedRows.map((row) => {
+      if (row.type === 'message') {
+        return {
+          type: row.type,
+          id: row.message.id,
+          role: row.message.role,
+          text: messageText(row.message).replace(/\s+/g, ' ').slice(0, 50) || null,
+        }
+      }
+      if (row.type === 'phase') {
+        return { type: row.type, phaseId: row.phase.id, status: row.phase.status }
+      }
+      return { type: row.type, id: 'id' in row ? row.id : null }
     }),
-  }).catch(() => {})
-  // #endregion
+  })
   return groupedRows
 }

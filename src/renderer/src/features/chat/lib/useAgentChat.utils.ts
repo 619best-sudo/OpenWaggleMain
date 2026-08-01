@@ -6,6 +6,7 @@ export {
 } from './chat-attachment-preview'
 export {
   buildPartialAssistantMessage,
+  buildToolResultLookup,
   messagePartToUIParts,
   sessionToUIMessages,
 } from './chat-message-conversion'

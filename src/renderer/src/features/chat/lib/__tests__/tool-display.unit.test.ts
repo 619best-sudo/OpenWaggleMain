@@ -1,6 +1,6 @@
 import type { JsonObject } from '@shared/types/json'
 import { describe, expect, it } from 'vitest'
-import { resolveActionText } from '../tool-display'
+import { resolveActionText, summarizeToolTarget } from '../tool-display'
 
 function actionText(name: string, args: JsonObject, isRunning: boolean) {
   return resolveActionText({
@@ -72,5 +72,71 @@ describe('resolveActionText', () => {
     )
     expect(actionText('find', { pattern: '*.tsx', path: 'src' }, false)).toBe('Found *.tsx in src')
     expect(actionText('ls', { path: 'src' }, false)).toBe('Listed src')
+  })
+})
+
+describe('summarizeToolTarget', () => {
+  it('returns the relativizable path for read/write/edit (caller relativizes)', () => {
+    expect(summarizeToolTarget('read', { path: 'src/app.ts' })).toBe('src/app.ts')
+    expect(summarizeToolTarget('write', { path: 'a/b.ts' })).toBe('a/b.ts')
+  })
+
+  it('includes the read line range suffix', () => {
+    expect(summarizeToolTarget('read', { path: 'src/app.ts', offset: 10, limit: 5 })).toBe(
+      'src/app.ts:10-14',
+    )
+  })
+
+  it('formats grep/find targets', () => {
+    expect(summarizeToolTarget('grep', { pattern: 'TODO', path: 'src' })).toBe('/TODO/ in src')
+    expect(summarizeToolTarget('find', { pattern: '*.tsx' })).toBe('*.tsx in .')
+  })
+
+  it('wraps bash commands in backticks', () => {
+    expect(summarizeToolTarget('bash', { command: 'git status' })).toBe('`git status`')
+  })
+
+  it('formats project_memory targets with action + operand', () => {
+    expect(summarizeToolTarget('project_memory', { action: 'get' })).toBe('Get memory')
+    expect(summarizeToolTarget('project_memory', { action: 'recall', text: 'html' })).toBe(
+      'Recall "html"',
+    )
+    expect(
+      summarizeToolTarget('project_memory', { action: 'remember', text: 'use Tailwind' }),
+    ).toBe('Remember: use Tailwind')
+    expect(
+      summarizeToolTarget('project_memory', { action: 'set_category', category: 'frontend' }),
+    ).toBe('Set category: frontend')
+    // Inferred action when omitted (mirrors the tool's own inference).
+    expect(summarizeToolTarget('project_memory', { text: 'html' })).toBe('Recall "html"')
+    expect(summarizeToolTarget('project_memory', { category: 'backend' })).toBe(
+      'Set category: backend',
+    )
+    // No operand at all → just the verb.
+    expect(summarizeToolTarget('project_memory', {})).toBe('Memory')
+  })
+
+  it('formats ask_user_question targets with the question', () => {
+    expect(
+      summarizeToolTarget('ask_user_question', { question: 'Which framework should we use?' }),
+    ).toBe('Which framework should we use?')
+    // Long questions are truncated.
+    const long = 'A'.repeat(120)
+    const result = summarizeToolTarget('ask_user_question', { question: long })
+    expect(result.length).toBeLessThan(long.length)
+    expect(result.endsWith('…')).toBe(true)
+    // No question → empty (caller falls back to the tool name).
+    expect(summarizeToolTarget('ask_user_question', {})).toBe('')
+  })
+
+  it('surfaces query/url/name for MCP-style tools', () => {
+    expect(summarizeToolTarget('mcp__web__fetch', { url: 'https://x.example' })).toBe(
+      'https://x.example',
+    )
+    expect(summarizeToolTarget('mcp__db__search', { query: 'users' })).toBe('users')
+  })
+
+  it('returns empty string when no informative arg is present', () => {
+    expect(summarizeToolTarget('customTool', {})).toBe('')
   })
 })

@@ -1,15 +1,15 @@
 import { parseJsonUnknown, safeDecodeUnknown } from '@shared/schema'
 import type { SessionId, SessionNodeId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
-import { machinePlanSchema, type MachineExecutionState } from '@shared/types/machine'
+import { type MachineExecutionState, machinePlanSchema } from '@shared/types/machine'
 import type { SessionWorkspace } from '@shared/types/session'
-import { messagePartToUIParts } from '@/features/chat/lib/useAgentChat.utils'
+import { buildToolResultLookup, messagePartToUIParts } from '@/features/chat/lib/useAgentChat.utils'
 import { createRendererLogger } from '@/shared/lib/logger'
 import {
   getUIMessageText,
-  isInternalToolHandoffAssistantText,
   isInternalMachinePlannerPromptText,
   isInternalTeamOrchestrationPromptText,
+  isInternalToolHandoffAssistantText,
 } from './chat-message-text'
 
 const logger = createRendererLogger('session-workspace-transcript')
@@ -32,6 +32,11 @@ function workspaceBelongsToSession(workspace: SessionWorkspace, sessionId: Sessi
 
 function workspacePathToMessages(workspace: SessionWorkspace, messages: UIMessage[]) {
   const messagesById = new Map(messages.map((message) => [message.id, message]))
+  // Tool results are persisted as their own messages along the workspace path;
+  // index them across the whole path so each call part recovers its `output`.
+  const toolResultByCallId = buildToolResultLookup(
+    workspace.transcriptPath.map((entry) => entry.node.message).filter((message) => !!message),
+  )
   const workspaceMessages: UIMessage[] = []
 
   for (const entry of workspace.transcriptPath) {
@@ -50,11 +55,11 @@ function workspacePathToMessages(workspace: SessionWorkspace, messages: UIMessag
     workspaceMessages.push({
       id: messageId,
       role: message.role,
-      parts: message.parts.flatMap(messagePartToUIParts),
+      parts: message.parts.flatMap((part) => messagePartToUIParts(part, toolResultByCallId)),
       createdAt: new Date(message.createdAt),
-        ...(message.metadata?.branchSummary ||
-        message.metadata?.compactionSummary ||
-        message.metadata?.phaseTranscript
+      ...(message.metadata?.branchSummary ||
+      message.metadata?.compactionSummary ||
+      message.metadata?.phaseTranscript
         ? {
             metadata: {
               ...(message.metadata.branchSummary
@@ -63,9 +68,9 @@ function workspacePathToMessages(workspace: SessionWorkspace, messages: UIMessag
               ...(message.metadata.compactionSummary
                 ? { compactionSummary: message.metadata.compactionSummary }
                 : {}),
-                ...(message.metadata.phaseTranscript
-                  ? { phaseTranscript: message.metadata.phaseTranscript }
-                  : {}),
+              ...(message.metadata.phaseTranscript
+                ? { phaseTranscript: message.metadata.phaseTranscript }
+                : {}),
             },
           }
         : {}),
@@ -337,13 +342,11 @@ export function resolveTranscriptMessages({
           draftBranchSourceNodeId,
         )
       : messages
-  const hadHiddenMachinePlannerPrompt = hasHiddenInternalMachinePlannerPrompt(baseTranscriptMessages)
+  const hadHiddenMachinePlannerPrompt =
+    hasHiddenInternalMachinePlannerPrompt(baseTranscriptMessages)
 
   const transcriptMessages = reorderMachineOriginalRequestBeforeAssistantMessages(
-    filterHiddenInternalMachineAndTeamMessages(
-      baseTranscriptMessages,
-      machinePlan,
-    ),
+    filterHiddenInternalMachineAndTeamMessages(baseTranscriptMessages, machinePlan),
     machinePlan,
     hadHiddenMachinePlannerPrompt,
   )
@@ -378,7 +381,9 @@ export function resolveTranscriptMessages({
         transcriptPhaseTranscriptIds: transcriptMessages
           .filter((message) => message.metadata?.phaseTranscript)
           .map((message) => message.id),
-        activeWorkspaceNodeId: activeWorkspace?.activeNodeId ? String(activeWorkspace.activeNodeId) : null,
+        activeWorkspaceNodeId: activeWorkspace?.activeNodeId
+          ? String(activeWorkspace.activeNodeId)
+          : null,
       },
       ts: Date.now(),
     }),

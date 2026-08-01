@@ -13,6 +13,7 @@ import {
   Plus,
   RotateCw,
   TerminalSquare,
+  Trash2,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { cn } from '@/shared/lib/cn'
@@ -105,12 +106,16 @@ function ServerRow({
   server,
   index,
   busy,
+  removable,
   onToggle,
+  onRemove,
 }: {
   readonly server: McpServerSummary
   readonly index: number
   readonly busy: boolean
+  readonly removable: boolean
   readonly onToggle: () => void
+  readonly onRemove: () => void
 }) {
   return (
     <div
@@ -143,6 +148,21 @@ function ServerRow({
           label={`${server.enabled ? 'Disable' : 'Enable'} ${server.name}`}
           onCheckedChange={onToggle}
         />
+        <Button
+          variant="unstyled"
+          type="button"
+          disabled={!removable || busy}
+          onClick={onRemove}
+          title={
+            removable
+              ? `Remove ${server.name} from ${server.sourceLabel}`
+              : `"${server.sourceLabel}" is read-only and cannot be edited here`
+          }
+          aria-label={`Remove ${server.name}`}
+          className="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-error/10 hover:text-error disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-tertiary"
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
       </div>
     </div>
   )
@@ -699,13 +719,22 @@ export function McpSourcesPanel({
 
 export function McpServersPanel({
   servers,
+  sources,
   busy,
   onToggleServer,
+  onRemoveServer,
 }: {
   readonly servers: readonly McpServerSummary[]
+  readonly sources: readonly McpConfigSourceSummary[]
   readonly busy: boolean
   readonly onToggleServer: (server: McpServerSummary) => void
+  readonly onRemoveServer: (server: McpServerSummary) => void
 }) {
+  const editableSourceIds = useMemo(
+    () => new Set(sources.filter((source) => source.editable).map((source) => source.id)),
+    [sources],
+  )
+
   return (
     <div className="flex flex-col bg-bg-primary">
       {servers.length > 0 ? (
@@ -715,7 +744,9 @@ export function McpServersPanel({
             server={server}
             index={index}
             busy={busy}
+            removable={editableSourceIds.has(server.sourceId)}
             onToggle={() => onToggleServer(server)}
+            onRemove={() => onRemoveServer(server)}
           />
         ))
       ) : (

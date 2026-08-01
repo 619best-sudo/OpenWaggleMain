@@ -1,7 +1,7 @@
 import { SessionBranchId, SessionId, SessionNodeId } from '@shared/types/brand'
 import type { SessionBranch, SessionSummary } from '@shared/types/session'
 import { describe, expect, it } from 'vitest'
-import { buildSidebarBranchRows } from '../sidebar-branches'
+import { buildSidebarBranchRows, resolveActiveBranchIdForSession } from '../sidebar-branches'
 
 function branch(input: {
   readonly sessionId: SessionId
@@ -103,5 +103,76 @@ describe('buildSidebarBranchRows', () => {
       'main',
       'OAuth path',
     ])
+  })
+
+  it('does not highlight a branch as active for a session that is not the active session', () => {
+    // Regression: every session persists a non-null lastActiveBranchId, so
+    // falling back to it for inactive sessions lit up one branch per session
+    // and made several sessions look active at once. The active highlight must
+    // belong only to the active session's active branch.
+    const sessionId = SessionId('session-1')
+    const rows = buildSidebarBranchRows({
+      session: session({
+        id: sessionId,
+        branches: [
+          branch({ sessionId, id: 'session-1:main', name: 'main', isMain: true }),
+          branch({ sessionId, id: 'session-1:branch:a', name: 'Branch 2' }),
+        ],
+      }),
+      activeBranchId: resolveActiveBranchIdForSession({
+        sessionId,
+        activeSessionId: SessionId('session-2'),
+        activeBranchId: SessionBranchId('session-1:branch:a'),
+      }),
+      draftBranch: null,
+    })
+
+    expect(rows.filter((row) => row.type === 'branch' && row.isActive)).toEqual([])
+  })
+
+  it('highlights the active branch only for the active session', () => {
+    const sessionId = SessionId('session-1')
+    const rows = buildSidebarBranchRows({
+      session: session({
+        id: sessionId,
+        branches: [
+          branch({ sessionId, id: 'session-1:main', name: 'main', isMain: true }),
+          branch({ sessionId, id: 'session-1:branch:a', name: 'Branch 2' }),
+        ],
+      }),
+      activeBranchId: resolveActiveBranchIdForSession({
+        sessionId,
+        activeSessionId: sessionId,
+        activeBranchId: SessionBranchId('session-1:branch:a'),
+      }),
+      draftBranch: null,
+    })
+
+    const activeBranchIds = rows
+      .filter((row) => row.type === 'branch' && row.isActive)
+      .map((row) => (row.type === 'branch' ? String(row.branch.id) : null))
+    expect(activeBranchIds).toEqual(['session-1:branch:a'])
+  })
+})
+
+describe('resolveActiveBranchIdForSession', () => {
+  it('returns the active branch id for the active session', () => {
+    expect(
+      resolveActiveBranchIdForSession({
+        sessionId: SessionId('session-1'),
+        activeSessionId: SessionId('session-1'),
+        activeBranchId: SessionBranchId('session-1:branch:a'),
+      }),
+    ).toBe(SessionBranchId('session-1:branch:a'))
+  })
+
+  it('returns null for a non-active session even when an activeBranchId is provided', () => {
+    expect(
+      resolveActiveBranchIdForSession({
+        sessionId: SessionId('session-1'),
+        activeSessionId: SessionId('session-2'),
+        activeBranchId: SessionBranchId('session-1:branch:a'),
+      }),
+    ).toBeNull()
   })
 })

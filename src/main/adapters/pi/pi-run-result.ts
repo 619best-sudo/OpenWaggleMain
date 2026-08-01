@@ -7,7 +7,7 @@ import {
   buildPersistedUserMessageParts,
   type PersistedUserMessagePartsPayload,
 } from '../../agent/shared'
-import { piHistoryToProjectedMessages } from './pi-message-mapper'
+import { historyToProjectedMessages } from '../message-projection/message-mapper'
 
 function makeMessage(
   role: 'user' | 'assistant' | 'system',
@@ -105,7 +105,7 @@ export function buildPiRunNewMessages(
     (message) => isPiRuntimeAssistantMessage(message) || isPiRuntimeToolResultMessage(message),
   )
 
-  const assistantAndToolMessages = piHistoryToProjectedMessages(filteredAppended)
+  const assistantAndToolMessages = historyToProjectedMessages(filteredAppended)
   return [makeMessage('user', buildPersistedUserMessageParts(payload)), ...assistantAndToolMessages]
 }
 
@@ -114,5 +114,5 @@ export function buildPiRunAssistantMessages(appendedMessages: readonly unknown[]
     (message) => isPiRuntimeAssistantMessage(message) || isPiRuntimeToolResultMessage(message),
   )
 
-  return piHistoryToProjectedMessages(filteredAppended)
+  return historyToProjectedMessages(filteredAppended)
 }

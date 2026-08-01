@@ -273,6 +273,97 @@ describe('deriveSessionBranchesForSnapshot', () => {
     })
   })
 
+  it('does not derive a phantom branch when a structural node sits mid-chain', () => {
+    // This mirrors what a turing run actually persists (createdOrder-sorted): the
+    // bridge-status artifact node lands BETWEEN the user turn and the appended
+    // assistant turn, not trailing. Filtering it out must not split the linear
+    // chain into two leaves ("main" + "Branch 2").
+    const derived = deriveSessionBranchesForSnapshot({
+      sessionId: 'session-1',
+      activeNodeId: 'thread-snapshot-1',
+      existingBranches: [],
+      nodes: [
+        {
+          id: 'user-1',
+          parentId: null,
+          piEntryType: 'message',
+          kind: 'user_message',
+          role: 'user',
+          timestampMs: 1,
+          contentJson: JSON.stringify({ parts: [{ type: 'text', text: 'change header name' }], model: null }),
+          metadataJson: '{}',
+          pathDepth: 0,
+          createdOrder: 0,
+        },
+        {
+          id: 'bridge-1',
+          parentId: 'user-1',
+          piEntryType: 'custom',
+          kind: 'custom',
+          role: null,
+          timestampMs: 2,
+          contentJson: JSON.stringify({ customType: TURING_BRIDGE_STATUS_CUSTOM_TYPE, data: {} }),
+          metadataJson: '{}',
+          pathDepth: 1,
+          createdOrder: 1,
+        },
+        {
+          id: 'assistant-1',
+          parentId: 'bridge-1',
+          piEntryType: 'message',
+          kind: 'assistant_message',
+          role: 'assistant',
+          timestampMs: 3,
+          contentJson: JSON.stringify({
+            parts: [{ type: 'text', text: 'Renamed the header.' }],
+            model: 'openai/gpt-5.4',
+          }),
+          metadataJson: '{}',
+          pathDepth: 2,
+          createdOrder: 2,
+        },
+        {
+          id: 'phase-transcript-1',
+          parentId: 'assistant-1',
+          piEntryType: 'custom',
+          kind: 'custom',
+          role: null,
+          timestampMs: 4,
+          contentJson: JSON.stringify({
+            customType: PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE,
+            data: { version: 1, phases: [] },
+          }),
+          metadataJson: '{}',
+          pathDepth: 3,
+          createdOrder: 3,
+        },
+        {
+          id: 'thread-snapshot-1',
+          parentId: 'phase-transcript-1',
+          piEntryType: 'custom',
+          kind: 'custom',
+          role: null,
+          timestampMs: 5,
+          contentJson: JSON.stringify({ customType: TURING_THREAD_SNAPSHOT_CUSTOM_TYPE, data: {} }),
+          metadataJson: '{}',
+          pathDepth: 4,
+          createdOrder: 4,
+        },
+      ],
+    })
+
+    expect(derived.branches).toHaveLength(1)
+    expect(derived.branches[0]).toMatchObject({
+      id: 'session-1:main',
+      name: 'main',
+      headNodeId: 'assistant-1',
+      isMain: true,
+    })
+    // The active node stays pinned to the trailing artifact so the phase
+    // transcript remains on the active path (and keeps suppressing raw handoffs).
+    expect(derived.activeNodeId).toBe('thread-snapshot-1')
+  })
+
   it('preserves a structural active node and inherits branch hints for transcript artifacts', () => {
     const nodes = [
       {

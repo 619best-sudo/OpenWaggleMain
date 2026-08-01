@@ -10,11 +10,11 @@ import {
 
 function agentState(
   overrides: Partial<
-    Pick<HarnessAgentState, 'lastPhaseResults' | 'lastThreadSnapshot' | 'pendingUserQuestion'>
+    Pick<HarnessAgentState, 'lastSteps' | 'lastThreadSnapshot' | 'pendingUserQuestion'>
   > = {},
-): Pick<HarnessAgentState, 'lastPhaseResults' | 'lastThreadSnapshot' | 'pendingUserQuestion'> {
+): Pick<HarnessAgentState, 'lastSteps' | 'lastThreadSnapshot' | 'pendingUserQuestion'> {
   return {
-    lastPhaseResults: undefined,
+    lastSteps: undefined,
     lastThreadSnapshot: undefined,
     pendingUserQuestion: undefined,
     ...overrides,
@@ -22,14 +22,14 @@ function agentState(
 }
 
 describe('turing-run-classification', () => {
-  it('marks explicit verification failures as failed phases', () => {
+  it('marks explicit verification failures as failed', () => {
+    expect(phaseResultToStatus({ verified: false })).toBe('failed')
+  })
+
+  it('maps a pending user question to interrupted', () => {
     expect(
-      phaseResultToStatus({
-        pendingUserQuestion: undefined,
-        error: undefined,
-        verified: false,
-      } as never),
-    ).toBe('failed')
+      phaseResultToStatus({ pendingUserQuestion: { phase: 'plan', question: 'which file?' } }),
+    ).toBe('interrupted')
   })
 
   it('recognizes retry-exhausted verification failures as graceful run failures', () => {
@@ -57,7 +57,7 @@ describe('turing-run-classification', () => {
     ).toBe('stop')
   })
 
-  it('preserves real terminal errors even when the perfect phase exists', () => {
+  it('preserves real terminal errors even when a failed snapshot exists', () => {
     const state = agentState({
       lastThreadSnapshot: {
         timestamp: Date.now(),
@@ -85,32 +85,21 @@ describe('turing-run-classification', () => {
     ).toBe('error')
   })
 
-  it('suppresses terminal crash state for failed phases that already have contextual output', () => {
+  it('suppresses terminal crash state for a failed run that already produced contextual output', () => {
+    // Under the flat loop, a mid-run crash that already wrote files + produced a
+    // summary is a graceful phase failure: show the partial work, not a crash.
     const state = agentState({
-      lastPhaseResults: {
-        perform: {
-          phase: 'perform',
-          summary:
-            'Implementation failed before completion.\nFiles changed before failure: /tmp/index.html\nError: browser screenshot failed',
-          display: {
-            summary:
-              'Implementation failed before completion.\nFiles changed before failure: /tmp/index.html\nError: browser screenshot failed',
-            toolCallIds: ['tool-1'],
-          },
-          error: 'browser screenshot failed',
-          writtenPaths: ['/tmp/index.html'],
-          complexity: 0,
-          usage: {
-            input: 0,
-            output: 0,
-            cacheRead: 0,
-            cacheWrite: 0,
-            totalTokens: 0,
-            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-          },
-          messages: [],
-        } as never,
-      } as never,
+      lastSteps: [
+        {
+          planId: 'p1',
+          taskId: 't1',
+          title: 'edit index',
+          summary: 'editing the file',
+          complexity: 'low',
+          isCompleted: true,
+          files: ['/tmp/index.html'],
+        },
+      ],
       lastThreadSnapshot: {
         timestamp: Date.now(),
         task: 'fix the title',
@@ -120,6 +109,7 @@ describe('turing-run-classification', () => {
         summary:
           'Implementation failed before completion.\nFiles changed before failure: /tmp/index.html\nError: browser screenshot failed',
         error: 'browser screenshot failed',
+        writtenPaths: ['/tmp/index.html'],
       },
     })
 

@@ -74,6 +74,14 @@ export interface AgentSendPayload {
   readonly text: string
   readonly thinkingLevel: ThinkingLevel
   readonly attachments: readonly PreparedAttachment[]
+  /**
+   * Run this turn in PLAN MODE: the agent decomposes the request first, surfaces
+   * the plan for approval (PlanReviewCard), and only then executes it a step at
+   * a time. Set by the composer's Machine mode toggle.
+   *
+   * Absent/false is the default flat loop — one work loop, no decomposition.
+   */
+  readonly planMode?: boolean
 }
 
 export interface CompactionSummaryMetadata {

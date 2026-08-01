@@ -478,7 +478,12 @@ create a single file index.html to design physics realistic solar system animati
     const resolved = resolveTranscriptMessages({
       activeSessionId: SESSION_DETAIL_ID,
       activeWorkspace: workspaceWithPath([user, assistant], assistant.id, assistant.id),
-      messages: [uiMessage('user-head', 'user', 'Head user'), uiMessage('assistant-head', 'assistant', 'Head answer'), machinePrompt, machinePlanResponse],
+      messages: [
+        uiMessage('user-head', 'user', 'Head user'),
+        uiMessage('assistant-head', 'assistant', 'Head answer'),
+        machinePrompt,
+        machinePlanResponse,
+      ],
       machinePlan: {
         goal: 'Create a single self-contained index.html file that renders a physics-realistic solar system animation',
         originalRequest:
@@ -748,23 +753,13 @@ create a beautifull sass page in single file index.html`,
   })
 
   it('keeps persisted machine task transcript rows in the flat transcript', () => {
-    const assistantTask = sessionNode(
-      'assistant-task',
-      null,
-      'assistant',
-      'Created the file.',
-      0,
-    )
+    const assistantTask = sessionNode('assistant-task', null, 'assistant', 'Created the file.', 0)
 
     const resolved = resolveTranscriptMessages({
       activeSessionId: SESSION_DETAIL_ID,
       activeWorkspace: workspaceWithPath([assistantTask], assistantTask.id, assistantTask.id),
       messages: [
-        uiMessage(
-          'user-1',
-          'user',
-          'create a beautifull sass page in single file index.html',
-        ),
+        uiMessage('user-1', 'user', 'create a beautifull sass page in single file index.html'),
         uiMessage('assistant-task', 'assistant', 'Created the file.'),
       ],
       machinePlan: {

@@ -54,6 +54,20 @@
   --color-thinking-text: var(--theme-thinking-text);
   --radius-panel: 22px;
 
+  /* Tool-call code views (read / write / edit bodies) */
+  --color-code-view-bg: var(--theme-code-view-bg);
+  --color-code-view-border: var(--theme-code-view-border);
+  --color-code-view-gutter-bg: var(--theme-code-view-gutter-bg);
+  --color-code-view-gutter-text: var(--theme-code-view-gutter-text);
+  --color-code-view-add-bg: var(--theme-code-view-add-bg);
+  --color-code-view-add-accent: var(--theme-code-view-add-accent);
+  --color-code-view-add-text: var(--theme-code-view-add-text);
+  --color-code-view-remove-bg: var(--theme-code-view-remove-bg);
+  --color-code-view-remove-accent: var(--theme-code-view-remove-accent);
+  --color-code-view-remove-text: var(--theme-code-view-remove-text);
+  --color-code-view-concern-bg: var(--theme-code-view-concern-bg);
+  --color-code-view-concern-accent: var(--theme-code-view-concern-accent);
+
   /* Diff panel */
   --color-diff-bg: var(--theme-diff-bg);
   --color-diff-file-bg: var(--theme-diff-file-bg);
@@ -196,6 +210,26 @@
   .sidebar-scroll::-webkit-scrollbar {
     width: 0;
     height: 0;
+  }
+
+  /*
+   * Shiki dual-theme tokens (tool-call file/diff views).
+   *
+   * `useHighlightedLines` tokenizes once with a light+dark theme pair and
+   * `defaultColor: false`, so each token span carries BOTH colours as custom
+   * properties and no inline `color`. These two rules pick the right one, so
+   * highlighting follows the app theme with no re-tokenizing. `code-token` marks
+   * the spans that opt in.
+   *
+   * The absent inline `color` is what makes this work: an inline style outranks
+   * every selector here, so leaving shiki's default on meant the light palette
+   * won even under the dark theme (identifiers at #231d1e on #131317).
+   */
+  .code-token {
+    color: var(--shiki-light, currentColor);
+  }
+  html[data-theme="dark"] .code-token {
+    color: var(--shiki-dark, currentColor);
   }
 
   /* Diff scroll — thinner than global scrollbars */

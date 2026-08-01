@@ -4,9 +4,9 @@ import * as Effect from 'effect/Effect'
 import { SessionId, SupportedModelId } from '@shared/types/brand'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const runPiSessionMock = vi.fn<() => Promise<AgentKernelRunResult>>()
-const runPiWaggleMock = vi.fn<() => Promise<AgentKernelRunResult>>()
-const runTuringSessionMock = vi.fn<() => Promise<AgentKernelRunResult>>()
+const runPiSessionMock = vi.fn<(input: unknown) => Promise<AgentKernelRunResult>>()
+const runPiWaggleMock = vi.fn<(input: unknown) => Promise<AgentKernelRunResult>>()
+const runTuringSessionMock = vi.fn<(input: unknown) => Promise<AgentKernelRunResult>>()
 
 vi.mock('../agent-kernel/classic-run', () => ({
   runPiSession: (input: unknown) => runPiSessionMock(input),

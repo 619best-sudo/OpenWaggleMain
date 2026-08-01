@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest'
 import { safeMarkdownSanitizeSchema } from '../../markdown-safety'
 import { createRehypeShikiPlugin } from '../rehype-shiki-plugin'
 import { ShikiCache } from '../shiki-cache'
+import { waggleCodeThemeDark, waggleCodeThemeLight } from '../waggle-code-theme'
 
 interface StyleNode {
   readonly type: string
@@ -38,7 +39,7 @@ function collectStyles(node: Root | Element | StyleNode) {
 describe('full pipeline: Shiki + rehypeSanitize preserves style attributes', () => {
   it('color: style values survive rehypeSanitize', async () => {
     const highlighter = await createHighlighter({
-      themes: ['github-dark', 'github-light'],
+      themes: [waggleCodeThemeDark, waggleCodeThemeLight],
       langs: ['typescript'],
       engine: createJavaScriptRegexEngine(),
     })

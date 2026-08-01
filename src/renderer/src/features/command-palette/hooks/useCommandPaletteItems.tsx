@@ -3,8 +3,6 @@ import type { SkillDiscoveryItem } from '@shared/types/standards'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { usePreferencesStore } from '@/features/settings/state'
-import { useWaggleStore } from '@/features/waggle/state'
-import { wagglePresetsQueryOptions } from '@/queries/waggle-presets'
 import { api } from '@/shared/lib/ipc'
 import { useUIStore } from '@/shell/ui-store'
 import {
@@ -14,9 +12,7 @@ import {
 import {
   createBaseCommands,
   createConfigureMcpItem,
-  createConfigureWaggleItem,
   createMcpItems,
-  createPresetItems,
   createSkillItems,
   filterBaseCommands,
 } from '../lib/command-palette-items'
@@ -32,7 +28,6 @@ export function useCommandPaletteItems({
   query,
   slashSkills,
   onSelectSkill,
-  onStartWaggle,
   onOpenSessionTree,
   onForkToNewSession,
   onCloneToNewSession,
@@ -42,7 +37,6 @@ export function useCommandPaletteItems({
   const closeCommandPalette = useUIStore((s) => s.closeCommandPalette)
   const showToast = useUIStore((s) => s.showToast)
   const projectPath = usePreferencesStore((state) => state.settings.projectPath)
-  const wagglePresetsQuery = useQuery(wagglePresetsQueryOptions(projectPath))
   const mcpSettingsQuery = useQuery({
     queryKey: ['mcp-settings', projectPath],
     queryFn: () => api.getMcpSettings(projectPath),
@@ -51,10 +45,6 @@ export function useCommandPaletteItems({
   const configureMcp = () => {
     closeCommandPalette()
     void navigate({ to: '/mcp' })
-  }
-  const configureWaggle = () => {
-    closeCommandPalette()
-    void navigate({ to: '/waggle' })
   }
   const toggleMcpServer = (server: McpServerSummary) => {
     closeCommandPalette()
@@ -77,21 +67,7 @@ export function useCommandPaletteItems({
   const actions: CommandPaletteActionHandlers = {
     closeCommandPalette,
     configureMcp,
-    configureWaggle,
     toggleMcpServer,
-    selectPreset: (preset) => {
-      onStartWaggle(preset.config)
-      closeCommandPalette()
-    },
-    startWaggle: () => {
-      const config = useWaggleStore.getState().activeConfig
-      if (!config) {
-        configureWaggle()
-        return
-      }
-      onStartWaggle(config)
-      closeCommandPalette()
-    },
     selectSkill: (skillId, skillName) => {
       onSelectSkill(skillId, skillName)
       closeCommandPalette()
@@ -109,8 +85,6 @@ export function useCommandPaletteItems({
     ...filterBaseCommands(createBaseCommands(actions), lowerQuery),
     ...createSkillItems(slashSkills, lowerQuery, actions.selectSkill),
     ...createMcpItems(mcpSettingsQuery.data?.servers ?? [], lowerQuery, actions.toggleMcpServer),
-    ...createPresetItems(wagglePresetsQuery.data ?? [], lowerQuery, actions.selectPreset),
     ...createConfigureMcpItem(lowerQuery, actions.configureMcp),
-    ...createConfigureWaggleItem(lowerQuery, actions.configureWaggle),
   ]
 }

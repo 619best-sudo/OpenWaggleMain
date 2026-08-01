@@ -46,6 +46,10 @@ const BUNDLED_DEPS = [
   'jszip',
   'mammoth',
   'unpdf',
+  // ESM-only runtime dep: must be bundled (not externalized) so the CJS main process
+  // can load it — Node's CJS resolver cannot resolve a package with only an ESM
+  // `exports` map.
+  'turing-harness',
 ]
 
 interface UnknownObject {

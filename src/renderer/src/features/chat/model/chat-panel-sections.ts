@@ -2,15 +2,16 @@ import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { MachineExecutionState } from '@shared/types/machine'
+import type { PendingPlanReviewRequest, PlanReviewResolution } from '@shared/types/plan-review'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
 import type { TeammateDefinition } from '@shared/types/teammate'
+import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/waggle'
 import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
 import type { AgentChatStatus, AgentCompactionStatus } from '../hooks/useAgentChat'
 import type { SessionForkTarget } from '../lib/session-fork-targets'
 import type { PendingToolPermissionRequest } from '../lib/tool-permission-request'
 import type { ChatRow } from '../lib/types-chat-row'
-import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 
 export interface ChatTranscriptSectionState {
   readonly messages: UIMessage[]
@@ -30,6 +31,13 @@ export interface ChatTranscriptSectionState {
   readonly onUserDidSendConsumed: () => void
   readonly pendingToolPermissionRequest: PendingToolPermissionRequest | null
   readonly pendingUserQuestionRequest: PendingUserQuestionRequest | null
+  /** A drafted plan awaiting the user's approve / revise / cancel verdict. */
+  readonly pendingPlanReviewRequest: PendingPlanReviewRequest | null
+  /** Non-null once the review is answered — the card then renders read-only. */
+  readonly planReviewDecision: PlanReviewResolution['decision'] | null
+  readonly onResolvePlanReview: (resolution: PlanReviewResolution) => Promise<void>
+  /** Project root, needed to stage per-step attachments. */
+  readonly planReviewProjectPath: string | null
   readonly toolPermissionBusy: boolean
   readonly toolPermissionError: string | null
   onOpenProject: () => Promise<void>
@@ -41,9 +49,10 @@ export interface ChatTranscriptSectionState {
   onDismissToolPermission: () => void
   onApproveToolPermission: () => Promise<void>
   onDenyToolPermission: () => Promise<void>
-  onResolveUserQuestion: (
-    resolution: { request: PendingUserQuestionRequest; answer: string },
-  ) => Promise<void>
+  onResolveUserQuestion: (resolution: {
+    request: PendingUserQuestionRequest
+    answer: string
+  }) => Promise<void>
   onDismissError: (errorId: string | null) => void
   onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
   onBranchFromMessage: (messageId: string) => void

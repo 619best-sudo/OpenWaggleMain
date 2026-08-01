@@ -22,9 +22,13 @@ vi.mock('../../pi/pi-provider-catalog', () => ({
           ? { type: 'api_key', key: 'stored-tm-key' }
           : undefined,
   }),
+  // Default LLM routing goes through the backend, so resolving a config needs
+  // the backend base URL.
+  resolveTuringMachineBaseUrl: () => 'http://127.0.0.1:3001/turing-machine',
 }))
 
 const harnessCreateCount = vi.hoisted(() => ({ value: 0 }))
+const attachOpenWaggleRuntimeMock = vi.hoisted(() => vi.fn(async () => ({ issues: [] })))
 
 vi.mock('turing-harness', () => {
   class MockHarness {
@@ -37,6 +41,10 @@ vi.mock('turing-harness', () => {
           }),
           refreshAllSummaries: vi.fn(async () => undefined),
         },
+        addPooledMcpServer: vi.fn(async () => ({ id: 'mcp-1' })),
+        addMcpServer: vi.fn(async () => ({ id: 'mcp-1' })),
+        addSkill: vi.fn(async () => undefined),
+        removeProvider: vi.fn(async () => undefined),
       },
     }))
 
@@ -56,8 +64,21 @@ vi.mock('turing-harness', () => {
         }),
       })),
     },
+    McpRuntimePool: class {
+      // The shared pool is constructed by getSharedMcpPool; a bare class is enough.
+    },
+    // Asset generation defaults to the backend proxy, so building a session's
+    // asset backends goes through the harness's backend image seam.
+    createBackendImageBackend: vi.fn(() => vi.fn()),
+    createOpenRouterImageBackend: vi.fn(() => vi.fn()),
   }
 })
+
+// Mock the bridge so prewarm-with-runtime tests can assert the attach is
+// attempted without needing the real turing-harness MCP/skill APIs.
+vi.mock('../turing-openwaggle-bridge', () => ({
+  attachOpenWaggleRuntime: attachOpenWaggleRuntimeMock,
+}))
 
 import {
   checkoutWarmProjectSession,
@@ -94,5 +115,61 @@ describe('turing-memory-prewarm', () => {
     // the next thread instead of being built on its critical path.
     await checkoutWarmProjectSession('pi-session-1', '/tmp/repo')
     expect(harnessCreateCount.value).toBe(2)
+  })
+
+  it('attaches MCP servers + skills during prewarm when runtime inputs are supplied', async () => {
+    attachOpenWaggleRuntimeMock.mockClear()
+    const mcpSettings = {
+      adapter: { enabled: true, packageSource: '', runtimeConfigPath: null },
+      sources: [],
+      effective: { mcpServers: {}, disabledMcpServers: {}, settings: {}, imports: [] },
+      servers: [
+        {
+          name: 'fs',
+          enabled: true,
+          sourceId: 'global-standard',
+          sourceLabel: 'Global',
+          sourcePath: '/tmp/mcp.json',
+          transport: 'stdio',
+          directTools: 'inherited',
+          command: 'npx',
+        },
+      ],
+      runtimeConfigPath: null,
+    } as never
+    const standardsContext = {
+      agentsInstruction: 'AGENTS',
+      agentsScopedInstructions: [],
+      activeSkills: [
+        {
+          id: 'my-skill',
+          name: 'My Skill',
+          description: 'desc',
+          body: 'body',
+          skillPath: '/tmp/SKILL.md',
+          folderPath: '/tmp/skill',
+          hasScripts: false,
+        },
+      ],
+      warnings: [],
+    } as never
+
+    await prewarmProjectMemory('/tmp/repo-with-runtime', { mcpSettings, standardsContext })
+
+    // The bridge attach is the single point where MCP clients + skill providers
+    // get wired into the prewarmed session. Verifying it was called with the
+    // supplied runtime proves the prewarm path actually surfaces extensions.
+    expect(attachOpenWaggleRuntimeMock).toHaveBeenCalledTimes(1)
+    const calls = attachOpenWaggleRuntimeMock.mock.calls as unknown as unknown[][]
+    expect(calls[0]?.[1]).toMatchObject({
+      mcpSettings,
+      standardsContext,
+    })
+  })
+
+  it('does not call the bridge when no runtime inputs are supplied', async () => {
+    attachOpenWaggleRuntimeMock.mockClear()
+    await prewarmProjectMemory('/tmp/repo-no-runtime')
+    expect(attachOpenWaggleRuntimeMock).not.toHaveBeenCalled()
   })
 })

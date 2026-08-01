@@ -431,6 +431,133 @@ describe('sessionToUIMessages', () => {
     })
   })
 
+  it('re-attaches a persisted tool-result to its tool-call part across messages', () => {
+    // Persisted tool results live in their own `tool-result` role message,
+    // separate from the assistant message that issued the call. Without
+    // cross-message recovery the hydrated tool-call part would have no
+    // `output`, collapsing read/edit/write tool strips once a run completes.
+    const session: SessionDetail = {
+      id: SessionId('session-recovery'),
+      title: 'Recovered result',
+      projectPath: '/repo',
+      createdAt: 1,
+      updatedAt: 1,
+      messages: [
+        {
+          id: MessageId('msg-call'),
+          role: 'assistant',
+          createdAt: 1,
+          parts: [
+            {
+              type: 'tool-call',
+              toolCall: {
+                id: ToolCallId('tool-read'),
+                name: 'read',
+                args: { path: 'README.md' },
+                state: 'input-complete',
+              },
+            },
+          ],
+        },
+        {
+          id: MessageId('msg-result'),
+          role: 'assistant',
+          createdAt: 2,
+          parts: [
+            {
+              type: 'tool-result',
+              toolResult: {
+                id: ToolCallId('tool-read'),
+                name: 'read',
+                args: { path: 'README.md' },
+                result: 'File contents go here',
+                isError: false,
+                duration: 12,
+              },
+            },
+          ],
+        },
+      ],
+    }
+
+    const messages = sessionToUIMessages(session)
+    const toolCall = messages[0]?.parts[0]
+
+    expect(toolCall).toEqual({
+      type: 'tool-call',
+      id: 'tool-read',
+      name: 'read',
+      arguments: '{"path":"README.md"}',
+      state: 'input-complete',
+      output: 'File contents go here',
+    })
+  })
+
+  it('attaches a real Pi-shaped tool result so the body stays expandable after hydration', async () => {
+    // Mirrors how Pi persists results: a `tool-result` node whose `result` is
+    // `{ content: [{type:'text', text}], details }`. The inline tool block uses
+    // getToolResultText/getToolDiffData on `output`; if the lookup attached it,
+    // those helpers must yield content so the strip stays clickable + expanded.
+    const session: SessionDetail = {
+      id: SessionId('session-pi-shape'),
+      title: 'Pi-shaped result',
+      projectPath: '/repo',
+      createdAt: 1,
+      updatedAt: 1,
+      messages: [
+        {
+          id: MessageId('call-edit'),
+          role: 'assistant',
+          createdAt: 1,
+          parts: [
+            {
+              type: 'tool-call',
+              toolCall: {
+                id: ToolCallId('edit-1'),
+                name: 'edit',
+                args: { path: 'src/app.ts', oldString: 'a', newString: 'b' },
+                state: 'input-complete',
+              },
+            },
+          ],
+        },
+        {
+          id: MessageId('result-edit'),
+          role: 'assistant',
+          createdAt: 2,
+          parts: [
+            {
+              type: 'tool-result',
+              toolResult: {
+                id: ToolCallId('edit-1'),
+                name: 'edit',
+                args: { path: 'src/app.ts', oldString: 'a', newString: 'b' },
+                result: {
+                  content: [{ type: 'text', text: 'applied' }],
+                  details: { diff: '-a\n+b' },
+                },
+                isError: false,
+                duration: 3,
+              },
+            },
+          ],
+        },
+      ],
+    }
+
+    const messages = sessionToUIMessages(session)
+    const toolCall = messages[0]?.parts[0]
+    const output = (toolCall as { output?: unknown }).output
+
+    expect(output).toBeDefined()
+    // Same consumption path the inline block uses to decide expandability.
+    const { getToolResultText, getToolDiffData } = await import('../tool-call-block')
+    expect(getToolResultText(output)).not.toBe('')
+    expect(
+      getToolDiffData(output, 'edit', { path: 'src/app.ts', oldString: 'a', newString: 'b' }),
+    ).not.toBeNull()
+  })
+
   it('maps persisted reasoning parts to inline thinking UI parts', () => {
     const session: SessionDetail = {
       id: SessionId('session-reasoning'),

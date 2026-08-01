@@ -10,7 +10,7 @@
  * model. Returning `null` (or leaving the global unset) simply disables the early
  * interrupt — the existing post-execution interception still applies.
  */
-import { type EarlyToolAuthoringPlan, resolveEarlyToolAuthoringPlan } from './tool-model-route'
+import { type EarlyToolAuthoringPlan, resolveEarlyToolAuthoringPlan } from '../../application/tool-model-route'
 
 type EarlyToolAuthoringResolver = (toolName: string) => EarlyToolAuthoringPlan | null
 

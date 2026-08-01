@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AgentTransportEvent } from '@shared/types/stream'
-import { getAgentPhaseTitle } from '@shared/types/phase-titles'
 import { createTuringEventMapper } from '../turing-event-mapper'
 
 describe('turing-event-mapper', () => {
-  it('anchors tool execution under one assistant message without forwarding toolcall deltas', () => {
+  it('anchors tool execution under one assistant message and forwards toolcall_* deltas', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-07-21T18:00:00.000Z'))
 
@@ -16,6 +15,7 @@ describe('turing-event-mapper', () => {
     })
 
     mapEvent({ type: 'message_start', message: { role: 'assistant', content: [] } } as never)
+    // The model authors a tool call: toolcall_start with the id already known.
     mapEvent({
       type: 'message_update',
       message: { role: 'assistant', content: [] },
@@ -44,15 +44,13 @@ describe('turing-event-mapper', () => {
     } as never)
     mapEvent({ type: 'message_end', message: { role: 'assistant', content: [] } } as never)
 
-    expect(emitted.map((event) => event.type)).toEqual([
-      'message_start',
-      'tool_execution_start',
-      'tool_execution_end',
-      'message_end',
-    ])
-    const [messageStart, toolStart] = emitted
-    expect(messageStart?.type).toBe('message_start')
-    expect(toolStart?.type).toBe('tool_execution_start')
+    const types = emitted.map((event) => event.type)
+    // toolcall_start is forwarded as a message_update so the UI shows the call as
+    // it is authored; tool_execution_* anchor under the same assistant message.
+    expect(types).toContain('tool_execution_start')
+    expect(types).toContain('tool_execution_end')
+    const messageStart = emitted.find((event) => event.type === 'message_start')
+    const toolStart = emitted.find((event) => event.type === 'tool_execution_start')
     if (messageStart?.type !== 'message_start' || toolStart?.type !== 'tool_execution_start') {
       throw new Error('unexpected event shape')
     }
@@ -97,7 +95,7 @@ describe('turing-event-mapper', () => {
     vi.useRealTimers()
   })
 
-  it('marks perfect verification failures as failed phase updates', () => {
+  it('projects chain_start/chain_end as a single working phase', () => {
     const emitted: AgentTransportEvent[] = []
     const mapEvent = createTuringEventMapper({
       runId: 'run-3',
@@ -105,38 +103,20 @@ describe('turing-event-mapper', () => {
       emit: (event) => emitted.push(event),
     })
 
-    mapEvent({
-      type: 'phase_end',
-      phase: 'perfect',
-      result: {
-        phase: 'perfect',
-        summary: 'VERDICT: FAIL\nThe expected title was not found.',
-        verified: false,
-        complexity: 0,
-        usage: {
-          input: 0,
-          output: 0,
-          cacheRead: 0,
-          cacheWrite: 0,
-          totalTokens: 0,
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-        },
-        messages: [],
-      },
-    } as never)
+    mapEvent({ type: 'chain_start', task: 'fix the title' } as never)
+    mapEvent({ type: 'chain_end', success: true, iterations: 1 } as never)
 
-    expect(emitted).toHaveLength(1)
-    expect(emitted[0]).toEqual(
-      expect.objectContaining({
-        type: 'phase_end',
-        phaseId: 'perfect',
-        status: 'failed',
-        summary: 'The expected title was not found.',
-      }),
-    )
+    expect(emitted.map((event) => event.type)).toEqual(['phase_start', 'phase_end'])
+    const [start, end] = emitted as Array<
+      Extract<AgentTransportEvent, { type: 'phase_start' | 'phase_end' }>
+    >
+    expect(start.phaseId).toBe('working')
+    expect(end.phaseId).toBe('working')
+    if (end.type !== 'phase_end') throw new Error('expected phase_end')
+    expect(end.status).toBe('completed')
   })
 
-  it('prefers the perfect summary artifact over a verdict-only raw summary', () => {
+  it('marks a failed chain_end as a failed working phase', () => {
     const emitted: AgentTransportEvent[] = []
     const mapEvent = createTuringEventMapper({
       runId: 'run-3b',
@@ -144,41 +124,16 @@ describe('turing-event-mapper', () => {
       emit: (event) => emitted.push(event),
     })
 
-    mapEvent({
-      type: 'phase_end',
-      phase: 'perfect',
-      result: {
-        phase: 'perfect',
-        summary: 'VERDICT: PASS',
-        artifacts: {
-          summary: 'Verified the app flow and confirmed the generated summary is shown after verification.',
-        },
-        verified: true,
-        complexity: 0,
-        usage: {
-          input: 0,
-          output: 0,
-          cacheRead: 0,
-          cacheWrite: 0,
-          totalTokens: 0,
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-        },
-        messages: [],
-      },
-    } as never)
+    mapEvent({ type: 'chain_start', task: 'fix the title' } as never)
+    mapEvent({ type: 'chain_end', success: false, iterations: 2 } as never)
 
-    expect(emitted).toHaveLength(1)
-    expect(emitted[0]).toEqual(
-      expect.objectContaining({
-        type: 'phase_end',
-        phaseId: 'perfect',
-        status: 'completed',
-        summary: 'Verified the app flow and confirmed the generated summary is shown after verification.',
-      }),
-    )
+    const end = emitted.find((event) => event.type === 'phase_end')
+    if (end?.type !== 'phase_end') throw new Error('expected phase_end')
+    expect(end.status).toBe('failed')
+    expect(end.phaseId).toBe('working')
   })
 
-  it('uses retry-specific perform titles after a failed perfect verdict', () => {
+  it('drops the 4P phase_* events the flat loop no longer emits', () => {
     const emitted: AgentTransportEvent[] = []
     const mapEvent = createTuringEventMapper({
       runId: 'run-4',
@@ -187,36 +142,9 @@ describe('turing-event-mapper', () => {
     })
 
     mapEvent({ type: 'phase_start', phase: 'perform' } as never)
-    mapEvent({
-      type: 'phase_end',
-      phase: 'perfect',
-      result: {
-        phase: 'perfect',
-        summary: 'VERDICT: FAIL\nThe title still does not match the requirement.',
-        verified: false,
-        complexity: 0,
-        usage: {
-          input: 0,
-          output: 0,
-          cacheRead: 0,
-          cacheWrite: 0,
-          totalTokens: 0,
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-        },
-        messages: [],
-      },
-    } as never)
-    mapEvent({ type: 'phase_start', phase: 'perform' } as never)
+    mapEvent({ type: 'phase_end', phase: 'perfect', result: { verified: false } } as never)
+    mapEvent({ type: 'phase_summary', phase: 'plan' } as never)
 
-    const performStarts = emitted.filter(
-      (event): event is Extract<AgentTransportEvent, { type: 'phase_start' }> =>
-        event.type === 'phase_start' && event.phaseId === 'perform',
-    )
-
-    expect(performStarts).toHaveLength(2)
-    expect(performStarts[0]?.label).toBe(getAgentPhaseTitle('perform', 0))
-    expect(performStarts[1]?.label).toBe(
-      getAgentPhaseTitle('perform', 1, { retryReason: 'failed_verification' }),
-    )
+    expect(emitted).toEqual([])
   })
 })

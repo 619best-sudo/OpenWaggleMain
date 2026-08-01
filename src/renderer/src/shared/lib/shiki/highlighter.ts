@@ -6,6 +6,11 @@
  */
 import type { BundledLanguage, Highlighter } from 'shiki'
 import { createHighlighter, createJavaScriptRegexEngine } from 'shiki'
+import {
+  WAGGLE_CODE_THEME_DARK,
+  waggleCodeThemeDark,
+  waggleCodeThemeLight,
+} from './waggle-code-theme'
 
 const PRELOADED_LANGUAGES = [
   'typescript',
@@ -22,7 +27,12 @@ const PRELOADED_LANGUAGES = [
   'go',
 ] as const satisfies readonly BundledLanguage[]
 
-const PRELOADED_THEMES = ['github-dark', 'github-light'] as const
+/**
+ * The app's own light/dark themes (see `waggle-code-theme.ts`) rather than
+ * shiki's bundled github pair, whose muted palette read as grey-on-black on our
+ * code surfaces.
+ */
+const PRELOADED_THEMES = [waggleCodeThemeDark, waggleCodeThemeLight] as const
 export type PreloadedLanguage = (typeof PRELOADED_LANGUAGES)[number]
 
 let highlighterPromise: Promise<Highlighter> | undefined
@@ -72,4 +82,4 @@ export function resolveLanguage(lang: string): PreloadedLanguage | undefined {
 }
 
 /** Default theme used for highlighting (fallback if dual-theme not used). */
-export const DEFAULT_THEME = 'github-dark'
+export const DEFAULT_THEME = WAGGLE_CODE_THEME_DARK

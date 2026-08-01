@@ -1,7 +1,7 @@
 import type { SessionSummary } from '@shared/types/session'
 import { Edit3 } from 'lucide-react'
 import { Button } from '@/shared/ui/Button'
-import { buildSidebarBranchRows } from '../lib/sidebar-branches'
+import { buildSidebarBranchRows, resolveActiveBranchIdForSession } from '../lib/sidebar-branches'
 import type { SidebarProjectGroup } from '../lib/sidebar-project-groups'
 import type {
   SidebarBranchActions,
@@ -153,8 +153,11 @@ function ProjectSessionRow({
   const branchRows = buildSidebarBranchRows({
     session,
     activeSessionTree: state.activeSessionTree,
-    activeBranchId:
-      session.id === state.activeSessionId ? state.activeBranchId : session.lastActiveBranchId,
+    activeBranchId: resolveActiveBranchIdForSession({
+      sessionId: session.id,
+      activeSessionId: state.activeSessionId,
+      activeBranchId: state.activeBranchId,
+    }),
     branchesCollapsed: disclosure.rowsCollapsed,
     draftBranch: state.draftBranch,
   })

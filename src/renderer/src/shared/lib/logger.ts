@@ -35,10 +35,18 @@ export function createRendererLogger(namespace: string): Logger {
 
     if (data && Object.keys(data).length > 0) {
       consoleMethod(prefix, data)
-      return
+    } else {
+      consoleMethod(prefix)
     }
 
-    consoleMethod(prefix)
+    // Forward to the main-process log file so renderer-side pipeline steps
+    // (message cache, hydration, chat rows) are captured alongside main logs.
+    try {
+      ;(window as { api?: { forwardRendererLog?: (entry: unknown) => void } }).api
+        ?.forwardRendererLog?.({ namespace, level, message, data })
+    } catch {
+      // Preload not ready / sandboxed — never let logging throw.
+    }
   }
 
   return {

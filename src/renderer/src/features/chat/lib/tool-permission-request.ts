@@ -1,6 +1,9 @@
-import { normalizeToolResultPayload } from '@shared/utils/tool-result-state'
 import type { UIMessage, UIMessagePart } from '@shared/types/chat-ui'
-import type { ToolPermissionPayloadDetails, ToolPermissionRequestEnvelope } from '@shared/types/tool-permission'
+import type {
+  ToolPermissionPayloadDetails,
+  ToolPermissionRequestEnvelope,
+} from '@shared/types/tool-permission'
+import { normalizeToolResultPayload } from '@shared/utils/tool-result-state'
 
 type JsonRecord = Record<string, unknown>
 
@@ -16,7 +19,11 @@ function isRecord(value: unknown): value is JsonRecord {
 }
 
 function isToolPermissionDetails(value: unknown): value is ToolPermissionPayloadDetails {
-  return isRecord(value) && value.kind === 'tool_permission_request' && typeof value.toolName === 'string'
+  return (
+    isRecord(value) &&
+    value.kind === 'tool_permission_request' &&
+    typeof value.toolName === 'string'
+  )
 }
 
 function readTextSummary(content: unknown) {
@@ -30,7 +37,9 @@ function readTextSummary(content: unknown) {
   }
   return blocks
     .flatMap((block) =>
-      isRecord(block) && block.type === 'text' && typeof block.text === 'string' ? [block.text] : [],
+      isRecord(block) && block.type === 'text' && typeof block.text === 'string'
+        ? [block.text]
+        : [],
     )
     .join('\n')
     .trim()
@@ -48,7 +57,11 @@ function toPermissionRequest(
   const details = normalized.details
   const request = isRecord(details.request) ? details.request : {}
   const permission = isRecord(request.permission) ? request.permission : {}
-  const inputCandidate = isRecord(details.args) ? details.args : isRecord(details.input) ? details.input : null
+  const inputCandidate = isRecord(details.args)
+    ? details.args
+    : isRecord(details.input)
+      ? details.input
+      : null
 
   if (!inputCandidate) {
     return null

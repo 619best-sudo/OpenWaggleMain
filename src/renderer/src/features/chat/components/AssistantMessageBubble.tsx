@@ -1,13 +1,427 @@
 import type { SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
+import type { JsonObject } from '@shared/types/json'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { WaggleAgentColor } from '@shared/types/waggle'
-import { GitBranch } from 'lucide-react'
+import { Brain, ChevronDown, GitBranch, LoaderCircle } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { looksLikeMachinePlanText } from '../lib/machine-plan-detection'
+import { relativeToProject } from '../lib/project-paths'
+import {
+  getConcernLinesFromResult,
+  getToolDiffData,
+  getToolResultText,
+  type LineConcern,
+  READ_VIEW_MAX_HEIGHT_PX,
+} from '../lib/tool-call-block'
+import { summarizeToolTarget } from '../lib/tool-display'
+import { getToolMediaOutput, type ToolMediaOutput } from '../lib/tool-media-output'
+import { useActiveProjectPath } from '../lib/use-active-project-path'
 import { AgentLabel } from './AgentLabel'
 import { MachinePlanStreamingPlaceholder } from './MachinePlanStreamingPlaceholder'
 import { StreamingText } from './StreamingText'
+import { FileContentView, UnifiedDiffView } from './ToolCallBlockParts'
+import { ToolMediaPreview } from './ToolMediaPreview'
+
+// ---- Inline tool block (matches PhaseTimelineCard ToolStrip styling) ----
+
+function toolActionLabel(name: string) {
+  const lower = name.toLowerCase()
+  if (lower === 'read' || lower === 'cat') return 'READ'
+  if (lower === 'write') return 'WRITE'
+  if (lower === 'edit') return 'EDIT'
+  if (lower === 'bash' || lower === 'bash_readonly') return 'RUN'
+  if (lower === 'ls') return 'LS'
+  if (lower === 'grep' || lower === 'find') return 'SEARCH'
+  // MCP tools are namespaced `mcp__<server>__<tool>`; show the tool segment
+  // (Title-Cased) instead of the whole ugly uppercased identifier.
+  if (lower.startsWith('mcp__')) {
+    const segments = name.split('__')
+    const toolSegment = segments[segments.length - 1]
+    if (toolSegment) {
+      return toolSegment
+        .replace(/[-_]+/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim()
+    }
+  }
+  // Unknown native tools: Title-Case the snake/kebab name instead of shouting
+  // it in caps (avoids echoing the same identifier twice, once as the chip).
+  return name
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim()
+}
+
+function mediaActionLabel(media: ToolMediaOutput | null): string | null {
+  if (!media) return null
+  if (media.kind === 'image') return 'IMAGE'
+  if (media.kind === 'video') return 'VIDEO'
+  if (media.kind === 'audio') return 'AUDIO'
+  if (media.kind === 'html') return 'HTML'
+  return null
+}
+
+function toolTone(name: string) {
+  const lower = name.toLowerCase()
+  if (lower === 'read' || lower === 'cat') return 'bg-sky-500/10 text-sky-500'
+  return 'bg-text-tertiary/10 text-text-secondary'
+}
+
+function parsePathFromArgs(args: string): string | null {
+  try {
+    const parsed = JSON.parse(args) as Record<string, unknown>
+    if (typeof parsed.path === 'string' && parsed.path.trim()) return parsed.path.trim()
+    if (typeof parsed.command === 'string' && parsed.command.trim()) return parsed.command.trim()
+    return null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Normalize a path for concern correlation. `read` and `mark_concern_lines` may
+ * pass slightly different strings for the same file (relative vs absolute,
+ * trailing slash); collapse those so a lookup matches. Lowercased so matching is
+ * case-insensitive (paths are code, but the model's casing is consistent enough
+ * that this only helps, never hurts).
+ */
+function normalizeConcernPath(p: string): string {
+  return p
+    .replace(/[\\/]+$/, '')
+    .trim()
+    .toLowerCase()
+}
+
+function toolDiffLineCount(
+  args: string,
+  toolName: string,
+  resultContent: unknown,
+): { add: number; del: number } | null {
+  try {
+    const parsedArgs =
+      typeof args === 'string'
+        ? (() => {
+            try {
+              return JSON.parse(args)
+            } catch {
+              return {}
+            }
+          })()
+        : {}
+    const diff = getToolDiffData(resultContent, toolName, parsedArgs)
+    if (!diff?.lines?.length) return null
+    return { add: diff.additions ?? 0, del: diff.deletions ?? 0 }
+  } catch {
+    return null
+  }
+}
+
+const FILE_VIEW_TOOLS = new Set(['read', 'write', 'edit'])
+
+function InlineToolBlock({
+  toolName,
+  args,
+  state,
+  output,
+  error,
+  concern,
+}: {
+  readonly toolName: string
+  readonly args: string
+  readonly state: string
+  readonly output?: unknown
+  readonly error?: string
+  readonly concern?: LineConcern
+}) {
+  const isStreaming = state === 'input-streaming' || state === 'executing'
+  const isError = state === 'error' || !!error
+  const isDone = state === 'complete'
+  const lower = toolName.toLowerCase()
+  const projectPath = useActiveProjectPath()
+  const parsedArgs = useMemo(() => safeParseArgs(args), [args])
+  // Title shown next to the action chip: the tool's target (file path, command,
+  // pattern, …) relativized to the open repo, falling back to a short arg
+  // summary. Never repeats the tool name — the chip already shows the verb.
+  const title = useMemo(() => {
+    const rawPath = parsePathFromArgs(args)
+    if (rawPath) {
+      // `path` is a real file path → relativize; `command` is a shell command
+      // (no relativization needed, but it's stored under the same field).
+      const isCommand = lower === 'bash' || lower === 'bash_readonly'
+      return isCommand ? rawPath : relativeToProject(projectPath, rawPath)
+    }
+    return summarizeToolTarget(lower, parsedArgs)
+  }, [args, lower, parsedArgs, projectPath])
+  // Raw target path (unrelativized) — used to infer the syntax-highlighting
+  // language for the file/diff bodies.
+  const filePath = useMemo(() => parsePathFromArgs(args), [args])
+  const diff = useMemo(
+    () => (output ? toolDiffLineCount(args, toolName, output) : null),
+    [args, toolName, output],
+  )
+  const fullDiff = useMemo(
+    () => (output ? getToolDiffData(output, lower, parsedArgs) : null),
+    [output, lower, parsedArgs],
+  )
+  const readContent = useMemo(
+    () => (lower === 'read' && output ? getToolResultText(output) : null),
+    [lower, output],
+  )
+  const writeContent = useMemo(() => {
+    if (lower !== 'write') return null
+    const raw = parsedArgs.content
+    return typeof raw === 'string' ? raw : null
+  }, [lower, parsedArgs.content])
+  const concernSet = useMemo(
+    () => (concern?.lines.length ? new Set(concern.lines) : undefined),
+    [concern],
+  )
+  // Media/HTML tool outputs render as a preview instead of (or alongside) the
+  // file-view path. Detected from the tool's result payload shape.
+  //
+  // write/edit are excluded on purpose: their result is a FILE CHANGE, and the
+  // diff below is the body the user wants. Letting a media match win means
+  // writing `index.html` replaces a +437-line diff with a preview card — which
+  // is strictly less information about what the agent just did.
+  const media = useMemo(
+    () => (output && lower !== 'write' && lower !== 'edit' ? getToolMediaOutput(output) : null),
+    [output, lower],
+  )
+  // ask_user_question: surface the question + options (and the user's selected
+  // answer once the run resumes) in an expandable body.
+  const askUserDetail = useMemo(
+    () => (lower === 'ask_user_question' ? extractAskUserDetail(parsedArgs, output) : null),
+    [lower, parsedArgs, output],
+  )
+
+  // A tool strip must stay openable whenever it produced a response. During a
+  // run, the response is streamed inline (output is populated); after a run
+  // completes and the session is hydrated, the response is recovered from the
+  // persisted tool-result. In both cases we need the strip to remain expandable
+  // so the tool response is never hidden — even if our specific body parsers
+  // (file body / diff) can't make sense of an unusual payload shape, the user
+  // can still open it to inspect the raw result.
+  const hasBody =
+    (lower === 'read' && output != null) ||
+    (lower === 'write' && (writeContent != null || output != null)) ||
+    (lower === 'edit' && output != null) ||
+    !!media ||
+    !!askUserDetail
+  // read/write/edit, media, and ask_user_question tools default expanded; other
+  // tools stay header-only.
+  const [expanded, setExpanded] = useState(
+    (FILE_VIEW_TOOLS.has(lower) || !!media || !!askUserDetail) && hasBody,
+  )
+
+  const mediaLabel = mediaActionLabel(media)
+  const showAction = mediaLabel ?? toolActionLabel(toolName)
+
+  return (
+    <div
+      className={cn(
+        'rounded-[14px] border p-[1.5px]',
+        isError ? 'border-red-500/30' : 'border-border/40',
+      )}
+    >
+      <div
+        className={cn(
+          // No padding here: the header carries its own, so the expanded code card
+          // can sit flush to the strip edges (no horizontal/bottom inset).
+          'overflow-hidden rounded-[12px] border',
+          isError ? 'border-red-500/20 bg-red-500/5' : 'border-border/45 bg-bg-secondary/[0.18]',
+        )}
+      >
+        <button
+          type="button"
+          aria-expanded={hasBody ? expanded : undefined}
+          onClick={() => {
+            if (hasBody) setExpanded((value) => !value)
+          }}
+          className={cn(
+            'flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px]',
+            hasBody ? 'cursor-pointer' : 'cursor-default',
+          )}
+        >
+          {hasBody && (
+            <ChevronDown
+              className={cn(
+                'size-3 shrink-0 text-text-muted transition-transform',
+                !expanded && '-rotate-90',
+              )}
+            />
+          )}
+          {showAction && (
+            <span
+              className={cn(
+                'px-1.5 py-0.5 rounded-[6px] font-semibold uppercase tracking-[0.08em] text-[10px]',
+                toolTone(toolName),
+              )}
+            >
+              {showAction}
+            </span>
+          )}
+          {/* The filename sizes to its content (not flex-1) so the +/- counts sit
+              directly beside it rather than being pushed to the far right. */}
+          <span className="min-w-0 truncate text-text-primary/88 font-mono">
+            {title || toolName}
+          </span>
+          {isDone && diff && (
+            <span className="flex items-center gap-1.5 text-[11px] font-medium tabular-nums shrink-0">
+              {diff.add > 0 && <span className="text-emerald-500">+{diff.add}</span>}
+              {diff.del > 0 && <span className="text-red-500">-{diff.del}</span>}
+            </span>
+          )}
+          {/* Absorbs the remaining width, keeping status indicators right-aligned. */}
+          <span className="flex-1" />
+          {isStreaming && <LoaderCircle className="size-3 shrink-0 animate-spin text-text-muted" />}
+          {isError && <span className="text-[11px] text-red-500 shrink-0">Failed</span>}
+        </button>
+        {isError && error ? (
+          <div className="px-3 pb-2 text-[11px] text-red-400 font-mono truncate">{error}</div>
+        ) : null}
+
+        {expanded && hasBody && (
+          <div>
+            {media ? (
+              <div className="px-3 pb-3">
+                <ToolMediaPreview output={media} />
+              </div>
+            ) : askUserDetail ? (
+              <div className="px-3 pb-3">
+                <AskUserQuestionBody detail={askUserDetail} />
+              </div>
+            ) : (
+              <>
+                {lower === 'read' && output != null && (
+                  <FileContentView
+                    content={readContent || getToolResultText(output)}
+                    variant="default"
+                    concernSet={concernSet}
+                    maxHeight={READ_VIEW_MAX_HEIGHT_PX}
+                    path={filePath}
+                  />
+                )}
+                {lower === 'write' &&
+                  (fullDiff && fullDiff.lines.length > 0 ? (
+                    // Real unified diff from the tool result (previous file vs the
+                    // bytes written) — the accurate view, including authored writes.
+                    <UnifiedDiffView diff={fullDiff} compact path={filePath} />
+                  ) : writeContent != null ? (
+                    // No result diff yet (still streaming) — show the drafted
+                    // content as all-additions so there's always a body to open.
+                    <FileContentView
+                      content={writeContent}
+                      variant="additions"
+                      maxHeight={READ_VIEW_MAX_HEIGHT_PX}
+                      path={filePath}
+                    />
+                  ) : output != null ? (
+                    // Result arrived but carried no diff (unusual) — surface the raw
+                    // response instead of an empty body.
+                    <FileContentView
+                      content={getToolResultText(output)}
+                      variant="default"
+                      maxHeight={READ_VIEW_MAX_HEIGHT_PX}
+                    />
+                  ) : null)}
+                {lower === 'edit' &&
+                  output != null &&
+                  (fullDiff && fullDiff.lines.length > 0 ? (
+                    <UnifiedDiffView diff={fullDiff} compact path={filePath} />
+                  ) : (
+                    // Parser couldn't build a diff (unusual payload shape) — still
+                    // surface the raw response so it isn't hidden.
+                    <FileContentView
+                      content={getToolResultText(output)}
+                      variant="default"
+                      maxHeight={READ_VIEW_MAX_HEIGHT_PX}
+                    />
+                  ))}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function safeParseArgs(args: string): JsonObject {
+  try {
+    const parsed = JSON.parse(args)
+    return parsed && typeof parsed === 'object' ? (parsed as JsonObject) : {}
+  } catch {
+    return {}
+  }
+}
+
+interface AskUserDetail {
+  readonly question: string
+  readonly reason?: string
+  readonly options: readonly string[]
+  readonly answer?: string
+}
+
+/**
+ * Pull the question, options, and (once the run resumes) the user's selected
+ * answer out of an `ask_user_question` tool call. The answer is the tool's
+ * result text — the harness returns the user's response as the tool result so
+ * the conversation continues in the same context.
+ */
+function extractAskUserDetail(args: JsonObject, output: unknown): AskUserDetail | null {
+  const question = typeof args.question === 'string' ? args.question.trim() : ''
+  if (!question) return null
+  const reason =
+    typeof args.reason === 'string' && args.reason.trim() ? args.reason.trim() : undefined
+  const options = Array.isArray(args.options)
+    ? args.options.filter((o): o is string => typeof o === 'string' && o.trim().length > 0)
+    : []
+  const answerRaw = output ? getToolResultText(output).trim() : ''
+  const answer = answerRaw || undefined
+  return { question, reason, options, answer }
+}
+
+function AskUserQuestionBody({ detail }: { readonly detail: AskUserDetail }) {
+  return (
+    <div className="rounded-[12px] border border-border/40 bg-bg-secondary/30 px-3.5 py-3">
+      <div className="text-[14px] leading-[1.5] text-text-primary">{detail.question}</div>
+      {detail.reason ? (
+        <div className="mt-1 text-[13px] leading-[1.5] text-text-secondary">{detail.reason}</div>
+      ) : null}
+      {detail.options.length > 0 ? (
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {detail.options.map((option) => {
+            const selected = !!detail.answer && detail.answer === option
+            return (
+              <span
+                key={option}
+                className={cn(
+                  'rounded-[8px] border px-2 py-1 text-[13px] leading-[1.4]',
+                  selected
+                    ? 'border-accent/50 bg-accent/10 text-text-primary'
+                    : 'border-border/35 bg-bg-primary/60 text-text-secondary',
+                )}
+              >
+                {option}
+              </span>
+            )
+          })}
+        </div>
+      ) : null}
+      {detail.answer ? (
+        <div className="mt-2.5 rounded-[10px] bg-bg-primary/50 px-3 py-2 ring-1 ring-inset ring-border/40">
+          <div className="text-[11px] font-medium uppercase tracking-[0.06em] text-text-tertiary">
+            Your answer
+          </div>
+          <div className="mt-0.5 text-[14px] leading-[1.5] text-text-primary">{detail.answer}</div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
 
 export interface WaggleInfo {
   agentLabel: string
@@ -52,7 +466,121 @@ function AssistantTextPart({
   if (isStreaming && looksLikeMachinePlanText(content)) {
     return <MachinePlanStreamingPlaceholder />
   }
-  return <StreamingText text={content} isStreaming={isStreaming} />
+  // Left-align the plain narration with the tool/thinking blocks' content edge.
+  // Those blocks inset their content (border + horizontal padding) by ~13px,
+  // so match that here — otherwise the text reads a hair further left and the
+  // turn looks ragged.
+  return <StreamingText text={content} isStreaming={isStreaming} className="pl-[13px]" />
+}
+
+/**
+ * Renders a reasoning/thinking block.
+ *
+ * Visibility policy, derived from real persisted data: when reasoning is on,
+ * the model narrates its pre-tool intent INSIDE the reasoning channel (e.g.
+ * "Let me read the project memory to find the relevant files"), and the turn's
+ * only content is `[reasoning, tool-call]` with no `text` part. If we collapsed
+ * that reasoning, the user would see a silent wall of tool chips with no
+ * narration at all — exactly the "boring app" problem. So:
+ *
+ *   - Tool-bearing turn (hasToolCall): the reasoning IS the narration → show it
+ *     visibly, inline, in muted prose. Still togglable to hide.
+ *   - Pure-answer turn (no tool call): the turn carries a `text` part that is
+ *     the answer; the reasoning is auxiliary → render it as a collapsed
+ *     "Thinking" chip that expands on click, and auto-expand only while
+ *     streaming so the user can watch it think.
+ *
+ * `userToggled` records an explicit click so the streaming-driven auto-expand
+ * on pure-answer turns doesn't fight a manual choice.
+ */
+function ReasoningBlock({
+  content,
+  isStreaming,
+  hasToolCall,
+}: {
+  readonly content: string
+  readonly isStreaming: boolean
+  readonly hasToolCall: boolean
+}) {
+  // Tool-bearing turns: reasoning is the narration → always visible. Pure-answer
+  // turns: collapsed chip, auto-open while streaming unless the user toggled.
+  const [open, setOpen] = useState(hasToolCall)
+  const [userToggled, setUserToggled] = useState(false)
+
+  useEffect(() => {
+    if (hasToolCall) return // tool-bearing turns are always open; ignore streaming
+    if (!userToggled) {
+      setOpen(isStreaming)
+    }
+  }, [isStreaming, userToggled, hasToolCall])
+
+  const toggle = () => {
+    setUserToggled(true)
+    setOpen((prev) => !prev)
+  }
+
+  // Tool-bearing turn: render the narration inline as muted prose (no chip),
+  // with a small "thinking" label so it reads as the agent's voice, not the
+  // final answer. Collapsible to keep control with the user.
+  if (hasToolCall) {
+    return (
+      <div className="rounded-[10px] border border-border/20 bg-bg-secondary/[0.08]">
+        <button
+          type="button"
+          onClick={toggle}
+          className="flex w-full items-center gap-1.5 px-2.5 py-1 text-[11px] text-text-muted/80 hover:text-text-secondary transition-colors"
+          aria-expanded={open}
+          aria-label={open ? 'Hide reasoning' : 'Show reasoning'}
+        >
+          <Brain className="size-3 shrink-0" />
+          <span className="uppercase tracking-wide font-medium">
+            {open ? 'thinking' : 'show thinking'}
+          </span>
+          {!open && <ChevronDown className="size-3 shrink-0" />}
+        </button>
+        {open && content.trim() ? (
+          <div className="px-3 pb-2 pt-0.5">
+            <StreamingText
+              text={content}
+              isStreaming={isStreaming}
+              className="text-text-muted text-[13px] italic"
+            />
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
+  // Pure-answer turn: collapsed "Thinking" chip, auto-expand while streaming.
+  return (
+    <div className="rounded-[12px] border border-border/30 bg-bg-secondary/[0.12]">
+      <button
+        type="button"
+        onClick={toggle}
+        className="flex w-full items-center gap-2 px-3 py-1.5 text-[12px] text-text-muted hover:text-text-secondary transition-colors"
+        aria-expanded={open}
+      >
+        <Brain className="size-3.5 shrink-0" />
+        <span className="font-medium">Thinking</span>
+        {isStreaming ? (
+          <LoaderCircle className="size-3 shrink-0 animate-spin" />
+        ) : (
+          <ChevronDown
+            className={cn('size-3 shrink-0 transition-transform', open ? 'rotate-180' : 'rotate-0')}
+          />
+        )}
+      </button>
+      {open && content.trim() ? (
+        <div className="px-3 pb-2.5 pt-0.5 border-t border-border/20">
+          <StreamingText
+            text={content}
+            isStreaming={isStreaming}
+            className="text-text-muted text-[13px]"
+          />
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 interface AssistantMessageBubbleProps {
@@ -76,10 +604,137 @@ export function AssistantMessageBubble({
   hideAgentLabel,
   onBranchFromMessage,
 }: AssistantMessageBubbleProps) {
-  const textParts = message.parts.filter(
-    (part): part is Extract<UIMessage['parts'][number], { type: 'text' }> =>
-      part.type === 'text' && part.content.trim().length > 0,
+  // Render parts IN ORDER so narration interleaves naturally with tool calls
+  // (e.g. "I need to read this" → READ block → "The file has X"). The previous
+  // implementation bucketed text/call/result into three separate groups, which
+  // lost the model's natural ordering and made turns read as a flat wall of
+  // tool calls.
+  //
+  // Tool-result dedup: a `tool-result` whose `toolCallId` is covered by a
+  // paired `tool-call` part is skipped (its output is shown on the call block
+  // itself). Orphan results (no matching call) still render standalone.
+  const toolCallIds = useMemo(
+    () =>
+      new Set(
+        message.parts
+          .filter(
+            (part): part is Extract<UIMessage['parts'][number], { type: 'tool-call' }> =>
+              part.type === 'tool-call',
+          )
+          .map((part) => part.id),
+      ),
+    [message.parts],
   )
+
+  // On live streams the tool-call part carries `output` directly. On hydrated
+  // sessions the call part has no output — the result lives on the paired
+  // `tool-result` part (which the dedup below skips from rendering). Index
+  // those results by toolCallId so we can feed them back into the call block
+  // and still render the diff / file body for a reloaded session.
+  const toolResultByCallId = useMemo(() => {
+    const map = new Map<string, unknown>()
+    for (const part of message.parts) {
+      if (part.type !== 'tool-result') continue
+      map.set(part.toolCallId, part.content)
+    }
+    return map
+  }, [message.parts])
+
+  // mark_concern_lines calls never render as their own row — their result is
+  // folded onto the matching read's file view as line highlights. Build a
+  // path → concerns map from all such tool-call parts in this message.
+  //
+  // Keying: the model passes the SAME path string to `read` and
+  // `mark_concern_lines`, so we correlate by that raw arg path (normalized for
+  // trailing slashes / case). We can't rely on the read's resolved `details.path`
+  // because pi's ReadToolDetails carries no path field.
+  const concernsByPath = useMemo(() => {
+    const map = new Map<string, LineConcern>()
+    for (const part of message.parts) {
+      if (part.type !== 'tool-call') continue
+      if (part.name !== 'mark_concern_lines') continue
+      const concern = part.output ? getConcernLinesFromResult(part.output) : null
+      const argPath = parsePathFromArgs(part.arguments)
+      if (concern) {
+        // Index under every form we might look up by: the resolved path the tool
+        // returned AND the raw arg path the model passed.
+        map.set(normalizeConcernPath(concern.path), concern)
+        if (argPath) map.set(normalizeConcernPath(argPath), concern)
+      }
+    }
+    return map
+  }, [message.parts])
+
+  const renderableParts = message.parts.map((part, index) => {
+    if (part.type === 'text' && part.content.trim()) {
+      return (
+        <AssistantTextPart
+          key={`${message.id}-text-${String(index)}`}
+          content={part.content}
+          isStreaming={!!isStreaming}
+        />
+      )
+    }
+    if (part.type === 'thinking' && part.content.trim()) {
+      return (
+        <ReasoningBlock
+          key={`${message.id}-thinking-${String(index)}`}
+          content={part.content}
+          isStreaming={!!isStreaming}
+          hasToolCall={toolCallIds.size > 0}
+        />
+      )
+    }
+    if (part.type === 'tool-call') {
+      // mark_concern_lines is folded onto reads as highlights, never its own row.
+      if (part.name === 'mark_concern_lines') return null
+      // Correlate this call with a concern entry by the raw path arg the model
+      // passed (the same string it passed to mark_concern_lines). pi's read
+      // details carry no path, so the arg path is the source of truth here.
+      const argPath = parsePathFromArgs(part.arguments)
+      const concern = argPath ? concernsByPath.get(normalizeConcernPath(argPath)) : undefined
+      // Hydrated sessions: the call part has no `output`, so fall back to the
+      // paired tool-result part's content (same payload shape) to recover the
+      // diff / file body.
+      const output = part.output ?? toolResultByCallId.get(part.id)
+      return (
+        <InlineToolBlock
+          key={`${message.id}-tc-${part.id ?? String(index)}`}
+          toolName={part.name}
+          args={part.arguments}
+          state={part.state}
+          output={output}
+          concern={concern}
+        />
+      )
+    }
+    if (part.type === 'tool-result' && !toolCallIds.has(part.toolCallId)) {
+      // Orphan mark_concern_lines results are also hidden (they only carry a
+      // concerns payload that's folded onto reads). Detect by shape, since the
+      // tool-result part has no toolName field.
+      if (getConcernLinesFromResult(part.content)) return null
+      const isError = part.state === 'error' || !!part.error
+      const resultText =
+        part.error ||
+        (typeof part.content === 'string' ? part.content.split('\n')[0]?.slice(0, 160) : undefined)
+      return (
+        <div
+          key={`${message.id}-tr-${part.toolCallId ?? String(index)}`}
+          className={cn(
+            'rounded-[12px] border px-3 py-1.5 text-[12px] font-mono',
+            isError
+              ? 'border-red-500/30 bg-red-500/5 text-red-400'
+              : 'border-border/45 bg-bg-secondary/[0.12] text-text-muted',
+          )}
+        >
+          <span className="line-clamp-2 break-all">
+            {resultText || (isError ? 'Error' : 'Done')}
+          </span>
+        </div>
+      )
+    }
+    return null
+  })
 
   return (
     <div className="group/assistant-msg relative w-full">
@@ -104,13 +759,7 @@ export function AssistantMessageBubble({
           </div>
         ) : null}
 
-        {textParts.map((part, index) => (
-          <AssistantTextPart
-            key={`${message.id}-text-${String(index)}`}
-            content={part.content}
-            isStreaming={!!isStreaming}
-          />
-        ))}
+        {renderableParts}
       </div>
     </div>
   )

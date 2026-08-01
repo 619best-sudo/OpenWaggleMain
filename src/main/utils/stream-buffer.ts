@@ -206,6 +206,9 @@ export function applyEventToStreamBuffer(sessionId: SessionId, event: AgentTrans
       'compaction_end',
       'auto_retry_start',
       'auto_retry_end',
+      'phase_start',
+      'phase_end',
+      'phase_summary',
       'custom',
       () => undefined,
     )

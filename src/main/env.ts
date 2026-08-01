@@ -24,6 +24,18 @@ const envSchema = Schema.Struct({
   OPENWAGGLE_LOG_LEVEL: Schema.optional(Schema.Literal('debug', 'info', 'warn', 'error')),
   OPENWAGGLE_APP_AUTH_GOOGLE_DESKTOP_CLIENT_ID: Schema.optional(Schema.String),
   OPENWAGGLE_APP_AUTH_GOOGLE_DESKTOP_CLIENT_SECRET: Schema.optional(Schema.String),
+  /**
+   * Escape hatch: when truthy ('1' | 'true' | 'yes' | 'on'), ALL model traffic
+   * bypasses the turing-machine backend and goes straight to OpenRouter with a
+   * user-supplied key — chat completions, the connection probe, image generation
+   * and vision analysis alike.
+   *
+   * Default (unset/falsy) is backend-only: everything is proxied through
+   * `/turing-machine/*` so calls are JWT-authenticated, quota-checked and billed
+   * centrally, and no OpenRouter key ever leaves the backend. Intended for
+   * offline/dev debugging when the backend is not running.
+   */
+  OPENWAGGLE_DIRECT_OPENROUTER: Schema.optional(Schema.String),
   OPENWAGGLE_OPENROUTER_API_KEY: Schema.optional(Schema.String),
   OPENROUTER_API_KEY: Schema.optional(Schema.String),
   OPENWAGGLE_OPENROUTER_BASE_URL: optionalUrlSchema,
@@ -31,6 +43,29 @@ const envSchema = Schema.Struct({
   OPENWAGGLE_TURING_MODE: Schema.optional(
     Schema.Literal('chain', 'prepare', 'plan', 'perform', 'perfect'),
   ),
+  /**
+   * OpenRouter slug of the STRONGER model turing-harness escalates to when a call
+   * is judged too complex for the run's own model: it comprehends files the staged
+   * `read` rates hard, and authors the bytes for high-complexity write/edit calls.
+   * Unset ⇒ no escalation (single-model behavior).
+   */
+  OPENWAGGLE_TURING_ESCALATION_MODEL: Schema.optional(Schema.String),
+  /**
+   * Which provider backs `assets_generator`. Defaults to 'turing' — image
+   * generation goes through the backend `/turing-machine/images` proxy (JWT auth
+   * + central billing). Set explicitly to 'openrouter' (or enable
+   * `OPENWAGGLE_DIRECT_OPENROUTER`) to call OpenRouter directly instead.
+   */
+  OPENWAGGLE_ASSET_PROVIDER: Schema.optional(Schema.Literal('turing', 'openrouter', 'runware')),
+  /** Image-OUTPUT capable model slug used for asset generation. */
+  OPENWAGGLE_IMAGE_GEN_MODEL: Schema.optional(Schema.String),
+  /**
+   * Media-INPUT capable (multimodal) model slug used by the `media_analysis`
+   * tool. Distinct from `OPENWAGGLE_IMAGE_GEN_MODEL` (which generates images) and
+   * from the run's own model — the default run model is text-only, so vision must
+   * be pinned separately or the tool sends images to a model that cannot see them.
+   */
+  OPENWAGGLE_VISION_MODEL: Schema.optional(Schema.String),
 })
 
 export type Env = SchemaType<typeof envSchema>

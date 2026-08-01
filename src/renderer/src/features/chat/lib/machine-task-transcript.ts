@@ -1,6 +1,6 @@
 import { parseJsonUnknown, safeDecodeUnknown } from '@shared/schema'
 import type { UIMessage } from '@shared/types/chat-ui'
-import { machinePlanSchema, type MachineExecutionState } from '@shared/types/machine'
+import { type MachineExecutionState, machinePlanSchema } from '@shared/types/machine'
 import { getUIMessageText, isInternalToolHandoffAssistantText } from './chat-message-text'
 
 function normalizeMachineMessageText(text: string) {
@@ -39,7 +39,10 @@ function extractJsonBlock(text: string) {
   return text.trim()
 }
 
-function matchesPersistedMachinePlanMessage(message: UIMessage, machinePlan: MachineExecutionState) {
+function matchesPersistedMachinePlanMessage(
+  message: UIMessage,
+  machinePlan: MachineExecutionState,
+) {
   if (message.role !== 'assistant') {
     return false
   }
@@ -76,7 +79,9 @@ function findLastMatchingOriginalRequestIndex(
   messages: readonly UIMessage[],
   originalRequest: string | undefined,
 ) {
-  const normalizedOriginalRequest = originalRequest ? normalizeMachineMessageText(originalRequest) : ''
+  const normalizedOriginalRequest = originalRequest
+    ? normalizeMachineMessageText(originalRequest)
+    : ''
   if (!normalizedOriginalRequest) {
     return -1
   }

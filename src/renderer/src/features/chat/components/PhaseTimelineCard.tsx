@@ -3,27 +3,37 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Components } from 'react-markdown'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { relativeToProject } from '@/features/chat/lib/project-paths'
 import { parseToolArgs } from '@/features/chat/lib/tool-args'
 import {
+  getConcernLinesFromResult,
   getResultError,
+  getResultPath,
   getToolDiffData,
+  type LineConcern,
+  READ_VIEW_MAX_HEIGHT_PX,
   type ToolCallResultPayload,
 } from '@/features/chat/lib/tool-call-block'
+import { summarizeToolTarget } from '@/features/chat/lib/tool-display'
+import { getToolMediaOutput } from '@/features/chat/lib/tool-media-output'
+import { useActiveProjectPath } from '@/features/chat/lib/use-active-project-path'
 import { cn } from '@/shared/lib/cn'
 import { safeMarkdownComponents } from '@/shared/lib/markdown-link-components'
 import { safeMarkdownRehypePlugins, safeMarkdownUrlTransform } from '@/shared/lib/markdown-safety'
 import { Button } from '@/shared/ui/Button'
 import { Textarea } from '@/shared/ui/Textarea'
 import type { ChatRow, PhaseTimelinePhaseRow, PhaseTimelineToolDetail } from '../lib/types-chat-row'
-import { ToolArgs, ToolResult, UnifiedDiffView } from './ToolCallBlockParts'
+import { FileContentView, ToolArgs, ToolResult, UnifiedDiffView } from './ToolCallBlockParts'
+import { ToolMediaPreview } from './ToolMediaPreview'
 import { UserQuestionCard } from './UserQuestionCard'
 
 interface PhaseTimelineCardProps {
   row: Extract<ChatRow, { type: 'phase' }>
   pendingUserQuestionRequest?: PendingUserQuestionRequest | null
-  onResolveUserQuestion?: (
-    resolution: { request: NonNullable<PhaseTimelinePhaseRow['pendingUserQuestion']>; answer: string },
-  ) => Promise<void>
+  onResolveUserQuestion?: (resolution: {
+    request: NonNullable<PhaseTimelinePhaseRow['pendingUserQuestion']>
+    answer: string
+  }) => Promise<void>
 }
 
 const PHASE_REMARK_PLUGINS = [remarkGfm]
@@ -31,7 +41,9 @@ const UNIX_PATH_PATTERN = /(^|[\s(])((?:\/[\w.-]+)+)/gm
 
 const phaseMarkdownComponents: Components = {
   ...safeMarkdownComponents,
-  p: ({ children }) => <p className="my-0 text-[14px] leading-[1.72] text-text-primary">{children}</p>,
+  p: ({ children }) => (
+    <p className="my-0 text-[14px] leading-[1.72] text-text-primary">{children}</p>
+  ),
   ol: ({ children }) => (
     <ol className="my-0 list-decimal pl-5 text-[14px] leading-[1.72] text-text-primary space-y-1.5">
       {children}
@@ -61,7 +73,9 @@ const phaseMarkdownComponents: Components = {
     </pre>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="my-0 border-l-2 border-border/45 pl-3 text-text-primary/88">{children}</blockquote>
+    <blockquote className="my-0 border-l-2 border-border/45 pl-3 text-text-primary/88">
+      {children}
+    </blockquote>
   ),
 }
 
@@ -73,13 +87,7 @@ function normalizePhaseMarkdown(text: string) {
     .replace(/(?<!`)(<\/?[A-Za-z][^>\n]*>)(?!`)/g, '`$1`')
 }
 
-function MarkdownBlock({
-  content,
-  className,
-}: {
-  content: string
-  className?: string
-}) {
+function MarkdownBlock({ content, className }: { content: string; className?: string }) {
   return (
     <div
       className={cn(
@@ -126,7 +134,8 @@ function parseToolPath(argumentsString: string | undefined) {
   try {
     const parsed = JSON.parse(argumentsString) as { path?: unknown; query?: unknown }
     if (typeof parsed.path === 'string' && parsed.path.trim().length > 0) return parsed.path.trim()
-    if (typeof parsed.query === 'string' && parsed.query.trim().length > 0) return parsed.query.trim()
+    if (typeof parsed.query === 'string' && parsed.query.trim().length > 0)
+      return parsed.query.trim()
     return null
   } catch {
     return null
@@ -139,6 +148,7 @@ function getActionLabel(toolName: string) {
   if (toolName === 'edit') return 'EDIT'
   if (toolName === 'ls') return 'LS'
   if (toolName === 'grep' || toolName === 'find') return 'SEARCH'
+  if (toolName === 'mark_concern_lines') return 'CONCERN'
   if (toolName === 'run_command' || toolName === 'execute') return 'RUN'
   return toolName.toUpperCase()
 }
@@ -146,12 +156,6 @@ function getActionLabel(toolName: string) {
 function getToolTone(toolName: string) {
   if (toolName === 'read' || toolName === 'cat') {
     return 'bg-sky-500/10 text-sky-500'
-  }
-  if (toolName === 'write') {
-    return 'bg-emerald-500/10 text-emerald-500'
-  }
-  if (toolName === 'edit') {
-    return 'bg-amber-500/10 text-amber-500'
   }
   return 'bg-text-tertiary/10 text-text-secondary'
 }
@@ -163,35 +167,103 @@ function toToolResultPayload(tool: PhaseTimelineToolDetail): ToolCallResultPaylo
   return {
     content: tool.toolResult.content,
     state: tool.toolResult.state,
-    ...(tool.toolResult.sourceMessageId ? { sourceMessageId: tool.toolResult.sourceMessageId } : {}),
+    ...(tool.toolResult.sourceMessageId
+      ? { sourceMessageId: tool.toolResult.sourceMessageId }
+      : {}),
   }
 }
 
-function ToolStrip({ tool }: { tool: PhaseTimelineToolDetail }) {
-  const [expanded, setExpanded] = useState(false)
+/** Resolve a tool's absolute file path: prefer the harness `details.path` on a
+ *  successful result (read/mark_concern_lines write it there), fall back to the
+ *  `path`/`query` arg. Used to correlate a read with its mark_concern_lines. */
+function resolveToolPath(tool: PhaseTimelineToolDetail): string | null {
+  const result = toToolResultPayload(tool)
+  if (result) {
+    const detailsPath = getResultPath(result.content)
+    if (detailsPath) return detailsPath
+  }
+  return parseToolPath(tool.toolCall?.arguments)
+}
+
+/** Build a path → concerns map from a phase's mark_concern_lines tool results,
+ *  and return the list of tools with those calls filtered out (they're shown
+ *  only as highlights on the matching read, never as their own row). */
+function collectConcernsAndVisibleTools(tools: readonly PhaseTimelineToolDetail[]): {
+  concernsByPath: Map<string, LineConcern>
+  visibleTools: readonly PhaseTimelineToolDetail[]
+} {
+  const concernsByPath = new Map<string, LineConcern>()
+  const visibleTools: PhaseTimelineToolDetail[] = []
+  for (const tool of tools) {
+    if (tool.toolName === 'mark_concern_lines') {
+      const result = toToolResultPayload(tool)
+      const concern = result ? getConcernLinesFromResult(result.content) : null
+      if (concern) {
+        // Last-write-wins: a later call refines the concern set for a path.
+        concernsByPath.set(concern.path, concern)
+      }
+      // Either way, a mark_concern_lines call never renders as its own row.
+      continue
+    }
+    visibleTools.push(tool)
+  }
+  return { concernsByPath, visibleTools }
+}
+
+const FILE_VIEW_TOOLS = new Set(['read', 'write', 'edit'])
+
+function ToolStrip({
+  tool,
+  concernLines,
+}: {
+  tool: PhaseTimelineToolDetail
+  concernLines?: readonly number[]
+}) {
+  const projectPath = useActiveProjectPath()
   const pathOrQuery = parseToolPath(tool.toolCall?.arguments)
   const action = getActionLabel(tool.toolName)
-  const display = pathOrQuery || tool.toolName
   const parsedArgs = useMemo(
     () => parseToolArgs(tool.toolCall?.arguments ?? '{}'),
     [tool.toolCall?.arguments],
   )
+  // Title: the tool's target relativized to the open repo, or a short arg
+  // summary. Never repeats the tool name (the chip already shows the verb).
+  const display = useMemo(() => {
+    if (pathOrQuery) {
+      const isCommand = tool.toolName === 'bash' || tool.toolName === 'bash_readonly'
+      return isCommand ? pathOrQuery : relativeToProject(projectPath, pathOrQuery)
+    }
+    return summarizeToolTarget(tool.toolName, parsedArgs) || tool.toolName
+  }, [pathOrQuery, projectPath, tool.toolName, parsedArgs])
   const result = useMemo(() => toToolResultPayload(tool), [tool])
   const diff = useMemo(
     () => (result ? getToolDiffData(result.content, tool.toolName, parsedArgs) : null),
     [parsedArgs, result, tool.toolName],
   )
   const resultError = useMemo(() => getResultError(result), [result])
+  const media = useMemo(() => (result ? getToolMediaOutput(result.content) : null), [result])
   const hasExpandableDetails =
     tool.toolName === 'read' ||
     tool.toolName === 'write' ||
     tool.toolName === 'edit' ||
     diff !== null ||
-    !!resultError
-  const hiddenArgKeys =
-    diff?.lines.length && (tool.toolName === 'write' || tool.toolName === 'edit')
-      ? new Set(['content', 'oldString', 'newString'])
-      : undefined
+    !!resultError ||
+    !!media
+  // read/write/edit default to expanded (the file/diff view is the point of the
+  // card). Other tools (ls, grep, bash, ...) stay collapsed until clicked.
+  const [expanded, setExpanded] = useState(
+    hasExpandableDetails && FILE_VIEW_TOOLS.has(tool.toolName),
+  )
+  const concernSet = useMemo(
+    () => (concernLines?.length ? new Set(concernLines) : undefined),
+    [concernLines],
+  )
+  // For write: show the written content itself as an all-additions file view.
+  const writeContent = useMemo(() => {
+    if (tool.toolName !== 'write') return null
+    const raw = parsedArgs.content
+    return typeof raw === 'string' ? raw : null
+  }, [parsedArgs.content, tool.toolName])
 
   return (
     <div className="group">
@@ -221,9 +293,11 @@ function ToolStrip({ tool }: { tool: PhaseTimelineToolDetail }) {
                 {action}
               </span>
             )}
-            <span className="min-w-0 flex-1 truncate text-text-primary/88">{display}</span>
+            {/* The filename sizes to its content (not flex-1) so the +/- counts sit
+                directly beside it rather than being pushed to the far right. */}
+            <span className="min-w-0 truncate text-text-primary/88">{display}</span>
             {diff && (
-              <span className="ml-auto flex items-center gap-2 text-[11px] font-medium tabular-nums">
+              <span className="flex items-center gap-1.5 text-[11px] font-medium tabular-nums shrink-0">
                 {diff.additions > 0 && (
                   <span
                     aria-label={`${String(diff.additions)} lines added`}
@@ -244,41 +318,68 @@ function ToolStrip({ tool }: { tool: PhaseTimelineToolDetail }) {
                 )}
               </span>
             )}
+            {/* Absorbs the remaining width, keeping the status indicator right-aligned. */}
+            <span className="flex-1" />
             {tool.status === 'running' && (
-              <span className="ml-auto animate-pulse text-text-tertiary">...</span>
+              <span className="animate-pulse text-text-tertiary">...</span>
             )}
           </button>
 
           {expanded && hasExpandableDetails && (
-            <div className="px-3 pb-3">
-              <div className="rounded-[10px] border border-border/35 bg-bg-secondary/25 px-3 py-2.5">
-                {diff && diff.lines.length > 0 && (
-                  <div>
-                    <UnifiedDiffView diff={diff} compact />
+            // Flush: the code card spans the strip's full width with no
+            // horizontal or bottom inset.
+            <div>
+              <div>
+                {media ? (
+                  <div className="px-3 pb-3">
+                    <ToolMediaPreview output={media} />
                   </div>
-                )}
+                ) : (
+                  <>
+                    {diff && diff.lines.length > 0 && (
+                      <div>
+                        <UnifiedDiffView diff={diff} compact path={pathOrQuery} />
+                      </div>
+                    )}
 
-                {tool.toolName === 'read' && result && (
-                  <div className={cn(diff && diff.lines.length > 0 && 'mt-2.5')}>
-                    <ToolResult
-                      content={result.content}
-                      isError={!!resultError}
-                      name={tool.toolName}
-                      path={pathOrQuery}
-                    />
-                  </div>
-                )}
+                    {tool.toolName === 'read' && result && (
+                      <div>
+                        <ToolResult
+                          content={result.content}
+                          isError={!!resultError}
+                          name={tool.toolName}
+                          path={pathOrQuery}
+                          concernLines={concernSet}
+                        />
+                      </div>
+                    )}
 
-                {(tool.toolName === 'write' || tool.toolName === 'edit') && tool.toolCall && (
-                  <div className={cn((diff?.lines.length ?? 0) > 0 && 'mt-2.5')}>
-                    <ToolArgs
-                      name={tool.toolName}
-                      args={parsedArgs}
-                      rawArgs={tool.toolCall.arguments}
-                      path={pathOrQuery}
-                      hiddenArgKeys={hiddenArgKeys}
-                    />
-                  </div>
+                    {tool.toolName === 'write' &&
+                      writeContent != null &&
+                      !(diff && diff.lines.length > 0) && (
+                        // The real unified diff (rendered above) is preferred; only
+                        // fall back to the drafted content when no diff is available.
+                        <div>
+                          <FileContentView
+                            content={writeContent}
+                            variant="additions"
+                            maxHeight={READ_VIEW_MAX_HEIGHT_PX}
+                            path={pathOrQuery}
+                          />
+                        </div>
+                      )}
+
+                    {tool.toolName === 'edit' && tool.toolCall && !(diff && diff.lines.length > 0) && (
+                      <div className="px-3 pb-3">
+                        <ToolArgs
+                          name={tool.toolName}
+                          args={parsedArgs}
+                          rawArgs={tool.toolCall.arguments}
+                          path={pathOrQuery}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -300,9 +401,10 @@ function PlanReviewActions({
   onResolveUserQuestion,
 }: {
   request: PendingUserQuestionRequest & { kind: 'plan_review' }
-  onResolveUserQuestion?: (
-    resolution: { request: PendingUserQuestionRequest; answer: string },
-  ) => Promise<void>
+  onResolveUserQuestion?: (resolution: {
+    request: PendingUserQuestionRequest
+    answer: string
+  }) => Promise<void>
 }) {
   const [busyDecision, setBusyDecision] = useState<'approve' | 'edit' | 'reject' | null>(null)
   const [editMode, setEditMode] = useState(false)
@@ -329,7 +431,7 @@ function PlanReviewActions({
   }
 
   return (
-      <div className="mt-3 rounded-[12px] border border-border/35 bg-bg-primary/55 p-3">
+    <div className="mt-3 rounded-[12px] border border-border/35 bg-bg-primary/55 p-3">
       <div className="text-[14px] font-medium leading-[1.5] text-text-primary">Review Plan</div>
       <div className="mt-1 text-[14px] leading-[1.5] text-text-secondary">
         Approve to start implementation, edit to regenerate the plan, or reject to stop here.
@@ -427,9 +529,10 @@ function PlanList({
 }: {
   planJson: unknown
   pendingPlanReviewRequest?: (PendingUserQuestionRequest & { kind: 'plan_review' }) | null
-  onResolveUserQuestion?: (
-    resolution: { request: PendingUserQuestionRequest; answer: string },
-  ) => Promise<void>
+  onResolveUserQuestion?: (resolution: {
+    request: PendingUserQuestionRequest
+    answer: string
+  }) => Promise<void>
 }) {
   if (!Array.isArray(planJson)) return null
   const visibleItems = planJson.filter((item) => item && typeof item === 'object')
@@ -444,51 +547,53 @@ function PlanList({
         </div>
         <div className="flex flex-col gap-3">
           {planJson.map((item: any, i) => {
-          if (!item || typeof item !== 'object') return null
-          return (
-            <div key={item.id || i} className="flex flex-col gap-1">
-              <div
-                className={cn(
-                  'flex items-start text-[14px] leading-[1.5] text-text-primary',
-                  showNumbers ? 'gap-2' : 'gap-0',
-                )}
-              >
-                {showNumbers ? (
-                  <span className="w-4 shrink-0 text-text-tertiary">{i + 1}.</span>
-                ) : null}
-                <span className="min-w-0 flex-1">{String(item.title || item.summary || 'Step')}</span>
-              </div>
-              {item.summary && item.summary !== item.title && (
-                <MarkdownBlock
-                  content={String(item.summary)}
-                  className={cn(
-                    'text-text-secondary [&_p]:text-[14px] [&_p]:leading-[1.5] [&_p]:text-text-secondary [&_ol]:text-[14px] [&_ol]:leading-[1.5] [&_ol]:text-text-secondary [&_ul]:text-[14px] [&_ul]:leading-[1.5] [&_ul]:text-text-secondary',
-                    showNumbers && 'pl-6',
-                  )}
-                />
-              )}
-              {Array.isArray(item.files) && item.files.length > 0 && (
+            if (!item || typeof item !== 'object') return null
+            return (
+              <div key={item.id || i} className="flex flex-col gap-1">
                 <div
                   className={cn(
-                    'flex flex-wrap items-center gap-1.5 pt-0.5 text-[14px] leading-[1.5] text-text-tertiary',
-                    showNumbers && 'pl-6',
+                    'flex items-start text-[14px] leading-[1.5] text-text-primary',
+                    showNumbers ? 'gap-2' : 'gap-0',
                   )}
                 >
-                  <span className="mr-1">Files</span>
-                  {item.files.map((file: unknown, index: number) =>
-                    typeof file === 'string' ? (
-                      <code
-                        key={`${String(item.id || i)}-file-${String(index)}`}
-                        className="rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 font-mono text-[14px] leading-[1.5] text-text-secondary"
-                      >
-                        {file}
-                      </code>
-                    ) : null,
-                  )}
+                  {showNumbers ? (
+                    <span className="w-4 shrink-0 text-text-tertiary">{i + 1}.</span>
+                  ) : null}
+                  <span className="min-w-0 flex-1">
+                    {String(item.title || item.summary || 'Step')}
+                  </span>
                 </div>
-              )}
-            </div>
-          )
+                {item.summary && item.summary !== item.title && (
+                  <MarkdownBlock
+                    content={String(item.summary)}
+                    className={cn(
+                      'text-text-secondary [&_p]:text-[14px] [&_p]:leading-[1.5] [&_p]:text-text-secondary [&_ol]:text-[14px] [&_ol]:leading-[1.5] [&_ol]:text-text-secondary [&_ul]:text-[14px] [&_ul]:leading-[1.5] [&_ul]:text-text-secondary',
+                      showNumbers && 'pl-6',
+                    )}
+                  />
+                )}
+                {Array.isArray(item.files) && item.files.length > 0 && (
+                  <div
+                    className={cn(
+                      'flex flex-wrap items-center gap-1.5 pt-0.5 text-[14px] leading-[1.5] text-text-tertiary',
+                      showNumbers && 'pl-6',
+                    )}
+                  >
+                    <span className="mr-1">Files</span>
+                    {item.files.map((file: unknown, index: number) =>
+                      typeof file === 'string' ? (
+                        <code
+                          key={`${String(item.id || i)}-file-${String(index)}`}
+                          className="rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 font-mono text-[14px] leading-[1.5] text-text-secondary"
+                        >
+                          {file}
+                        </code>
+                      ) : null,
+                    )}
+                  </div>
+                )}
+              </div>
+            )
           })}
         </div>
         {pendingPlanReviewRequest ? (
@@ -509,13 +614,19 @@ function PlanSetList({ planSet }: { planSet: unknown }) {
   const plans = (planSet as { plans?: unknown }).plans
   if (!Array.isArray(plans) || plans.length === 0) return null
   const orderRaw = (planSet as { executionOrder?: unknown }).executionOrder
-  const order = Array.isArray(orderRaw) ? orderRaw.filter((id): id is string => typeof id === 'string') : []
+  const order = Array.isArray(orderRaw)
+    ? orderRaw.filter((id): id is string => typeof id === 'string')
+    : []
   const byId = new Map<string, any>()
   for (const plan of plans) {
-    if (plan && typeof plan === 'object' && typeof (plan as any).id === 'string') byId.set((plan as any).id, plan)
+    if (plan && typeof plan === 'object' && typeof (plan as any).id === 'string')
+      byId.set((plan as any).id, plan)
   }
   const ordered = order.length
-    ? [...order.map((id) => byId.get(id)).filter(Boolean), ...plans.filter((p: any) => !order.includes(p?.id))]
+    ? [
+        ...order.map((id) => byId.get(id)).filter(Boolean),
+        ...plans.filter((p: any) => !order.includes(p?.id)),
+      ]
     : plans
 
   return (
@@ -548,7 +659,9 @@ function PlanSetList({ planSet }: { planSet: unknown }) {
                       <div key={task.id || taskIndex} className="flex flex-col gap-1">
                         <div className="flex items-start gap-2 text-[14px] leading-[1.5] text-text-primary">
                           <span className="w-4 shrink-0 text-text-tertiary">{taskIndex + 1}.</span>
-                          <span className="min-w-0 flex-1">{String(task.title || task.summary || 'Step')}</span>
+                          <span className="min-w-0 flex-1">
+                            {String(task.title || task.summary || 'Step')}
+                          </span>
                           {typeof task.complexity === 'string' ? (
                             <span className="shrink-0 rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 text-[12px] text-text-tertiary">
                               {task.complexity}
@@ -606,7 +719,9 @@ function QaPlanList({ qaPlan }: { qaPlan: unknown }) {
                   ) : null}
                 </div>
                 {typeof check.evidence === 'string' && check.evidence ? (
-                  <span className="pl-6 text-[13px] leading-[1.5] text-text-tertiary">{check.evidence}</span>
+                  <span className="pl-6 text-[13px] leading-[1.5] text-text-tertiary">
+                    {check.evidence}
+                  </span>
                 ) : null}
               </div>
             )
@@ -622,9 +737,10 @@ function PendingQuestionCard({
   onResolveUserQuestion,
 }: {
   request: PendingUserQuestionRequest | null | undefined
-  onResolveUserQuestion?: (
-    resolution: { request: PendingUserQuestionRequest; answer: string },
-  ) => Promise<void>
+  onResolveUserQuestion?: (resolution: {
+    request: PendingUserQuestionRequest
+    answer: string
+  }) => Promise<void>
 }) {
   if (!request) return null
   return (
@@ -648,11 +764,21 @@ export function PhaseTimelineCard({
   const livePendingQuestion =
     pendingUserQuestionRequest?.phase === phase.id ? pendingUserQuestionRequest : null
   const effectivePendingQuestion = phase.pendingUserQuestion ?? livePendingQuestion ?? undefined
-  const pendingPlanReview = phase.planJson && isPlanReviewRequest(effectivePendingQuestion)
+  // A plan_review always gets the inline Approve / Edit / Reject card (with its own
+  // in-card comment box), never the plain UserQuestionCard text input. Don't gate
+  // this on `phase.planJson` being present: the live synthetic pending-question row
+  // and planSet-based plans have no `planJson`, and gating on it would drop the
+  // review to a bare input box.
+  const pendingPlanReview = isPlanReviewRequest(effectivePendingQuestion)
     ? effectivePendingQuestion
     : null
   const pendingClarification = pendingPlanReview ? null : effectivePendingQuestion
   const summaryContent = phase.summary ?? fallbackPhaseSummary(phase)
+
+  const { concernsByPath, visibleTools } = useMemo(
+    () => collectConcernsAndVisibleTools(phase.tools),
+    [phase.tools],
+  )
 
   return (
     <section
@@ -664,18 +790,20 @@ export function PhaseTimelineCard({
         <h3
           className={cn(
             'text-[14px] font-semibold text-text-primary',
-            phase.status === 'running' && 'animate-pulse'
+            phase.status === 'running' && 'animate-pulse',
           )}
         >
           {statusLabel(phase)}
         </h3>
       </div>
 
-      {phase.tools.length > 0 && (
+      {visibleTools.length > 0 && (
         <div className="flex flex-col gap-3">
-          {phase.tools.map((tool) => (
-            <ToolStrip key={tool.toolCallId} tool={tool} />
-          ))}
+          {visibleTools.map((tool) => {
+            const toolPath = resolveToolPath(tool)
+            const concern = toolPath ? concernsByPath.get(toolPath) : undefined
+            return <ToolStrip key={tool.toolCallId} tool={tool} concernLines={concern?.lines} />
+          })}
         </div>
       )}
 
@@ -699,7 +827,21 @@ export function PhaseTimelineCard({
         </div>
       ) : null}
 
-      <PendingQuestionCard request={pendingClarification} onResolveUserQuestion={onResolveUserQuestion} />
+      {/* When planJson is present the review actions render inside PlanList next to
+          the plan. Otherwise (live pending-question row / planSet plans) render the
+          same inline Approve / Edit / Reject card here so the review never degrades
+          to a plain text input. */}
+      {pendingPlanReview && !phase.planJson ? (
+        <PlanReviewActions
+          request={pendingPlanReview}
+          onResolveUserQuestion={onResolveUserQuestion}
+        />
+      ) : null}
+
+      <PendingQuestionCard
+        request={pendingClarification}
+        onResolveUserQuestion={onResolveUserQuestion}
+      />
 
       {summaryContent && (
         <MarkdownBlock

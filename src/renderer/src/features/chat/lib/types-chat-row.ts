@@ -2,7 +2,10 @@ import type { RunMode } from '@shared/types/background-run'
 import type { SessionBranchId, SupportedModelId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { MachineExecutionState } from '@shared/types/machine'
-import type { PersistedPhaseTranscriptPhase, PersistedPhaseTranscriptTool } from '@shared/types/phase'
+import type {
+  PersistedPhaseTranscriptPhase,
+  PersistedPhaseTranscriptTool,
+} from '@shared/types/phase'
 import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import type { WaggleAgentColor, WaggleMessageMetadata } from '@shared/types/waggle'
 import type { CompletedPhase } from '@/features/chat/hooks/useStreamingPhase'

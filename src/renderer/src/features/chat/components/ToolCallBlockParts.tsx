@@ -1,5 +1,6 @@
 import type { JsonObject } from '@shared/types/json'
 import { AlertCircle, Clipboard } from 'lucide-react'
+import { useMemo } from 'react'
 import {
   buildFencedCodeMarkdown,
   FILE_CONTENT_ARG_KEYS,
@@ -9,13 +10,23 @@ import {
   JSON_STRINGIFY_SPACES,
   LONG_ARGUMENT_MAX_HEIGHT_PX,
   LONG_ARGUMENT_PREVIEW_CHARS,
+  type NumberedLine,
+  READ_VIEW_MAX_HEIGHT_PX,
+  READ_VIEW_MAX_LINES,
   RESULT_MAX_HEIGHT_PX,
   shouldHighlightCode,
+  splitNumberedFileLines,
   type UnifiedDiffData,
+  type UnifiedDiffLine,
 } from '@/features/chat/lib/tool-call-block'
+import {
+  type HighlightedToken,
+  useHighlightedLines,
+} from '@/features/chat/lib/use-highlighted-lines'
 import { useCopyToClipboard } from '@/shared/hooks/useCopyToClipboard'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
+import { FileContentView } from './FileContentView'
 import { StreamingText } from './StreamingText'
 
 export function CopyButton({ label, value }: { readonly label: string; readonly value: string }) {
@@ -164,11 +175,13 @@ export function ToolResult({
   isError,
   name,
   path,
+  concernLines,
 }: {
   content: unknown
   isError: boolean
   name: string
   path: string | null
+  concernLines?: ReadonlySet<number>
 }) {
   const displayContent = getToolResultText(content)
 
@@ -187,10 +200,12 @@ export function ToolResult({
 
   if (name === 'read' && displayContent) {
     return (
-      <HighlightedFileContent
+      <FileContentView
         content={displayContent}
-        language={inferLanguageFromPath(path)}
-        maxHeight={RESULT_MAX_HEIGHT_PX}
+        variant="default"
+        concernSet={concernLines}
+        maxHeight={READ_VIEW_MAX_HEIGHT_PX}
+        path={path}
       />
     )
   }
@@ -205,53 +220,7 @@ export function ToolResult({
   )
 }
 
-export function UnifiedDiffView({
-  diff,
-  compact = false,
-}: {
-  readonly diff: UnifiedDiffData
-  readonly compact?: boolean
-}) {
-  return (
-    <div className="home-panel-frame-soft rounded-md overflow-hidden text-[12px] font-mono">
-      <div className="home-divider-b flex items-center justify-between bg-code-card px-3 py-1.5">
-        <span className="font-medium text-[color:var(--color-tool-call-file-text)]">Diff</span>
-        <div className="flex items-center gap-2 shrink-0 ml-2">
-          {diff.additions > 0 && (
-            <span
-              aria-label={`${String(diff.additions)} lines added`}
-              title={`${String(diff.additions)} lines added`}
-              className="rounded-full bg-success/10 px-1.5 py-0.5 font-medium tabular-nums text-success"
-            >
-              +{diff.additions}
-            </span>
-          )}
-          {diff.deletions > 0 && (
-            <span
-              aria-label={`${String(diff.deletions)} lines removed`}
-              title={`${String(diff.deletions)} lines removed`}
-              className="rounded-full bg-error/10 px-1.5 py-0.5 font-medium tabular-nums text-error"
-            >
-              -{diff.deletions}
-            </span>
-          )}
-        </div>
-      </div>
-      <div
-        className={cn(
-          'overflow-x-auto bg-transparent',
-          compact && 'max-h-[220px] overflow-y-hidden',
-        )}
-      >
-        {diff.lines.map((line, index) => (
-          <div
-            key={`${String(index)}-${line.type}`}
-            className={cn('flex whitespace-pre px-3', getUnifiedDiffLineClassName(line.type))}
-          >
-            {line.content}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+// The code/diff views live in their own module (they're a cohesive unit and this
+// file was over its line budget). Re-exported so existing importers are unchanged.
+export { FileContentView }
+export { UnifiedDiffView } from './UnifiedDiffView'

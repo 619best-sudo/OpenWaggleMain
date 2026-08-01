@@ -183,13 +183,15 @@ export interface AgentTransportQueueUpdateEvent extends TransportEventBase {
 
 export interface AgentTransportPhaseStartEvent extends TransportEventBase {
   readonly type: 'phase_start'
-  readonly phaseId: Exclude<AgentPhaseId, 'working'>
+  /** The flat loop projects the whole run as one synthetic `'working'` phase. */
+  readonly phaseId: AgentPhaseId
   readonly label: string
 }
 
 export interface AgentTransportPhaseEndEvent extends TransportEventBase {
   readonly type: 'phase_end'
-  readonly phaseId: Exclude<AgentPhaseId, 'working'>
+  /** The flat loop projects the whole run as one synthetic `'working'` phase. */
+  readonly phaseId: AgentPhaseId
   readonly label: string
   readonly status: PersistedPhaseStatus
   readonly summary?: string
@@ -198,6 +200,22 @@ export interface AgentTransportPhaseEndEvent extends TransportEventBase {
   readonly qaPlan?: JsonValue
   readonly pendingUserQuestion?: PendingUserQuestionRequest
   readonly toolCallIds?: readonly string[]
+}
+
+/**
+ * Lightweight end-of-phase signal emitted after {@link AgentTransportPhaseEndEvent}.
+ * Carries ONLY the user-facing `uiSummary` string and the structured `handoff`
+ * object — so a UI/IPC host can render the phase card / fire a notification
+ * without unpacking the heavy `phase_end` payload. `phase_end` remains the
+ * source of truth for status/plan/qa detail; this is the slim companion.
+ * Emitted by the turing-harness kernel (its `phase_summary` AgentEvent).
+ */
+export interface AgentTransportPhaseSummaryEvent extends TransportEventBase {
+  readonly type: 'phase_summary'
+  /** The flat loop projects the whole run as one synthetic `'working'` phase. */
+  readonly phaseId: AgentPhaseId
+  readonly uiSummary?: string
+  readonly handoff?: JsonValue
 }
 
 export interface AgentTransportCompactionStartEvent extends TransportEventBase {
@@ -242,6 +260,7 @@ export type AgentTransportEvent =
   | AgentTransportTurnEndEvent
   | AgentTransportPhaseStartEvent
   | AgentTransportPhaseEndEvent
+  | AgentTransportPhaseSummaryEvent
   | AgentTransportMessageStartEvent
   | AgentTransportMessageUpdateEvent
   | AgentTransportMessageEndEvent

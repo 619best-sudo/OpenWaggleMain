@@ -1,6 +1,6 @@
 import { matchBy } from '@diegogbrisa/ts-match'
 import type { AgentSessionEvent } from '@mariozechner/pi-coding-agent'
-import { createStreamingMessageId, toJsonValue } from '../pi-message-mapper'
+import { createStreamingMessageId, toJsonValue } from '../../message-projection/message-mapper'
 import type {
   MessageStartSessionEvent,
   MessageUpdateSessionEvent,

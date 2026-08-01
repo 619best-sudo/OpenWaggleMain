@@ -18,6 +18,12 @@ import type {
 export const EMPTY_UI_MESSAGES: UIMessage[] = []
 const logger = createRendererLogger('use-agent-chat-cache')
 
+function previewMessageText(message: UIMessage): string | null {
+  const text = getUIMessageText(message).replace(/\s+/g, ' ').trim()
+  if (!text) return null
+  return text.length > 50 ? `${text.slice(0, 50)}…` : text
+}
+
 export function createPendingRunWaiter() {
   let resolveRun = () => {}
   let rejectRun = (_error: Error) => {}
@@ -73,10 +79,21 @@ export function setMessagesForSession(
   const lastMessage = nextMessages[nextMessages.length - 1]
   const lastUserMessage = [...nextMessages].reverse().find((message) => message.role === 'user')
 
-  logger.debug('Updated cached session messages', {
+  logger.info('Updated cached session messages', {
     sessionId: String(targetSessionId),
     reason: options.reason ?? 'unspecified',
     messageCount: nextMessages.length,
+    // ORDER DEBUG: full ordered list so we can see exactly how messages are
+    // sequenced after each stream event / hydration. role + id + a short text
+    // preview + any tool-call ids in the message.
+    order: nextMessages.map((message) => ({
+      id: message.id,
+      role: message.role,
+      text: previewMessageText(message),
+      toolCallIds: message.parts
+        .filter((part) => part.type === 'tool-call')
+        .map((part) => (part as { id: string }).id),
+    })),
     lastMessageId: lastMessage?.id ?? null,
     lastMessageRole: lastMessage?.role ?? null,
     lastMessageText: lastMessage ? getUIMessageText(lastMessage) : null,

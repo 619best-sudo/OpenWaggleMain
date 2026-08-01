@@ -28,6 +28,7 @@ import {
   createOpenWaggleAgentSessionFromServices,
   disposeOpenWagglePiSession,
 } from '../pi-session-lifecycle'
+import { markConcernLinesToolDefinition } from '../tools/mark-concern-lines-tool'
 import { logger } from './constants'
 import { waitForPostRunSettlement } from './post-run-settlement'
 import { createSessionManagerForSession } from './session-manager'
@@ -58,11 +59,16 @@ async function createPiSessionForRun(input: {
 }) {
   const hasExistingMessages = input.sessionManager.buildSessionContext().messages.length > 0
   const noToolsOption = input.noTools ? { noTools: input.noTools } : {}
+  // mark_concern_lines is a custom read-only tool the model calls right after a
+  // read to flag the lines that matter; the renderer folds those onto the read
+  // view as highlights. Added to every session (both first-turn and continue).
+  const customTools = [markConcernLinesToolDefinition]
   const result = hasExistingMessages
     ? await createOpenWaggleAgentSessionFromServices({
         services: input.services,
         model: input.model,
         sessionManager: input.sessionManager,
+        customTools,
         ...noToolsOption,
       })
     : await createOpenWaggleAgentSessionFromServices({
@@ -70,6 +76,7 @@ async function createPiSessionForRun(input: {
         model: input.model,
         thinkingLevel: input.thinkingLevel,
         sessionManager: input.sessionManager,
+        customTools,
         ...noToolsOption,
       })
 

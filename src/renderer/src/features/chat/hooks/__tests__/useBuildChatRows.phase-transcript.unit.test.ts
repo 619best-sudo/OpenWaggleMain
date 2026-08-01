@@ -49,7 +49,7 @@ describe('buildChatRows phase transcript migration', () => {
     })
   })
 
-  it('suppresses legacy assistant tool transcript rows once a phase transcript exists', () => {
+  it('renders legacy assistant tool transcript rows alongside the phase transcript (show-all-bubbles)', () => {
     const rawAssistantMessage: UIMessage = {
       id: 'assistant-legacy',
       role: 'assistant',
@@ -115,13 +115,13 @@ describe('buildChatRows phase transcript migration', () => {
       phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
     })
 
-    expect(rows.map((row) => row.type)).toEqual(['message', 'phase'])
+    expect(rows.map((row) => row.type)).toEqual(['message', 'message', 'phase'])
     expect(
       rows.some((row) => row.type === 'message' && row.message.id === 'assistant-legacy'),
-    ).toBe(false)
+    ).toBe(true)
   })
 
-  it('suppresses plain assistant clarification messages once a phase transcript exists for the turn', () => {
+  it('renders plain assistant clarification messages alongside the phase transcript (show-all-bubbles)', () => {
     const rawAssistantMessage: UIMessage = {
       id: 'assistant-clarification',
       role: 'assistant',
@@ -184,10 +184,10 @@ describe('buildChatRows phase transcript migration', () => {
       phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
     })
 
-    expect(rows.map((row) => row.type)).toEqual(['message', 'phase'])
+    expect(rows.map((row) => row.type)).toEqual(['message', 'message', 'phase'])
     expect(
       rows.some((row) => row.type === 'message' && row.message.id === 'assistant-clarification'),
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it('renders a live clarification card while the run is paused for user input', () => {
@@ -256,7 +256,7 @@ describe('buildChatRows phase transcript migration', () => {
     )
   })
 
-  it('renders live phase rows from phase_end events and suppresses raw assistant turn text while loading', () => {
+  it('renders live phase rows from phase_end events alongside the raw assistant turn text (show-all-bubbles)', () => {
     const rows = buildChatRows({
       messages: [
         createUserMessage('user-1', 'create html page'),
@@ -316,11 +316,11 @@ describe('buildChatRows phase transcript migration', () => {
       ],
     })
 
-    expect(rows.map((row) => row.type)).toEqual(['message', 'phase', 'phase-indicator'])
+    expect(rows.map((row) => row.type)).toEqual(['message', 'message', 'phase', 'phase-indicator'])
     expect(
       rows.some((row) => row.type === 'message' && row.message.id === 'assistant-raw-plan'),
-    ).toBe(false)
-    expect(rows[1]).toMatchObject({
+    ).toBe(true)
+    expect(rows[2]).toMatchObject({
       type: 'phase',
       phase: {
         id: 'prepare',

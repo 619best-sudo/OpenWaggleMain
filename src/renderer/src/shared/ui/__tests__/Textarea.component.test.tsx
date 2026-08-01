@@ -14,7 +14,7 @@ vi.mock('@/shared/lib/logger', () => ({
 }))
 
 vi.mock('@/shared/lib/shiki/highlighter', () => ({
-  DEFAULT_THEME: 'github-dark',
+  DEFAULT_THEME: 'waggle-dark',
   getHighlighter: getHighlighterMock,
   resolveLanguage: vi.fn((language: string) => (language === 'json' ? 'json' : undefined)),
 }))
@@ -48,7 +48,7 @@ describe('Textarea', () => {
     await waitFor(() => {
       expect(codeToTokensBaseMock).toHaveBeenCalledWith('{\n  "mcpServers"\n}', {
         lang: 'json',
-        theme: 'github-dark',
+        theme: 'waggle-dark',
       })
     })
 

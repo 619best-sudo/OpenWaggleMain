@@ -4,7 +4,7 @@ import { PI_WAGGLE_USER_REQUEST_CUSTOM_TYPE } from '@openwaggle/pi-waggle/protoc
 import type { MessageRole } from '@shared/types/agent'
 import { createModelRef } from '@shared/types/llm'
 import type { ProjectedSessionNodeInput } from '../../../ports/session-repository'
-import { toJsonValue } from '../pi-message-mapper'
+import { toJsonValue } from '../../message-projection/message-mapper'
 import {
   buildMessageNodeContentJson,
   buildRawNodeContentJson,

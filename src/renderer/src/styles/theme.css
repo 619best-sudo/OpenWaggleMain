@@ -44,6 +44,33 @@
 }
 
 html[data-theme="light"] {
+  /*
+   * Tool-call code views (read / write / edit bodies).
+   *
+   * A deliberately BOLDER palette than the review DiffPanel's: these blocks are
+   * small, inline, and skimmed mid-conversation, so added/removed rows need to
+   * read as green/red at a glance. Kept as their own tokens so tuning them never
+   * restyles the full-page diff review.
+   *
+   * Backgrounds stay light enough that syntax-highlighted code on top of them
+   * remains legible — the punch comes from the saturated accent bar + gutter.
+   */
+  --theme-code-view-bg: #fcfcfd;
+  --theme-code-view-border: #dfe3ea;
+  --theme-code-view-gutter-bg: #eef0f5;
+  --theme-code-view-gutter-text: #8b93a3;
+
+  --theme-code-view-add-bg: #d6f7e4;
+  --theme-code-view-add-accent: #0fa958;
+  --theme-code-view-add-text: #07733c;
+
+  --theme-code-view-remove-bg: #ffdfe4;
+  --theme-code-view-remove-accent: #e5344f;
+  --theme-code-view-remove-text: #a81430;
+
+  --theme-code-view-concern-bg: #fff3d4;
+  --theme-code-view-concern-accent: #e0951b;
+
   --theme-bg-app: #f5f5f6;
   --theme-bg: #ffffff;
   --theme-bg-secondary: #f6f6f8;
@@ -156,6 +183,26 @@ html[data-theme="light"] {
 }
 
 html[data-theme="dark"] {
+  /* Tool-call code views — bold dark counterparts (see the light block). */
+  --theme-code-view-bg: #131317;
+  --theme-code-view-border: #2a2b33;
+  --theme-code-view-gutter-bg: #1c1d24;
+  /* Line numbers sit next to bold, saturated code — brightened so the gutter
+     stays readable instead of dissolving into the surround. */
+  --theme-code-view-gutter-text: #8f939f;
+
+  --theme-code-view-add-bg: #123a27;
+  --theme-code-view-add-accent: #2ee27f;
+  --theme-code-view-add-text: #5ff0a1;
+
+  /* Luminance-matched to the add wash, so neither row type shouts louder. */
+  --theme-code-view-remove-bg: #3d1520;
+  --theme-code-view-remove-accent: #ff4d64;
+  --theme-code-view-remove-text: #ff8f9d;
+
+  --theme-code-view-concern-bg: #3a2c0e;
+  --theme-code-view-concern-accent: #f0b429;
+
   --theme-bg-app: #0a0a0a;
   --theme-bg: #111112;
   --theme-bg-secondary: #151518;

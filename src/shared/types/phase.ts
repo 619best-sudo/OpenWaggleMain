@@ -6,8 +6,8 @@ export type AgentPhaseId = 'prepare' | 'plan' | 'perform' | 'perfect' | 'working
 
 export const PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE = 'openwaggle.phase-transcript'
 
-export type PersistedPhaseStatus = 'pending' | 'running' | 'completed' | 'failed'
-export type AgentPhaseStatus = PersistedPhaseStatus | 'interrupted'
+export type PersistedPhaseStatus = 'pending' | 'running' | 'completed' | 'failed' | 'interrupted'
+export type AgentPhaseStatus = PersistedPhaseStatus
 
 export interface PersistedPhaseTranscriptTool {
   readonly toolCallId: string
@@ -16,7 +16,12 @@ export interface PersistedPhaseTranscriptTool {
 }
 
 export interface PersistedPhaseTranscriptPhase {
-  readonly id: Exclude<AgentPhaseId, 'working'>
+  /**
+   * The flat loop projects the whole run as one synthetic `'working'` phase.
+   * (The legacy 4P ids prepare/plan/perform/perfect remain valid for older
+   * persisted transcripts.)
+   */
+  readonly id: AgentPhaseId
   readonly label: string
   readonly activityText: string
   readonly status: PersistedPhaseStatus

@@ -117,6 +117,9 @@ function handleAgentStateEvent(
       'tool_execution_update',
       'tool_execution_end',
       'queue_update',
+      'phase_start',
+      'phase_end',
+      'phase_summary',
       'custom',
       () => undefined,
     )

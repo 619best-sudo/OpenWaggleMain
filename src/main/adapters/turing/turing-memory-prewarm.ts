@@ -1,13 +1,26 @@
 import path from 'node:path'
-import { FileMemory, Harness, type Session, McpRuntimePool } from 'turing-harness'
 import type { McpSettingsView } from '@shared/types/mcp'
+import { FileMemory, Harness, McpRuntimePool, type PoolLogger, type Session } from 'turing-harness'
 import type { ProjectMemoryStatus } from '../../../shared/types/project-memory'
 import { createLogger } from '../../logger'
 import type { AgentKernelStandardsContext } from '../../ports/agent-kernel-service'
-import { attachOpenWaggleRuntime } from './turing-openwaggle-bridge'
 import { resolveTuringLlmConfig } from './turing-llm-config'
+import { assetBackends, mediaAnalysisConfig } from './turing-media-providers'
+import { createInspirationBackend } from './inspiration/inspiration-backend'
+import { routeModel } from './turing-model-routing'
+import { resolveVisionModel } from './turing-vision-model'
 
 const logger = createLogger('turing-memory-prewarm')
+
+// Adapter so the harness MCP pool writes into the same app log file the user
+// reads. The harness PoolLogger uses `data?: unknown`; the app Logger uses
+// `data?: object`, so we cast at the boundary.
+const poolLog: PoolLogger = {
+  debug: (m, d) => logger.debug(m, d as object | undefined),
+  info: (m, d) => logger.info(m, d as object | undefined),
+  warn: (m, d) => logger.warn(m, d as object | undefined),
+  error: (m, d) => logger.error(m, d as object | undefined),
+}
 const DEFAULT_MODEL_REF = 'turing-machine/turing-machine'
 
 export interface PrewarmRuntime {
@@ -22,10 +35,8 @@ interface WarmProjectSession {
   readonly harness: Harness
   readonly session: Session
   readonly warmedAt: number
-  /** True if MCP clients + skill providers were attached during prewarm. */
-  readonly bridgeAttached: boolean
-  /** Signature of the attached runtime, for diagnostics; null if not attached. */
-  readonly bridgeSignature: string | null
+  /** MCP settings + standards context carried for deferred bridge attach at run time. */
+  readonly runtime: PrewarmRuntime
 }
 
 interface InflightWarmProjectSession {
@@ -52,18 +63,30 @@ const spareSessions = new Map<string, WarmProjectSession>()
 const assignedSessions = new Map<string, WarmProjectSession>()
 const sharedMcpPools = new Map<string, McpRuntimePool>()
 
-/** Get or create a shared MCP runtime pool for a given project path. */
+/**
+ * Get or create a shared MCP runtime pool for a given project path.
+ *
+ * The pool uses a near-infinite idle timeout (24h) so connected MCP servers
+ * PERSIST across runs, sessions, and app idle — they're spawned once and kept
+ * alive for the lifetime of the process. This makes `borrow()` essentially free
+ * (a Map lookup) on every run after the first, so MCP tools are available to
+ * the LLM at turn 1 instead of appearing mid-run.
+ */
 export function getSharedMcpPool(projectPath: string): McpRuntimePool {
   const normalized = normalizeProjectPath(projectPath)
   let pool = sharedMcpPools.get(normalized)
   if (!pool) {
-    pool = new McpRuntimePool()
+    pool = new McpRuntimePool({ idleTimeoutMs: 24 * 60 * 60 * 1000, log: poolLog })
     sharedMcpPools.set(normalized, pool)
-    logger.info('Created new shared MCP pool', { projectPath: normalized })
+    logger.info('Created new persistent shared MCP pool', {
+      projectPath: normalized,
+      poolInstanceId: pool.getInstanceId(),
+    })
   } else {
-    const poolAny = pool as unknown as { pool?: Map<string, unknown> }
+    const poolAny = pool as unknown as { pool?: Map<string, unknown>; getInstanceId?: () => number }
     logger.info('Reusing existing shared MCP pool', {
       projectPath: normalized,
+      poolInstanceId: poolAny.getInstanceId?.() ?? 'unknown',
       poolSize: poolAny.pool?.size ?? 'unknown',
     })
   }
@@ -88,11 +111,39 @@ async function createWarmProjectSession(
 ): Promise<WarmProjectSession> {
   const normalizedProjectPath = normalizeProjectPath(projectPath)
   const { config, signature } = buildLlmSignature(runtime.modelRef)
+  const visionModel = resolveVisionModel()
+  logger.info('Creating warm turing session', {
+    projectPath: normalizedProjectPath,
+    model: config.modelSlug,
+    visionModel,
+  })
   const harness = new Harness({
     apiKey: config.apiKey,
     baseUrl: config.baseUrl,
     cwd: normalizedProjectPath,
     permissionMode: 'bypass',
+    // Real media generation for `assets_generator`. The harness ships only
+    // placeholders (it can't pick a provider for us), so without this the tool
+    // writes stand-in files. Provider is env-selected, so Runware can replace
+    // OpenRouter later without touching this call site.
+    assets: { backends: assetBackends(config) },
+    // Vision for `media_analysis`. Without this the tool inherits the run model,
+    // which is text-to-text by default — the attachment reaches a model that
+    // cannot read it. Pin a multimodal slug (see `turing-vision-model`); and when
+    // OPENWAGGLE_ASSET_PROVIDER=turing, route the vision call through the backend
+    // `/media/analysis` proxy (JWT auth + central billing) instead of OpenRouter.
+    mediaAnalysis: mediaAnalysisConfig(visionModel),
+    // Internal keyword→blueprint lookup for `inspiration_generator`, used when a
+    // UI/poster is built without a reference image. The backend resolves the
+    // user JWT per call and silently returns null (no token / no match / backend
+    // down) so the run always continues. The tool's `details` are internal.
+    inspiration: { backend: createInspirationBackend() },
+    // Escalation routing: (read|write) x (medium|high) -> model slug. The table
+    // lives in `turing-model-routing.ts`; the harness consults it for write/edit
+    // authoring and for the staged `read`'s comprehension model. Without it,
+    // escalation falls back to indexing `toolModelCandidates` by complexity
+    // score, where which model a rating lands on depends on the pool's length.
+    routeModel,
   })
   const { session } = await (
     harness.createProjectSession as (opts: Record<string, unknown>) => Promise<{ session: Session }>
@@ -100,49 +151,34 @@ async function createWarmProjectSession(
     cwd: normalizedProjectPath,
     connectMcp: false,
     fileMemoryRuntime: {
+      // `autoStartHydration: false` narrows the initial hydration queue to
+      // stale/pending/errored entries (instead of re-summarizing the whole
+      // project on every session open). Pairing it with `llmSyncEnabled: true`
+      // guarantees that narrow queue actually seeds — without it, hydration is
+      // silently gated on a persisted on-disk flag that can be false, leaving
+      // stale entries un-summarized forever. Full re-summarization still only
+      // happens via the manual "Refresh memory" UI action (`refreshAllSummaries`).
       autoStartHydration: false,
+      llmSyncEnabled: true,
     },
   })
 
-  // Best-effort: attach the OpenWaggle bridge (MCP clients + skill providers)
-  // during prewarm so the first prompt hits a prewarmed runtime. Failures
-  // here must NOT throw away the spare — the run-path bridge will retry.
-  let bridgeAttached = false
-  let bridgeSignature: string | null = null
-  if (runtime.mcpSettings || runtime.standardsContext) {
-    try {
-      const t0 = Date.now()
-      const mcpPool = getSharedMcpPool(normalizedProjectPath)
-      const result = await attachOpenWaggleRuntime(session, {
-        mcpSettings: runtime.mcpSettings,
-        standardsContext: runtime.standardsContext,
-      }, {
-        projectPath: normalizedProjectPath,
-        mcpPool,
-      })
-      const mcpCount = runtime.mcpSettings?.servers.filter((s) => s.enabled).length ?? 0
-      const skillCount = runtime.standardsContext?.activeSkills.length ?? 0
-      const mcpFails = result.issues.filter((i) => i.kind === 'mcp-fail').length
-      // `bridgeAttached` is true whenever the attach completed (even with
-      // partial MCP fails). The bridge now caches partial results, so the run
-      // path's `attachOpenWaggleRuntime` hits the fast-path and reuses the
-      // already-connected providers.
-      bridgeAttached = true
-      bridgeSignature = mcpCount + skillCount > 0 ? `${mcpCount}mcp/${skillCount}skill` : null
-      logger.info('Bridge attached during prewarm', {
-        projectPath: normalizedProjectPath,
-        mcpCount,
-        skillCount,
-        mcpFails,
-        ms: Date.now() - t0,
-      })
-    } catch (error) {
-      logger.warn('Bridge attach during prewarm failed; run pipeline will retry', {
-        projectPath: normalizedProjectPath,
-        error: error instanceof Error ? error.message : String(error),
-      })
-    }
-  }
+  // Eagerly prewarm the SHARED MCP POOL in the background. We do NOT attach the
+  // servers to this session's registry here (that happens at run time via
+  // `connectMcpBackground` → `addPooledMcpServer`), but we DO kick off the
+  // child-process spawn + JSON-RPC handshake now, against the persistent pool.
+  //
+  // Because the pool holds servers alive across sessions (24h idle timeout),
+  // `borrow()` during a run is a Map lookup — instant — so MCP tools are in the
+  // registry before turn 1. This is what makes the race condition go away:
+  // the spawn cost (seconds) is paid here, in the background, while the user
+  // is still typing; the run pays only the borrow cost (microseconds).
+  prewarmMcpPool(normalizedProjectPath, runtime).catch((error: unknown) => {
+    logger.warn('Background MCP pool prewarm failed (non-fatal)', {
+      projectPath: normalizedProjectPath,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  })
 
   return {
     projectPath: normalizedProjectPath,
@@ -150,9 +186,44 @@ async function createWarmProjectSession(
     harness,
     session,
     warmedAt: Date.now(),
-    bridgeAttached,
-    bridgeSignature,
+    runtime,
   }
+}
+
+/**
+ * Eagerly connect every enabled stdio MCP server into the project's shared pool.
+ * Fire-and-forget by design: callers don't await this. Each server that connects
+ * stays in the pool (24h idle timeout) so subsequent runs borrow it instantly.
+ *
+ * This deliberately touches only the POOL — it does not register providers on any
+ * session. Run-time code (`connectMcpBackground`) borrows from the warm pool and
+ * registers on the live session then. Splitting warm (pool) from attach (session)
+ * is what lets a spare session stay MCP-free while the pool is shared + hot.
+ */
+async function prewarmMcpPool(projectPath: string, runtime: PrewarmRuntime): Promise<void> {
+  if (!runtime.mcpSettings) return
+  const pool = getSharedMcpPool(projectPath)
+  // Resolve the same server options the run-time bridge will use. We import the
+  // resolver lazily to avoid a cycle (the bridge imports prewarm's pool getter).
+  const { resolveOpenWaggleMcpServers } = await import('./turing-openwaggle-bridge')
+  const { servers } = resolveOpenWaggleMcpServers(runtime.mcpSettings)
+  if (servers.length === 0) return
+
+  // Borrow each server into the pool with a throwaway session id. We never
+  // return them — they're meant to stay warm. allSettled so a single failing
+  // server (e.g. a bad command) doesn't reject the whole prewarm.
+  const t0 = Date.now()
+  const results = await Promise.allSettled(
+    servers.map((options) => pool.borrow(options, 'prewarm')),
+  )
+  const fulfilled = results.filter((r) => r.status === 'fulfilled').length
+  logger.info('MCP pool prewarm complete', {
+    projectPath,
+    servers: servers.length,
+    connected: fulfilled,
+    failed: servers.length - fulfilled,
+    ms: Date.now() - t0,
+  })
 }
 
 async function disposeWarmProjectSession(
@@ -235,8 +306,6 @@ export function prewarmProjectMemory(
       logger.info('Prewarmed warm turing session', {
         projectPath: normalizedProjectPath,
         warmedAt: projectSession.warmedAt,
-        bridgeAttached: projectSession.bridgeAttached,
-        bridgeSignature: projectSession.bridgeSignature,
       })
       return projectSession
     })

@@ -1,16 +1,30 @@
 import type { SkillCatalogResult, SkillDiscoveryItem } from '@shared/types/standards'
-import { Download, RefreshCw, Sparkles } from 'lucide-react'
+import { Download, RefreshCw, Sparkles, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useProject } from '@/features/sessions/hooks'
 import { useSkills } from '@/features/skills/hooks/useSkills'
 import { cn } from '@/shared/lib/cn'
+import { api } from '@/shared/lib/ipc'
 import { Button } from '@/shared/ui/Button'
 import { Spinner } from '@/shared/ui/Spinner'
 import { ToggleSwitch } from '@/shared/ui/ToggleSwitch'
+import { useUIStore } from '@/shell/ui-store'
 import { ImportSkillDialog } from './ImportSkillDialog'
 import { SkillPreviewPane } from './SkillPreviewPane'
 import { EmptySkillsState, NoProjectState } from './SkillsPanelStates'
+
+/**
+ * Whether a skill folder lives under the project's `.openwaggle/skills` root —
+ * the only directory the UI is allowed to delete from (mirrors the importer,
+ * which writes only there). Repo-curated skills under `.agents/skills` are
+ * version-controlled and must be removed via the filesystem.
+ */
+function isRemovableSkill(projectPath: string, folderPath: string): boolean {
+  const root = `${projectPath.replace(/\/+$/, '')}/.openwaggle/skills`
+  const normalized = folderPath.replace(/\/+$/, '')
+  return normalized === root || normalized.startsWith(`${root}/`)
+}
 
 function SkillsPanelActions({
   onRefresh,
@@ -62,13 +76,17 @@ function SkillsPanelHeader({
 function SkillListItem({
   skill,
   selected,
+  removable,
   onSelect,
   onToggle,
+  onRemove,
 }: {
   readonly skill: SkillDiscoveryItem
   readonly selected: boolean
+  readonly removable: boolean
   readonly onSelect: () => void
   readonly onToggle: (enabled: boolean) => void
+  readonly onRemove: () => void
 }) {
   return (
     <div
@@ -119,12 +137,27 @@ function SkillListItem({
           </span>
         </div>
       </Button>
-      <div className="flex items-center shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         <ToggleSwitch
           checked={skill.enabled}
           label={`${skill.enabled ? 'Disable' : 'Enable'} ${skill.name}`}
           onCheckedChange={onToggle}
         />
+        <Button
+          variant="unstyled"
+          type="button"
+          disabled={!removable}
+          onClick={onRemove}
+          title={
+            removable
+              ? `Remove ${skill.name}`
+              : "Repo-curated skills (.agents/skills) can't be removed from here"
+          }
+          aria-label={`Remove ${skill.name}`}
+          className="rounded-md p-1.5 text-text-tertiary transition-colors hover:bg-error/10 hover:text-error disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-tertiary"
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
       </div>
     </div>
   )
@@ -134,14 +167,18 @@ function SkillsList({
   catalog,
   isLoading,
   selectedSkillId,
+  projectPath,
   selectSkill,
   toggleSkill,
+  removeSkill,
 }: {
   readonly catalog: SkillCatalogResult | null
   readonly isLoading: boolean
   readonly selectedSkillId: string | null
+  readonly projectPath: string
   readonly selectSkill: (skillId: string) => void
   readonly toggleSkill: (skillId: string, enabled: boolean) => Promise<void>
+  readonly removeSkill: (skillId: string) => Promise<void>
 }) {
   const skills = catalog?.skills ?? []
 
@@ -167,8 +204,10 @@ function SkillsList({
               key={skill.id}
               skill={skill}
               selected={selectedSkillId === skill.id}
+              removable={isRemovableSkill(projectPath, skill.folderPath)}
               onSelect={() => selectSkill(skill.id)}
               onToggle={(enabled) => void toggleSkill(skill.id, enabled)}
+              onRemove={() => void removeSkill(skill.id)}
             />
           ))
         )}
@@ -181,14 +220,18 @@ function SkillsSidebar({
   catalog,
   isLoading,
   selectedSkillId,
+  projectPath,
   selectSkill,
   toggleSkill,
+  removeSkill,
 }: {
   readonly catalog: SkillCatalogResult | null
   readonly isLoading: boolean
   readonly selectedSkillId: string | null
+  readonly projectPath: string
   readonly selectSkill: (skillId: string) => void
   readonly toggleSkill: (skillId: string, enabled: boolean) => Promise<void>
+  readonly removeSkill: (skillId: string) => Promise<void>
 }) {
   return (
     <div className="flex min-h-0 flex-col border-r border-border bg-bg-secondary p-4 pb-0 pt-2">
@@ -197,8 +240,10 @@ function SkillsSidebar({
           catalog={catalog}
           isLoading={isLoading}
           selectedSkillId={selectedSkillId}
+          projectPath={projectPath}
           selectSkill={selectSkill}
           toggleSkill={toggleSkill}
+          removeSkill={removeSkill}
         />
       </section>
     </div>
@@ -221,12 +266,15 @@ function SkillsPanelContent({
     isLoading,
     isPreviewLoading,
     isImporting,
+    isRemoving,
     error,
     refresh,
     importSkill,
     selectSkill,
     toggleSkill,
+    removeSkill,
   } = useSkills(projectPath)
+  const showToast = useUIStore((state) => state.showToast)
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const selectedSkill = catalog?.skills.find((skill) => skill.id === selectedSkillId) ?? null
   const headerActions = (
@@ -248,6 +296,21 @@ function SkillsPanelContent({
     return result
   }
 
+  async function handleRemoveSkill(skill: SkillDiscoveryItem) {
+    const confirmed = await api.showConfirm(
+      'Remove this skill?',
+      `The skill folder at ${skill.folderPath} will be deleted. This cannot be undone.`,
+    )
+    if (!confirmed) return
+    try {
+      await removeSkill(skill.id)
+      showToast(`Removed skill "${skill.name}".`, 'success')
+    } catch (removeError) {
+      const message = removeError instanceof Error ? removeError.message : String(removeError)
+      showToast(`Failed to remove skill: ${message}`, 'error')
+    }
+  }
+
   return (
     <div className={cn('flex h-full flex-col overflow-hidden', showHeader && 'bg-bg')}>
       {showHeader ? (
@@ -265,8 +328,13 @@ function SkillsPanelContent({
           catalog={catalog}
           isLoading={isLoading}
           selectedSkillId={selectedSkillId}
+          projectPath={projectPath}
           selectSkill={selectSkill}
           toggleSkill={toggleSkill}
+          removeSkill={async (skillId) => {
+            const target = catalog?.skills.find((skill) => skill.id === skillId)
+            if (target) await handleRemoveSkill(target)
+          }}
         />
         <SkillPreviewPane
           error={error}
@@ -277,7 +345,7 @@ function SkillsPanelContent({
       </div>
       {isImportDialogOpen ? (
         <ImportSkillDialog
-          isImporting={isImporting}
+          isImporting={isImporting || isRemoving}
           onImport={handleImportSkill}
           onClose={() => setIsImportDialogOpen(false)}
         />

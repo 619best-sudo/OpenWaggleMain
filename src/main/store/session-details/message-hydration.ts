@@ -78,6 +78,17 @@ const pendingUserQuestionSchema = Schema.Struct({
   placeholder: Schema.optional(Schema.String),
   answerMode: Schema.optional(Schema.Literal('text', 'single-select', 'multi-select')),
   options: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
+  choices: Schema.optional(
+    Schema.mutable(
+      Schema.Array(
+        Schema.Struct({
+          label: Schema.String,
+          description: Schema.optional(Schema.String),
+          recommended: Schema.optional(Schema.Boolean),
+        }),
+      ),
+    ),
+  ),
 })
 
 const persistedPhaseTranscriptPhaseSchema = Schema.Struct({

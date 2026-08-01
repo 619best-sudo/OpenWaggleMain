@@ -17,6 +17,16 @@ const mockState = vi.hoisted(() => {
         enabled: true,
         loadStatus: 'ok',
       },
+      {
+        id: 'curated-skill',
+        name: 'Curated Skill',
+        description: 'Repo-curated',
+        folderPath: '/tmp/project/.agents/skills/curated-skill',
+        skillPath: '/tmp/project/.agents/skills/curated-skill/SKILL.md',
+        hasScripts: false,
+        enabled: true,
+        loadStatus: 'ok',
+      },
     ],
   })
 
@@ -28,6 +38,9 @@ const mockState = vi.hoisted(() => {
       status: 'imported',
       skillId: 'skill-one',
     }),
+    removeSkill: vi.fn<(skillId: string) => Promise<void>>().mockResolvedValue(undefined),
+    showToast: vi.fn(),
+    showConfirm: vi.fn<(_: string, __?: string) => Promise<boolean>>().mockResolvedValue(true),
   }
 })
 
@@ -56,8 +69,20 @@ vi.mock('@/features/skills/hooks/useSkills', () => ({
     selectSkill: vi.fn(),
     toggleSkill: vi.fn(),
     isImporting: false,
+    isRemoving: false,
     importSkill: mockState.importSkill,
+    removeSkill: mockState.removeSkill,
   }),
+}))
+
+vi.mock('@/shell/ui-store', () => ({
+  useUIStore: () => mockState.showToast,
+}))
+
+vi.mock('@/shared/lib/ipc', () => ({
+  api: {
+    showConfirm: (...args: unknown[]) => mockState.showConfirm(args[0] as string, args[1] as string),
+  },
 }))
 
 function renderPanel(previewMarkdown: string) {
@@ -70,6 +95,10 @@ describe('SkillsPanel markdown safety', () => {
     mockState.previewMarkdown = ''
     mockState.catalog = mockState.createCatalog()
     mockState.importSkill.mockClear()
+    mockState.removeSkill.mockClear()
+    mockState.showToast.mockClear()
+    mockState.showConfirm.mockClear()
+    mockState.showConfirm.mockResolvedValue(true)
   })
 
   it('renders allowed links and blocks unsafe protocols', () => {
@@ -174,5 +203,44 @@ describe('SkillsPanel markdown safety', () => {
         'Import a skill or add one to your project skills folder or `.agents/skills`.',
       ),
     ).toBeInTheDocument()
+  })
+})
+
+describe('SkillsPanel remove', () => {
+  beforeEach(() => {
+    mockState.previewMarkdown = ''
+    mockState.catalog = mockState.createCatalog()
+    mockState.removeSkill.mockClear()
+    mockState.showToast.mockClear()
+    mockState.showConfirm.mockClear()
+    mockState.showConfirm.mockResolvedValue(true)
+  })
+
+  it('removes an .openwaggle skill after confirmation', async () => {
+    renderPanel('')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Skill One' }))
+
+    await waitFor(() => expect(mockState.showConfirm).toHaveBeenCalled())
+    await waitFor(() => expect(mockState.removeSkill).toHaveBeenCalledWith('skill-one'))
+    expect(mockState.showToast).toHaveBeenCalledWith('Removed skill "Skill One".', 'success')
+  })
+
+  it('does not remove when the confirmation is cancelled', async () => {
+    mockState.showConfirm.mockResolvedValue(false)
+    renderPanel('')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Skill One' }))
+
+    await waitFor(() => expect(mockState.showConfirm).toHaveBeenCalled())
+    expect(mockState.removeSkill).not.toHaveBeenCalled()
+    expect(mockState.showToast).not.toHaveBeenCalled()
+  })
+
+  it('disables the remove button for repo-curated .agents/skills entries', () => {
+    renderPanel('')
+
+    const removeCurated = screen.getByRole('button', { name: 'Remove Curated Skill' })
+    expect(removeCurated).toBeDisabled()
   })
 })

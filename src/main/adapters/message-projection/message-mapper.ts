@@ -1,3 +1,11 @@
+/**
+ * Pure message-projection helpers shared by the agent run path.
+ *
+ * These translate the runtime-agnostic history shape (`{ role, content, model }` /
+ * `{ role: 'toolResult', ... }`) into OpenWaggle `Message[]`. They are vendor-neutral
+ * — no Pi or turing-harness imports — and were hoisted out of the Pi adapter so the
+ * turing adapter does not depend on `adapters/pi/`. Both runtimes use them.
+ */
 import { randomUUID } from 'node:crypto'
 import type { Message, MessagePart } from '@shared/types/agent'
 import { MessageId, SupportedModelId, ToolCallId } from '@shared/types/brand'
@@ -69,7 +77,7 @@ function toProjectedToolResultValue(content: readonly unknown[], details: unknow
   }
 }
 
-type PiProjectedHistoryMessage =
+type ProjectedHistoryMessage =
   | {
       readonly role: 'assistant'
       readonly content: readonly unknown[]
@@ -84,21 +92,21 @@ type PiProjectedHistoryMessage =
       readonly details?: unknown
     }
 
-interface PiProjectionState {
+interface ProjectionState {
   readonly result: Message[]
   currentAssistantParts: MessagePart[] | null
   currentAssistantModel: string | undefined
   currentToolCallArgs: Map<string, JsonObject>
 }
 
-interface PiToolCallContent {
+interface ToolCallContent {
   readonly type: 'toolCall'
   readonly id: string
   readonly name: string
   readonly arguments: JsonObject
 }
 
-function flushAssistant(state: PiProjectionState) {
+function flushAssistant(state: ProjectionState) {
   if (!state.currentAssistantParts) {
     return
   }
@@ -129,10 +137,10 @@ function projectAssistantPart(
   if (part.type === 'thinking' && typeof part.thinking === 'string') {
     return { type: 'reasoning', text: part.thinking }
   }
-  return isPiToolCallContent(part) ? projectToolCallPart(part, toolCallArgs) : null
+  return isToolCallContent(part) ? projectToolCallPart(part, toolCallArgs) : null
 }
 
-function isPiToolCallContent(part: unknown): part is PiToolCallContent {
+function isToolCallContent(part: unknown): part is ToolCallContent {
   return (
     isRecord(part) &&
     part.type === 'toolCall' &&
@@ -143,7 +151,7 @@ function isPiToolCallContent(part: unknown): part is PiToolCallContent {
 }
 
 function projectToolCallPart(
-  part: PiToolCallContent,
+  part: ToolCallContent,
   toolCallArgs: Map<string, JsonObject>,
 ): MessagePart {
   const toolArgs = toJsonObject(part.arguments)
@@ -167,8 +175,8 @@ function projectAssistantParts(content: readonly unknown[], toolCallArgs: Map<st
 }
 
 function handleAssistantMessage(
-  state: PiProjectionState,
-  message: Extract<PiProjectedHistoryMessage, { role: 'assistant' }>,
+  state: ProjectionState,
+  message: Extract<ProjectedHistoryMessage, { role: 'assistant' }>,
 ) {
   flushAssistant(state)
   state.currentAssistantParts = projectAssistantParts(message.content, state.currentToolCallArgs)
@@ -176,7 +184,7 @@ function handleAssistantMessage(
 }
 
 function projectToolResultPart(
-  message: Extract<PiProjectedHistoryMessage, { role: 'toolResult' }>,
+  message: Extract<ProjectedHistoryMessage, { role: 'toolResult' }>,
   fallbackArgs: JsonObject | undefined,
 ): MessagePart {
   return {
@@ -196,8 +204,8 @@ function projectToolResultPart(
 }
 
 function handleToolResultMessage(
-  state: PiProjectionState,
-  message: Extract<PiProjectedHistoryMessage, { role: 'toolResult' }>,
+  state: ProjectionState,
+  message: Extract<ProjectedHistoryMessage, { role: 'toolResult' }>,
 ) {
   if (!state.currentAssistantParts) {
     state.currentAssistantParts = []
@@ -208,10 +216,10 @@ function handleToolResultMessage(
   ]
 }
 
-export function piHistoryToProjectedMessages(
-  messages: ReadonlyArray<PiProjectedHistoryMessage>,
+export function historyToProjectedMessages(
+  messages: ReadonlyArray<ProjectedHistoryMessage>,
 ): Message[] {
-  const state: PiProjectionState = {
+  const state: ProjectionState = {
     result: [],
     currentAssistantParts: null,
     currentAssistantModel: undefined,

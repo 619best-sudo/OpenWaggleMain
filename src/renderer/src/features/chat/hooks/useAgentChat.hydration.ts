@@ -189,12 +189,19 @@ function hydrateActiveRunSession(
   const nextMessages = input.cachedRenderMessages
     ? mergeBackgroundReconnectMessages([...persistedMessages], [...input.cachedRenderMessages])
     : reconcileSnapshotUserMessages(persistedMessages, existingMessages)
-  logger.debug('Hydrating active run session messages', {
+  logger.info('Hydrating active run session messages', {
     sessionId: String(input.sessionId),
+    mode: input.cachedRenderMessages ? 'background-reconnect-merge' : 'snapshot-reconcile',
     persistedMessageCount: persistedMessages.length,
     cachedRenderMessageCount: input.cachedRenderMessages?.length ?? 0,
     existingLiveCacheCount: existingMessages.length,
     finalMergedMessageCount: nextMessages.length,
+    // ORDER DEBUG: full order of each input + the merged result so we can see
+    // how the persisted snapshot reconciles with the live-streamed cache.
+    persistedOrder: persistedMessages.map((message) => ({ id: message.id, role: message.role })),
+    cachedOrder: (input.cachedRenderMessages ?? []).map((message) => ({ id: message.id, role: message.role })),
+    existingOrder: existingMessages.map((message) => ({ id: message.id, role: message.role })),
+    finalOrder: nextMessages.map((message) => ({ id: message.id, role: message.role })),
     persistedLastUserMessageId: getLastUserMessage(persistedMessages)?.id ?? null,
     cachedLastUserMessageId: getLastUserMessage(input.cachedRenderMessages ?? [])?.id ?? null,
     existingLastUserMessageId: getLastUserMessage(existingMessages)?.id ?? null,
@@ -240,17 +247,24 @@ function hydrateIdleSession(
     input.optimisticUserMessages,
   )
   const existingMessages = getMessagesForSession(context.messagesBySessionIdRef, input.sessionId)
-  const reconciledMessages = reconcileSnapshotUserMessages(snapshotMessages, existingMessages)
-  const withCachedRenderMessages = input.cachedRenderMessages
-    ? mergeBackgroundReconnectMessages(reconciledMessages, [...input.cachedRenderMessages])
-    : reconciledMessages
-  const finalMessages = mergeBackgroundReconnectMessages(withCachedRenderMessages, existingMessages)
-  logger.debug('Hydrating idle session messages', {
+  // On run completion the persisted snapshot is authoritative — the live stream
+  // was only a preview. Replace the entire message cache with the snapshot
+  // (keeping optimistic user-message React identity via text reconciliation).
+  // Do NOT merge cached render messages or the live cache; the snapshot carries
+  // the handoff-stripped, correctly-ordered canonical state.
+  const finalMessages = reconcileSnapshotUserMessages(snapshotMessages, existingMessages)
+  logger.info('Hydrating idle session messages', {
     sessionId: String(input.sessionId),
     snapshotMessageCount: snapshotMessages.length,
     cachedRenderMessageCount: input.cachedRenderMessages?.length ?? 0,
     existingLiveCacheCount: existingMessages.length,
     finalMergedMessageCount: finalMessages.length,
+    // ORDER DEBUG: the persisted snapshot order vs the existing live cache, and
+    // the final merged result. This fires when a run completes and the persisted
+    // snapshot replaces the streamed messages — the prime spot for order churn.
+    snapshotOrder: snapshotMessages.map((message) => ({ id: message.id, role: message.role })),
+    existingOrder: existingMessages.map((message) => ({ id: message.id, role: message.role })),
+    finalOrder: finalMessages.map((message) => ({ id: message.id, role: message.role })),
     snapshotLastUserMessageId: getLastUserMessage(snapshotMessages)?.id ?? null,
     cachedLastUserMessageId: getLastUserMessage(input.cachedRenderMessages ?? [])?.id ?? null,
     existingLastUserMessageId: getLastUserMessage(existingMessages)?.id ?? null,

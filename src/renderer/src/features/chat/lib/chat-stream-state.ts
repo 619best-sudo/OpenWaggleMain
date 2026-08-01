@@ -64,6 +64,9 @@ export function applyAgentTransportEvent(
       'compaction_end',
       'auto_retry_start',
       'auto_retry_end',
+      'phase_start',
+      'phase_end',
+      'phase_summary',
       cloneMessages,
     )
     .exhaustive()

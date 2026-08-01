@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   clearApprovedToolPermissions,
-  createToolPermissionRequestExtension,
   registerApprovedToolPermission,
-} from '../tool-permission-request-extension'
+} from '../../../application/tool-permission-approvals'
+import { createToolPermissionRequestExtension } from '../tool-permission-request-extension'
 
 type ToolCallHandler = (event: { toolName: string; input: unknown }) => Promise<unknown>
 

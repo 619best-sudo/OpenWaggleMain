@@ -58,6 +58,10 @@ export const agentSendPayloadSchema = Schema.Struct({
   text: Schema.String,
   thinkingLevel: Schema.Literal(...THINKING_LEVELS),
   attachments: Schema.mutable(Schema.Array(preparedAttachmentSchema)),
+  // Machine mode. MUST stay listed here: this schema is the IPC boundary and it
+  // strips anything it does not declare, so an omitted field is dropped between
+  // renderer and main with no error — the toggle would look wired and do nothing.
+  planMode: Schema.optional(Schema.Boolean),
 })
 
 export const toolPermissionResolutionSchema: Schema.Schema<ToolPermissionResolution> = Schema.Struct({

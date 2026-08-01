@@ -1,6 +1,12 @@
 import { spawn } from 'node:child_process'
 import type { McpServerDefinition, McpSettingsView } from '@shared/types/mcp'
-import { defineSkill, type McpServerOptions, type Session, type McpRuntimePool } from 'turing-harness'
+import {
+  defineSkill,
+  type McpServerOptions,
+  type ProviderInput,
+  type Session,
+  type McpRuntimePool,
+} from 'turing-harness'
 import type {
   AgentKernelActiveSkill,
   AgentKernelStandardsContext,
@@ -23,6 +29,10 @@ export interface BridgeResult {
   readonly attemptedMcpNames: readonly string[]
   readonly connectedMcpIds: readonly string[]
   readonly skillToolNames: readonly string[]
+  /** Tool names from successfully connected MCP servers (for the prompt). */
+  readonly connectedMcpToolNames: Readonly<Record<string, readonly string[]>>
+  /** MCP server names that failed to connect (for the prompt). */
+  readonly failedMcpNames: readonly string[]
 }
 
 const logger = createLogger('turing-bridge')
@@ -273,6 +283,9 @@ export async function attachOpenWaggleRuntime(
     // categorizer's guess. These skills are reference/instruction bundles useful
     // in every phase.
     session.addSkill(
+      // `defineSkill` returns `ProviderInput` (kind: ProviderKind) but always stamps
+      // kind:'skill' at runtime; `addSkill` expects the narrowed skill variant. The
+      // library's return type is imprecise, so cast to the shape addSkill requires.
       defineSkill({
         id: `openwaggle:skill:${skill.id}`,
         source: 'external',
@@ -292,9 +305,25 @@ export async function attachOpenWaggleRuntime(
             },
           },
         ],
-      }),
+      }) as Omit<ProviderInput, 'kind'> & { kind?: 'skill' },
     )
     skillToolNames.push(toolName)
+  }
+
+  // Build connected tool names + failed names for the prompt.
+  const connectedMcpToolNames: Record<string, readonly string[]> = {}
+  const failedMcpNames: string[] = []
+  for (const result of settled) {
+    if (result.status === 'rejected') continue
+    const value = result.value
+    if (value.ok) {
+      const provider = session.listCapabilities().find((p) => p.id === value.id)
+      if (provider) {
+        connectedMcpToolNames[value.options.name ?? value.options.id] = provider.tools.map((t) => t.name)
+      }
+    } else {
+      failedMcpNames.push(value.options.name ?? value.options.id)
+    }
   }
 
   const result: BridgeResult = {
@@ -303,6 +332,8 @@ export async function attachOpenWaggleRuntime(
     attemptedMcpNames,
     connectedMcpIds,
     skillToolNames,
+    connectedMcpToolNames,
+    failedMcpNames,
   }
 
   // Always cache — even partial attaches. The next call with the same signature
@@ -325,12 +356,187 @@ export async function attachOpenWaggleRuntime(
   return result
 }
 
+/**
+ * Connect MCP servers in the background without blocking the caller. Returns
+ * immediately — each MCP server's tools flow into the session registry as they
+ * connect, so the flat loop's dynamic tool resolution can pick them up mid-run.
+ *
+ * Skills are registered synchronously (they're just text-returning tools, so
+ * registration is instant). Cache priming runs in parallel as before.
+ *
+ * Use this when you want the LLM to start thinking immediately with built-in
+ * tools while MCP servers connect asynchronously.
+ */
+export async function connectMcpBackground(
+  session: Session,
+  runtime: {
+    readonly mcpSettings?: McpSettingsView
+    readonly standardsContext?: AgentKernelStandardsContext
+  },
+  options?: {
+    readonly projectPath?: string
+    readonly mcpPool?: McpRuntimePool
+  },
+): Promise<{ ready: Promise<BridgeResult> }> {
+  const t0 = Date.now()
+  const enabledMcpNames = (runtime.mcpSettings?.servers ?? [])
+    .filter((summary) => summary.enabled)
+    .map((summary) => summary.name)
+  const { servers, issues: mcpIssues } = resolveOpenWaggleMcpServers(runtime.mcpSettings)
+  const activeSkills = runtime.standardsContext?.activeSkills ?? []
+  const { mcpPool } = options ?? {}
+  // Diagnostic: log the resolved server signatures so we can confirm the run's
+  // borrow shares the prewarm's pool connection (same sig) vs. spawning a dup.
+  const { mcpServerSignature } = await import('turing-harness')
+  for (const s of servers) {
+    logger.info('connectMcpBackground resolved server', {
+      name: s.name,
+      usePool: Boolean(mcpPool),
+      poolInstanceId: (mcpPool as unknown as { getInstanceId?: () => number })?.getInstanceId?.() ?? 'none',
+      sig: mcpServerSignature(s).slice(0, 90),
+    })
+  }
+
+  // Fast-path: check if the same session was already wired (cached).
+  const signature = buildRuntimeSignature(servers, enabledMcpNames, activeSkills)
+  const cached = getCachedRuntimeAttachment(session, signature)
+  if (cached) {
+    logger.info('Bridge background fast-path', { mode: 'fast-path', ms: Date.now() - t0, signature })
+    return { ready: Promise.resolve(cached) }
+  }
+
+  // Clear existing OpenWaggle providers AWAITED (not fire-and-forget). The clear
+  // and the new provider registrations both touch the session registry; if they
+  // run concurrently the clear can rip out freshly-added providers mid-run,
+  // producing "unknown tool" failures on the summary finalizer turn. Await here
+  // so the registry is in a clean state before anything new is registered.
+  await clearExistingOpenWaggleRuntime(session)
+
+  const issues: BridgeIssue[] = []
+  const connectedMcpIds: string[] = []
+  const skillToolNames: string[] = []
+  const attemptedMcpNames = servers.map((server) => server.name ?? server.id)
+  const connectedMcpToolNames: Record<string, readonly string[]> = {}
+  const failedMcpNames: string[] = []
+  issues.push(...mcpIssues)
+
+  // Register skills synchronously (instant — no process spawn).
+  for (const skill of activeSkills) {
+    const toolName = sanitizeSkillToolName(skill.id)
+    session.addSkill(
+      defineSkill({
+        id: `openwaggle:skill:${skill.id}`,
+        source: 'external',
+        name: skill.name,
+        description: describeSkill(skill),
+        phases: ['prepare', 'plan', 'perform', 'perfect'],
+        tools: [
+          {
+            name: toolName,
+            description: describeSkill(skill),
+            parameters: { type: 'object', properties: {} },
+            async execute() {
+              return { output: buildSkillOutput(skill) }
+            },
+          },
+        ],
+      }) as Omit<ProviderInput, 'kind'> & { kind?: 'skill' },
+    )
+    skillToolNames.push(toolName)
+  }
+
+  // Build the ready promise: prime cache then spawn MCPs in background.
+  const ready = (async (): Promise<BridgeResult> => {
+    // Phase 1: prime npm cache — but ONLY for servers not already in the pool.
+    // A warm-pool server reuses an existing child process, so priming its npm
+    // cache again is pure latency (a subprocess spawn per server for nothing).
+    // On the cold path (first-ever connect) priming still runs in parallel.
+    const needsPriming = mcpPool ? servers.filter((options) => !mcpPool.has(options)) : servers
+    if (needsPriming.length > 0) {
+      await Promise.allSettled(needsPriming.map((options) => primeMcpServerCache(options)))
+    }
+
+    // Phase 2: spawn MCPs in parallel. Each connected server adds its tools
+    // to the registry IMMEDIATELY so the loop's dynamic resolver picks them up.
+    const settled = await Promise.allSettled(
+      servers.map(async (options) => {
+        try {
+          let item
+          if (mcpPool) {
+            item = await session.addPooledMcpServer(options, mcpPool)
+          } else {
+            item = await session.addMcpServer(options)
+          }
+          const provider = session.listCapabilities().find((p) => p.id === item.id)
+          if (provider) {
+            connectedMcpToolNames[options.name ?? options.id] = provider.tools.map((t) => t.name)
+          }
+          return { ok: true as const, id: item.id, options }
+        } catch (error) {
+          return {
+            ok: false as const,
+            options,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        }
+      }),
+    )
+    for (const result of settled) {
+      if (result.status === 'rejected') {
+        issues.push({
+          kind: 'mcp-fail',
+          message: `MCP attach crashed: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`,
+        })
+        continue
+      }
+      const value = result.value
+      if (value.ok) {
+        connectedMcpIds.push(value.id)
+      } else {
+        failedMcpNames.push(value.options.name ?? value.options.id)
+        issues.push({
+          kind: 'mcp-fail',
+          message: `Failed to connect MCP "${value.options.name ?? value.options.id}": ${value.error}`,
+        })
+      }
+    }
+
+    const result: BridgeResult = {
+      issues,
+      enabledMcpNames,
+      attemptedMcpNames,
+      connectedMcpIds,
+      skillToolNames,
+      connectedMcpToolNames,
+      failedMcpNames,
+    }
+
+    cacheRuntimeAttachment(session, signature, result)
+
+    logger.info('Bridge background done', {
+      mode: 'background',
+      ms: Date.now() - t0,
+      mcpCount: servers.length,
+      skillCount: activeSkills.length,
+      connectedMcp: connectedMcpIds.length,
+      mcpFails: issues.filter((i) => i.kind === 'mcp-fail').length,
+      signature,
+    })
+
+    return result
+  })()
+
+  return { ready }
+}
+
 export function buildOpenWaggleRuntimeDebugValue(
   session: Pick<Session, 'listCapabilities' | 'toolsForPhase'>,
   runtime: {
     readonly mcpSettings?: McpSettingsView
     readonly standardsContext?: AgentKernelStandardsContext
-    readonly bridge: BridgeResult
+    /** Absent when the bridge attach timed out — the run proceeds with built-in
+     *  tools only, and the debug node must still be emitted to say so. */
+    readonly bridge?: BridgeResult
   },
 ) {
   const providers = session.listCapabilities()
@@ -338,15 +544,15 @@ export function buildOpenWaggleRuntimeDebugValue(
   return {
     mcpAdapterEnabled: runtime.mcpSettings?.adapter.enabled ?? false,
     mcpRuntimeConfigPath: runtime.mcpSettings?.runtimeConfigPath ?? null,
-    enabledMcpNames: [...runtime.bridge.enabledMcpNames],
-    attemptedMcpNames: [...runtime.bridge.attemptedMcpNames],
-    connectedMcpIds: [...runtime.bridge.connectedMcpIds],
-    bridgeIssues: runtime.bridge.issues.map((issue) => ({
+    enabledMcpNames: [...(runtime.bridge?.enabledMcpNames ?? [])],
+    attemptedMcpNames: [...(runtime.bridge?.attemptedMcpNames ?? [])],
+    connectedMcpIds: [...(runtime.bridge?.connectedMcpIds ?? [])],
+    bridgeIssues: (runtime.bridge?.issues ?? []).map((issue) => ({
       kind: issue.kind,
       message: issue.message,
     })),
     activeSkillIds: (runtime.standardsContext?.activeSkills ?? []).map((skill) => skill.id),
-    activeSkillToolNames: [...runtime.bridge.skillToolNames],
+    activeSkillToolNames: [...(runtime.bridge?.skillToolNames ?? [])],
     providerIds: providers.map((provider) => provider.id),
     providerKinds: providers.map((provider) => ({ id: provider.id, kind: provider.kind })),
     prepareTools,
@@ -357,7 +563,12 @@ export function buildOpenWaggleRuntimePrompt(
   userText: string,
   runtime: {
     readonly standardsContext?: AgentKernelStandardsContext
-    readonly bridge?: Pick<BridgeResult, 'issues' | 'skillToolNames'>
+    // The prompt lists connected MCP tools and names the servers that failed, so
+    // it needs those two fields too — the narrower Pick predated that section.
+    readonly bridge?: Pick<
+      BridgeResult,
+      'issues' | 'skillToolNames' | 'connectedMcpToolNames' | 'failedMcpNames'
+    >
     readonly pendingUserQuestionResolution?: {
       readonly request: {
         readonly phase: 'prepare' | 'plan' | 'perform' | 'perfect'
@@ -407,13 +618,48 @@ export function buildOpenWaggleRuntimePrompt(
     )
   }
 
-  if (runtime.bridge?.issues?.length) {
-    sections.push(
-      [
-        'OPENWAGGLE MCP BRIDGE NOTES:',
-        ...runtime.bridge.issues.map((issue) => `- ${issue.message}`),
-      ].join('\n'),
-    )
+  if (runtime.bridge) {
+    // Connected MCP tools: list every tool from every connected MCP server
+    // so the model knows EXACTLY what browser/automation tools it can call.
+    const connected = runtime.bridge.connectedMcpToolNames
+    const connectedEntries = Object.entries(connected)
+    if (connectedEntries.length > 0) {
+      const lines = connectedEntries.map(
+        ([serverName, toolNames]) =>
+          `  - ${serverName}: ${toolNames.join(', ')}`,
+      )
+      sections.push(
+        [
+          'CONNECTED MCP TOOLS (use these exact tool names for browser/device automation, testing, screenshots, etc.):',
+          ...lines,
+          'Prefer these MCP tools over bash for browser automation, testing, screenshots, or device interaction.',
+        ].join('\n'),
+      )
+    }
+
+    // Failed MCP servers: explicitly tell the model which servers are NOT available
+    // so it doesn't try to call their tools or install workarounds.
+    const failed = runtime.bridge.failedMcpNames
+    if (failed.length > 0) {
+      sections.push(
+        [
+          'UNAVAILABLE MCP SERVERS (these failed to connect — their tools are NOT available; do NOT try to call them):',
+          ...failed.map((name) => `  - ${name}`),
+          'Do NOT install packages (npm install, pip install, etc.) to work around unavailable tools.',
+          'Use only the tools listed in CONNECTED MCP TOOLS above or the built-in coding tools.',
+        ].join('\n'),
+      )
+    }
+
+    // Legacy: bridge issues as notes
+    if (runtime.bridge.issues?.length) {
+      sections.push(
+        [
+          'OPENWAGGLE MCP BRIDGE NOTES:',
+          ...runtime.bridge.issues.map((issue) => `- ${issue.message}`),
+        ].join('\n'),
+      )
+    }
   }
 
   sections.push(

@@ -8,8 +8,9 @@
 import type { Element, ElementContent, Properties, Root, RootContent } from 'hast'
 import type { Highlighter } from 'shiki'
 import { createRendererLogger } from '@/shared/lib/logger'
-import { DEFAULT_THEME, type PreloadedLanguage, resolveLanguage } from './highlighter'
+import { type PreloadedLanguage, resolveLanguage } from './highlighter'
 import type { ShikiCache } from './shiki-cache'
+import { WAGGLE_CODE_THEME_DARK, WAGGLE_CODE_THEME_LIGHT } from './waggle-code-theme'
 
 // ---------------------------------------------------------------------------
 // Plugin options
@@ -158,8 +159,8 @@ function highlightCode(
     const root = highlighter.codeToHast(code, {
       lang: language,
       themes: {
-        light: 'github-light',
-        dark: 'github-dark',
+        light: WAGGLE_CODE_THEME_LIGHT,
+        dark: WAGGLE_CODE_THEME_DARK,
       },
     })
 

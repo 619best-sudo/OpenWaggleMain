@@ -21,6 +21,9 @@ export interface IpcSendChannelMap {
   'clipboard:write-text': {
     args: [text: string]
   }
+  'log:renderer': {
+    args: [entry: { namespace: string; level: string; message: string; data?: unknown }]
+  }
 }
 
 /**

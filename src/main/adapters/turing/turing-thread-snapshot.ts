@@ -121,6 +121,32 @@ export function createThreadSnapshotAgentHost(
         ...(followUpContext ? { followUpContext } : {}),
       })
     },
+    /**
+     * Flat loop driver passthrough. `HarnessAgent` with `mode:'chain'` calls this
+     * under the hood; the structured-continue follow-up context is injected the
+     * same way as for the legacy runChain/runPhase shims.
+     */
+    run(
+      task: string,
+      opts?: {
+        signal?: AbortSignal
+        askUserQuestion?: (request: AskUserQuestionRequest) => Promise<string>
+        followUpContext?: ThreadFollowUpContext
+        transcriptMode?: import('turing-harness').TranscriptMode
+        images?: Array<{ path: string; mimeType: string }>
+        skipPlan?: boolean
+      },
+    ) {
+      const followUpContext = resolvePersistedFollowUpContext(
+        session,
+        persistedSnapshot,
+        opts?.followUpContext,
+      )
+      return session.run(task, {
+        ...opts,
+        ...(followUpContext ? { followUpContext } : {}),
+      })
+    },
     runPhase(
       phase: Phase,
       task: string,

@@ -3,6 +3,7 @@ import { createHighlighter, createJavaScriptRegexEngine } from 'shiki'
 import { describe, expect, it } from 'vitest'
 import { createRehypeShikiPlugin } from '../rehype-shiki-plugin'
 import { ShikiCache } from '../shiki-cache'
+import { waggleCodeThemeDark, waggleCodeThemeLight } from '../waggle-code-theme'
 
 /** Build a minimal HAST tree for `<pre><code class="language-{lang}">code</code></pre>`. */
 function makeTree(language: string, code: string): Root {
@@ -37,7 +38,7 @@ function getCodeElement(tree: Root): Element {
 
 async function loadHighlighter() {
   return createHighlighter({
-    themes: ['github-dark', 'github-light'],
+    themes: [waggleCodeThemeDark, waggleCodeThemeLight],
     langs: ['typescript', 'javascript'],
     engine: createJavaScriptRegexEngine(),
   })

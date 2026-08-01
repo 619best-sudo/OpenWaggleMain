@@ -7,6 +7,7 @@ import {
   toSkillCatalogResult,
 } from '../skills/skill-catalog'
 import { importSkillFromUrl } from '../skills/skill-importer'
+import { removeSkill } from '../skills/skill-remover'
 import { loadProjectAgentsInstruction } from '../standards/agents-loader'
 import { resolveAgentsChainForPath, resolveAgentsForRun } from '../standards/agents-resolver'
 import { typedHandle } from './typed-ipc'
@@ -92,6 +93,15 @@ export function registerSkillsHandlers(): void {
       const sourceUrl = decodeUnknownOrThrow(sourceUrlSchema, rawSourceUrl)
 
       return yield* Effect.promise(() => importSkillFromUrl(projectPath, sourceUrl))
+    }),
+  )
+
+  typedHandle('skills:remove', (_event, rawProjectPath: string, rawSkillId: string) =>
+    Effect.gen(function* () {
+      const projectPath = decodeUnknownOrThrow(projectPathSchema, rawProjectPath)
+      const skillId = decodeUnknownOrThrow(skillIdSchema, rawSkillId)
+
+      yield* Effect.promise(() => removeSkill(projectPath, skillId))
     }),
   )
 }

@@ -194,7 +194,7 @@ describe('turing OpenWaggle bridge', () => {
           runtimeConfigPath: '/tmp/runtime.json',
         },
         standardsContext: {
-          agentsInstruction: null,
+          agentsInstruction: '',
           agentsScopedInstructions: [],
           activeSkills: [
             {
@@ -211,6 +211,8 @@ describe('turing OpenWaggle bridge', () => {
         },
         bridge: {
           issues: [],
+          connectedMcpToolNames: {},
+          failedMcpNames: [],
           enabledMcpNames: ['playwright'],
           attemptedMcpNames: ['playwright'],
           connectedMcpIds: ['openwaggle:mcp:playwright'],
@@ -263,6 +265,8 @@ describe('turing OpenWaggle bridge', () => {
         warnings: ['Skill catalog warning'],
       },
       bridge: {
+        connectedMcpToolNames: {},
+        failedMcpNames: [],
         issues: [
           {
             kind: 'mcp-skip',

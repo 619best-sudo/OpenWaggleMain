@@ -18,11 +18,13 @@ interface UseSkillsResult {
   isLoading: boolean
   isPreviewLoading: boolean
   isImporting: boolean
+  isRemoving: boolean
   error: string | null
   refresh: () => Promise<void>
   selectSkill: (skillId: string) => void
   toggleSkill: (skillId: string, enabled: boolean) => Promise<void>
   importSkill: (sourceUrl: string) => Promise<SkillImportResult>
+  removeSkill: (skillId: string) => Promise<void>
 }
 
 function describeSkillsError(error: unknown, fallback: string) {
@@ -53,6 +55,15 @@ export function useSkills(projectPath: string | null): UseSkillsResult {
       readonly nextProjectPath: string
       readonly sourceUrl: string
     }) => api.importSkillFromUrl(nextProjectPath, sourceUrl),
+  })
+  const removeSkillMutation = useMutation({
+    mutationFn: ({
+      nextProjectPath,
+      skillId,
+    }: {
+      readonly nextProjectPath: string
+      readonly skillId: string
+    }) => api.removeSkill(nextProjectPath, skillId),
   })
 
   const catalog = skillResourcesQuery.data?.catalog ?? null
@@ -141,6 +152,19 @@ export function useSkills(projectPath: string | null): UseSkillsResult {
     return result
   }
 
+  async function removeSkill(skillId: string) {
+    if (!projectPath) return
+    removeSkillMutation.reset()
+    await removeSkillMutation.mutateAsync({ nextProjectPath: projectPath, skillId })
+    // Clear the preview for the removed skill so the pane doesn't hold stale
+    // markdown for a folder that no longer exists.
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.skillPreview(projectPath, skillId),
+      exact: true,
+    })
+    await queryClient.invalidateQueries({ queryKey: queryKeys.skills(projectPath), exact: true })
+  }
+
   function getErrorMessage() {
     if (skillResourcesQuery.error) {
       return describeSkillsError(skillResourcesQuery.error, 'Failed to load skills.')
@@ -150,6 +174,9 @@ export function useSkills(projectPath: string | null): UseSkillsResult {
     }
     if (toggleSkillMutation.error) {
       return describeSkillsError(toggleSkillMutation.error, 'Failed to update skill state.')
+    }
+    if (removeSkillMutation.error) {
+      return describeSkillsError(removeSkillMutation.error, 'Failed to remove skill.')
     }
     return null
   }
@@ -162,10 +189,12 @@ export function useSkills(projectPath: string | null): UseSkillsResult {
     isLoading: skillResourcesQuery.isPending,
     isPreviewLoading: previewQuery.isPending,
     isImporting: importSkillMutation.isPending,
+    isRemoving: removeSkillMutation.isPending,
     error: getErrorMessage(),
     refresh,
     selectSkill: setSelectedSkillId,
     toggleSkill,
     importSkill,
+    removeSkill,
   }
 }
