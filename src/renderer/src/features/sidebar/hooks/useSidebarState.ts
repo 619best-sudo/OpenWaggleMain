@@ -1,6 +1,6 @@
 import { SessionId } from '@shared/types/brand'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useChat } from '@/features/chat/hooks'
 import { useGit } from '@/features/git/hooks'
 import { useProject, useSessions } from '@/features/sessions/hooks'
@@ -75,6 +75,27 @@ export function useSidebarState() {
     recentProjects,
     sortMode,
   })
+
+  // Auto-collapse every project except the active one whenever the active
+  // project changes. The user can still expand/collapse manually afterwards —
+  // this effect only fires on project switch, so those manual choices persist
+  // until the next switch. Without it, every project that ever had a session
+  // stays expanded and the sidebar grows unbounded as users add projects.
+  const lastActiveProjectPath = useRef<string | null>(null)
+  useEffect(() => {
+    const activePath = project.projectPath
+    if (activePath === lastActiveProjectPath.current) return
+    lastActiveProjectPath.current = activePath
+    // When no project is active, leave the collapse state untouched so all
+    // groups stay visible (e.g. a new user picking their first project).
+    if (!activePath) return
+    setCollapsedProjectPaths(
+      () =>
+        new Set(
+          sessionGroups.projects.map((group) => group.projectPath).filter((p) => p !== activePath),
+        ),
+    )
+  }, [project.projectPath, sessionGroups])
 
   function displayProjectName(path: string) {
     return projectDisplayNames[path]?.trim() || projectName(path)

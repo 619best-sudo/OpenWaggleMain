@@ -31,8 +31,9 @@ export function useGitRefresh({
   useEffect(() => {
     let refreshTimer: ReturnType<typeof setTimeout> | null = null
 
-    const unsubscribe = api.onAgentEvent(({ sessionId, event }) => {
-      if (!isTerminalTransportEvent(event)) return
+    const unsubscribe = api.onAgentEventBatch(({ sessionId, events }) => {
+      // Only terminal events matter here; the whole batch is one signal.
+      if (!events.some(isTerminalTransportEvent)) return
 
       if (activeSessionId === sessionId) {
         void refreshSession(activeSessionId)

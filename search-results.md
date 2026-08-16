@@ -1,0 +1,993 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e4]:
+    - generic [ref=e6]: NEW|Epik raised $1M pre-seed, led by InfoEdge.
+    - generic [ref=e7]:
+      - generic [ref=e9]:
+        - link "Epik Logo" [ref=e11] [cursor=pointer]:
+          - /url: /
+          - img "Epik Logo" [ref=e12]
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - generic:
+              - generic:
+                - generic: Demo in 60 Minutes
+            - textbox "Search" [ref=e21]:
+              - /placeholder: " "
+              - text: ecovacs
+          - button "Search" [ref=e22]:
+            - img [ref=e23]
+          - button "Clear search" [ref=e3418] [cursor=pointer]:
+            - img [ref=e3419]
+        - generic [ref=e26]:
+          - button "Ask Epik AI" [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+            - generic [ref=e32]: Ask Epik AI
+          - link "Login" [ref=e33] [cursor=pointer]:
+            - /url: /login
+            - img [ref=e34]
+          - button "My Bag" [ref=e37]:
+            - img [ref=e38]
+            - generic [ref=e40]: "3"
+      - navigation [ref=e42]:
+        - generic [ref=e44]:
+          - button "Home Home" [ref=e45] [cursor=pointer]:
+            - img "Home" [ref=e47]
+            - generic [ref=e48]:
+              - generic [ref=e49]: Home
+              - img [ref=e50]
+          - button "Kitchen Kitchen" [ref=e52] [cursor=pointer]:
+            - img "Kitchen" [ref=e54]
+            - generic [ref=e55]:
+              - generic [ref=e56]: Kitchen
+              - img [ref=e57]
+          - button "Health & Wellness Health & Wellness" [ref=e59] [cursor=pointer]:
+            - img "Health & Wellness" [ref=e61]
+            - generic [ref=e62]:
+              - generic [ref=e63]: Health & Wellness
+              - img [ref=e64]
+          - button "Gadgets Gadgets" [ref=e66] [cursor=pointer]:
+            - img "Gadgets" [ref=e68]
+            - generic [ref=e69]:
+              - generic [ref=e70]: Gadgets
+              - img [ref=e71]
+          - button "Beauty & Personal Care Beauty & Personal Care" [ref=e73] [cursor=pointer]:
+            - img "Beauty & Personal Care" [ref=e75]
+            - generic [ref=e76]:
+              - generic [ref=e77]: Beauty & Personal Care
+              - img [ref=e78]
+          - button "Personal Luxury Personal Luxury" [ref=e80] [cursor=pointer]:
+            - img "Personal Luxury" [ref=e82]
+            - generic [ref=e83]:
+              - generic [ref=e84]: Personal Luxury
+              - img [ref=e85]
+          - button "Kids Kids" [ref=e87] [cursor=pointer]:
+            - img "Kids" [ref=e89]
+            - generic [ref=e90]:
+              - generic [ref=e91]: Kids
+              - img [ref=e92]
+          - button "Music & Instruments Music & Instruments" [ref=e94] [cursor=pointer]:
+            - img "Music & Instruments" [ref=e96]
+            - generic [ref=e97]:
+              - generic [ref=e98]: Music & Instruments
+              - img [ref=e99]
+          - button "Sports & Outdoors Sports & Outdoors" [ref=e101] [cursor=pointer]:
+            - img "Sports & Outdoors" [ref=e103]
+            - generic [ref=e104]:
+              - generic [ref=e105]: Sports & Outdoors
+              - img [ref=e106]
+  - alert [ref=e3230]: Search Products | Epik
+  - generic:
+    - generic:
+      - iframe
+  - generic [ref=e3438]:
+    - generic [ref=e3439]:
+      - generic [ref=e3442]:
+        - text: Showing 25 of 25 products for
+        - generic [ref=e3443]: "\"ecovacs\""
+      - generic [ref=e3444]:
+        - generic [ref=e3445]: "Sort by:"
+        - generic [ref=e3446]:
+          - combobox [ref=e3447] [cursor=pointer]:
+            - option "Relevance" [selected]
+            - 'option "Price: Low to High"'
+            - 'option "Price: High to Low"'
+            - option "Newest First"
+          - img
+    - generic [ref=e3448]:
+      - generic [ref=e3450]:
+        - link "ECOVACS DEEBOT N30 White 2 in 1 Robot Vacuum Cleaner & Mop, 10000 Pa Suction, 5200mAh Battery, Covers 3500+ Sq ft in Single Charge, Zero Tangle 2.0 Technology, Advanced TrueMapping" [ref=e3451] [cursor=pointer]:
+          - /url: /products/ecovacs-n30-white
+          - generic [ref=e3452]:
+            - generic:
+              - generic: Demo in 60 Mins
+            - img "ECOVACS DEEBOT N30 White 2 in 1 Robot Vacuum Cleaner & Mop, 10000 Pa Suction, 5200mAh Battery, Covers 3500+ Sq ft in Single Charge, Zero Tangle 2.0 Technology, Advanced TrueMapping" [ref=e3453]
+        - generic [ref=e3454]:
+          - link "ECOVACS DEEBOT N30 White 2 in 1 Robot Vacuum Cleaner & Mop, 10000 Pa Suction, 5200mAh Battery, Covers 3500+ Sq ft in Single Charge, Zero Tangle 2.0 Technology, Advanced TrueMapping" [ref=e3455] [cursor=pointer]:
+            - /url: /products/ecovacs-n30-white
+            - heading "ECOVACS DEEBOT N30 White 2 in 1 Robot Vacuum Cleaner & Mop, 10000 Pa Suction, 5200mAh Battery, Covers 3500+ Sq ft in Single Charge, Zero Tangle 2.0 Technology, Advanced TrueMapping" [level=3] [ref=e3456]
+          - generic [ref=e3458]:
+            - generic [ref=e3459]:
+              - img [ref=e3460]
+              - img [ref=e3462]
+              - img [ref=e3464]
+              - img [ref=e3466]
+              - img [ref=e3468]
+            - generic [ref=e3470]: "4.5"
+            - generic [ref=e3471]: (3.4k+)
+          - generic [ref=e3473]:
+            - generic [ref=e3474]:
+              - paragraph [ref=e3475]: Epik Price
+              - generic [ref=e3476]: ₹23,999
+            - generic [ref=e3478]:
+              - paragraph [ref=e3479]: Regular Price
+              - generic [ref=e3480]:
+                - generic [ref=e3481]: ₹99,990
+                - generic [ref=e3482]: 76% off
+          - generic [ref=e3484]:
+            - img [ref=e3485]
+            - paragraph [ref=e3487]: ₹2,000 / Month EMI
+          - generic [ref=e3489]:
+            - button "Add to bag" [ref=e3490] [cursor=pointer]:
+              - img [ref=e3491]
+            - button "Home Demo" [ref=e3494] [cursor=pointer]:
+              - generic [ref=e3495]: Home Demo
+      - generic [ref=e3497]:
+        - link "ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025 Launch, PowerBoost Charging, OZMO Roller 2.0 Instant Self-Washing Mop, 19500Pa Blast Suction, Bagless OmniCyclone Station" [ref=e3498] [cursor=pointer]:
+          - /url: /products/ecovacs-deebot-x11-omnicyclone
+          - generic [ref=e3499]:
+            - generic:
+              - generic: Demo in 60 Mins
+            - img "ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025 Launch, PowerBoost Charging, OZMO Roller 2.0 Instant Self-Washing Mop, 19500Pa Blast Suction, Bagless OmniCyclone Station" [ref=e3500]
+        - generic [ref=e3501]:
+          - link "ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025 Launch, PowerBoost Charging, OZMO Roller 2.0 Instant Self-Washing Mop, 19500Pa Blast Suction, Bagless OmniCyclone Station" [ref=e3502] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-x11-omnicyclone
+            - heading "ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025 Launch, PowerBoost Charging, OZMO Roller 2.0 Instant Self-Washing Mop, 19500Pa Blast Suction, Bagless OmniCyclone Station" [level=3] [ref=e3503]
+          - generic [ref=e3505]:
+            - generic [ref=e3506]:
+              - img [ref=e3507]
+              - img [ref=e3509]
+              - img [ref=e3511]
+              - img [ref=e3513]
+              - img [ref=e3515]
+            - generic [ref=e3517]: "4.4"
+            - generic [ref=e3518]: (1.2k+)
+          - generic [ref=e3520]:
+            - generic [ref=e3521]:
+              - paragraph [ref=e3522]: Epik Price
+              - generic [ref=e3523]: ₹1,34,999
+            - generic [ref=e3525]:
+              - paragraph [ref=e3526]: Regular Price
+              - generic [ref=e3527]:
+                - generic [ref=e3528]: ₹2,49,999
+                - generic [ref=e3529]: 46% off
+          - generic [ref=e3531]:
+            - img [ref=e3532]
+            - paragraph [ref=e3534]: ₹11,250 / Month EMI
+          - generic [ref=e3536]:
+            - button "Add to bag" [ref=e3537] [cursor=pointer]:
+              - img [ref=e3538]
+            - button "Home Demo" [ref=e3541] [cursor=pointer]:
+              - generic [ref=e3542]: Home Demo
+      - generic [ref=e3544]:
+        - link "ECOVACS DEEBOT T80 Omni 2 in 1 Robot Vacuum Cleaner & Mop, New Launch, 18000 Pa, 6400 mAh Battery, OZMO Roller Real-Time Mop Washing, Self-Emptying, Hot Air Drying, AI ReMop 2.0, ZeroTangle 3.0" [ref=e3545] [cursor=pointer]:
+          - /url: /products/ecovacs-deebot-t80-pro-omni-robot
+          - generic [ref=e3546]:
+            - generic:
+              - generic: Demo in 60 Mins
+            - img "ECOVACS DEEBOT T80 Omni 2 in 1 Robot Vacuum Cleaner & Mop, New Launch, 18000 Pa, 6400 mAh Battery, OZMO Roller Real-Time Mop Washing, Self-Emptying, Hot Air Drying, AI ReMop 2.0, ZeroTangle 3.0" [ref=e3547]
+        - generic [ref=e3548]:
+          - link "ECOVACS DEEBOT T80 Omni 2 in 1 Robot Vacuum Cleaner & Mop, New Launch, 18000 Pa, 6400 mAh Battery, OZMO Roller Real-Time Mop Washing, Self-Emptying, Hot Air Drying, AI ReMop 2.0, ZeroTangle 3.0" [ref=e3549] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-t80-pro-omni-robot
+            - heading "ECOVACS DEEBOT T80 Omni 2 in 1 Robot Vacuum Cleaner & Mop, New Launch, 18000 Pa, 6400 mAh Battery, OZMO Roller Real-Time Mop Washing, Self-Emptying, Hot Air Drying, AI ReMop 2.0, ZeroTangle 3.0" [level=3] [ref=e3550]
+          - generic [ref=e3552]:
+            - generic [ref=e3553]:
+              - img [ref=e3554]
+              - img [ref=e3556]
+              - img [ref=e3558]
+              - img [ref=e3560]
+              - img [ref=e3562]
+            - generic [ref=e3564]: "4.5"
+            - generic [ref=e3565]: (4.3k+)
+          - generic [ref=e3567]:
+            - generic [ref=e3568]:
+              - paragraph [ref=e3569]: Epik Price
+              - generic [ref=e3570]: ₹99,999
+            - generic [ref=e3572]:
+              - paragraph [ref=e3573]: Regular Price
+              - generic [ref=e3574]:
+                - generic [ref=e3575]: ₹1,99,999
+                - generic [ref=e3576]: 50% off
+          - generic [ref=e3578]:
+            - img [ref=e3579]
+            - paragraph [ref=e3581]: ₹8,333 / Month EMI
+          - generic [ref=e3583]:
+            - button "Add to bag" [ref=e3584] [cursor=pointer]:
+              - img [ref=e3585]
+            - button "Home Demo" [ref=e3588] [cursor=pointer]:
+              - generic [ref=e3589]: Home Demo
+      - generic [ref=e3591]:
+        - link "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e3592] [cursor=pointer]:
+          - /url: /products/ecovacs-deebot-n30-white-2-in-1-robot-vacuum-cleaner-mop-2025-new-launch-10000-pa-suction-5200mah-battery-covers-3500-sq-ft-in-single-charge-zero-tangle-2-0-technology-advanced-truemapping-copy
+          - generic [ref=e3593]:
+            - generic:
+              - generic: Demo in 60 Mins
+            - img "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e3594]
+        - generic [ref=e3595]:
+          - link "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e3596] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-n30-white-2-in-1-robot-vacuum-cleaner-mop-2025-new-launch-10000-pa-suction-5200mah-battery-covers-3500-sq-ft-in-single-charge-zero-tangle-2-0-technology-advanced-truemapping-copy
+            - heading "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [level=3] [ref=e3597]
+          - generic [ref=e3599]:
+            - generic [ref=e3600]:
+              - img [ref=e3601]
+              - img [ref=e3603]
+              - img [ref=e3605]
+              - img [ref=e3607]
+              - img [ref=e3609]
+            - generic [ref=e3611]: "4.1"
+            - generic [ref=e3612]: (3.2k+)
+          - generic [ref=e3614]:
+            - generic [ref=e3615]:
+              - paragraph [ref=e3616]: Epik Price
+              - generic [ref=e3617]: ₹32,999
+            - generic [ref=e3619]:
+              - paragraph [ref=e3620]: Regular Price
+              - generic [ref=e3621]:
+                - generic [ref=e3622]: ₹89,999
+                - generic [ref=e3623]: 63% off
+          - generic [ref=e3625]:
+            - img [ref=e3626]
+            - paragraph [ref=e3628]: ₹2,750 / Month EMI
+          - generic [ref=e3630]:
+            - button "Add to bag" [ref=e3631] [cursor=pointer]:
+              - img [ref=e3632]
+            - button "Home Demo" [ref=e3635] [cursor=pointer]:
+              - generic [ref=e3636]: Home Demo
+      - generic [ref=e3638]:
+        - link "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e3639] [cursor=pointer]:
+          - /url: /products/ecovacs-t50-pro
+          - generic [ref=e3640]:
+            - generic:
+              - generic: Demo in 60 Mins
+            - img "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e3641]
+        - generic [ref=e3642]:
+          - link "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e3643] [cursor=pointer]:
+            - /url: /products/ecovacs-t50-pro
+            - heading "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [level=3] [ref=e3644]
+          - generic [ref=e3646]:
+            - generic [ref=e3647]:
+              - img [ref=e3648]
+              - img [ref=e3650]
+              - img [ref=e3652]
+              - img [ref=e3654]
+              - img [ref=e3656]
+            - generic [ref=e3658]: "4.5"
+            - generic [ref=e3659]: (3.4k+)
+          - generic [ref=e3661]:
+            - generic [ref=e3662]:
+              - paragraph [ref=e3663]: Epik Price
+              - generic [ref=e3664]: ₹79,999
+            - generic [ref=e3666]:
+              - paragraph [ref=e3667]: Regular Price
+              - generic [ref=e3668]:
+                - generic [ref=e3669]: ₹1,99,900
+                - generic [ref=e3670]: 60% off
+          - generic [ref=e3672]:
+            - img [ref=e3673]
+            - paragraph [ref=e3675]: ₹6,667 / Month EMI
+          - generic [ref=e3677]:
+            - button "Add to bag" [ref=e3678] [cursor=pointer]:
+              - img [ref=e3679]
+            - button "Home Demo" [ref=e3682] [cursor=pointer]:
+              - generic [ref=e3683]: Home Demo
+      - generic [ref=e3685]:
+        - link "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [ref=e3686] [cursor=pointer]:
+          - /url: /products/ecovacs-deebot-n50-pro-omni-2-in-1-robotic-vacuum-cleaner-mop-2026-new-launch-25000-pa-suction-self-emptying-omni-station-zerotangle-2-0-hot-air-drying-auto-lift-mop-on-carpet-upto-300-mins
+          - generic [ref=e3687]:
+            - generic:
+              - generic: Demo in 60 Mins
+            - img "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [ref=e3688]
+        - generic [ref=e3689]:
+          - link "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [ref=e3690] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-n50-pro-omni-2-in-1-robotic-vacuum-cleaner-mop-2026-new-launch-25000-pa-suction-self-emptying-omni-station-zerotangle-2-0-hot-air-drying-auto-lift-mop-on-carpet-upto-300-mins
+            - heading "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [level=3] [ref=e3691]
+          - generic [ref=e3694]:
+            - generic [ref=e3695]:
+              - paragraph [ref=e3696]: Epik Price
+              - generic [ref=e3697]: ₹59,999
+            - generic [ref=e3699]:
+              - paragraph [ref=e3700]: Regular Price
+              - generic [ref=e3701]:
+                - generic [ref=e3702]: ₹1,69,999
+                - generic [ref=e3703]: 65% off
+          - generic [ref=e3705]:
+            - img [ref=e3706]
+            - paragraph [ref=e3708]: ₹5,000 / Month EMI
+          - generic [ref=e3710]:
+            - button "Add to bag" [ref=e3711] [cursor=pointer]:
+              - img [ref=e3712]
+            - button "Home Demo" [ref=e3715] [cursor=pointer]:
+              - generic [ref=e3716]: Home Demo
+      - generic [ref=e3718]:
+        - link "ECOVACS DEEBOT X1 Omni 2 In 1 Robotic Vacuum & Mop with Powerful Suction, All In One Omni Station, AIVI 3D Navigation, TrueMapping, YIKO Voice Assistant" [ref=e3719] [cursor=pointer]:
+          - /url: /products/deebot-x1-omni-ecovacs-brand-new-all-in-one-vacuum-and-mopping-flagship
+          - generic [ref=e3720]:
+            - generic:
+              - generic: Demo in 60 Mins
+            - img "ECOVACS DEEBOT X1 Omni 2 In 1 Robotic Vacuum & Mop with Powerful Suction, All In One Omni Station, AIVI 3D Navigation, TrueMapping, YIKO Voice Assistant" [ref=e3721]
+        - generic [ref=e3722]:
+          - link "ECOVACS DEEBOT X1 Omni 2 In 1 Robotic Vacuum & Mop with Powerful Suction, All In One Omni Station, AIVI 3D Navigation, TrueMapping, YIKO Voice Assistant" [ref=e3723] [cursor=pointer]:
+            - /url: /products/deebot-x1-omni-ecovacs-brand-new-all-in-one-vacuum-and-mopping-flagship
+            - heading "ECOVACS DEEBOT X1 Omni 2 In 1 Robotic Vacuum & Mop with Powerful Suction, All In One Omni Station, AIVI 3D Navigation, TrueMapping, YIKO Voice Assistant" [level=3] [ref=e3724]
+          - generic [ref=e3727]:
+            - generic [ref=e3728]:
+              - paragraph [ref=e3729]: Epik Price
+              - generic [ref=e3730]: ₹49,999
+            - generic [ref=e3732]:
+              - paragraph [ref=e3733]: Regular Price
+              - generic [ref=e3734]:
+                - generic [ref=e3735]: ₹1,19,999
+                - generic [ref=e3736]: 58% off
+          - generic [ref=e3738]:
+            - img [ref=e3739]
+            - paragraph [ref=e3741]: ₹4,167 / Month EMI
+          - generic [ref=e3743]:
+            - button "Add to bag" [ref=e3744] [cursor=pointer]:
+              - img [ref=e3745]
+            - button "Home Demo" [ref=e3748] [cursor=pointer]:
+              - generic [ref=e3749]: Home Demo
+      - generic [ref=e3751]:
+        - link "ECOVACS WINBOT Window Cleaning Robot - Compact Design, Dual Nozzles with Ultrasonic Spray, 9-Stage Protection System, Intelligent Path Planning, 3 Cleaning Modes, Anti-Slipping System" [ref=e3752] [cursor=pointer]:
+          - /url: /products/ecovacs-winbot-window-cleaning-robot-compact-design-dual-nozzles-with-ultrasonic-spray-9-stage-protection-system-intelligent-path-planning-3-cleaning-modes-anti-slipping-system
+          - generic [ref=e3753]:
+            - generic:
+              - generic: Demo in 60 Mins
+            - img "ECOVACS WINBOT Window Cleaning Robot - Compact Design, Dual Nozzles with Ultrasonic Spray, 9-Stage Protection System, Intelligent Path Planning, 3 Cleaning Modes, Anti-Slipping System" [ref=e3754]
+        - generic [ref=e3755]:
+          - link "ECOVACS WINBOT Window Cleaning Robot - Compact Design, Dual Nozzles with Ultrasonic Spray, 9-Stage Protection System, Intelligent Path Planning, 3 Cleaning Modes, Anti-Slipping System" [ref=e3756] [cursor=pointer]:
+            - /url: /products/ecovacs-winbot-window-cleaning-robot-compact-design-dual-nozzles-with-ultrasonic-spray-9-stage-protection-system-intelligent-path-planning-3-cleaning-modes-anti-slipping-system
+            - heading "ECOVACS WINBOT Window Cleaning Robot - Compact Design, Dual Nozzles with Ultrasonic Spray, 9-Stage Protection System, Intelligent Path Planning, 3 Cleaning Modes, Anti-Slipping System" [level=3] [ref=e3757]
+          - generic [ref=e3760]:
+            - generic [ref=e3761]:
+              - paragraph [ref=e3762]: Epik Price
+              - generic [ref=e3763]: ₹19,999
+            - generic [ref=e3765]:
+              - paragraph [ref=e3766]: Regular Price
+              - generic [ref=e3767]:
+                - generic [ref=e3768]: ₹59,999
+                - generic [ref=e3769]: 67% off
+          - generic [ref=e3771]:
+            - img [ref=e3772]
+            - paragraph [ref=e3774]: ₹1,667 / Month EMI
+          - generic [ref=e3776]:
+            - button "Add to bag" [ref=e3777] [cursor=pointer]:
+              - img [ref=e3778]
+            - button "Home Demo" [ref=e3781] [cursor=pointer]:
+              - generic [ref=e3782]: Home Demo
+      - generic [ref=e3784]:
+        - link "ECOVACS DEEBOT N30 / N30 Plus Accessory Kit" [ref=e3785] [cursor=pointer]:
+          - /url: /products/accessory-kit
+          - img "ECOVACS DEEBOT N30 / N30 Plus Accessory Kit" [ref=e3787]
+        - generic [ref=e3788]:
+          - link "ECOVACS DEEBOT N30 / N30 Plus Accessory Kit" [ref=e3789] [cursor=pointer]:
+            - /url: /products/accessory-kit
+            - heading "ECOVACS DEEBOT N30 / N30 Plus Accessory Kit" [level=3] [ref=e3790]
+          - generic [ref=e3793]:
+            - generic [ref=e3794]:
+              - paragraph [ref=e3795]: Epik Price
+              - generic [ref=e3796]: ₹3,499
+            - generic [ref=e3798]:
+              - paragraph [ref=e3799]: Regular Price
+              - generic [ref=e3800]:
+                - generic [ref=e3801]: ₹5,999
+                - generic [ref=e3802]: 42% off
+          - generic [ref=e3804]:
+            - img [ref=e3805]
+            - paragraph [ref=e3807]: ₹292 / Month EMI
+          - generic [ref=e3809]:
+            - button "Add to bag" [ref=e3810] [cursor=pointer]:
+              - img [ref=e3811]
+            - button "Buy Now" [ref=e3814] [cursor=pointer]:
+              - generic [ref=e3815]: Buy Now
+      - generic [ref=e3817]:
+        - link "ECOVACS DEEBOT N30 / N30 PLUS Reusable Mopping Pads (Pack of 3)" [ref=e3818] [cursor=pointer]:
+          - /url: /products/reusable-mopping-pads-pack-of-3
+          - img "ECOVACS DEEBOT N30 / N30 PLUS Reusable Mopping Pads (Pack of 3)" [ref=e3820]
+        - generic [ref=e3821]:
+          - link "ECOVACS DEEBOT N30 / N30 PLUS Reusable Mopping Pads (Pack of 3)" [ref=e3822] [cursor=pointer]:
+            - /url: /products/reusable-mopping-pads-pack-of-3
+            - heading "ECOVACS DEEBOT N30 / N30 PLUS Reusable Mopping Pads (Pack of 3)" [level=3] [ref=e3823]
+          - generic [ref=e3826]:
+            - generic [ref=e3827]:
+              - paragraph [ref=e3828]: Epik Price
+              - generic [ref=e3829]: ₹2,499
+            - generic [ref=e3831]:
+              - paragraph [ref=e3832]: Regular Price
+              - generic [ref=e3833]:
+                - generic [ref=e3834]: ₹3,999
+                - generic [ref=e3835]: 38% off
+          - generic [ref=e3837]:
+            - img [ref=e3838]
+            - paragraph [ref=e3840]: ₹208 / Month EMI
+          - generic [ref=e3842]:
+            - button "Add to bag" [ref=e3843] [cursor=pointer]:
+              - img [ref=e3844]
+            - button "Buy Now" [ref=e3847] [cursor=pointer]:
+              - generic [ref=e3848]: Buy Now
+      - generic [ref=e3850]:
+        - link "ECOVACS DEEBOT N30 / N30 PLUS Accessory Kit & Mop Set" [ref=e3851] [cursor=pointer]:
+          - /url: /products/accessory-kit-mop-set
+          - img "ECOVACS DEEBOT N30 / N30 PLUS Accessory Kit & Mop Set" [ref=e3853]
+        - generic [ref=e3854]:
+          - link "ECOVACS DEEBOT N30 / N30 PLUS Accessory Kit & Mop Set" [ref=e3855] [cursor=pointer]:
+            - /url: /products/accessory-kit-mop-set
+            - heading "ECOVACS DEEBOT N30 / N30 PLUS Accessory Kit & Mop Set" [level=3] [ref=e3856]
+          - generic [ref=e3859]:
+            - generic [ref=e3860]:
+              - paragraph [ref=e3861]: Epik Price
+              - generic [ref=e3862]: ₹4,999
+            - generic [ref=e3864]:
+              - paragraph [ref=e3865]: Regular Price
+              - generic [ref=e3866]:
+                - generic [ref=e3867]: ₹9,999
+                - generic [ref=e3868]: 50% off
+          - generic [ref=e3870]:
+            - img [ref=e3871]
+            - paragraph [ref=e3873]: ₹417 / Month EMI
+          - generic [ref=e3875]:
+            - button "Add to bag" [ref=e3876] [cursor=pointer]:
+              - img [ref=e3877]
+            - button "Buy Now" [ref=e3880] [cursor=pointer]:
+              - generic [ref=e3881]: Buy Now
+      - generic [ref=e3883]:
+        - link "ECOVACS DEEBOT N50 PRO OMNI Accessory Kit" [ref=e3884] [cursor=pointer]:
+          - /url: /products/deebot-n50-pro-omni-accessory-kit
+          - img "ECOVACS DEEBOT N50 PRO OMNI Accessory Kit" [ref=e3886]
+        - generic [ref=e3887]:
+          - link "ECOVACS DEEBOT N50 PRO OMNI Accessory Kit" [ref=e3888] [cursor=pointer]:
+            - /url: /products/deebot-n50-pro-omni-accessory-kit
+            - heading "ECOVACS DEEBOT N50 PRO OMNI Accessory Kit" [level=3] [ref=e3889]
+          - generic [ref=e3892]:
+            - generic [ref=e3893]:
+              - paragraph [ref=e3894]: Epik Price
+              - generic [ref=e3895]: ₹3,999
+            - generic [ref=e3897]:
+              - paragraph [ref=e3898]: Regular Price
+              - generic [ref=e3899]:
+                - generic [ref=e3900]: ₹5,999
+                - generic [ref=e3901]: 33% off
+          - generic [ref=e3903]:
+            - img [ref=e3904]
+            - paragraph [ref=e3906]: ₹333 / Month EMI
+          - generic [ref=e3908]:
+            - button "Add to bag" [ref=e3909] [cursor=pointer]:
+              - img [ref=e3910]
+            - button "Buy Now" [ref=e3913] [cursor=pointer]:
+              - generic [ref=e3914]: Buy Now
+      - generic [ref=e3916]:
+        - link "ECOVACS DEEBOT N50 PRO OMNI Reusable Mopping Pad (Set of 2)" [ref=e3917] [cursor=pointer]:
+          - /url: /products/reusable-mopping-pad-set-of-2
+          - img "ECOVACS DEEBOT N50 PRO OMNI Reusable Mopping Pad (Set of 2)" [ref=e3919]
+        - generic [ref=e3920]:
+          - link "ECOVACS DEEBOT N50 PRO OMNI Reusable Mopping Pad (Set of 2)" [ref=e3921] [cursor=pointer]:
+            - /url: /products/reusable-mopping-pad-set-of-2
+            - heading "ECOVACS DEEBOT N50 PRO OMNI Reusable Mopping Pad (Set of 2)" [level=3] [ref=e3922]
+          - generic [ref=e3925]:
+            - generic [ref=e3926]:
+              - paragraph [ref=e3927]: Epik Price
+              - generic [ref=e3928]: ₹3,999
+            - generic [ref=e3930]:
+              - paragraph [ref=e3931]: Regular Price
+              - generic [ref=e3932]:
+                - generic [ref=e3933]: ₹9,999
+                - generic [ref=e3934]: 60% off
+          - generic [ref=e3936]:
+            - img [ref=e3937]
+            - paragraph [ref=e3939]: ₹333 / Month EMI
+          - generic [ref=e3941]:
+            - button "Add to bag" [ref=e3942] [cursor=pointer]:
+              - img [ref=e3943]
+            - button "Buy Now" [ref=e3946] [cursor=pointer]:
+              - generic [ref=e3947]: Buy Now
+      - generic [ref=e3949]:
+        - link "ECOVACS DEEBOT N50 PRO OMNI Accessory Kit & Mop Set" [ref=e3950] [cursor=pointer]:
+          - /url: /products/deebot-n50-pro-omni-accessory-kit-mop-set
+          - img "ECOVACS DEEBOT N50 PRO OMNI Accessory Kit & Mop Set" [ref=e3952]
+        - generic [ref=e3953]:
+          - link "ECOVACS DEEBOT N50 PRO OMNI Accessory Kit & Mop Set" [ref=e3954] [cursor=pointer]:
+            - /url: /products/deebot-n50-pro-omni-accessory-kit-mop-set
+            - heading "ECOVACS DEEBOT N50 PRO OMNI Accessory Kit & Mop Set" [level=3] [ref=e3955]
+          - generic [ref=e3958]:
+            - generic [ref=e3959]:
+              - paragraph [ref=e3960]: Epik Price
+              - generic [ref=e3961]: ₹7,999
+            - generic [ref=e3963]:
+              - paragraph [ref=e3964]: Regular Price
+              - generic [ref=e3965]:
+                - generic [ref=e3966]: ₹16,999
+                - generic [ref=e3967]: 53% off
+          - generic [ref=e3969]:
+            - img [ref=e3970]
+            - paragraph [ref=e3972]: ₹667 / Month EMI
+          - generic [ref=e3974]:
+            - button "Add to bag" [ref=e3975] [cursor=pointer]:
+              - img [ref=e3976]
+            - button "Buy Now" [ref=e3979] [cursor=pointer]:
+              - generic [ref=e3980]: Buy Now
+      - generic [ref=e3982]:
+        - link "ECOVACS DEEBOT N50 PRO OMNI DUST BAGS" [ref=e3983] [cursor=pointer]:
+          - /url: /products/deebot-n50-pro-omni-dust-bags
+          - img "ECOVACS DEEBOT N50 PRO OMNI DUST BAGS" [ref=e3985]
+        - generic [ref=e3986]:
+          - link "ECOVACS DEEBOT N50 PRO OMNI DUST BAGS" [ref=e3987] [cursor=pointer]:
+            - /url: /products/deebot-n50-pro-omni-dust-bags
+            - heading "ECOVACS DEEBOT N50 PRO OMNI DUST BAGS" [level=3] [ref=e3988]
+          - generic [ref=e3991]:
+            - generic [ref=e3992]:
+              - paragraph [ref=e3993]: Epik Price
+              - generic [ref=e3994]: ₹2,499
+            - generic [ref=e3996]:
+              - paragraph [ref=e3997]: Regular Price
+              - generic [ref=e3998]:
+                - generic [ref=e3999]: ₹3,999
+                - generic [ref=e4000]: 38% off
+          - generic [ref=e4002]:
+            - img [ref=e4003]
+            - paragraph [ref=e4005]: ₹208 / Month EMI
+          - generic [ref=e4007]:
+            - button "Add to bag" [ref=e4008] [cursor=pointer]:
+              - img [ref=e4009]
+            - button "Buy Now" [ref=e4012] [cursor=pointer]:
+              - generic [ref=e4013]: Buy Now
+      - generic [ref=e4015]:
+        - link "ECOVACS DEEBOT T80 PRO OMNI Accessory Kit" [ref=e4016] [cursor=pointer]:
+          - /url: /products/deebot-t80-pro-omni
+          - img "ECOVACS DEEBOT T80 PRO OMNI Accessory Kit" [ref=e4018]
+        - generic [ref=e4019]:
+          - link "ECOVACS DEEBOT T80 PRO OMNI Accessory Kit" [ref=e4020] [cursor=pointer]:
+            - /url: /products/deebot-t80-pro-omni
+            - heading "ECOVACS DEEBOT T80 PRO OMNI Accessory Kit" [level=3] [ref=e4021]
+          - generic [ref=e4024]:
+            - generic [ref=e4025]:
+              - paragraph [ref=e4026]: Epik Price
+              - generic [ref=e4027]: ₹4,999
+            - generic [ref=e4029]:
+              - paragraph [ref=e4030]: Regular Price
+              - generic [ref=e4031]:
+                - generic [ref=e4032]: ₹5,999
+                - generic [ref=e4033]: 17% off
+          - generic [ref=e4035]:
+            - img [ref=e4036]
+            - paragraph [ref=e4038]: ₹417 / Month EMI
+          - generic [ref=e4040]:
+            - button "Add to bag" [ref=e4041] [cursor=pointer]:
+              - img [ref=e4042]
+            - button "Buy Now" [ref=e4045] [cursor=pointer]:
+              - generic [ref=e4046]: Buy Now
+      - generic [ref=e4048]:
+        - link "ECOVACS DEEBOT T80 PRO OMNI Roller Brush" [ref=e4049] [cursor=pointer]:
+          - /url: /products/deebot-t80-pro-omni-roller-brush
+          - img "ECOVACS DEEBOT T80 PRO OMNI Roller Brush" [ref=e4051]
+        - generic [ref=e4052]:
+          - link "ECOVACS DEEBOT T80 PRO OMNI Roller Brush" [ref=e4053] [cursor=pointer]:
+            - /url: /products/deebot-t80-pro-omni-roller-brush
+            - heading "ECOVACS DEEBOT T80 PRO OMNI Roller Brush" [level=3] [ref=e4054]
+          - generic [ref=e4057]:
+            - generic [ref=e4058]:
+              - paragraph [ref=e4059]: Epik Price
+              - generic [ref=e4060]: ₹4,999
+            - generic [ref=e4062]:
+              - paragraph [ref=e4063]: Regular Price
+              - generic [ref=e4064]:
+                - generic [ref=e4065]: ₹8,999
+                - generic [ref=e4066]: 44% off
+          - generic [ref=e4068]:
+            - img [ref=e4069]
+            - paragraph [ref=e4071]: ₹417 / Month EMI
+          - generic [ref=e4073]:
+            - button "Add to bag" [ref=e4074] [cursor=pointer]:
+              - img [ref=e4075]
+            - button "Buy Now" [ref=e4078] [cursor=pointer]:
+              - generic [ref=e4079]: Buy Now
+      - generic [ref=e4081]:
+        - link "ECOVACS DEEBOT T80 PRO OMNI Accessory Kit & Roller Brush Set" [ref=e4082] [cursor=pointer]:
+          - /url: /products/deebot-t80-pro-omni-accessory-kit-roller-brush-set
+          - img "ECOVACS DEEBOT T80 PRO OMNI Accessory Kit & Roller Brush Set" [ref=e4084]
+        - generic [ref=e4085]:
+          - link "ECOVACS DEEBOT T80 PRO OMNI Accessory Kit & Roller Brush Set" [ref=e4086] [cursor=pointer]:
+            - /url: /products/deebot-t80-pro-omni-accessory-kit-roller-brush-set
+            - heading "ECOVACS DEEBOT T80 PRO OMNI Accessory Kit & Roller Brush Set" [level=3] [ref=e4087]
+          - generic [ref=e4090]:
+            - generic [ref=e4091]:
+              - paragraph [ref=e4092]: Epik Price
+              - generic [ref=e4093]: ₹8,999
+            - generic [ref=e4095]:
+              - paragraph [ref=e4096]: Regular Price
+              - generic [ref=e4097]:
+                - generic [ref=e4098]: ₹16,999
+                - generic [ref=e4099]: 47% off
+          - generic [ref=e4101]:
+            - img [ref=e4102]
+            - paragraph [ref=e4104]: ₹750 / Month EMI
+          - generic [ref=e4106]:
+            - button "Add to bag" [ref=e4107] [cursor=pointer]:
+              - img [ref=e4108]
+            - button "Buy Now" [ref=e4111] [cursor=pointer]:
+              - generic [ref=e4112]: Buy Now
+      - generic [ref=e4114]:
+        - link "ECOVACS DEEBOT T80 PRO OMNI Dust Bag (Pack of 3)" [ref=e4115] [cursor=pointer]:
+          - /url: /products/deebot-t80-pro-omni-dust-bag-pack-of-3
+          - img "ECOVACS DEEBOT T80 PRO OMNI Dust Bag (Pack of 3)" [ref=e4117]
+        - generic [ref=e4118]:
+          - link "ECOVACS DEEBOT T80 PRO OMNI Dust Bag (Pack of 3)" [ref=e4119] [cursor=pointer]:
+            - /url: /products/deebot-t80-pro-omni-dust-bag-pack-of-3
+            - heading "ECOVACS DEEBOT T80 PRO OMNI Dust Bag (Pack of 3)" [level=3] [ref=e4120]
+          - generic [ref=e4123]:
+            - generic [ref=e4124]:
+              - paragraph [ref=e4125]: Epik Price
+              - generic [ref=e4126]: ₹2,499
+            - generic [ref=e4128]:
+              - paragraph [ref=e4129]: Regular Price
+              - generic [ref=e4130]:
+                - generic [ref=e4131]: ₹3,999
+                - generic [ref=e4132]: 38% off
+          - generic [ref=e4134]:
+            - img [ref=e4135]
+            - paragraph [ref=e4137]: ₹208 / Month EMI
+          - generic [ref=e4139]:
+            - button "Add to bag" [ref=e4140] [cursor=pointer]:
+              - img [ref=e4141]
+            - button "Buy Now" [ref=e4144] [cursor=pointer]:
+              - generic [ref=e4145]: Buy Now
+      - generic [ref=e4147]:
+        - link "ECOVACS DEEBOT X11 OMNI Cyclone Accessory Kit" [ref=e4148] [cursor=pointer]:
+          - /url: /products/deebot-x11-omni-cyclone-accessory-kit
+          - img "ECOVACS DEEBOT X11 OMNI Cyclone Accessory Kit" [ref=e4150]
+        - generic [ref=e4151]:
+          - link "ECOVACS DEEBOT X11 OMNI Cyclone Accessory Kit" [ref=e4152] [cursor=pointer]:
+            - /url: /products/deebot-x11-omni-cyclone-accessory-kit
+            - heading "ECOVACS DEEBOT X11 OMNI Cyclone Accessory Kit" [level=3] [ref=e4153]
+          - generic [ref=e4156]:
+            - generic [ref=e4157]:
+              - paragraph [ref=e4158]: Epik Price
+              - generic [ref=e4159]: ₹4,999
+            - generic [ref=e4161]:
+              - paragraph [ref=e4162]: Regular Price
+              - generic [ref=e4163]:
+                - generic [ref=e4164]: ₹9,999
+                - generic [ref=e4165]: 50% off
+          - generic [ref=e4167]:
+            - img [ref=e4168]
+            - paragraph [ref=e4170]: ₹417 / Month EMI
+          - generic [ref=e4172]:
+            - button "Add to bag" [ref=e4173] [cursor=pointer]:
+              - img [ref=e4174]
+            - button "Buy Now" [ref=e4177] [cursor=pointer]:
+              - generic [ref=e4178]: Buy Now
+      - generic [ref=e4180]:
+        - link "ECOVACS DEEBOT X11 OMNI Cyclone Roller Brush" [ref=e4181] [cursor=pointer]:
+          - /url: /products/deebot-x11-omni-cyclone-roller-brush
+          - img "ECOVACS DEEBOT X11 OMNI Cyclone Roller Brush" [ref=e4185]
+        - generic [ref=e4186]:
+          - link "ECOVACS DEEBOT X11 OMNI Cyclone Roller Brush" [ref=e4187] [cursor=pointer]:
+            - /url: /products/deebot-x11-omni-cyclone-roller-brush
+            - heading "ECOVACS DEEBOT X11 OMNI Cyclone Roller Brush" [level=3] [ref=e4188]
+          - generic [ref=e4191]:
+            - generic [ref=e4192]:
+              - paragraph [ref=e4193]: Epik Price
+              - generic [ref=e4194]: ₹4,999
+            - generic [ref=e4196]:
+              - paragraph [ref=e4197]: Regular Price
+              - generic [ref=e4198]:
+                - generic [ref=e4199]: ₹11,999
+                - generic [ref=e4200]: 58% off
+          - generic [ref=e4202]:
+            - img [ref=e4203]
+            - paragraph [ref=e4205]: ₹417 / Month EMI
+          - generic [ref=e4207]:
+            - button "Add to bag" [ref=e4208] [cursor=pointer]:
+              - img [ref=e4209]
+            - button "Buy Now" [ref=e4212] [cursor=pointer]:
+              - generic [ref=e4213]: Buy Now
+      - generic [ref=e4215]:
+        - link "ECOVACS DEEBOT X11 OMNI Cyclone Accessory Kit & Roller Brush Set" [ref=e4216] [cursor=pointer]:
+          - /url: /products/deebot-x11-omni-cyclone-accessory-kit-roller-brush-set
+          - img "ECOVACS DEEBOT X11 OMNI Cyclone Accessory Kit & Roller Brush Set" [ref=e4220]
+        - generic [ref=e4221]:
+          - link "ECOVACS DEEBOT X11 OMNI Cyclone Accessory Kit & Roller Brush Set" [ref=e4222] [cursor=pointer]:
+            - /url: /products/deebot-x11-omni-cyclone-accessory-kit-roller-brush-set
+            - heading "ECOVACS DEEBOT X11 OMNI Cyclone Accessory Kit & Roller Brush Set" [level=3] [ref=e4223]
+          - generic [ref=e4226]:
+            - generic [ref=e4227]:
+              - paragraph [ref=e4228]: Epik Price
+              - generic [ref=e4229]: ₹8,999
+            - generic [ref=e4231]:
+              - paragraph [ref=e4232]: Regular Price
+              - generic [ref=e4233]:
+                - generic [ref=e4234]: ₹18,999
+                - generic [ref=e4235]: 53% off
+          - generic [ref=e4237]:
+            - img [ref=e4238]
+            - paragraph [ref=e4240]: ₹750 / Month EMI
+          - generic [ref=e4242]:
+            - button "Add to bag" [ref=e4243] [cursor=pointer]:
+              - img [ref=e4244]
+            - button "Buy Now" [ref=e4247] [cursor=pointer]:
+              - generic [ref=e4248]: Buy Now
+      - generic [ref=e4250]:
+        - link "ECOVACS DEEBOT X11 OMNI Cyclone Sponge Filter" [ref=e4251] [cursor=pointer]:
+          - /url: /products/deebot-x11-omni-cyclone-sponge-filter
+          - img "ECOVACS DEEBOT X11 OMNI Cyclone Sponge Filter" [ref=e4255]
+        - generic [ref=e4256]:
+          - link "ECOVACS DEEBOT X11 OMNI Cyclone Sponge Filter" [ref=e4257] [cursor=pointer]:
+            - /url: /products/deebot-x11-omni-cyclone-sponge-filter
+            - heading "ECOVACS DEEBOT X11 OMNI Cyclone Sponge Filter" [level=3] [ref=e4258]
+          - generic [ref=e4261]:
+            - generic [ref=e4262]:
+              - paragraph [ref=e4263]: Epik Price
+              - generic [ref=e4264]: ₹1,499
+            - generic [ref=e4266]:
+              - paragraph [ref=e4267]: Regular Price
+              - generic [ref=e4268]:
+                - generic [ref=e4269]: ₹5,999
+                - generic [ref=e4270]: 75% off
+          - generic [ref=e4272]:
+            - img [ref=e4273]
+            - paragraph [ref=e4275]: ₹125 / Month EMI
+          - generic [ref=e4277]:
+            - button "Add to bag" [ref=e4278] [cursor=pointer]:
+              - img [ref=e4279]
+            - button "Buy Now" [ref=e4282] [cursor=pointer]:
+              - generic [ref=e4283]: Buy Now
+      - generic [ref=e4285]:
+        - link "ECOVACS Winbot W2 Pro Omni Smart Window Cleaning Robot with 5500Pa Suction Power" [ref=e4286] [cursor=pointer]:
+          - /url: /products/ecovacs-winbot-w2-pro-omni-smart-window-cleaning-robot-with-5500pa-suction-power
+          - img "ECOVACS Winbot W2 Pro Omni Smart Window Cleaning Robot with 5500Pa Suction Power" [ref=e4290]
+        - generic [ref=e4291]:
+          - link "ECOVACS Winbot W2 Pro Omni Smart Window Cleaning Robot with 5500Pa Suction Power" [ref=e4292] [cursor=pointer]:
+            - /url: /products/ecovacs-winbot-w2-pro-omni-smart-window-cleaning-robot-with-5500pa-suction-power
+            - heading "ECOVACS Winbot W2 Pro Omni Smart Window Cleaning Robot with 5500Pa Suction Power" [level=3] [ref=e4293]
+          - generic [ref=e4296]:
+            - generic [ref=e4297]:
+              - paragraph [ref=e4298]: Epik Price
+              - generic [ref=e4299]: ₹49,999
+            - generic [ref=e4301]:
+              - paragraph [ref=e4302]: Regular Price
+              - generic [ref=e4303]:
+                - generic [ref=e4304]: ₹89,900
+                - generic [ref=e4305]: 44% off
+          - generic [ref=e4307]:
+            - img [ref=e4308]
+            - paragraph [ref=e4310]: ₹4,167 / Month EMI
+          - generic [ref=e4312]:
+            - button "Add to bag" [ref=e4313] [cursor=pointer]:
+              - img [ref=e4314]
+            - button "Buy Now" [ref=e4317] [cursor=pointer]:
+              - generic [ref=e4318]: Buy Now
+      - generic [ref=e4320]:
+        - link "Out of Stock ECOVACS DEEBOT MINI Omni 2 in 1 Robot Vacuum Cleaner & Mop, 2025 New Launch, 9000 Pa, Self-Emptying Omni Station, ZeroTangle 2.0, TrueMapping 2.0, 45℃ Hot Air Dry, Deep Mopping, One-Touch Self-Clean Visit the ECOVACS Store" [ref=e4321] [cursor=pointer]:
+          - /url: /products/ecovacs-deebot-omni-mini
+          - generic [ref=e4322]:
+            - generic [ref=e4323]: Out of Stock
+            - img "ECOVACS DEEBOT MINI Omni 2 in 1 Robot Vacuum Cleaner & Mop, 2025 New Launch, 9000 Pa, Self-Emptying Omni Station, ZeroTangle 2.0, TrueMapping 2.0, 45℃ Hot Air Dry, Deep Mopping, One-Touch Self-Clean Visit the ECOVACS Store" [ref=e4326]
+        - generic [ref=e4327]:
+          - link "ECOVACS DEEBOT MINI Omni 2 in 1 Robot Vacuum Cleaner & Mop, 2025 New Launch, 9000 Pa, Self-Emptying Omni Station, ZeroTangle 2.0, TrueMapping 2.0, 45℃ Hot Air Dry, Deep Mopping, One-Touch Self-Clean Visit the ECOVACS Store" [ref=e4328] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-omni-mini
+            - heading "ECOVACS DEEBOT MINI Omni 2 in 1 Robot Vacuum Cleaner & Mop, 2025 New Launch, 9000 Pa, Self-Emptying Omni Station, ZeroTangle 2.0, TrueMapping 2.0, 45℃ Hot Air Dry, Deep Mopping, One-Touch Self-Clean Visit the ECOVACS Store" [level=3] [ref=e4329]
+          - generic [ref=e4331]:
+            - generic [ref=e4332]:
+              - img [ref=e4333]
+              - img [ref=e4335]
+              - img [ref=e4337]
+              - img [ref=e4339]
+              - img [ref=e4341]
+            - generic [ref=e4343]: "4.5"
+            - generic [ref=e4344]: (4.4k+)
+          - generic [ref=e4346]:
+            - generic [ref=e4347]:
+              - paragraph [ref=e4348]: Epik Price
+              - generic [ref=e4349]: ₹36,999
+            - generic [ref=e4351]:
+              - paragraph [ref=e4352]: Regular Price
+              - generic [ref=e4353]:
+                - generic [ref=e4354]: ₹1,39,999
+                - generic [ref=e4355]: 74% off
+          - generic [ref=e4357]:
+            - img [ref=e4358]
+            - paragraph [ref=e4360]: ₹3,083 / Month EMI
+          - generic [ref=e4363]: Out of Stock
+  - generic [ref=e3232]:
+    - generic [ref=e3233]:
+      - img [ref=e3235]
+      - paragraph [ref=e3239]: The Trusted Choice for 10,000+ Families
+    - generic [ref=e3240]:
+      - img [ref=e3242]
+      - paragraph [ref=e3249]: Backed by India’s Top Investors
+    - generic [ref=e3250]:
+      - img [ref=e3252]
+      - paragraph [ref=e3257]: Rated 5.0 for Demo Experience
+  - contentinfo [ref=e3258]:
+    - generic [ref=e3259]:
+      - generic [ref=e3260]:
+        - generic [ref=e3263]:
+          - img "Epik Logo" [ref=e3264]
+          - generic [ref=e3270]:
+            - generic [ref=e3271]:
+              - text: Free Demo
+              - text: in
+            - text: 60 Minutes
+          - generic [ref=e3272]:
+            - link "Download on the App Store" [ref=e3273] [cursor=pointer]:
+              - /url: https://apps.apple.com/in/app/id6756187208
+              - img "Download on the App Store" [ref=e3274]
+            - link "Get it on Google Play" [ref=e3275] [cursor=pointer]:
+              - /url: https://play.google.com/store/apps/details?id=com.epik.app
+              - img "Get it on Google Play" [ref=e3276]
+          - 'link "Chat with Epik: Free Home Demo Of Electronics on ChatGPT" [ref=e3278] [cursor=pointer]':
+            - /url: https://chatgpt.com/apps/getepik/asdk_app_6a14854d64e08191ad53123ae40ce9ad
+            - 'img "Chat with Epik: Free Home Demo Of Electronics on ChatGPT" [ref=e3279]'
+        - generic [ref=e3280]:
+          - heading "LINKS" [level=3] [ref=e3281]
+          - list [ref=e3282]:
+            - listitem [ref=e3283]:
+              - link "Contact Us" [ref=e3284] [cursor=pointer]:
+                - /url: /pages/contact-us
+            - listitem [ref=e3285]:
+              - link "Shipping Policy" [ref=e3286] [cursor=pointer]:
+                - /url: /pages/shipping-policy
+            - listitem [ref=e3287]:
+              - link "Privacy Policy" [ref=e3288] [cursor=pointer]:
+                - /url: /pages/privacy-policy
+            - listitem [ref=e3289]:
+              - link "Cancellation & Refund Policy" [ref=e3290] [cursor=pointer]:
+                - /url: /pages/refund-policy
+            - listitem [ref=e3291]:
+              - link "Terms Of Service" [ref=e3292] [cursor=pointer]:
+                - /url: /pages/terms-of-service
+        - generic [ref=e3293]:
+          - generic [ref=e3294]:
+            - heading "CONTACT US" [level=3] [ref=e3295]
+            - generic [ref=e3296]:
+              - paragraph [ref=e3297]:
+                - text: 767, Sector 3, HSR Layout,
+                - text: Bengaluru, Karnataka - 560102
+              - generic [ref=e3298]:
+                - img [ref=e3299]
+                - link "+91 76250 01413" [ref=e3301] [cursor=pointer]:
+                  - /url: tel:+917625001413
+              - generic [ref=e3302]:
+                - img [ref=e3303]
+                - link "support@getepik.in" [ref=e3305] [cursor=pointer]:
+                  - /url: mailto:support@getepik.in
+          - generic [ref=e3306]:
+            - heading "FOLLOW US" [level=3] [ref=e3307]
+            - generic [ref=e3308]:
+              - link "Follow us on Instagram" [ref=e3309] [cursor=pointer]:
+                - /url: https://www.instagram.com/getepik.in?igsh=MTEyMzNzeHBvZTBpNg%3D%3D&utm_source=qr
+                - img [ref=e3310]
+              - link "Subscribe to our YouTube channel" [ref=e3312] [cursor=pointer]:
+                - /url: https://youtube.com/@getepik_in?feature=shared
+                - img [ref=e3313]
+              - link "Follow us on X (Twitter)" [ref=e3315] [cursor=pointer]:
+                - /url: https://x.com/getepik_in?s=21
+                - img [ref=e3316]
+              - link "Like our Facebook page" [ref=e3318] [cursor=pointer]:
+                - /url: https://www.facebook.com/share/176JKieb7w/?mibextid=wwXIfr
+                - img [ref=e3319]
+      - generic [ref=e3323]:
+        - generic [ref=e3325]:
+          - button "Brand Store" [ref=e3326] [cursor=pointer]: Brand Store
+          - button "Cleaning" [ref=e3328] [cursor=pointer]
+          - button "Entertainment" [ref=e3329] [cursor=pointer]
+          - button "Gadgets" [ref=e3330] [cursor=pointer]
+          - button "HealthTech" [ref=e3331] [cursor=pointer]
+          - button "Home Appliances" [ref=e3332] [cursor=pointer]
+          - button "Home Automation" [ref=e3333] [cursor=pointer]
+          - button "Kitchen Appliances" [ref=e3334] [cursor=pointer]
+          - button "Personal Care" [ref=e3335] [cursor=pointer]
+          - button "Security & Surveillance" [ref=e3336] [cursor=pointer]
+          - button "Smart Phones" [ref=e3337] [cursor=pointer]
+          - button "Bangalore" [ref=e3338] [cursor=pointer]
+          - button "Delhi NCR" [ref=e3339] [cursor=pointer]
+        - generic [ref=e3340]:
+          - generic [ref=e3341]:
+            - list [ref=e3342]:
+              - listitem [ref=e3343]:
+                - link "Agaro in Bangalore" [ref=e3344] [cursor=pointer]:
+                  - /url: /agaro-online-store-in-bangalore
+              - listitem [ref=e3345]:
+                - link "Bombay Shaving Co in Bangalore" [ref=e3346] [cursor=pointer]:
+                  - /url: /bombay-shaving-co-online-store-in-bangalore
+              - listitem [ref=e3347]:
+                - link "Curapod in Bangalore" [ref=e3348] [cursor=pointer]:
+                  - /url: /curapod-online-store-in-bangalore
+              - listitem [ref=e3349]:
+                - link "Ecovacs in Bangalore" [ref=e3350] [cursor=pointer]:
+                  - /url: /ecovacs-online-store-in-bangalore
+              - listitem [ref=e3351]:
+                - link "Hammer in Bangalore" [ref=e3352] [cursor=pointer]:
+                  - /url: /hammer-online-store-in-bangalore
+              - listitem [ref=e3353]:
+                - link "Ilife in Bangalore" [ref=e3354] [cursor=pointer]:
+                  - /url: /ilife-online-store-in-bangalore
+            - list [ref=e3355]:
+              - listitem [ref=e3356]:
+                - link "AO Smith in Bangalore" [ref=e3357] [cursor=pointer]:
+                  - /url: /ao-smith-online-store-in-bangalore
+              - listitem [ref=e3358]:
+                - link "Bosch in Bangalore" [ref=e3359] [cursor=pointer]:
+                  - /url: /bosch-online-store-in-bangalore
+              - listitem [ref=e3360]:
+                - link "Daikin in Bangalore" [ref=e3361] [cursor=pointer]:
+                  - /url: /daikin-online-store-in-bangalore
+              - listitem [ref=e3362]:
+                - link "Geek in Bangalore" [ref=e3363] [cursor=pointer]:
+                  - /url: /geek-online-store-in-bangalore
+              - listitem [ref=e3364]:
+                - link "Happinetz in Bangalore" [ref=e3365] [cursor=pointer]:
+                  - /url: /happinetz-online-store-in-bangalore
+              - listitem [ref=e3366]:
+                - link "JBL in Bangalore" [ref=e3367] [cursor=pointer]:
+                  - /url: /jbl-online-store-in-bangalore
+            - list [ref=e3368]:
+              - listitem [ref=e3369]:
+                - link "Apple in Bangalore" [ref=e3370] [cursor=pointer]:
+                  - /url: /apple-online-store-in-bangalore
+              - listitem [ref=e3371]:
+                - link "Bose in Bangalore" [ref=e3372] [cursor=pointer]:
+                  - /url: /bose-online-store-in-bangalore
+              - listitem [ref=e3373]:
+                - link "Dashcam in Bangalore" [ref=e3374] [cursor=pointer]:
+                  - /url: /dashcam-online-store-in-bangalore
+              - listitem [ref=e3375]:
+                - link "GM in Bangalore" [ref=e3376] [cursor=pointer]:
+                  - /url: /gm-online-store-in-bangalore
+              - listitem [ref=e3377]:
+                - link "Hindware in Bangalore" [ref=e3378] [cursor=pointer]:
+                  - /url: /hindware-online-store-in-bangalore
+              - listitem [ref=e3379]:
+                - link "Jovs in Bangalore" [ref=e3380] [cursor=pointer]:
+                  - /url: /jovs-online-store-in-bangalore
+            - list [ref=e3381]:
+              - listitem [ref=e3382]:
+                - link "Atomberg in Bangalore" [ref=e3383] [cursor=pointer]:
+                  - /url: /atomberg-online-store-in-bangalore
+              - listitem [ref=e3384]:
+                - link "Callmate in Bangalore" [ref=e3385] [cursor=pointer]:
+                  - /url: /callmate-online-store-in-bangalore
+              - listitem [ref=e3386]:
+                - link "Dell in Bangalore" [ref=e3387] [cursor=pointer]:
+                  - /url: /dell-online-store-in-bangalore
+              - listitem [ref=e3388]:
+                - link "Godrej in Bangalore" [ref=e3389] [cursor=pointer]:
+                  - /url: /godrej-online-store-in-bangalore
+              - listitem [ref=e3390]:
+                - link "HP in Bangalore" [ref=e3391] [cursor=pointer]:
+                  - /url: /hp-online-store-in-bangalore
+              - listitem [ref=e3392]:
+                - link "Kent in Bangalore" [ref=e3393] [cursor=pointer]:
+                  - /url: /kent-online-store-in-bangalore
+            - list [ref=e3394]:
+              - listitem [ref=e3395]:
+                - link "Blue Star in Bangalore" [ref=e3396] [cursor=pointer]:
+                  - /url: /blue-star-online-store-in-bangalore
+              - listitem [ref=e3397]:
+                - link "Caresmith in Bangalore" [ref=e3398] [cursor=pointer]:
+                  - /url: /caresmith-online-store-in-bangalore
+              - listitem [ref=e3399]:
+                - link "Dyson in Bangalore" [ref=e3400] [cursor=pointer]:
+                  - /url: /dyson-online-store-in-bangalore
+              - listitem [ref=e3401]:
+                - link "Haier in Bangalore" [ref=e3402] [cursor=pointer]:
+                  - /url: /haier-online-store-in-bangalore
+              - listitem [ref=e3403]:
+                - link "IFB in Bangalore" [ref=e3404] [cursor=pointer]:
+                  - /url: /ifb-online-store-in-bangalore
+              - listitem [ref=e3405]:
+                - link "Kroff in Bangalore" [ref=e3406] [cursor=pointer]:
+                  - /url: /kroff-online-store-in-bangalore
+          - button "Show More" [ref=e3408] [cursor=pointer]:
+            - text: Show More
+            - img [ref=e3409]
+      - generic [ref=e3412]: © 2025 VIVAVILLA RETAIL PRIVATE LIMITED (Epik) | All Rights Reserved
+  - button "Chat on WhatsApp" [ref=e3414] [cursor=pointer]:
+    - img [ref=e3416]

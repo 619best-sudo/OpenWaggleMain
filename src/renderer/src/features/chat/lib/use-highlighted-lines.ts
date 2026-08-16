@@ -7,9 +7,16 @@
  * returns shiki's TOKENS grouped by line instead of HTML, so a caller keeps full
  * control of each row's layout while still colouring the code itself.
  *
- * Tokenizing the file in ONE call (rather than line by line) preserves
- * multi-line grammar context — block comments and template literals stay
- * correctly coloured across line boundaries.
+ * Tokenizing in ONE call (rather than line by line) preserves multi-line grammar
+ * context — block comments and template literals stay correctly coloured across
+ * line boundaries. Callers therefore pass the largest slice they can afford:
+ * `codeToTokens` is SYNCHRONOUS and scales with input, measured at ~360ms for
+ * 1,000 lines and ~710ms for 2,000. Handing it a whole file froze the renderer
+ * for most of a second the moment a tool strip was expanded — with a run
+ * streaming, that is the stall. The views window their rows, so they pass the
+ * visible window (plus its overscan) and re-tokenize as it moves; the cost
+ * becomes a few ms, and the only loss is grammar context from constructs that
+ * begin far above the window.
  *
  * Colours are DUAL-THEME: with `defaultColor: false` shiki emits BOTH colours as
  * `--shiki-light` / `--shiki-dark` custom properties and no inline `color`. Rules
@@ -20,7 +27,11 @@
  */
 import type { CSSProperties } from 'react'
 import { useEffect, useState } from 'react'
-import { getHighlighter, type PreloadedLanguage } from '@/shared/lib/shiki/highlighter'
+import {
+  ensureLanguage,
+  getHighlighter,
+  type HighlightLanguage,
+} from '@/shared/lib/shiki/highlighter'
 import {
   WAGGLE_CODE_THEME_DARK,
   WAGGLE_CODE_THEME_LIGHT,
@@ -45,7 +56,7 @@ export type HighlightedLines = readonly (readonly HighlightedToken[])[]
  */
 export function useHighlightedLines(
   code: string,
-  language: PreloadedLanguage | undefined,
+  language: HighlightLanguage | undefined,
 ): HighlightedLines | null {
   const [lines, setLines] = useState<HighlightedLines | null>(null)
 
@@ -56,9 +67,18 @@ export function useHighlightedLines(
     }
 
     let cancelled = false
-    void getHighlighter()
+    void ensureLanguage(language)
+      .then(async (ready) => {
+        if (!ready) return null
+        return await getHighlighter()
+      })
       .then((highlighter) => {
         if (cancelled) return
+        if (!highlighter) {
+          // No grammar for this language — render plain text.
+          setLines(null)
+          return
+        }
         const { tokens } = highlighter.codeToTokens(code, {
           lang: language,
           themes: THEME_PAIR,

@@ -1,0 +1,37 @@
+- generic [active] [ref=e1] [box=0,0,1200,8857]:
+  - banner [ref=e4] [box=0,0,1200,207]:
+    - generic [ref=e6] [box=436,4,328,16]: NEW|Epik raised $1M pre-seed, led by InfoEdge.
+    - generic [ref=e7] [box=0,24,1200,183]:
+      - generic [ref=e9] [box=20,30,1160,40]
+      - navigation [ref=e42] [box=0,80,1200,123]
+  - main [ref=e108] [box=0,0,1200,7469]:
+    - generic [ref=e112] [box=0,207,1200,192]:
+      - generic [ref=e114] [box=-2400,207,1200,192]
+      - generic [ref=e143] [box=536,375,128,8]
+    - generic [ref=e151] [box=0,399,1200,7070]:
+      - generic [ref=e152] [box=0,399,1200,495]
+      - generic [ref=e1127] [box=0,894,1200,495]
+      - generic [ref=e2260] [box=0,1390,1200,495]
+      - link "Epik delivery How an Epik Logo demo works in 60 minutes Know More" [ref=e3199] [cursor=pointer] [box=32,1909,1136,160]:
+        - /url: /how-demo-works
+  - alert [ref=e3230] [box=-1,7500,1,1]
+  - generic [box=0,7501,1200,0]:
+    - generic [box=0,7518,0,0]:
+      - iframe [box=0,7518,0,0]
+  - generic [ref=e3232] [box=24,7581,1152,32]:
+    - generic [ref=e3233] [box=24,7581,341,32]:
+      - img [ref=e3235] [box=24,7581,25,32]
+      - paragraph [ref=e3239] [box=80,7586,285,21]: The Trusted Choice for 10,000+ Families
+    - generic [ref=e3240] [box=490,7581,281,30]:
+      - img [ref=e3242] [box=490,7581,30,30]
+      - paragraph [ref=e3249] [box=546,7586,225,21]: Backed by India’s Top Investors
+    - generic [ref=e3250] [box=897,7586,279,21]:
+      - img [ref=e3252] [box=897,7587,40,19]
+      - paragraph [ref=e3257] [box=953,7586,223,21]: Rated 5.0 for Demo Experience
+  - contentinfo [ref=e3258] [box=0,7653,1200,1204]:
+    - generic [ref=e3259] [box=0,7733,1200,1108]:
+      - generic [ref=e3260] [box=24,7733,1152,670]
+      - generic [ref=e3323] [box=24,8459,1152,299]
+      - generic [ref=e3412] [box=24,8823,424,18]: © 2025 VIVAVILLA RETAIL PRIVATE LIMITED (Epik) | All Rights Reserved
+  - button "Chat on WhatsApp" [ref=e3414] [cursor=pointer] [box=1120,592,56,56]:
+    - img [ref=e3416] [box=1133,605,30,30]

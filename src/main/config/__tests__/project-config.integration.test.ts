@@ -9,7 +9,7 @@ import {
 } from '../project-config'
 
 function settingsPath(projectPath: string) {
-  return join(projectPath, '.openwaggle', 'settings.json')
+  return join(projectPath, '.turing-machine', 'settings.json')
 }
 
 describe('project config integration', () => {
@@ -34,7 +34,7 @@ describe('project config integration', () => {
 
   it('loads preferences and nested Pi settings from one settings file', async () => {
     const projectPath = join(tmpRoot, 'project-merged')
-    mkdirSync(join(projectPath, '.openwaggle'), { recursive: true })
+    mkdirSync(join(projectPath, '.turing-machine'), { recursive: true })
     writeFileSync(
       settingsPath(projectPath),
       JSON.stringify({

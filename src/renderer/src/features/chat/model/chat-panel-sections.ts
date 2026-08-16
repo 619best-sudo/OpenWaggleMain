@@ -19,7 +19,6 @@ export interface ChatTranscriptSectionState {
   readonly projectPath: string | null
   readonly recentProjects: readonly string[]
   readonly activeSessionId: SessionId | null
-  readonly machinePlan: MachineExecutionState | null
   readonly chatRows: ChatRow[]
   /** The ID of the last user message used to identify stable session hydration for scroll restore. */
   readonly lastUserMessageId: string | null
@@ -80,8 +79,6 @@ export interface ChatComposerSectionState {
   onStartWaggle: (config: WaggleConfig) => void
   onStartTeam: (teammate: TeammateDefinition) => void
   onSetMachineModeEnabled: (enabled: boolean) => void
-  onApproveMachinePlan: () => Promise<void>
-  onDiscardMachinePlan: () => Promise<void>
   onClearTeamMode: () => void
   onSendWithWaggle: (payload: AgentSendPayload) => Promise<void>
   onSteer: (messageId: string) => Promise<void>

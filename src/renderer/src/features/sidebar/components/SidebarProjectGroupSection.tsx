@@ -117,8 +117,17 @@ function ProjectSessionRows({
     )
   }
 
+  // Cap the active project's thread list so a project with many threads can't
+  // push the other project headers out of view. The list scrolls internally;
+  // every project header stays reachable. Inactive projects are collapsed
+  // (render no rows), so this only ever binds the one expanded group.
+  const isActiveProject = group.projectPath === state.projectPath
+  const listClassName = isActiveProject
+    ? 'mt-1.5 space-y-1 max-h-[50vh] overflow-y-auto sidebar-scroll pr-1'
+    : 'mt-1.5 space-y-1'
+
   return (
-    <div className="mt-1.5 space-y-1">
+    <div className={listClassName}>
       {showDraftSession ? (
         <DraftSessionRow
           projectLabel={projectLabel}

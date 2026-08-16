@@ -120,7 +120,7 @@ describe('preset starter prompts', () => {
       'Disturbed flow blast radius',
     ])
     expect(prompts[0]?.prompt).toMatch(/playwright/i)
-    expect(prompts[1]?.prompt).toMatch(/mobile-mcp/i)
+    expect(prompts[1]?.prompt).toMatch(/built-in mobile automation/i)
     expect(prompts[2]?.prompt).toMatch(/sql mcp/i)
     expect(prompts[3]?.prompt).toMatch(/disturbed indirectly/i)
   })

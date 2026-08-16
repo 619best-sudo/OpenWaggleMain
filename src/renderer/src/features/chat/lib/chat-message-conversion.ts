@@ -98,6 +98,7 @@ export function buildToolResultLookup(
 
 export function sessionToUIMessages(session: SessionDetail): UIMessage[] {
   const toolResultByCallId = buildToolResultLookup(session.messages)
+  const cache = conversionCacheForSession(session.id)
   return session.messages.map((msg) => {
     // Results co-located with their call in this same message are resolved by the
     // inline block's per-message fallback; don't pre-attach them.
@@ -105,30 +106,95 @@ export function sessionToUIMessages(session: SessionDetail): UIMessage[] {
     for (const part of msg.parts) {
       if (part.type === 'tool-result') sameMessageResultIds.add(String(part.toolResult.id))
     }
-    return {
-      id: String(msg.id),
-      role: msg.role,
-      parts: msg.parts.flatMap((part) =>
-        messagePartToUIParts(part, toolResultByCallId, sameMessageResultIds),
-      ),
-      createdAt: new Date(msg.createdAt),
-      ...(msg.metadata?.branchSummary ||
-      msg.metadata?.compactionSummary ||
-      msg.metadata?.phaseTranscript
-        ? {
-            metadata: {
-              ...(msg.metadata.branchSummary ? { branchSummary: msg.metadata.branchSummary } : {}),
-              ...(msg.metadata.compactionSummary
-                ? { compactionSummary: msg.metadata.compactionSummary }
-                : {}),
-              ...(msg.metadata.phaseTranscript
-                ? { phaseTranscript: msg.metadata.phaseTranscript }
-                : {}),
-            },
-          }
-        : {}),
+    // Identity stability: every hydration used to build fresh message and part
+    // objects for the WHOLE session, which defeated every row memoization in the
+    // transcript (rows compare by message identity) and re-parsed all completed
+    // markdown — the end-of-run full re-render. The fingerprint covers the
+    // message itself AND the cross-message outputs attached to its calls (a
+    // result persisted later changes an earlier call's UI shape), so a byte-equal
+    // node reconverts to the SAME object and the row bails out. Re-parsing the
+    // same JSON text yields the same key order, so JSON.stringify is a stable
+    // fingerprint for DB-projection objects.
+    const attachedOutputs: Record<string, JsonValue> = {}
+    for (const part of msg.parts) {
+      if (part.type !== 'tool-call') continue
+      const id = String(part.toolCall.id)
+      if (!sameMessageResultIds.has(id)) {
+        const output = toolResultByCallId.get(id)
+        if (output !== undefined) attachedOutputs[id] = output
+      }
     }
+    const fingerprint = `${JSON.stringify(msg)}\n${JSON.stringify(attachedOutputs)}`
+    const cached = cache.get(String(msg.id))
+    if (cached && cached.fingerprint === fingerprint) {
+      return cached.ui
+    }
+    const ui = convertPersistedMessage(msg, toolResultByCallId, sameMessageResultIds)
+    cache.set(String(msg.id), { fingerprint, ui })
+    return ui
   })
+}
+
+/** Extracted per-message conversion so the cache path can share it. */
+function convertPersistedMessage(
+  msg: SessionDetail['messages'][number],
+  toolResultByCallId: ReadonlyMap<string, JsonValue>,
+  sameMessageResultIds: ReadonlySet<string>,
+): UIMessage {
+  return {
+    id: String(msg.id),
+    role: msg.role,
+    parts: msg.parts.flatMap((part) =>
+      messagePartToUIParts(part, toolResultByCallId, sameMessageResultIds),
+    ),
+    createdAt: new Date(msg.createdAt),
+    ...(msg.metadata?.branchSummary ||
+    msg.metadata?.compactionSummary ||
+    msg.metadata?.phaseTranscript
+      ? {
+          metadata: {
+            ...(msg.metadata.branchSummary ? { branchSummary: msg.metadata.branchSummary } : {}),
+            ...(msg.metadata.compactionSummary
+              ? { compactionSummary: msg.metadata.compactionSummary }
+              : {}),
+            ...(msg.metadata.phaseTranscript
+              ? { phaseTranscript: msg.metadata.phaseTranscript }
+              : {}),
+          },
+        }
+      : {}),
+  }
+}
+
+/**
+ * Fingerprint → converted-message cache, per session. Bounded: a session's
+ * fingerprint entries are proportional to its message count, and only tiny
+ * fingerprint strings plus the (already-retained) UI objects are stored.
+ */
+interface ConversionCacheEntry {
+  readonly fingerprint: string
+  readonly ui: UIMessage
+}
+
+const CONVERSION_CACHE_MAX_SESSIONS = 8
+const conversionCacheBySession = new Map<string, Map<string, ConversionCacheEntry>>()
+
+function conversionCacheForSession(sessionId: string): Map<string, ConversionCacheEntry> {
+  const existing = conversionCacheBySession.get(sessionId)
+  if (existing) {
+    // LRU touch so the most recently hydrated sessions survive eviction.
+    conversionCacheBySession.delete(sessionId)
+    conversionCacheBySession.set(sessionId, existing)
+    return existing
+  }
+  const fresh = new Map<string, ConversionCacheEntry>()
+  conversionCacheBySession.set(sessionId, fresh)
+  while (conversionCacheBySession.size > CONVERSION_CACHE_MAX_SESSIONS) {
+    const oldest = conversionCacheBySession.keys().next().value
+    if (oldest === undefined) break
+    conversionCacheBySession.delete(oldest)
+  }
+  return fresh
 }
 export function buildPartialAssistantMessage(
   parts: readonly MessagePart[],

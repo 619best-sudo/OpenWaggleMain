@@ -76,7 +76,7 @@ function getProjectConfigSources(projectPath: string): McpSourceDefinition[] {
       editable: true,
     },
     {
-      id: 'project-openwaggle',
+      id: 'project-turing-machine',
       label: 'Project Turing Machine MCP',
       path: path.join(
         projectPath,
@@ -84,7 +84,7 @@ function getProjectConfigSources(projectPath: string): McpSourceDefinition[] {
         MCP_CONFIG.CONFIG_FILE_NAME,
       ),
       scope: 'project',
-      kind: 'openwaggle',
+      kind: 'turing-machine',
       editable: true,
     },
   ]

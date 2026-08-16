@@ -8,7 +8,9 @@ import { useUIStore } from '@/shell/ui-store'
 
 const logger = createRendererLogger('feedback')
 
-const GH_NEW_ISSUE_URL = 'https://github.com/OpenWaggle/OpenWaggle/issues/new'
+// TODO(branding): point this at the Turing Machine issue tracker once the public
+// repo URL is decided. Currently still pointing at the fork's origin repo.
+const GH_NEW_ISSUE_URL = 'https://github.com/619best-sudo/OpenWaggleMain/issues/new'
 
 export interface UseFeedbackReturn {
   // State

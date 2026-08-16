@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto'
 import { matchBy } from '@diegogbrisa/ts-match'
+import type { JsonValue } from '@shared/types/json'
 import { getAgentPhaseTitle } from '@shared/types/phase-titles'
 import type { AgentAssistantMessageEvent, AgentTransportEvent } from '@shared/types/stream'
-import type { JsonValue } from '@shared/types/json'
 import type { AgentEvent as TuringAgentEvent } from 'turing-harness'
-import { toJsonValue } from '../message-projection/message-mapper'
 import { createLogger } from '../../logger'
+import { toJsonValue } from '../message-projection/message-mapper'
 
 const logger = createLogger('turing-event-mapper')
 
@@ -77,7 +77,7 @@ interface PendingToolCall {
  */
 export function createTuringEventMapper(options: TuringEventMapperOptions) {
   const loggedEmit = (event: AgentTransportEvent) => {
-    logger.info('emit →', {
+    logger.debug('emit →', {
       type: event.type,
       messageId: (event as { messageId?: string }).messageId ?? null,
       toolCallId: (event as { toolCallId?: string }).toolCallId ?? null,
@@ -96,7 +96,7 @@ export function createTuringEventMapper(options: TuringEventMapperOptions) {
     pendingToolCalls: new Map(),
   }
   const handler = (event: TuringAgentEvent) => {
-    logger.info('turing event ←', describeTuringEvent(event))
+    logger.debug('turing event ←', describeTuringEvent(event))
     handleTuringEvent(state, event)
   }
   return Object.assign(handler, {
@@ -113,7 +113,8 @@ function describeTuringEvent(event: TuringAgentEvent): Record<string, unknown> {
       return {
         type: event.type,
         assistant: event.assistantMessageEvent.type,
-        contentIndex: (event.assistantMessageEvent as { contentIndex?: number }).contentIndex ?? null,
+        contentIndex:
+          (event.assistantMessageEvent as { contentIndex?: number }).contentIndex ?? null,
         toolCallId: (event.assistantMessageEvent as { toolCallId?: string }).toolCallId ?? null,
       }
     case 'message_end':
@@ -138,9 +139,7 @@ function handleTuringEvent(state: TuringMapperState, event: TuringAgentEvent) {
     .with('chain_start', () => emitWorkingPhaseStart(state))
     .with('chain_end', (value) => emitWorkingPhaseEnd(state, value.success))
     .with('message_start', () => beginMessage(state))
-    .with('message_update', (value) =>
-      handleAssistantEvent(state, value.assistantMessageEvent),
-    )
+    .with('message_update', (value) => handleAssistantEvent(state, value.assistantMessageEvent))
     .with('message_end', () => endMessage(state))
     .with('tool_execution_start', (value) => emitToolExecutionStart(state, value))
     .with('tool_execution_end', (value) => emitToolExecutionEnd(state, value))
@@ -212,7 +211,10 @@ function emitAssistantUpdate(
   })
 }
 
-function handleAssistantEvent(state: TuringMapperState, assistantEvent: TuringAssistantMessageEvent) {
+function handleAssistantEvent(
+  state: TuringMapperState,
+  assistantEvent: TuringAssistantMessageEvent,
+) {
   matchBy(assistantEvent, 'type')
     .with('text_delta', (value) =>
       emitAssistantUpdate(state, ensureMessageStarted(state), {
@@ -241,9 +243,15 @@ function handleAssistantEvent(state: TuringMapperState, assistantEvent: TuringAs
         content: value.content,
       } as AgentAssistantMessageEvent),
     )
-    .with('toolcall_start', (value) => handleToolCallStart(state, value.contentIndex, value.partial))
-    .with('toolcall_delta', (value) => handleToolCallDelta(state, value.contentIndex, value.delta, value.partial))
-    .with('toolcall_end', (value) => handleToolCallEnd(state, value.contentIndex, value.toolCall, value.partial))
+    .with('toolcall_start', (value) =>
+      handleToolCallStart(state, value.contentIndex, value.partial),
+    )
+    .with('toolcall_delta', (value) =>
+      handleToolCallDelta(state, value.contentIndex, value.delta, value.partial),
+    )
+    .with('toolcall_end', (value) =>
+      handleToolCallEnd(state, value.contentIndex, value.toolCall, value.partial),
+    )
     .otherwise(() => undefined)
 }
 

@@ -63,11 +63,11 @@ function blankMcpSettingsView(projectPath: string): McpSettingsView {
     },
     sources: [
       {
-        id: 'project-openwaggle',
+        id: 'project-turing-machine',
         label: 'Project Turing Machine',
-        path: path.join(projectPath, '.openwaggle', 'agent', 'mcp.json'),
+        path: path.join(projectPath, '.turing-machine', 'agent', 'mcp.json'),
         scope: 'project' as const,
-        kind: 'openwaggle' as const,
+        kind: 'turing-machine' as const,
         exists: false,
         editable: true,
         serverCount: 0,
@@ -179,7 +179,7 @@ describe('registerWaggleAppsHandlers', () => {
       }),
     )
 
-    const skillPath = path.join(projectPath, '.openwaggle', 'skills', 'ui-critic', 'SKILL.md')
+    const skillPath = path.join(projectPath, '.turing-machine', 'skills', 'ui-critic', 'SKILL.md')
     await expect(fs.readFile(skillPath, 'utf8')).resolves.toContain('name: ui-critic')
   })
 })

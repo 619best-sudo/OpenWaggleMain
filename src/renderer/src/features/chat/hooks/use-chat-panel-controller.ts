@@ -313,27 +313,29 @@ export function useChatPanelSections(): ChatPanelSections {
     // sorts first; the legacy 4P ids are kept for older persisted transcripts.
     const phaseOrder: readonly AgentPhaseId[] = ['working', 'prepare', 'plan', 'perform', 'perfect']
 
-    return api.onAgentEvent(({ sessionId, event }) => {
+    return api.onAgentEventBatch(({ sessionId, events }) => {
       if (sessionId !== activeSessionId) {
         return
       }
 
-      if (event.type === 'agent_start') {
-        setLiveCompletedPhases([])
-        return
-      }
+      for (const event of events) {
+        if (event.type === 'agent_start') {
+          setLiveCompletedPhases([])
+          continue
+        }
 
-      if (event.type !== 'phase_end') {
-        return
-      }
+        if (event.type !== 'phase_end') {
+          continue
+        }
 
-      setLiveCompletedPhases((current) => {
-        const next = [...current.filter((phase) => phase.phaseId !== event.phaseId), event]
-        next.sort(
-          (left, right) => phaseOrder.indexOf(left.phaseId) - phaseOrder.indexOf(right.phaseId),
-        )
-        return next
-      })
+        setLiveCompletedPhases((current) => {
+          const next = [...current.filter((phase) => phase.phaseId !== event.phaseId), event]
+          next.sort(
+            (left, right) => phaseOrder.indexOf(left.phaseId) - phaseOrder.indexOf(right.phaseId),
+          )
+          return next
+        })
+      }
     })
   }, [activeSessionId])
 
@@ -384,83 +386,56 @@ export function useChatPanelSections(): ChatPanelSections {
       return
     }
 
-    return api.onAgentEvent(({ sessionId, event }) => {
-      if (sessionId !== activeSessionId || event.type !== 'custom') {
+    return api.onAgentEventBatch(({ sessionId, events }) => {
+      if (sessionId !== activeSessionId) {
         return
       }
 
-      // #region debug-point R:permission-custom-event
-      if (
-        event.name === TOOL_PERMISSION_REQUEST_EVENT ||
-        event.name === TOOL_PERMISSION_RESOLVED_EVENT
-      ) {
-        void fetch('http://127.0.0.1:7777/event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'permission-flow',
-            runId: 'pre-fix',
-            hypothesisId: '2',
-            location: 'use-chat-panel-controller.ts:onAgentEvent',
-            msg: '[DEBUG] Renderer received tool permission custom event',
-            data: {
-              activeSessionId: String(activeSessionId),
-              sessionId: String(sessionId),
-              name: event.name,
-              value:
-                event.name === TOOL_PERMISSION_REQUEST_EVENT &&
-                isPendingToolPermissionRequest(event.value)
-                  ? {
-                      toolCallId: event.value.toolCallId,
-                      toolName: event.value.toolName,
-                    }
-                  : null,
-            },
-            ts: Date.now(),
-          }),
-        }).catch(() => {})
-      }
-      // #endregion
+      for (const event of events) {
+        if (event.type !== 'custom') {
+          continue
+        }
 
-      if (event.name === PLAN_REVIEW_REQUEST_EVENT && isPendingPlanReviewRequest(event.value)) {
-        // A fresh draft supersedes the previous record and is interactive again.
-        setPendingPlanReviewRequest(event.value)
-        setPlanReviewDecision(null)
-        return
-      }
+        if (event.name === PLAN_REVIEW_REQUEST_EVENT && isPendingPlanReviewRequest(event.value)) {
+          // A fresh draft supersedes the previous record and is interactive again.
+          setPendingPlanReviewRequest(event.value)
+          setPlanReviewDecision(null)
+          continue
+        }
 
-      if (event.name === PLAN_REVIEW_RESOLVED_EVENT) {
-        // Keep the card; mark it answered. The main process reports the verdict it
-        // actually acted on, which is the one worth showing (it also covers the
-        // run being aborted, where the renderer never submitted anything).
-        setPlanReviewDecision(planReviewDecisionFromEvent(event.value))
-        return
-      }
+        if (event.name === PLAN_REVIEW_RESOLVED_EVENT) {
+          // Keep the card; mark it answered. The main process reports the verdict it
+          // actually acted on, which is the one worth showing (it also covers the
+          // run being aborted, where the renderer never submitted anything).
+          setPlanReviewDecision(planReviewDecisionFromEvent(event.value))
+          continue
+        }
 
-      if (event.name === USER_QUESTION_REQUEST_EVENT && isPendingUserQuestionRequest(event.value)) {
-        pendingUserQuestionVersionRef.current += 1
-        setPendingUserQuestionRequest(event.value)
-        return
-      }
+        if (event.name === USER_QUESTION_REQUEST_EVENT && isPendingUserQuestionRequest(event.value)) {
+          pendingUserQuestionVersionRef.current += 1
+          setPendingUserQuestionRequest(event.value)
+          continue
+        }
 
-      if (
-        event.name === TOOL_PERMISSION_REQUEST_EVENT &&
-        isPendingToolPermissionRequest(event.value)
-      ) {
-        pendingToolPermissionVersionRef.current += 1
-        setLivePendingToolPermissionRequest(toLivePendingToolPermissionRequest(event.value))
-        return
-      }
+        if (
+          event.name === TOOL_PERMISSION_REQUEST_EVENT &&
+          isPendingToolPermissionRequest(event.value)
+        ) {
+          pendingToolPermissionVersionRef.current += 1
+          setLivePendingToolPermissionRequest(toLivePendingToolPermissionRequest(event.value))
+          continue
+        }
 
-      if (event.name === TOOL_PERMISSION_RESOLVED_EVENT) {
-        pendingToolPermissionVersionRef.current += 1
-        setLivePendingToolPermissionRequest(null)
-        return
-      }
+        if (event.name === TOOL_PERMISSION_RESOLVED_EVENT) {
+          pendingToolPermissionVersionRef.current += 1
+          setLivePendingToolPermissionRequest(null)
+          continue
+        }
 
-      if (event.name === USER_QUESTION_RESOLVED_EVENT) {
-        pendingUserQuestionVersionRef.current += 1
-        setPendingUserQuestionRequest(null)
+        if (event.name === USER_QUESTION_RESOLVED_EVENT) {
+          pendingUserQuestionVersionRef.current += 1
+          setPendingUserQuestionRequest(null)
+        }
       }
     })
   }, [activeSessionId])
@@ -470,24 +445,31 @@ export function useChatPanelSections(): ChatPanelSections {
       return
     }
 
-    return api.onAgentEvent(({ sessionId, event }) => {
-      if (
-        sessionId !== activeSessionId ||
-        event.type !== 'custom' ||
-        !event.name.startsWith('machine:')
-      ) {
+    return api.onAgentEventBatch(({ sessionId, events }) => {
+      if (sessionId !== activeSessionId) {
         return
       }
 
-      if (event.name === 'machine:run-start') {
-        useMachineModeStore.getState().startRun(activeSessionId)
+      let sawMachineEvent = false
+      for (const event of events) {
+        if (event.type !== 'custom' || !event.name.startsWith('machine:')) {
+          continue
+        }
+
+        if (event.name === 'machine:run-start') {
+          useMachineModeStore.getState().startRun(activeSessionId)
+        }
+
+        if (event.name === 'machine:run-end') {
+          useMachineModeStore.getState().finishRun(activeSessionId)
+        }
+
+        sawMachineEvent = true
       }
 
-      if (event.name === 'machine:run-end') {
-        useMachineModeStore.getState().finishRun(activeSessionId)
+      if (sawMachineEvent) {
+        void refreshSessionWorkspace(activeSessionId)
       }
-
-      void refreshSessionWorkspace(activeSessionId)
     })
   }, [activeSessionId, refreshSessionWorkspace])
 
@@ -756,26 +738,6 @@ export function useChatPanelSections(): ChatPanelSections {
     setSuppressedToolPermissionId(currentRequest.toolCallId)
     setToolPermissionBusy(true)
     setToolPermissionError(null)
-    // #region debug-point A:renderer-permission-submit
-    void fetch('http://127.0.0.1:7779/event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'tool-model-routing',
-        runId: 'pre-fix',
-        hypothesisId: 'A',
-        location: 'use-chat-panel-controller.ts:handleResolveToolPermission',
-        msg: '[DEBUG] Renderer submitted tool permission resolution',
-        data: {
-          decision,
-          toolCallId: currentRequest.toolCallId,
-          toolName: currentRequest.toolName,
-          model: currentRequest.model ?? null,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
-    // #endregion
     try {
       await resolveToolPermission({
         request: {
@@ -866,8 +828,6 @@ export function useChatPanelSections(): ChatPanelSections {
     handleStartWaggle: sendWorkflow.startWaggle,
     handleStartTeam: sendWorkflow.startTeam,
     handleSetMachineModeEnabled: sendWorkflow.setMachineModeEnabled,
-    handleApproveMachinePlan,
-    handleDiscardMachinePlan,
     handleStopCollaboration: sendWorkflow.stopCollaboration,
     handleClearTeamMode: clearActiveTeammate,
     handleSkipBranchSummary: branchSummary.skipBranchSummary,

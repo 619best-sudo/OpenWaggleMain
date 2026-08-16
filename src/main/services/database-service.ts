@@ -96,6 +96,15 @@ const makeDatabaseLayer = Effect.gen(function* () {
       yield* sql.unsafe('PRAGMA journal_mode = WAL;')
       yield* sql.unsafe('PRAGMA foreign_keys = ON;')
       yield* sql.unsafe('PRAGMA busy_timeout = 5000;')
+      // WAL + NORMAL is the durable-enough combination: transactions survive an
+      // app crash (the WAL is the truth); only an OS/power failure can lose the
+      // last commits. The default FULL fsyncs the WAL on every commit, which
+      // stalled the synchronous main-thread writer (and with it all IPC) per
+      // write.
+      yield* sql.unsafe('PRAGMA synchronous = NORMAL;')
+      // Keep the WAL bounded so checkpoints (which better-sqlite3 runs on the
+      // writer thread) stay short instead of occasionally freezing mid-run.
+      yield* sql.unsafe('PRAGMA wal_autocheckpoint = 4000;')
       yield* runMigrations
     }).pipe(
       Effect.mapError(

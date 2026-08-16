@@ -18,8 +18,8 @@ import type {
   InspirationBackendInput,
   InspirationBackendResult,
 } from 'turing-harness'
-import { readStoredApiKey } from '../providers/turing-credentials'
 import { createLogger } from '../../../logger'
+import { readStoredApiKey } from '../providers/turing-credentials'
 import { fetchInspirationByKeywords } from './inspiration-client'
 
 const logger = createLogger('inspiration-backend')
@@ -65,6 +65,13 @@ export function createInspirationBackend(
       keywords: input.keywords,
       kind: input.kind,
       sections: input.sections,
+      // The two weighted search axes. Forwarding them is what makes the store
+      // rank the style+domain INTERSECTION; without them the server falls back
+      // to any-tag keyword overlap, which scores a glassy fintech page and a
+      // flat clinic page identically for a glassmorphic health request.
+      style: input.style,
+      domain: input.domain,
+      scope: input.scope,
       baseUrl,
       token,
       timeoutMs,

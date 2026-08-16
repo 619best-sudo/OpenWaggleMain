@@ -5,6 +5,7 @@ import type {
   ExtensionFactory,
   SettingsManager,
 } from '@mariozechner/pi-coding-agent'
+import { PROJECT_RESOURCE_ROOT_SEGMENTS } from '@shared/constants/project-config'
 import { normalizeSkillId } from '@shared/utils/skill-id'
 import { isPathInside } from '../../utils/paths'
 import type { OpenWaggleMcpRuntimeContext } from './pi-mcp-config-service'
@@ -22,10 +23,10 @@ type PiResourceLoaderOptions = NonNullable<
 type PiSkillsOverride = NonNullable<PiResourceLoaderOptions['skillsOverride']>
 type PiSkillsOverrideInput = Parameters<PiSkillsOverride>[0]
 
-const OPENWAGGLE_SKILLS_ROOT_SEGMENTS = ['.openwaggle', 'skills'] as const
-const OPENWAGGLE_EXTENSIONS_ROOT_SEGMENTS = ['.openwaggle', 'extensions'] as const
-const OPENWAGGLE_PROMPTS_ROOT_SEGMENTS = ['.openwaggle', 'prompts'] as const
-const OPENWAGGLE_THEMES_ROOT_SEGMENTS = ['.openwaggle', 'themes'] as const
+const OPENWAGGLE_SKILLS_ROOT_SEGMENTS = PROJECT_RESOURCE_ROOT_SEGMENTS.skills
+const OPENWAGGLE_EXTENSIONS_ROOT_SEGMENTS = PROJECT_RESOURCE_ROOT_SEGMENTS.extensions
+const OPENWAGGLE_PROMPTS_ROOT_SEGMENTS = PROJECT_RESOURCE_ROOT_SEGMENTS.prompts
+const OPENWAGGLE_THEMES_ROOT_SEGMENTS = PROJECT_RESOURCE_ROOT_SEGMENTS.themes
 const OPENWAGGLE_CATALOG_SKILL_ROOT_SEGMENTS = [
   OPENWAGGLE_SKILLS_ROOT_SEGMENTS,
   ['.agents', 'skills'] as const,

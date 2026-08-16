@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { getAgentDir, SettingsManager } from '@mariozechner/pi-coding-agent'
 import { decodeUnknownOrThrow, type SchemaType } from '@shared/schema'
+import { PROJECT_CONFIG_DIR } from '@shared/constants/project-config'
 import { jsonObjectSchema, projectSettingsFileSchema } from '@shared/schemas/validation'
 import type { JsonObject, JsonValue } from '@shared/types/json'
 import {
@@ -12,7 +13,6 @@ import {
 } from './openwaggle-pi-settings-resources'
 
 const JSON_INDENT_SPACES = 2
-const OPENWAGGLE_CONFIG_DIR = '.openwaggle'
 const SETTINGS_FILE_NAME = 'settings.json'
 type ParsedProjectSettingsFile = SchemaType<typeof projectSettingsFileSchema>
 
@@ -28,7 +28,7 @@ interface OpenWagglePiSettingsManagerOptions {
 }
 
 function getOpenWaggleProjectSettingsPath(projectPath: string) {
-  return join(projectPath, OPENWAGGLE_CONFIG_DIR, SETTINGS_FILE_NAME)
+  return join(projectPath, PROJECT_CONFIG_DIR, SETTINGS_FILE_NAME)
 }
 
 function getPiProjectSettingsPath(projectPath: string) {

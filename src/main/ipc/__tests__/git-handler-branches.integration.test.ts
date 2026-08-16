@@ -12,11 +12,16 @@ describe('registerGitHandlers branches', () => {
   let invalidateGitStatusCache: Awaited<
     ReturnType<typeof loadGitHandlers>
   >['invalidateGitStatusCache']
+  let invalidateGitRepositoryCache: Awaited<
+    ReturnType<typeof loadGitHandlers>
+  >['invalidateGitRepositoryCache']
 
   beforeEach(async () => {
     resetGitHandlerMocks()
-    ;({ invalidateGitStatusCache, registerGitHandlers } = await loadGitHandlers())
+    ;({ invalidateGitRepositoryCache, invalidateGitStatusCache, registerGitHandlers } =
+      await loadGitHandlers())
     invalidateGitStatusCache()
+    invalidateGitRepositoryCache()
   })
 
   it('lists local and remote branches with upstream metadata', async () => {

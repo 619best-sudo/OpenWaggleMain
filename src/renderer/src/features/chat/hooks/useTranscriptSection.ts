@@ -7,7 +7,7 @@ import type { SessionDetail } from '@shared/types/session'
 import type { AgentTransportPhaseEndEvent } from '@shared/types/stream'
 import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import type { WaggleCollaborationStatus } from '@shared/types/waggle'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { useStreamingPhase } from '@/features/chat/hooks/useStreamingPhase'
 import { useWaggleMetadataLookup } from '@/features/chat/hooks/useWaggleMetadataLookup'
 import { useSessionStore } from '@/features/sessions/state'
@@ -121,25 +121,37 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
       : null
 
   const transcriptLoading = isLoading || isSteering
-  const transcriptMessages = resolveTranscriptMessages({
-    activeSessionId,
-    activeWorkspace,
-    messages,
-    machinePlan,
-    draftBranchSourceNodeId,
-  })
-  logger.debug('Prepared transcript messages before row building', {
-    sessionId: activeSessionId ? String(activeSessionId) : null,
-    rawMessageCount: messages.length,
-    workspaceMessageCount: activeWorkspace?.transcriptPath.length ?? 0,
-    transcriptMessages: transcriptMessages.map((message) => ({
-      id: message.id,
-      role: message.role,
-    })),
-  })
+  // Resolving the transcript walks every message (JSON parsing candidate plan
+  // texts, regex-matching internal prompts). It must not re-run on unrelated
+  // re-renders — during a run this hook renders on every stream delta.
+  const transcriptMessages = useMemo(
+    () =>
+      resolveTranscriptMessages({
+        activeSessionId,
+        activeWorkspace,
+        messages,
+        machinePlan,
+        draftBranchSourceNodeId,
+      }),
+    [activeSessionId, activeWorkspace, messages, machinePlan, draftBranchSourceNodeId],
+  )
+  if (logger.isDebugEnabled?.() === true) {
+    logger.debug('Prepared transcript messages before row building', {
+      sessionId: activeSessionId ? String(activeSessionId) : null,
+      rawMessageCount: messages.length,
+      workspaceMessageCount: activeWorkspace?.transcriptPath.length ?? 0,
+      transcriptMessages: transcriptMessages.map((message) => ({
+        id: message.id,
+        role: message.role,
+      })),
+    })
+  }
   const waggleMetadataLookup = useWaggleMetadataLookup(activeSession, messages)
 
-  const lastUserMessage = resolveLastUserMessage(transcriptMessages)
+  const lastUserMessage = useMemo(
+    () => resolveLastUserMessage(transcriptMessages),
+    [transcriptMessages],
+  )
   const interruptedRun =
     activeWorkspace?.tree.session.id === activeSessionId
       ? activeWorkspace.tree.branches.find((branch) => branch.id === activeWorkspace.activeBranchId)
@@ -162,25 +174,27 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     pendingUserQuestionRequest,
     livePhaseEvents,
   })
-  logger.debug('Built transcript rows', {
-    sessionId: activeSessionId ? String(activeSessionId) : null,
-    transcriptMessageCount: transcriptMessages.length,
-    chatRowCount: chatRows.length,
-    renderedMessageRows: chatRows
-      .filter((row) => row.type === 'message')
-      .map((row) => ({
-        id: row.message.id,
-        role: row.message.role,
-      })),
-  })
+  if (logger.isDebugEnabled?.() === true) {
+    logger.debug('Built transcript rows', {
+      sessionId: activeSessionId ? String(activeSessionId) : null,
+      transcriptMessageCount: transcriptMessages.length,
+      chatRowCount: chatRows.length,
+      renderedMessageRows: chatRows
+        .filter((row) => row.type === 'message')
+        .map((row) => ({
+          id: row.message.id,
+          role: row.message.role,
+        })),
+    })
+  }
 
   // Compute lastUserMessageId for session-restore identity gating, not send anchoring.
-  const lastUserMessageId = (() => {
+  const lastUserMessageId = useMemo(() => {
     for (let i = transcriptMessages.length - 1; i >= 0; i -= 1) {
       if (transcriptMessages[i]?.role === 'user') return transcriptMessages[i]?.id ?? null
     }
     return null
-  })()
+  }, [transcriptMessages])
 
   return {
     messages: transcriptMessages,
@@ -188,7 +202,6 @@ export function useTranscriptSection(params: TranscriptSectionParams): ChatTrans
     projectPath,
     recentProjects,
     activeSessionId,
-    machinePlan,
     chatRows,
     onOpenProject: handleOpenProject,
     onSelectProjectPath: handleSelectProjectPath,

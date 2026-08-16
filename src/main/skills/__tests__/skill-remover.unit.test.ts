@@ -28,9 +28,9 @@ afterEach(async () => {
 })
 
 describe('removeSkill', () => {
-  it('deletes a skill folder under .openwaggle/skills', async () => {
+  it('deletes a skill folder under .turing-machine/skills', async () => {
     const projectPath = await makeTempProject()
-    const openwaggleRoot = path.join(projectPath, '.openwaggle', 'skills')
+    const openwaggleRoot = path.join(projectPath, '.turing-machine', 'skills')
     const folder = await writeSkill(openwaggleRoot, 'my-skill', 'My Skill')
 
     await removeSkill(projectPath, 'my-skill')
@@ -44,7 +44,7 @@ describe('removeSkill', () => {
     await writeSkill(agentsRoot, 'curated-skill', 'Curated Skill')
 
     await expect(removeSkill(projectPath, 'curated-skill')).rejects.toThrow(
-      /not in \.openwaggle\/skills/,
+      /not in \.turing-machine\/skills/,
     )
     // The folder must still exist — removal was refused.
     await expect(fs.stat(path.join(agentsRoot, 'curated-skill'))).resolves.toBeTruthy()
@@ -59,7 +59,7 @@ describe('removeSkill', () => {
     // The catalog resolves `.openwaggle` first, so removeSkill must target the
     // .openwaggle copy and leave the .agents copy intact.
     const projectPath = await makeTempProject()
-    const openwaggleRoot = path.join(projectPath, '.openwaggle', 'skills')
+    const openwaggleRoot = path.join(projectPath, '.turing-machine', 'skills')
     const agentsRoot = path.join(projectPath, '.agents', 'skills')
     const openwaggleFolder = await writeSkill(openwaggleRoot, 'shared', 'Shared OW')
     const agentsFolder = await writeSkill(agentsRoot, 'shared', 'Shared Agents')
@@ -72,7 +72,7 @@ describe('removeSkill', () => {
 
   it('removes a skill that has a scripts subfolder', async () => {
     const projectPath = await makeTempProject()
-    const openwaggleRoot = path.join(projectPath, '.openwaggle', 'skills')
+    const openwaggleRoot = path.join(projectPath, '.turing-machine', 'skills')
     const folder = await writeSkill(openwaggleRoot, 'with-scripts', 'With Scripts')
     await fs.mkdir(path.join(folder, 'scripts'), { recursive: true })
     await fs.writeFile(path.join(folder, 'scripts', 'run.sh'), '#!/bin/sh\n', 'utf8')

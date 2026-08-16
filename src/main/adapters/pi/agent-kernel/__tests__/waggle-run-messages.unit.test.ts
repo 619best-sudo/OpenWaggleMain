@@ -298,7 +298,7 @@ exact next loop instructions: revert the failed button patch first, then inspect
         {
           type: 'tool_execution_end',
           toolCallId: `tool-${String(index)}`,
-          toolName: 'mobile-mcp-qa',
+          toolName: 'device-qa',
           args: { prompt: `Inspect screenshot ${String(index)}` },
           result: { outputPath: imagePath },
           isError: false,

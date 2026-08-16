@@ -77,9 +77,13 @@ describe('PlanReviewCard', () => {
     renderCard()
     expect(screen.getByText('Add the header')).toBeInTheDocument()
     expect(screen.getByText('Wire it in')).toBeInTheDocument()
-    // '+' marks a new file, '~' an edit — so the user can see what gets created.
-    expect(screen.getByTitle('src/Header.tsx (write)')).toHaveTextContent('+ src/Header.tsx')
-    expect(screen.getByTitle('src/Page.tsx (edit)')).toHaveTextContent('~ src/Page.tsx')
+    // The file chips say "new" / "edit" in words rather than with a private
+    // +/~ notation, and a created file is the one worth catching before you
+    // approve — so it carries the accent.
+    // The label and the path are separate spans held apart by `gap-1`, so the
+    // chip's text content runs them together — assert the parts, not the gap.
+    expect(screen.getByTitle('src/Header.tsx')).toHaveTextContent(/^new\s*src\/Header\.tsx$/)
+    expect(screen.getByTitle('src/Page.tsx')).toHaveTextContent(/^edit\s*src\/Page\.tsx$/)
     expect(screen.getByText(/renders at 375px/)).toBeInTheDocument()
   })
 
@@ -254,5 +258,66 @@ describe('PlanReviewCard', () => {
     fireEvent.click(screen.getByRole('button', { name: /Cancel/ }))
     await waitFor(() => expect(onResolve).toHaveBeenCalledTimes(1))
     expect(onResolve).toHaveBeenCalledWith({ planReviewId: 'review-1', decision: 'cancelled' })
+  })
+
+  it('names the plan and its summary when there is only one', () => {
+    renderCard()
+    expect(screen.getByText('Ship it')).toBeInTheDocument()
+    expect(screen.queryByText('Review plan')).not.toBeInTheDocument()
+  })
+
+  it('carries the additions from the previous draft into the new one', async () => {
+    const base = request()
+    const [plan] = base.planSet.plans
+    if (!plan) throw new Error('fixture has no plan')
+    const [first, ...rest] = plan.tasks
+    if (!first) throw new Error('fixture has no steps')
+    const onResolve = vi.fn()
+
+    // A re-draft: the harness echoes back what the user pinned last round.
+    render(
+      <PlanReviewCard
+        request={{
+          ...base,
+          revision: 2,
+          planSet: {
+            ...base.planSet,
+            plans: [
+              {
+                ...plan,
+                tasks: [
+                  {
+                    ...first,
+                    userNotes: 'Use the brand blue.',
+                    attachments: [{ path: '/tmp/project/mockup.png', mimeType: 'image/png' }],
+                  },
+                  ...rest,
+                ],
+              },
+            ],
+          },
+        }}
+        onResolve={onResolve}
+        projectPath="/tmp/project"
+      />,
+    )
+
+    // Visible on the collapsed toggle, so the user can see they need not re-add it.
+    expect(screen.getByRole('button', { name: /note, 1 file/ })).toBeInTheDocument()
+
+    // And still submitted with the new draft.
+    fireEvent.click(screen.getByRole('button', { name: /Approve & run/ }))
+    await waitFor(() => expect(onResolve).toHaveBeenCalledTimes(1))
+    expect(onResolve).toHaveBeenCalledWith({
+      planReviewId: 'review-1',
+      decision: 'approved',
+      stepEdits: [
+        {
+          taskId: 't1',
+          notes: 'Use the brand blue.',
+          attachments: [{ path: '/tmp/project/mockup.png', mimeType: 'image/png' }],
+        },
+      ],
+    })
   })
 })

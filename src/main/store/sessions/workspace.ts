@@ -66,12 +66,16 @@ function resolveWorkspaceNode(
 }
 
 function buildTranscriptPath(tree: SessionTree, activeNodeId: SessionNode['id'] | null) {
-  const activePath = buildPiWorkingContextPath(activeNodeId ? String(activeNodeId) : null, tree.nodes, {
-    getId: (node) => String(node.id),
-    getParentId: (node) => (node.parentId ? String(node.parentId) : null),
-    getKind: (node) => node.kind,
-    getContentJson: (node) => node.contentJson,
-  }).map((node) => ({
+  const activePath = buildPiWorkingContextPath(
+    activeNodeId ? String(activeNodeId) : null,
+    tree.nodes,
+    {
+      getId: (node) => String(node.id),
+      getParentId: (node) => (node.parentId ? String(node.parentId) : null),
+      getKind: (node) => node.kind,
+      getContentJson: (node) => node.contentJson,
+    },
+  ).map((node) => ({
     node,
     branchId: node.branchId,
     isActive: node.id === activeNodeId,
@@ -83,25 +87,28 @@ function buildTranscriptPath(tree: SessionTree, activeNodeId: SessionNode['id'] 
   }
 
   const activePathIds = new Set(activePath.map((entry) => String(entry.node.id)))
-  const latestPhaseTranscriptEntry = tree.nodes.reduce<(typeof activePath)[number] | null>((latest, node) => {
-    if (
-      node.branchId !== activeBranchId ||
-      !node.message?.metadata?.phaseTranscript ||
-      activePathIds.has(String(node.id))
-    ) {
-      return latest
-    }
-
-    if (!latest || node.createdOrder > latest.node.createdOrder) {
-      return {
-        node,
-        branchId: node.branchId,
-        isActive: false,
+  const latestPhaseTranscriptEntry = tree.nodes.reduce<(typeof activePath)[number] | null>(
+    (latest, node) => {
+      if (
+        node.branchId !== activeBranchId ||
+        !node.message?.metadata?.phaseTranscript ||
+        activePathIds.has(String(node.id))
+      ) {
+        return latest
       }
-    }
 
-    return latest
-  }, null)
+      if (!latest || node.createdOrder > latest.node.createdOrder) {
+        return {
+          node,
+          branchId: node.branchId,
+          isActive: false,
+        }
+      }
+
+      return latest
+    },
+    null,
+  )
 
   return latestPhaseTranscriptEntry ? [...activePath, latestPhaseTranscriptEntry] : activePath
 }

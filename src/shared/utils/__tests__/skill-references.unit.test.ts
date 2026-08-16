@@ -21,7 +21,7 @@ describe('extractExplicitSkillReferences', () => {
   })
 
   it('ignores absolute path segments', () => {
-    const result = extractExplicitSkillReferences('Please inspect /tmp/repo/.openwaggle/skills')
+    const result = extractExplicitSkillReferences('Please inspect /tmp/repo/.turing-machine/skills')
     expect(result.allSkillIds).toEqual([])
   })
 

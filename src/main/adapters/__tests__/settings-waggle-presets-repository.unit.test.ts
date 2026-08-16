@@ -165,7 +165,9 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
         ],
       },
     })
-    expect(presets.find((preset) => preset.id === WagglePresetId('product-planning'))).toBeUndefined()
+    expect(
+      presets.find((preset) => preset.id === WagglePresetId('product-planning')),
+    ).toBeUndefined()
     expect(presets.find((preset) => preset.id === WagglePresetId('turing'))).toMatchObject({
       name: 'Turing',
       app: {
@@ -213,7 +215,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(presets.find((preset) => preset.id === WagglePresetId('mobile-build'))).toMatchObject({
       name: 'Mobile Build',
       app: {
-        requiredMcps: ['mobile-mcp'],
+        requiredMcps: ['mobile-device'],
         requiredSkills: ['frontend-implementer'],
         optionalMcps: [
           'mobile-device',
@@ -234,7 +236,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       {
         name: 'Mobile Engineer',
         app: {
-          requiredMcps: ['mobile-mcp'],
+          requiredMcps: ['mobile-device'],
           requiredSkills: [],
           optionalMcps: [
             'mobile-device',
@@ -304,7 +306,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       app: {
         requiredMcps: [],
         requiredSkills: [],
-        optionalMcps: ['playwright', 'mobile-mcp', 'mobile-device', 'postman', 'database'],
+        optionalMcps: ['playwright', 'mobile-device', 'postman', 'database'],
         optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor', 'backend-auditor'],
       },
       config: {
@@ -321,7 +323,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       app: {
         requiredMcps: [],
         requiredSkills: ['ui-screenshot-auditor', 'backend-auditor'],
-        optionalMcps: ['playwright', 'mobile-mcp', 'mobile-device', 'postman', 'database'],
+        optionalMcps: ['playwright', 'mobile-device', 'postman', 'database'],
         optionalSkills: ['frontend-implementer'],
       },
       config: {
@@ -371,7 +373,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     expect(presets.find((preset) => preset.id === WagglePresetId('development-qa'))).toMatchObject({
       name: 'Development QA',
       app: {
-        requiredMcps: ['playwright', 'mobile-mcp', 'postman', 'database'],
+        requiredMcps: ['playwright', 'mobile-device', 'postman', 'database'],
         requiredSkills: ['ui-screenshot-auditor', 'backend-auditor'],
       },
     })
@@ -382,7 +384,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
       app: {
         requiredMcps: [],
         requiredSkills: [],
-        optionalMcps: ['playwright', 'mobile-mcp', 'postman', 'database'],
+        optionalMcps: ['playwright', 'postman', 'database'],
         optionalSkills: ['ui-screenshot-auditor', 'backend-auditor'],
       },
       config: {
@@ -401,7 +403,7 @@ describe('SettingsWagglePresetsRepositoryLive', () => {
     ).toMatchObject({
       name: 'Performance Inspector',
       app: {
-        requiredMcps: ['chrome-devtools', 'mobile-mcp', 'postman', 'sql'],
+        requiredMcps: ['chrome-devtools', 'postman', 'sql'],
         requiredSkills: ['performance-auditor'],
       },
     })

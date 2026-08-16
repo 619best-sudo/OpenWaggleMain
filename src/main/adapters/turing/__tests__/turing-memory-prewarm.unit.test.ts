@@ -29,6 +29,9 @@ vi.mock('../../pi/pi-provider-catalog', () => ({
 
 const harnessCreateCount = vi.hoisted(() => ({ value: 0 }))
 const attachOpenWaggleRuntimeMock = vi.hoisted(() => vi.fn(async () => ({ issues: [] })))
+/** Ids passed to `pool.prewarm()` across the run, in order. */
+const prewarmedServerIds = vi.hoisted(() => [] as string[])
+const primedServerIds = vi.hoisted(() => [] as string[])
 
 vi.mock('turing-harness', () => {
   class MockHarness {
@@ -64,8 +67,43 @@ vi.mock('turing-harness', () => {
         }),
       })),
     },
+    // The shared pool is constructed by getSharedMcpPool. Record what the warm
+    // path asks it to connect so the prewarm contract can be asserted without
+    // spawning real MCP child processes.
     McpRuntimePool: class {
-      // The shared pool is constructed by getSharedMcpPool; a bare class is enough.
+      private readonly ids = new Set<string>()
+      getInstanceId() {
+        return 1
+      }
+      has(opts: { id: string }) {
+        return this.ids.has(opts.id)
+      }
+      pooledIds() {
+        return Array.from(this.ids)
+      }
+      async prewarm(opts: { id: string }) {
+        this.ids.add(opts.id)
+        prewarmedServerIds.push(opts.id)
+      }
+      async evictById(id: string) {
+        this.ids.delete(id)
+      }
+      clearFailureCooldowns() {}
+      async dispose() {
+        this.ids.clear()
+      }
+    },
+    primeMcpServerCache: vi.fn(async (opts: { id: string }) => {
+      primedServerIds.push(opts.id)
+    }),
+    // The pool is constructed with a tool cache; without this the factory is
+    // missing the constructor and `getSharedMcpPool` throws before prewarming.
+    McpToolCache: class {
+      get() {
+        return undefined
+      }
+      set() {}
+      forget() {}
     },
     // Asset generation defaults to the backend proxy, so building a session's
     // asset backends goes through the harness's backend image seam.
@@ -74,9 +112,11 @@ vi.mock('turing-harness', () => {
   }
 })
 
-// Mock the bridge so prewarm-with-runtime tests can assert the attach is
-// attempted without needing the real turing-harness MCP/skill APIs.
-vi.mock('../turing-openwaggle-bridge', () => ({
+// Stub only the attach. `resolveOpenWaggleMcpServers` stays REAL: the warm path
+// depends on it producing byte-identical server options to the run path, so
+// mocking it would hide exactly the drift that would break pool reuse.
+vi.mock('../turing-openwaggle-bridge', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../turing-openwaggle-bridge')>()),
   attachOpenWaggleRuntime: attachOpenWaggleRuntimeMock,
 }))
 
@@ -85,6 +125,19 @@ import {
   disposeAllWarmProjectSessions,
   prewarmProjectMemory,
 } from '../turing-memory-prewarm'
+
+/**
+ * The pool warm-up is fire-and-forget off `createWarmProjectSession` and goes
+ * through a dynamic import, so it lands a few microtask turns after
+ * `prewarmProjectMemory` resolves.
+ */
+async function waitFor(predicate: () => boolean, timeoutMs = 1000): Promise<void> {
+  const deadline = Date.now() + timeoutMs
+  while (!predicate()) {
+    if (Date.now() > deadline) throw new Error('timed out waiting for background prewarm')
+    await new Promise((resolve) => setTimeout(resolve, 5))
+  }
+}
 
 describe('turing-memory-prewarm', () => {
   beforeEach(() => {
@@ -117,12 +170,24 @@ describe('turing-memory-prewarm', () => {
     expect(harnessCreateCount.value).toBe(2)
   })
 
-  it('attaches MCP servers + skills during prewarm when runtime inputs are supplied', async () => {
+  it('warms enabled MCP servers into the shared pool without attaching them to the session', async () => {
     attachOpenWaggleRuntimeMock.mockClear()
+    prewarmedServerIds.length = 0
+    primedServerIds.length = 0
     const mcpSettings = {
       adapter: { enabled: true, packageSource: '', runtimeConfigPath: null },
       sources: [],
-      effective: { mcpServers: {}, disabledMcpServers: {}, settings: {}, imports: [] },
+      // The summary says which servers are enabled; `effective.mcpServers` holds
+      // the actual spawn definition. A summary without a matching definition is
+      // skipped, so both halves have to be present for the server to resolve.
+      effective: {
+        mcpServers: {
+          fs: { command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem'] },
+        },
+        disabledMcpServers: {},
+        settings: {},
+        imports: [],
+      },
       servers: [
         {
           name: 'fs',
@@ -155,21 +220,26 @@ describe('turing-memory-prewarm', () => {
     } as never
 
     await prewarmProjectMemory('/tmp/repo-with-runtime', { mcpSettings, standardsContext })
+    await waitFor(() => prewarmedServerIds.length > 0)
 
-    // The bridge attach is the single point where MCP clients + skill providers
-    // get wired into the prewarmed session. Verifying it was called with the
-    // supplied runtime proves the prewarm path actually surfaces extensions.
-    expect(attachOpenWaggleRuntimeMock).toHaveBeenCalledTimes(1)
-    const calls = attachOpenWaggleRuntimeMock.mock.calls as unknown as unknown[][]
-    expect(calls[0]?.[1]).toMatchObject({
-      mcpSettings,
-      standardsContext,
-    })
+    // Warm (pool) and attach (session) are deliberately split. Prewarm connects
+    // the server into the shared pool so a later run's `borrow()` is a Map
+    // lookup, and registers nothing on the spare session — that's what lets a
+    // spare stay MCP-free while the pool is shared and hot.
+    expect(prewarmedServerIds).toEqual(['turing-machine:mcp:fs'])
+    // Priming is NOT done here any more: it lives in the pool's cold-spawn path
+    // so it cannot delay a server that is served from the tool cache and never
+    // spawns. An up-front barrier here blocked every server behind the slowest
+    // `npm cache add`.
+    expect(primedServerIds).toEqual([])
+    expect(attachOpenWaggleRuntimeMock).not.toHaveBeenCalled()
   })
 
-  it('does not call the bridge when no runtime inputs are supplied', async () => {
+  it('does not touch the pool or the bridge when no runtime inputs are supplied', async () => {
     attachOpenWaggleRuntimeMock.mockClear()
+    prewarmedServerIds.length = 0
     await prewarmProjectMemory('/tmp/repo-no-runtime')
     expect(attachOpenWaggleRuntimeMock).not.toHaveBeenCalled()
+    expect(prewarmedServerIds).toEqual([])
   })
 })

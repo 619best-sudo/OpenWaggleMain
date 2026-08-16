@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import type { HarnessAgentState } from 'turing-harness'
+import { describe, expect, it } from 'vitest'
 import { buildRunTranscriptNode } from '../turing-classic-run'
 
 function makeState(
@@ -49,7 +49,15 @@ describe('buildRunTranscriptNode', () => {
       makeState({
         lastRunSummary: 'Updated the header in index.html.',
         lastSteps: [
-          { planId: 'p1', taskId: 't1', title: 'edit header', summary: 'x', complexity: 'low', isCompleted: true, files: ['/tmp/index.html'] },
+          {
+            planId: 'p1',
+            taskId: 't1',
+            title: 'edit header',
+            summary: 'x',
+            complexity: 'low',
+            isCompleted: true,
+            files: ['/tmp/index.html'],
+          },
         ],
         lastThreadSnapshot: {
           timestamp: 1,
@@ -65,7 +73,9 @@ describe('buildRunTranscriptNode', () => {
     )
 
     expect(node).toBeDefined()
-    const parsed = JSON.parse(node!.contentJson) as { data: { phases: Array<{ id: string; status: string; summary?: string }> } }
+    const parsed = JSON.parse(node!.contentJson) as {
+      data: { phases: Array<{ id: string; status: string; summary?: string }> }
+    }
     const phases = parsed.data.phases
     expect(phases).toHaveLength(1)
     expect(phases[0]?.id).toBe('working')
@@ -90,7 +100,9 @@ describe('buildRunTranscriptNode', () => {
       [],
       789,
     )
-    const parsed = JSON.parse(node!.contentJson) as { data: { phases: Array<{ id: string; status: string }> } }
+    const parsed = JSON.parse(node!.contentJson) as {
+      data: { phases: Array<{ id: string; status: string }> }
+    }
     expect(parsed.data.phases[0]?.status).toBe('failed')
   })
 

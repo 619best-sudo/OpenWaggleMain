@@ -49,26 +49,6 @@ export function loadAgentRunPreflight(input: AgentRunInput) {
 
     const settingsService = yield* SettingsService
     const settings = yield* settingsService.get()
-    // #region debug-point P:preflight-settings
-    void fetch('http://127.0.0.1:7777/event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'permission-flow',
-        runId: 'pre-fix',
-        hypothesisId: '1',
-        location: 'agent-run/preflight.ts:loadAgentRunPreflight',
-        msg: '[DEBUG] Loaded settings for agent run preflight',
-        data: {
-          sessionId: String(input.sessionId),
-          model: input.model,
-          toolPermissionMode: settings.toolPermissionMode,
-          projectPath: session.projectPath,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
-    // #endregion
     const assignedTitle = yield* assignSessionTitleFromUserText(
       input.sessionId,
       session,

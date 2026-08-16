@@ -57,7 +57,6 @@ function createSection(overrides: Partial<ChatTranscriptSectionState> = {}) {
     projectPath: '/repo',
     recentProjects: [],
     activeSessionId: null,
-    machinePlan: null,
     chatRows: [createMessageChatRow(defaultMessage)],
     lastUserMessageId: 'msg-1',
     streamSignalVersion: 0,

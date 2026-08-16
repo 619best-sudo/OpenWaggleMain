@@ -180,6 +180,42 @@ describe('AssistantMessageBubble (hydrated / post-completion)', () => {
     expect(screen.getByText(/const a = 1/)).toBeInTheDocument()
   })
 
+  // Regression: reading an .html file used to be detected as MEDIA (the result's
+  // details.path ended in .html, so getToolMediaOutput returned an HTML media
+  // reference), and the media preview branch preempted FileContentView. When the
+  // path was outside the active project the preview rendered as "Nothing to
+  // preview." — so the read appeared EMPTY even though the body was stored fine.
+  // Symmetric to the WRITE-of-.html regression below; read's body is source the
+  // user wants to see, never a rendered asset.
+  it('READ of an .html file shows the source, not an empty media preview', () => {
+    render(
+      <AssistantMessageBubble
+        message={msg([
+          {
+            type: 'tool-call',
+            id: 'call-read-html',
+            name: 'read',
+            arguments: JSON.stringify({ path: `${PROJECT_ROOT}/index.html` }),
+            state: 'complete',
+          },
+          {
+            type: 'tool-result',
+            toolCallId: 'call-read-html',
+            state: 'complete',
+            content: {
+              content: [{ type: 'text', text: '1\t<!DOCTYPE html>\n2\t<html><title>kofin</title></html>' }],
+              details: { path: `${PROJECT_ROOT}/index.html`, lineCount: 2 },
+            },
+          },
+        ])}
+        sessionId={sid}
+      />,
+    )
+    expect(screen.getByText(/<!DOCTYPE html>/)).toBeInTheDocument()
+    expect(screen.queryByText('Media file could not be found.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Nothing to preview.')).not.toBeInTheDocument()
+  })
+
   // Regression: writing an .html file used to be detected as MEDIA, and the media
   // preview branch preempted the diff — so a 437-line new page rendered as
   // "Media file could not be found." instead of showing what was written.

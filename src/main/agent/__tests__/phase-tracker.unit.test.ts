@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
 import { SessionId } from '@shared/types/brand'
 import { getAgentPhaseTitle } from '@shared/types/phase-titles'
+import { describe, expect, it } from 'vitest'
 import {
   getPhaseForSession,
   resetPhaseForSession,
@@ -105,8 +105,7 @@ describe.skip('phase-tracker (retry history — unimplemented)', () => {
       readonly phases: readonly IntendedPhaseEntry[]
     }
     const intendedState = phaseState as unknown as IntendedPhaseState | null
-    const currentAgentPhase = (_state: IntendedPhaseState | null): IntendedPhaseEntry | null =>
-      null
+    const currentAgentPhase = (_state: IntendedPhaseState | null): IntendedPhaseEntry | null => null
 
     expect(intendedState).not.toBeNull()
     if (!intendedState) {

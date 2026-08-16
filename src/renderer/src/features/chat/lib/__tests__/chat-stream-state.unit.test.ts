@@ -343,3 +343,37 @@ describe('applyAgentTransportEvent reasoning streaming', () => {
     expect(messages).toEqual([])
   })
 })
+
+describe('tool event reference stability', () => {
+  // During a run the row memo (`areChatRowsEqual`) compares `message` by
+  // reference, so a tool event must NOT hand every unrelated message a fresh
+  // object — otherwise the whole transcript re-renders on every
+  // tool_execution_start/end, and the cost grows with each accumulated tool.
+  it('preserves the identity of messages that do not contain the updated tool call', () => {
+    const otherMessage: UIMessage = {
+      id: 'user-1',
+      role: 'user',
+      parts: [{ type: 'text', content: 'read the file' }],
+    }
+    const assistantMessage: UIMessage = {
+      id: 'assistant-1',
+      role: 'assistant',
+      parts: [
+        { type: 'tool-call', id: 'tool-1', name: 'read', arguments: '', state: 'input-complete' },
+      ],
+    }
+    const before: UIMessage[] = [otherMessage, assistantMessage]
+
+    const after = applyAgentTransportEvent(before, {
+      type: 'tool_execution_start',
+      toolCallId: 'tool-1',
+      toolName: 'read',
+      args: { path: 'src/app.ts' },
+      parentMessageId: 'assistant-1',
+      timestamp: 1,
+    })
+
+    expect(after[0]).toBe(otherMessage) // unrelated message keeps its reference
+    expect(after[1]).not.toBe(assistantMessage) // only the carrier message is rebuilt
+  })
+})

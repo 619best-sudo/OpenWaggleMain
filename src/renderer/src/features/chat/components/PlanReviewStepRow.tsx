@@ -6,11 +6,11 @@ import { Textarea } from '@/shared/ui/Textarea'
 /** Rows for the per-step notes box. Small on purpose — it is an aside, not the plan. */
 const NOTE_TEXTAREA_ROWS = 2
 
-const COMPLEXITY_STYLE: Record<PlanReviewTask['complexity'], string> = {
-  low: 'bg-bg-hover text-text-tertiary',
-  medium: 'bg-warning/15 text-warning',
-  high: 'bg-error/15 text-error',
-}
+// NOTE: `task.complexity` is deliberately not rendered. It decides which model
+// authors the step's files — an internal routing signal the reviewer cannot act
+// on — and a coloured LOW/MEDIUM/HIGH badge on every row was the loudest thing
+// in a list whose actual content is the titles. Same reasoning as the tool
+// permission card.
 
 /** What the user is composing for one step, before it is sent. */
 export interface PlanStepDraft {
@@ -57,12 +57,70 @@ interface PlanReviewStepRowProps {
   readonly actions: PlanStepRowActions
 }
 
-/** Short "(1 note, 2 file(s))" tail shown on the collapsed toggle. */
+/** Short "· note, 2 files" tail shown on the collapsed toggle. */
 function editsSummary(draft: PlanStepDraft) {
   const parts: string[] = []
-  if (draft.notes.trim()) parts.push('1 note')
-  if (draft.attachments.length) parts.push(`${draft.attachments.length} file(s)`)
-  return parts.length ? ` (${parts.join(', ')})` : ''
+  if (draft.notes.trim()) parts.push('note')
+  if (draft.attachments.length) {
+    parts.push(`${draft.attachments.length} file${draft.attachments.length === 1 ? '' : 's'}`)
+  }
+  return parts.length ? ` · ${parts.join(', ')}` : ''
+}
+
+/**
+ * The step's position, as a marker rather than a bordered row.
+ *
+ * The list used to give every step its own `border` + `rounded-lg` box, nested
+ * inside the card's own two frames — three stacked surfaces for what is really
+ * an ordered list. A numbered marker carries the same structure with none of
+ * the weight, and lets the titles be the thing you see.
+ */
+function StepNumber({ order }: { readonly order: number }) {
+  return (
+    <span className="mt-px flex size-[20px] shrink-0 items-center justify-center rounded-full bg-bg-hover text-[11px] font-medium tabular-nums text-text-tertiary">
+      {order}
+    </span>
+  )
+}
+
+/**
+ * The files a step touches, split by what happens to them.
+ *
+ * `+`/`~` prefixes were a private notation nobody was told; "new" and "edit" is
+ * the same information in words the reviewer already has. Created files carry
+ * the accent because creating one is the decision worth catching in a plan you
+ * are about to approve.
+ */
+function StepFiles({
+  files,
+  mutations,
+}: {
+  readonly files: readonly string[]
+  readonly mutations: Readonly<Record<string, 'edit' | 'write'>>
+}) {
+  if (files.length === 0) return null
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1">
+      {files.map((file) => {
+        const isNew = mutations[file] === 'write'
+        return (
+          <span
+            key={file}
+            className={cn(
+              'flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[11px]',
+              isNew ? 'bg-accent/10 text-accent' : 'bg-code-card text-tool-call-file-text',
+            )}
+            title={file}
+          >
+            <span className="font-sans text-[10px] uppercase tracking-wide opacity-70">
+              {isNew ? 'new' : 'edit'}
+            </span>
+            <span className="max-w-[260px] truncate">{file}</span>
+          </span>
+        )
+      })}
+    </div>
+  )
 }
 
 /**
@@ -193,54 +251,33 @@ export function PlanReviewStepRow({
   const { onToggle, onNotesChange, onAttachFiles, onRemoveAttachment } = actions
 
   return (
-    <li className="rounded-lg border border-border px-3 py-2">
-      <div className="flex items-start gap-2">
-        <span className="mt-0.5 text-[12px] tabular-nums text-text-tertiary">{task.order}.</span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium text-text-primary">{task.title}</span>
-            <span
-              className={cn(
-                'rounded px-1.5 py-0.5 text-[11px] uppercase tracking-wide',
-                COMPLEXITY_STYLE[task.complexity],
-              )}
-            >
-              {task.complexity}
-            </span>
-            {planTitle ? <span className="text-[11px] text-text-tertiary">{planTitle}</span> : null}
-          </div>
-          <div className="mt-0.5 text-[13px] text-text-secondary">{task.summary}</div>
-
-          {task.files.length > 0 ? (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {task.files.map((file) => (
-                <span
-                  key={file}
-                  className="rounded bg-code-card px-1.5 py-0.5 font-mono text-[11px] text-tool-call-file-text"
-                  title={`${file} (${task.fileMutations[file] ?? 'edit'})`}
-                >
-                  {task.fileMutations[file] === 'write' ? '+ ' : '~ '}
-                  {file}
-                </span>
-              ))}
-            </div>
-          ) : null}
-          {task.verification ? (
-            <div className="mt-1 text-[12px] text-text-secondary">
-              <span className="text-text-primary">Done when:</span> {task.verification}
-            </div>
-          ) : null}
-          {task.risks ? (
-            <div className="mt-0.5 text-[12px] text-warning">Risk: {task.risks}</div>
-          ) : null}
-
-          <StepAdditions
-            draft={draft}
-            state={{ isOpen, disabled, staging, projectPath, readOnly }}
-            actions={{ onToggle, onNotesChange, onAttachFiles, onRemoveAttachment }}
-            stepOrder={task.order}
-          />
+    <li className="flex items-start gap-2.5">
+      <StepNumber order={task.order} />
+      <div className="min-w-0 flex-1 pb-1">
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <span className="font-medium text-text-primary">{task.title}</span>
+          {planTitle ? <span className="text-[11px] text-text-tertiary">{planTitle}</span> : null}
         </div>
+        <div className="mt-0.5 text-[13px] leading-[1.5] text-text-secondary">{task.summary}</div>
+
+        <StepFiles files={task.files} mutations={task.fileMutations} />
+
+        {task.verification ? (
+          <div className="mt-1.5 text-[12px] leading-[1.45] text-text-secondary">
+            <span className="text-text-tertiary">Done when </span>
+            {task.verification}
+          </div>
+        ) : null}
+        {task.risks ? (
+          <div className="mt-1 text-[12px] leading-[1.45] text-warning">{task.risks}</div>
+        ) : null}
+
+        <StepAdditions
+          draft={draft}
+          state={{ isOpen, disabled, staging, projectPath, readOnly }}
+          actions={{ onToggle, onNotesChange, onAttachFiles, onRemoveAttachment }}
+          stepOrder={task.order}
+        />
       </div>
     </li>
   )

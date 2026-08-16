@@ -2,6 +2,7 @@ import type { SkillCatalogResult, SkillDiscoveryItem } from '@shared/types/stand
 import { Download, RefreshCw, Sparkles, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { PROJECT_SKILLS_DIR_SEGMENTS } from '@shared/constants/project-config'
 import { useProject } from '@/features/sessions/hooks'
 import { useSkills } from '@/features/skills/hooks/useSkills'
 import { cn } from '@/shared/lib/cn'
@@ -15,13 +16,13 @@ import { SkillPreviewPane } from './SkillPreviewPane'
 import { EmptySkillsState, NoProjectState } from './SkillsPanelStates'
 
 /**
- * Whether a skill folder lives under the project's `.openwaggle/skills` root —
+ * Whether a skill folder lives under the project's `.turing-machine/skills` root —
  * the only directory the UI is allowed to delete from (mirrors the importer,
  * which writes only there). Repo-curated skills under `.agents/skills` are
  * version-controlled and must be removed via the filesystem.
  */
 function isRemovableSkill(projectPath: string, folderPath: string): boolean {
-  const root = `${projectPath.replace(/\/+$/, '')}/.openwaggle/skills`
+  const root = [projectPath.replace(/\/+$/, ''), ...PROJECT_SKILLS_DIR_SEGMENTS].join('/')
   const normalized = folderPath.replace(/\/+$/, '')
   return normalized === root || normalized.startsWith(`${root}/`)
 }

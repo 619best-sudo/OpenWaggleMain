@@ -1,0 +1,64 @@
+- generic [active] [ref=e1] [box=0,0,1200,7901]:
+  - banner [ref=e333] [box=0,0,1200,207]:
+    - generic [ref=e335] [box=436,4,328,16]: NEW|Epik raised $1M pre-seed, led by InfoEdge.
+    - generic [ref=e336] [box=0,24,1200,183]:
+      - generic [ref=e338] [box=20,30,1160,40]
+      - navigation [ref=e371] [box=0,80,1200,123]
+  - alert [ref=e1821] [box=-1,206,1,1]: Buy ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025 Launch, PowerBoost Charging, OZMO Roller 2.0 Instant Self-Washing Mop, 19500Pa Blast Suction, Bagless OmniCyclone Station Online - Shop with Free Home Demo in Bangalore | Epik
+  - generic [box=0,207,1200,0]:
+    - generic [box=0,224,0,0]:
+      - iframe [box=0,224,0,0]
+  - main [ref=e2025] [box=0,207,1200,6339]:
+    - navigation "Breadcrumb" [ref=e2026] [box=16,239,1168,28]:
+      - link "Epik" [ref=e2027] [cursor=pointer] [box=16,239,27,16]:
+        - /url: /
+      - img [ref=e2029] [box=51,240,14,14]
+      - link "Robot Vacuum Cleaner" [ref=e2031] [cursor=pointer] [box=73,239,140,16]:
+        - /url: /collections/robot-vacuum-cleaner-online-store-in-bangalore
+      - img [ref=e2032] [box=220,240,14,14]
+      - link "ECOVACS Robot Vacuum Cleaner" [ref=e2034] [cursor=pointer] [box=242,239,201,16]:
+        - /url: /collections/ecovacs-robot-vacuum-cleaner-online-store-in-bangalore
+      - img [ref=e2035] [box=451,240,14,14]
+      - generic "ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025 Launch, PowerBoost Charging, OZMO Roller 2.0 Instant Self-Washing Mop, 19500Pa Blast Suction, Bagless OmniCyclone Station" [ref=e2037] [box=473,239,360,16]: ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025…
+    - generic [ref=e2038] [box=16,267,1168,657]:
+      - generic [ref=e2041] [box=33,284,538,418]
+      - generic [ref=e2076] [box=637,292,522,607]
+    - generic [ref=e2168] [box=17,949,1166,72]:
+      - generic [ref=e2169] [box=17,949,292,72]
+      - generic [ref=e2176] [box=309,949,292,72]
+      - generic [ref=e2183] [box=600,949,292,72]
+      - generic [ref=e2191] [box=892,949,292,72]
+    - generic [ref=e2201] [box=16,1046,1168,568]:
+      - generic [ref=e2202] [box=16,1046,1168,376]
+      - link "Epik delivery How an Epik Logo demo works in 60 minutes Know More" [ref=e2296] [cursor=pointer] [box=16,1453,1168,160]:
+        - /url: /how-demo-works
+    - generic [ref=e2311] [box=16,1645,1168,1653]:
+      - heading "You May Also Like" [level=2] [ref=e2312] [box=16,1669,1168,28]
+      - generic [ref=e2314] [box=16,1713,1168,1573]
+    - generic [ref=e3017] [box=16,3298,1168,1286]:
+      - heading "More Products from Ecovacs" [level=2] [ref=e3018] [box=16,3330,1168,28]
+      - generic [ref=e3020] [box=16,3374,1168,1178]
+    - generic [ref=e3467] [box=16,4584,1168,1278]:
+      - heading "Top Selling Products in Bangalore" [level=2] [ref=e3468] [box=16,4616,1168,28]
+      - generic [ref=e3470] [box=16,4660,1168,1170]
+    - generic [ref=e4041] [box=16,5862,1168,652]:
+      - heading "What People Are Saying" [level=2] [ref=e4045] [box=371,5894,459,52]
+      - generic [ref=e4050] [box=0,6002,1200,244]
+      - generic [ref=e4184] [box=0,6278,1200,236]
+  - generic [ref=e1823] [box=24,6626,1152,32]:
+    - generic [ref=e1824] [box=24,6626,341,32]:
+      - img [ref=e1826] [box=24,6626,25,32]
+      - paragraph [ref=e1830] [box=80,6631,285,21]: The Trusted Choice for 10,000+ Families
+    - generic [ref=e1831] [box=490,6626,281,30]:
+      - img [ref=e1833] [box=490,6626,30,30]
+      - paragraph [ref=e1840] [box=546,6631,225,21]: Backed by India’s Top Investors
+    - generic [ref=e1841] [box=897,6631,279,21]:
+      - img [ref=e1843] [box=897,6632,40,19]
+      - paragraph [ref=e1848] [box=953,6631,223,21]: Rated 5.0 for Demo Experience
+  - contentinfo [ref=e1849] [box=0,6697,1200,1204]:
+    - generic [ref=e1850] [box=0,6777,1200,1108]:
+      - generic [ref=e1851] [box=24,6777,1152,670]
+      - generic [ref=e1914] [box=24,7503,1152,299]
+      - generic [ref=e2003] [box=24,7867,424,18]: © 2025 VIVAVILLA RETAIL PRIVATE LIMITED (Epik) | All Rights Reserved
+  - button "Chat on WhatsApp" [ref=e2005] [cursor=pointer] [box=1120,592,56,56]:
+    - img [ref=e2007] [box=1133,605,30,30]

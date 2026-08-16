@@ -121,4 +121,12 @@ export interface SessionHydrationKeys {
   readonly optimisticChanged: boolean
 }
 
-export type AgentEventPayload = IpcEventPayload<'agent:event'>
+/**
+ * A single transport event paired with its session — the unit the reducer works
+ * in. Events arrive over the wire coalesced (`agent:event-batch`); this is one
+ * element of such a batch, not a channel payload of its own.
+ */
+export type AgentEventPayload = {
+  sessionId: IpcEventPayload<'agent:event-batch'>['sessionId']
+  event: IpcEventPayload<'agent:event-batch'>['events'][number]
+}

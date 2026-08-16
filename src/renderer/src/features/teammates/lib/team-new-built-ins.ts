@@ -1143,7 +1143,7 @@ const MOBILE_DEVELOPER_TEAMMATE: TeammateDefinition = {
   app: {
     requiredMcps: [],
     requiredSkills: [],
-    optionalMcps: ['mobile-mcp'],
+    optionalMcps: [],
     optionalSkills: ['ui-ux-pro-max'],
   },
   agents: [

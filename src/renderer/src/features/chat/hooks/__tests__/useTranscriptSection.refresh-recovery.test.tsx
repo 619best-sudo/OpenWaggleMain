@@ -86,7 +86,10 @@ function phaseTranscriptNode(createdOrder: number): SessionNode {
   }
 }
 
-function workspaceWithNodes(nodes: readonly SessionNode[], activeNodeId: SessionNodeId): SessionWorkspace {
+function workspaceWithNodes(
+  nodes: readonly SessionNode[],
+  activeNodeId: SessionNodeId,
+): SessionWorkspace {
   return {
     tree: {
       session: {

@@ -11,7 +11,7 @@ import {
 } from '../project-config'
 
 function getSettingsPath(projectPath: string) {
-  return join(projectPath, '.openwaggle', 'settings.json')
+  return join(projectPath, '.turing-machine', 'settings.json')
 }
 
 describe('loadProjectConfig', () => {
@@ -19,7 +19,7 @@ describe('loadProjectConfig', () => {
 
   beforeEach(() => {
     tmpDir = join(tmpdir(), `openwaggle-test-${Date.now()}`)
-    mkdirSync(join(tmpDir, '.openwaggle'), { recursive: true })
+    mkdirSync(join(tmpDir, '.turing-machine'), { recursive: true })
   })
 
   afterEach(() => {
@@ -72,7 +72,7 @@ describe('loadProjectConfig', () => {
     expect(config).toEqual({})
   })
 
-  it('creates .openwaggle/settings.json when ensuring project settings', async () => {
+  it('creates .turing-machine/settings.json when ensuring project settings', async () => {
     const isolatedDir = join(tmpDir, 'new-project')
     mkdirSync(isolatedDir, { recursive: true })
 

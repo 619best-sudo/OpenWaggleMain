@@ -154,27 +154,6 @@ export function createAgentRunControls(params: AgentRunControlParams) {
 
     const targetSessionId = sessionId
     const runPromise = startForegroundRun(targetSessionId)
-    // #region debug-point A:renderer-send
-    void fetch('http://127.0.0.1:7777/event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'phase-flow-missing',
-        runId: 'pre-fix',
-        hypothesisId: 'A',
-        location: 'useAgentChat.run-controls.ts:dispatchAgentSend',
-        msg: '[DEBUG] Renderer dispatched agent send',
-        data: {
-          sessionId: String(targetSessionId),
-          model: params.model,
-          promptText: payload.text,
-          attachmentCount: payload.attachments.length,
-          waggle: waggleConfig !== null,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
-    // #endregion
     const sendPromise = waggleConfig
       ? api.sendWaggleMessage(targetSessionId, payload, params.model, waggleConfig)
       : api.sendMessage(targetSessionId, payload, params.model)
@@ -210,26 +189,6 @@ export function createAgentRunControls(params: AgentRunControlParams) {
     const runPromise = startForegroundRun(targetSessionId)
 
     try {
-      // #region debug-point A:renderer-ipc-invoke
-      void fetch('http://127.0.0.1:7779/event', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'tool-model-routing',
-          runId: 'pre-fix',
-          hypothesisId: 'A',
-          location: 'useAgentChat.run-controls.ts:resolveToolPermission',
-          msg: '[DEBUG] Renderer invoked resolveToolPermission IPC',
-          data: {
-            sessionId: targetSessionId,
-            requestModel: resolution.request.model ?? null,
-            activeModel: params.model,
-            decision: resolution.decision,
-          },
-          ts: Date.now(),
-        }),
-      }).catch(() => {})
-      // #endregion
       await api.resolveToolPermission(targetSessionId, resolution, params.model)
       await runPromise
     } catch (runError) {

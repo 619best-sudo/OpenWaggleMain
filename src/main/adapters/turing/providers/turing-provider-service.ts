@@ -12,17 +12,18 @@
  * (`turing-credentials.ts`) and the OpenRouter env key, mirroring how the renderer's
  * model picker gates `available`.
  */
-import type { Provider, ThinkingLevel } from '@shared/types/settings'
-import * as Effect from 'effect/Effect'
-import { Layer } from 'effect'
-import { ProviderLookupError } from '../../../errors'
-import { ProviderService } from '../../../ports/provider-service'
+
 import type {
-  ProviderAuthInfo,
   ProviderApiKeyAuthSource,
+  ProviderAuthInfo,
   ProviderAuthSource,
 } from '@shared/types/llm'
+import type { Provider, ThinkingLevel } from '@shared/types/settings'
+import { Layer } from 'effect'
+import * as Effect from 'effect/Effect'
 import { env } from '../../../env'
+import { ProviderLookupError } from '../../../errors'
+import { ProviderService } from '../../../ports/provider-service'
 import { isDirectOpenRouterEnabled, resolveBackendToken } from '../turing-llm-config'
 import { hasStoredApiKey, readStoredApiKey } from './turing-credentials'
 
@@ -53,9 +54,7 @@ function openRouterKeyConfigured(): boolean {
     return Boolean(resolveBackendToken())
   }
   return Boolean(
-    readStoredApiKey('openrouter') ||
-      env.OPENWAGGLE_OPENROUTER_API_KEY ||
-      env.OPENROUTER_API_KEY,
+    readStoredApiKey('openrouter') || env.OPENWAGGLE_OPENROUTER_API_KEY || env.OPENROUTER_API_KEY,
   )
 }
 
@@ -203,11 +202,11 @@ function providerConfigured(providerId: Provider, openRouterAvailable: boolean):
   if (providerId === TURING_MACHINE_PROVIDER_ID) {
     // The harness authenticates via the OpenRouter key; a dedicated turing-machine
     // token (env OPENWAGGLE_TURING_MACHINE_TOKEN) is an optional override.
-  return Boolean(
-    openRouterAvailable ||
-      process.env.OPENWAGGLE_TURING_MACHINE_TOKEN ||
-      hasStoredApiKey(providerId),
-  )
+    return Boolean(
+      openRouterAvailable ||
+        process.env.OPENWAGGLE_TURING_MACHINE_TOKEN ||
+        hasStoredApiKey(providerId),
+    )
   }
   // All other catalogued providers route through OpenRouter.
   return openRouterAvailable
@@ -259,11 +258,8 @@ export const TuringProviderServiceLive = Layer.succeed(
       ),
 
     isKnownModel: (modelId: string) =>
-      Effect.sync(
-        () =>
-          buildCatalog().some((entry) =>
-            entry.models.some((model) => model.id === modelId),
-          ),
+      Effect.sync(() =>
+        buildCatalog().some((entry) => entry.models.some((model) => model.id === modelId)),
       ),
   }),
 )

@@ -1,19 +1,6 @@
-import {
-  Activity,
-  CreditCard,
-  ExternalLink,
-  Gauge,
-  LogOut,
-  RotateCw,
-  Trophy,
-} from 'lucide-react'
+import { Activity, CreditCard, ExternalLink, Gauge, LogOut, RotateCw, Trophy } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { env } from '@/env'
-import {
-  buildSubscriptionUsageSummary,
-  formatUsdDisplay,
-  resolveSubscriptionPlan,
-} from '@/features/auth/lib/subscription-plan'
 import {
   type AppPublicSubscriptionTier,
   type AppSubscriptionSnapshot,
@@ -23,6 +10,11 @@ import {
   reconcileBillingCheckoutSession,
 } from '@/features/auth/lib/subscription-client'
 import {
+  buildSubscriptionUsageSummary,
+  formatUsdDisplay,
+  resolveSubscriptionPlan,
+} from '@/features/auth/lib/subscription-plan'
+import {
   refreshUsageSnapshotsForAuthenticatedUser,
   useAppAuth,
   useAppAuthStore,
@@ -31,6 +23,7 @@ import { cn } from '@/shared/lib/cn'
 import { api } from '@/shared/lib/ipc'
 import { Button } from '@/shared/ui/Button'
 import { useUIStore } from '@/shell/ui-store'
+
 const MONTH_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: 'UTC' })
 const DAY_FORMATTER = new Intl.DateTimeFormat('en-US', {
   weekday: 'short',
@@ -148,7 +141,13 @@ function buildUsageHeatmap(
       const key = toUtcDateKey(date)
       const isInRange = date.getTime() >= start.getTime() && date.getTime() <= end.getTime()
       const usage = isInRange
-        ? (usageMap.get(key) ?? { usdCents: 0, usd: 0, requestCount: 0, inputTokens: 0, outputTokens: 0 })
+        ? (usageMap.get(key) ?? {
+            usdCents: 0,
+            usd: 0,
+            requestCount: 0,
+            inputTokens: 0,
+            outputTokens: 0,
+          })
         : { usdCents: 0, usd: 0, requestCount: 0, inputTokens: 0, outputTokens: 0 }
 
       return {
@@ -264,8 +263,8 @@ function getBillingSyncRetryMessage(source: BillingSyncSource) {
 
 function getBillingReturnMessage(source: BillingSyncSource) {
   return source === 'checkout'
-    ? 'Checkout opened in your browser. Return to OpenWaggle when payment completes and billing will sync automatically.'
-    : 'Billing portal opened in your browser. Return to OpenWaggle to sync any changes automatically.'
+    ? 'Checkout opened in your browser. Return to Turing Machine when payment completes and billing will sync automatically.'
+    : 'Billing portal opened in your browser. Return to Turing Machine to sync any changes automatically.'
 }
 
 function resolveInitialBillingTierKey(
@@ -351,13 +350,8 @@ function LeaderboardList({
 }
 
 export function ProfileSection() {
-  const {
-    user,
-    subscriptionSnapshot,
-    turingMachineActivity,
-    leaderboardSnapshot,
-    signOut,
-  } = useAppAuth()
+  const { user, subscriptionSnapshot, turingMachineActivity, leaderboardSnapshot, signOut } =
+    useAppAuth()
   const showToast = useUIStore((state) => state.showToast)
   const billingSyncDelayTimerRef = useRef<number | null>(null)
   const billingSyncReturnTimerRef = useRef<number | null>(null)
@@ -375,7 +369,9 @@ export function ProfileSection() {
     subscriptionSnapshot?.subscription.billingCycle ?? 'monthly',
   )
   const [selectedBillingTierKey, setSelectedBillingTierKey] = useState<string | null>(null)
-  const [openingExternalTarget, setOpeningExternalTarget] = useState<OpeningExternalTarget | null>(null)
+  const [openingExternalTarget, setOpeningExternalTarget] = useState<OpeningExternalTarget | null>(
+    null,
+  )
   const subscriptionPlan = useMemo(
     () =>
       resolveSubscriptionPlan({
@@ -423,7 +419,9 @@ export function ProfileSection() {
         },
       ]),
     )
-    const activeDays = days.filter((day) => day.requestCount > 0 || (day.usd ?? day.usdCents / 100) > 0)
+    const activeDays = days.filter(
+      (day) => day.requestCount > 0 || (day.usd ?? day.usdCents / 100) > 0,
+    )
     const maxDay = activeDays.reduce<(typeof activeDays)[number] | null>((best, day) => {
       if (!best) return day
       const dayUsd = day.usd ?? day.usdCents / 100
@@ -667,7 +665,10 @@ export function ProfileSection() {
     billingSyncFocusCleanupRef.current = () => {
       window.removeEventListener('focus', handleFocus)
     }
-    billingSyncReturnTimerRef.current = window.setTimeout(startPolling, BILLING_SYNC_RETURN_TIMEOUT_MS)
+    billingSyncReturnTimerRef.current = window.setTimeout(
+      startPolling,
+      BILLING_SYNC_RETURN_TIMEOUT_MS,
+    )
 
     showToast(getBillingReturnMessage(source), 'neutral')
   }
@@ -677,7 +678,10 @@ export function ProfileSection() {
       await runOpeningAction('refresh', () => refreshBillingSnapshots(true))
       showToast('Billing status refreshed.', 'success')
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to refresh billing status.', 'error')
+      showToast(
+        error instanceof Error ? error.message : 'Failed to refresh billing status.',
+        'error',
+      )
     }
   }
 
@@ -703,7 +707,10 @@ export function ProfileSection() {
         await launchBillingFlow('checkout', session.url, baselineSignature, { preferOverlay: true })
       })
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to open the Dodo checkout.', 'error')
+      showToast(
+        error instanceof Error ? error.message : 'Failed to open the Dodo checkout.',
+        'error',
+      )
     }
   }
 
@@ -721,7 +728,10 @@ export function ProfileSection() {
         await launchBillingFlow('portal', session.url, baselineSignature)
       })
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Failed to open the Dodo customer portal.', 'error')
+      showToast(
+        error instanceof Error ? error.message : 'Failed to open the Dodo customer portal.',
+        'error',
+      )
     }
   }
 
@@ -730,8 +740,7 @@ export function ProfileSection() {
       <div className="space-y-1">
         <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-text-primary">Profile</h2>
         <p className="max-w-[760px] text-[12px] leading-5 text-text-tertiary">
-          Review your account details, usage, leaderboard, and quick access to your account
-          website.
+          Review your account details, usage, leaderboard, and quick access to your account website.
         </p>
       </div>
 
@@ -904,8 +913,8 @@ export function ProfileSection() {
                               isCurrentPlan
                                 ? 'cursor-default border-border/50 bg-bg-secondary/35'
                                 : isSelected
-                                ? 'border-accent/35 bg-accent/[0.025] ring-1 ring-accent/20'
-                                : 'border-border/45 hover:border-border/65 hover:bg-bg-secondary/60',
+                                  ? 'border-accent/35 bg-accent/[0.025] ring-1 ring-accent/20'
+                                  : 'border-border/45 hover:border-border/65 hover:bg-bg-secondary/60',
                             )}
                           >
                             <div className="flex h-full flex-col p-4">
@@ -951,8 +960,8 @@ export function ProfileSection() {
                                     isCurrentPlan
                                       ? 'border-border/45 bg-bg-secondary/70 text-transparent'
                                       : isSelected
-                                      ? 'border-accent bg-accent text-bg'
-                                      : 'border-border/45 bg-bg-secondary/70 text-transparent group-hover:border-accent/25',
+                                        ? 'border-accent bg-accent text-bg'
+                                        : 'border-border/45 bg-bg-secondary/70 text-transparent group-hover:border-accent/25',
                                   )}
                                 >
                                   <div className="size-2 rounded-full bg-current" />
@@ -970,7 +979,8 @@ export function ProfileSection() {
 
                               <div className="mt-4 flex flex-wrap gap-2">
                                 <span className="rounded-full border border-border/40 bg-bg-secondary/70 px-2.5 py-1 text-[11px] font-medium text-text-secondary">
-                                  ${formatUsdDisplay(tier.limits.turingMachineQuotaUsdCents / 100)} TM quota
+                                  ${formatUsdDisplay(tier.limits.turingMachineQuotaUsdCents / 100)}{' '}
+                                  TM quota
                                 </span>
                                 {pricing.discountPercent > 0 && (
                                   <span className="rounded-full border border-emerald-500/10 bg-emerald-500/8 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
@@ -986,8 +996,8 @@ export function ProfileSection() {
                                     isCurrentPlan
                                       ? 'border-border/35 bg-bg-secondary/70 text-text-secondary'
                                       : isSelected
-                                      ? 'border-accent/15 bg-bg-secondary/70 text-text-primary'
-                                      : 'border-border/35 bg-bg-secondary/70 text-text-secondary',
+                                        ? 'border-accent/15 bg-bg-secondary/70 text-text-primary'
+                                        : 'border-border/35 bg-bg-secondary/70 text-text-secondary',
                                   )}
                                 >
                                   <span>
@@ -1161,7 +1171,8 @@ export function ProfileSection() {
                       {formatCompactNumber(usageTokenDisplayTotal)}
                     </p>
                     <p className="mt-1 text-[11px] text-text-muted">
-                      {formatCompactNumber(usage.inputTokens)} in / {formatCompactNumber(usage.outputTokens)} out
+                      {formatCompactNumber(usage.inputTokens)} in /{' '}
+                      {formatCompactNumber(usage.outputTokens)} out
                     </p>
                   </div>
                   <div className="rounded-lg border border-border bg-bg px-3 py-3">
@@ -1274,7 +1285,6 @@ export function ProfileSection() {
             </div>
           </div>
         </section>
-
       </div>
     </div>
   )

@@ -27,6 +27,14 @@ export function runDispositionToStatus(input: {
   error?: string
   disposition?: string
   success?: boolean
+  /**
+   * The visual-verification audit, when the caller ran one. A run that changed
+   * the view layer and never looked at the result must not render `completed`:
+   * every other input here is the model's own account of how the run went, and
+   * this is the one signal derived from what it actually DID. Without it, a run
+   * that edited a screen and "verified" with `flutter build` reports success.
+   */
+  visualAudit?: { readonly unverified: boolean }
 }): TerminalPhaseStatus {
   if (input.pendingUserQuestion) {
     return 'interrupted'
@@ -37,6 +45,11 @@ export function runDispositionToStatus(input: {
   // A failed disposition with no hard error is a graceful failure (e.g. an
   // unverified run); still render as failed so the card reflects the outcome.
   if (input.disposition === 'failed' || input.success === false) {
+    return 'failed'
+  }
+  // Checked LAST, so it only ever downgrades an otherwise-successful run. A run
+  // already failing for a stronger reason keeps that reason.
+  if (input.visualAudit?.unverified) {
     return 'failed'
   }
   return 'completed'
@@ -82,11 +95,7 @@ export function isGracefulVerificationFailure(state: FlatRunClassificationState)
   }
 
   const snapshot = state.lastThreadSnapshot
-  if (
-    snapshot?.disposition === 'failed' &&
-    snapshot.verified === false &&
-    !snapshot.error
-  ) {
+  if (snapshot?.disposition === 'failed' && snapshot.verified === false && !snapshot.error) {
     return true
   }
   // A failed step without a hard run error is also a graceful per-step failure.
@@ -136,8 +145,7 @@ export function resolveTerminalError(input: {
   readonly terminalError?: string
   readonly agentState: FlatRunClassificationState
 }): string | undefined {
-  return isGracefulVerificationFailure(input.agentState) ||
-    isGracefulPhaseFailure(input.agentState)
+  return isGracefulVerificationFailure(input.agentState) || isGracefulPhaseFailure(input.agentState)
     ? undefined
     : input.terminalError
 }
@@ -154,10 +162,7 @@ export function resolveAgentEndReason(input: {
   if (input.terminalError) {
     return 'error'
   }
-  if (
-    isGracefulVerificationFailure(input.agentState) ||
-    isGracefulPhaseFailure(input.agentState)
-  ) {
+  if (isGracefulVerificationFailure(input.agentState) || isGracefulPhaseFailure(input.agentState)) {
     return input.stopReason && input.stopReason !== 'error' ? input.stopReason : 'stop'
   }
   return input.stopReason ?? 'stop'

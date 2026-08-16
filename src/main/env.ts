@@ -115,13 +115,41 @@ function loadMainProcessEnv() {
   return mergedEnv
 }
 
-function getEnvFilePaths(mode: string) {
-  return [
+/**
+ * Env files are searched in this order; the FIRST value found for a key wins
+ * (see `loadMainProcessEnv` — it only fills keys that are still undefined), and
+ * a real process env var always beats a file.
+ *
+ * The `process.cwd()` entries only ever resolve during development, where cwd is
+ * the repo root. A packaged app's cwd is whatever directory it was launched from
+ * — `/` when opened from Finder — and can never point inside `app.asar`. So a
+ * packaged build has no access to the repo's `.env.local` no matter what the
+ * packaging config includes, which is why bundling it into the asar looked like
+ * configuration but did nothing.
+ *
+ * `app.env` in the app's Resources directory is the packaged equivalent: it sits
+ * beside `app.asar` at a real filesystem path, so it is actually readable at
+ * runtime. It is a CURATED file — put only the keys the shipped app needs in it
+ * (see `build/app.env`), never a copy of `.env.local`.
+ *
+ * Note this file travels inside the distributed app, so anything in it is
+ * recoverable by unzipping the app. Keys that must stay private belong on the
+ * backend, not here.
+ */
+export function getEnvFilePaths(mode: string) {
+  const paths = [
     resolve(process.cwd(), '.env'),
     resolve(process.cwd(), `.env.${mode}`),
     resolve(process.cwd(), '.env.local'),
     resolve(process.cwd(), `.env.${mode}.local`),
   ]
+
+  // Undefined outside a packaged Electron app (plain node, tests).
+  if (typeof process.resourcesPath === 'string' && process.resourcesPath.length > 0) {
+    paths.push(resolve(process.resourcesPath, 'app.env'))
+  }
+
+  return paths
 }
 
 function parseEnvFile(contents: string) {

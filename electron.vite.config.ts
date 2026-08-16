@@ -131,6 +131,9 @@ export default defineConfig({
     plugins: [piExtensionLoaderBundlePlugin(), rolldownExternalFixPlugin()],
     build: {
       minify: false,
+      // Never emit source maps for the main process: they reconstruct original
+      // TypeScript verbatim inside the shipped asar.
+      sourcemap: false,
       externalizeDeps: {
         exclude: BUNDLED_DEPS,
       },
@@ -150,6 +153,9 @@ export default defineConfig({
     }
   },
   preload: {
+    build: {
+      sourcemap: false,
+    },
     resolve: {
       alias: {
         '@shared': resolve('src/shared')
@@ -157,6 +163,9 @@ export default defineConfig({
     }
   },
   renderer: {
+    build: {
+      sourcemap: false,
+    },
     server: {
       watch: {
         ignored: MCP_CONFIG_WATCH_IGNORES,

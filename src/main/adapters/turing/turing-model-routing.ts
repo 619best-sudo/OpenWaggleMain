@@ -24,47 +24,141 @@
  * The loop's default/driver model is configured separately (`TuringLlmConfig.
  * modelSlug`) and is unaffected by anything here.
  */
-import type { ModelRouter } from 'turing-harness'
-
-/** Complexity ratings that actually escalate. `low` never routes. */
-type RoutedRating = 'medium' | 'high'
+import type { ComplexityCategory, ModelRouter } from 'turing-harness'
+import { type EscalationRule, type RoutedRating, TURING_MODELS } from './turing-models.config'
 
 /**
- * The table. Edit this to change routing — nothing else needs to move.
- *
- * Every slug must exist on OpenRouter AND, for anything that runs as the driver,
- * be reasoning-capable: a model without the capability returns stream deltas
- * carrying only `content`/`role`, so the client renders no thinking and nothing
- * anywhere reports an error.
+ * Re-exported from the single model config so existing importers keep working.
+ * Edit the table in `turing-models.config.ts`, not here.
  */
-export const MODEL_ROUTING: Readonly<Record<'read' | 'write', Readonly<Record<RoutedRating, string>>>> = {
-  read: {
-    medium: 'deepseek/deepseek-v4-flash-0731',
-    high: 'openai/gpt-5.6-terra-pro',
-  },
-  write: {
-    medium: 'deepseek/deepseek-v4-flash-0731',
-    // Deliberately `terra`, not `terra-pro`: authoring wants the model that
-    // follows the edit instruction closely, not the one that reasons hardest.
-    high: 'openai/gpt-5.6-terra',
-  },
+export const MODEL_ROUTING = TURING_MODELS.complexity
+
+/**
+ * The escalation grid: sparse rules over the category / rating / attachment axes.
+ * Edit the rules in `turing-models.config.ts`, not here.
+ */
+export const ESCALATION_RULES = TURING_MODELS.escalationRules
+
+/** How many axes a rule constrains. More axes ⇒ more specific ⇒ wins. */
+function specificity(rule: EscalationRule): number {
+  return (
+    (rule.kind === undefined ? 0 : 1) +
+    (rule.category === undefined ? 0 : 1) +
+    (rule.rating === undefined ? 0 : 1) +
+    (rule.attachment === undefined ? 0 : 1)
+  )
+}
+
+/** Whether a rule's stated axes all agree with the call. Omitted axis ⇒ any. */
+function matches(rule: EscalationRule, call: EscalationQuery): boolean {
+  if (rule.kind !== undefined && rule.kind !== call.kind) return false
+  if (rule.category !== undefined && rule.category !== call.category) return false
+  if (rule.rating !== undefined && rule.rating !== call.rating) return false
+  if (rule.attachment !== undefined && rule.attachment !== Boolean(call.hasAttachment)) return false
+  return true
+}
+
+interface EscalationQuery {
+  readonly kind: 'read' | 'write'
+  readonly rating: RoutedRating
+  readonly category?: ComplexityCategory
+  readonly hasAttachment?: boolean
+}
+
+/**
+ * Resolve one cell of the grid, or `undefined` when no rule applies and the caller
+ * should fall back to {@link MODEL_ROUTING}.
+ *
+ * Specificity, not declaration order: a broad rule can never shadow a narrow one,
+ * so rules can be grouped for readability instead of sorted for correctness.
+ */
+export function resolveEscalationRule(call: EscalationQuery): EscalationRule | undefined {
+  let best: EscalationRule | undefined
+  let bestScore = -1
+  for (const rule of ESCALATION_RULES) {
+    if (!matches(rule, call)) continue
+    const score = specificity(rule)
+    if (score > bestScore) {
+      best = rule
+      bestScore = score
+    }
+  }
+  return best
 }
 
 /**
  * The hook handed to turing-harness. Returning `undefined` means "no opinion" —
  * the harness falls back to its candidate pool, and then to not escalating.
+ *
+ * A grid rule wins over the plain `(kind, rating)` table because it is the more
+ * specific statement of policy. Anything the grid does not name falls through, so
+ * the rule list stays sparse.
  */
-export const routeModel: ModelRouter = ({ kind, rating }) => {
+export const routeModel: ModelRouter = ({ kind, rating, category, hasAttachment }) => {
+  // Low PLAIN writes are authored by the driver — the designated author for the
+  // trivial tier — routed EXPLICITLY here rather than left for the harness's old
+  // silent driver-fallback (now removed). The harness errors if a plain write has
+  // no routed author model, so every write tier must resolve. Low reads stay
+  // unrouted (reads don't author bytes); low VISION writes stay unrouted so the
+  // harness picks an image-capable model from the candidate pool (the driver is
+  // text-only).
+  if (rating === 'low' && kind === 'write' && !hasAttachment) {
+    return TURING_MODELS.driver
+  }
   if (rating !== 'medium' && rating !== 'high') return undefined
-  return MODEL_ROUTING[kind][rating]
+  const rule = resolveEscalationRule({
+    kind,
+    rating,
+    ...(category ? { category } : {}),
+    ...(hasAttachment ? { hasAttachment } : {}),
+  })
+  return rule?.use ?? MODEL_ROUTING[kind][rating]
+}
+
+/**
+ * Reject two rules that are equally specific and could both match the same call.
+ * Such a pair resolves arbitrarily at runtime, which is a bug that only shows up
+ * as "why did this call use that model". Called from a unit test.
+ */
+export function assertUnambiguousEscalationRules(): void {
+  const kinds = ['read', 'write'] as const
+  const categories: readonly (ComplexityCategory | undefined)[] = ['ui', 'svg', 'code', undefined]
+  const ratings = ['medium', 'high'] as const
+
+  for (const kind of kinds) {
+    for (const category of categories) {
+      for (const rating of ratings) {
+        for (const hasAttachment of [true, false]) {
+          const query = { kind, rating, ...(category ? { category } : {}), hasAttachment }
+          const hits = ESCALATION_RULES.filter((r) => matches(r, query))
+          if (hits.length < 2) continue
+          const top = Math.max(...hits.map(specificity))
+          const tied = hits.filter((r) => specificity(r) === top)
+          if (tied.length > 1 && new Set(tied.map((r) => r.use)).size > 1) {
+            throw new Error(
+              `Ambiguous escalation rules for ${kind}/${category ?? 'any'}/${rating}/` +
+                `attachment=${hasAttachment}: ${tied.map((r) => r.use).join(' vs ')}. ` +
+                'Add an axis to one of them.',
+            )
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
  * Every slug the table can produce, de-duplicated. Useful for warming, for
  * validating configuration at startup, and as the candidate pool fallback.
+ *
+ * Includes the category overrides — a slug reachable only through a category
+ * still has to be warmed and validated like any other.
  */
 export function routedModelSlugs(): readonly string[] {
   return [
-    ...new Set(Object.values(MODEL_ROUTING).flatMap((byRating) => Object.values(byRating))),
+    ...new Set([
+      ...Object.values(MODEL_ROUTING).flatMap((byRating) => Object.values(byRating)),
+      ...ESCALATION_RULES.map((rule) => rule.use),
+    ]),
   ]
 }

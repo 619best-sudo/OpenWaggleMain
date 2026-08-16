@@ -57,7 +57,8 @@ export function useSessionStatusMonitor(): void {
         .otherwise(() => undefined)
     })
 
-    const unsubEvent = api.onAgentEvent(({ sessionId, event }) => {
+    const unsubEvent = api.onAgentEventBatch(({ sessionId, events }) => {
+      for (const event of events) {
       matchBy(event, 'type')
         .with('custom', (value) => {
           if (value.name === 'machine:run-start') {
@@ -102,6 +103,7 @@ export function useSessionStatusMonitor(): void {
             setStatusWithVisitCheck(sessionId, 'completed')
           }
         })
+      }
     })
 
     return () => {

@@ -16,7 +16,6 @@ import type { ToolPermissionMode } from '@shared/types/settings'
 import type { AgentTransportEvent } from '@shared/types/stream'
 import { TURING_BRIDGE_STATUS_CUSTOM_TYPE } from '@shared/types/structural-nodes'
 import type { PendingToolPermissionRequest } from '@shared/types/tool-permission'
-import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import {
   HarnessAgent,
   type HarnessAgentState,
@@ -40,6 +39,11 @@ import {
   detectAttachmentIntent,
   toTuringAttachments,
 } from './turing-attachments'
+import {
+  isBackendAuthError,
+  refreshBackendTokenAfterAuthFailure,
+  resolveAuthRecoveryContinuation,
+} from './turing-auth-recovery'
 import { createTuringEventMapper } from './turing-event-mapper'
 import { resolveTuringLlmConfig, toolModelCandidatesFor } from './turing-llm-config'
 import { checkoutWarmProjectSession, getSharedMcpPool } from './turing-memory-prewarm'
@@ -50,6 +54,7 @@ import {
   reparentProjectedNodesToTail,
   turingAppendedToProjectedMessages,
 } from './turing-message-projection'
+import { routeModel } from './turing-model-routing'
 import {
   type BridgeResult,
   buildOpenWaggleRuntimeDebugValue,
@@ -66,6 +71,7 @@ import {
   createThreadSnapshotAgentHost,
   extractPersistedThreadSnapshot,
 } from './turing-thread-snapshot'
+import { auditVisualVerification, describesRuntimeSymptom } from './turing-visual-verification'
 
 /**
  * The 4P execution mode used for a classic (single-agent) run.
@@ -123,21 +129,6 @@ export function resolveSnapshotActiveNodeId(
  * (which the main process routes back to the in-flight tool via
  * `resolvePendingUserQuestion`).
  */
-/**
- * Tool-call turns the harness work loop may take for one prompt.
- *
- * Outside plan mode `HarnessAgent.prompt` runs with `skipPlan: true`, so there is
- * exactly ONE work loop per prompt and this budget covers the WHOLE task — the
- * `create_plan` turn plus every step of the plan the user approved. The library
- * default (12) is sized for a single step and truncated multi-step plans partway
- * through, which surfaced as a run that "stopped after step 1".
- *
- * In plan mode (Machine toggle) the orchestrator runs a planning turn and then a
- * sub-loop PER STEP, so this is a per-step budget there rather than a whole-task
- * one — the same number buys considerably more work.
- */
-const WORK_LOOP_MAX_TOOL_TURNS = 30
-
 const USER_QUESTION_REQUEST_EVENT = 'openwaggle:user-question:request'
 const USER_QUESTION_RESOLVED_EVENT = 'openwaggle:user-question:resolved'
 const TOOL_PERMISSION_REQUEST_EVENT = 'openwaggle:tool-permission:request'
@@ -310,6 +301,27 @@ function buildRunResult(input: {
   }
 }
 
+/**
+ * The shell commands a run executed, in call order.
+ *
+ * The visual-verification audit needs these because every shell call — a `ls`, a
+ * `flutter build`, and a full test run alike — reaches it as the single tool
+ * name `bash`. Without the command text it cannot tell a fix proven by the
+ * project's own test suite from one proven by nothing.
+ */
+function extractBashCommands(messages: readonly TuringMessage[]): string[] {
+  const commands: string[] = []
+  for (const message of messages) {
+    if (message.role !== 'assistant') continue
+    for (const block of message.content) {
+      if (block.type !== 'toolCall' || block.name !== 'bash') continue
+      const args = block.arguments as { command?: unknown } | undefined
+      if (typeof args?.command === 'string') commands.push(args.command)
+    }
+  }
+  return commands
+}
+
 function buildToolNameLookup(messages: readonly TuringMessage[]) {
   const lookup = new Map<string, string>()
   for (const message of messages) {
@@ -344,6 +356,16 @@ export function buildRunTranscriptNode(
   >,
   messages: readonly TuringMessage[],
   timestampMs: number,
+  /**
+   * Context the visual-verification audit needs and the run state does not
+   * carry: what the user asked for, and which tools were connected. Optional so
+   * existing callers and tests keep working — an absent context simply narrows
+   * the audit to its file-based trigger.
+   */
+  auditContext: {
+    readonly userText?: string
+    readonly availableToolNames?: readonly string[]
+  } = {},
 ) {
   const snapshot = state.lastThreadSnapshot
   const summary = state.lastRunSummary?.trim() || snapshot?.summary?.trim()
@@ -362,12 +384,42 @@ export function buildRunTranscriptNode(
   )
   if (!hasContent) return undefined
 
+  // Did a run that changed the view layer ever look at the result? Both inputs
+  // are already here: the paths the run wrote, and every tool it called. This is
+  // the only check in the status computation that reads what the run DID rather
+  // than what it reported, which is why an otherwise-clean run can still fail it.
+  const visualAudit = auditVisualVerification({
+    writtenPaths: snapshot?.writtenPaths ?? [],
+    toolNames: [...toolNameLookup.values()],
+    executedCommands: extractBashCommands(messages),
+    ...(auditContext.userText ? { userText: auditContext.userText } : {}),
+    ...(auditContext.availableToolNames
+      ? { availableToolNames: auditContext.availableToolNames }
+      : {}),
+  })
+  if (visualAudit.unverified) {
+    logger.warn('Run finished without verifying the change against running software', {
+      trigger: visualAudit.trigger,
+      viewFiles: visualAudit.viewFiles,
+      writtenPaths: snapshot?.writtenPaths?.length ?? 0,
+    })
+  }
+
   const status = runDispositionToStatus({
     pendingUserQuestion: state.pendingUserQuestion,
     error: snapshot?.error,
     disposition: snapshot?.disposition,
     success: snapshot?.disposition === 'completed',
+    visualAudit,
   })
+
+  // Surface WHY the run is marked unverified. A `failed` card the user cannot
+  // account for is its own bug — they would read it as a crash and go looking
+  // for an error that does not exist. The model's own summary stays first; the
+  // audit is appended so the two are not confused for each other.
+  const summaryWithAudit = visualAudit.reason
+    ? [summary, `⚠︎ Unverified visual change: ${visualAudit.reason}`].filter(Boolean).join('\n\n')
+    : summary
 
   const phase: PersistedPhaseTranscriptPhase = {
     id: 'working',
@@ -378,7 +430,7 @@ export function buildRunTranscriptNode(
         : 'Working on the task',
     status,
     elapsedMs: 0,
-    ...(summary ? { summary } : {}),
+    ...(summaryWithAudit ? { summary: summaryWithAudit } : {}),
     ...(planSet ? { planSet: planSet as unknown as JsonValue } : {}),
     ...(state.pendingUserQuestion ? { pendingUserQuestion: state.pendingUserQuestion } : {}),
     tools: toolCalls,
@@ -434,7 +486,7 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   // for the full cold-spawn duration — if MCP isn't ready within this window the
   // model starts with built-in tools and MCP arrives mid-run via resolveTools.
   const BRIDGE_WAIT_MS = 8000
-  const { ready: bridgeReady } = await connectMcpBackground(
+  const { ready: bridgeReady, snapshot: bridgeSnapshot } = await connectMcpBackground(
     turingSession,
     {
       mcpSettings: input.mcpSettings,
@@ -449,14 +501,24 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   try {
     bridge = await new Promise<BridgeResult | undefined>((resolve) => {
       const timer = setTimeout(() => {
-        logger.warn(
-          'Bridge attach timed out — proceeding with built-in tools; MCP tools may arrive mid-run',
-          {
-            projectPath,
-            waitMs: BRIDGE_WAIT_MS,
-          },
-        )
-        resolve(undefined)
+        // Proceed with WHATEVER has attached, not with nothing. One slow server
+        // (a bad npm spec, or a `github:` spec that clones) takes 15-30s, and
+        // resolving `undefined` here meant the runtime prompt listed no MCP tools
+        // at all — so the model denied having Playwright while Playwright was
+        // connected and sitting in the registry. Stragglers still arrive mid-run
+        // via the loop's dynamic tool resolution.
+        const partial = bridgeSnapshot()
+        logger.warn('Bridge attach timed out — proceeding with the servers already attached', {
+          projectPath,
+          waitMs: BRIDGE_WAIT_MS,
+          connectedMcp: partial.connectedMcpIds.length,
+          connectedNames: Object.keys(partial.connectedMcpToolNames),
+          stillPending: partial.attemptedMcpNames.filter(
+            (name) =>
+              !(name in partial.connectedMcpToolNames) && !partial.failedMcpNames.includes(name),
+          ),
+        })
+        resolve(partial)
       }, BRIDGE_WAIT_MS)
       bridgeReady.then(
         (b) => {
@@ -476,6 +538,11 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   const agentHost = createThreadSnapshotAgentHost(turingSession, persistedThreadSnapshot)
   const agent: HarnessAgent = new HarnessAgent(agentHost, {
     model: llmConfig.modelSlug,
+    // Reproduce before you edit. `describesRuntimeSymptom` is the same classifier
+    // the post-hoc audit already uses to decide a run should have driven the app —
+    // reused here so detection and PREVENTION agree on what a bug report is,
+    // instead of the run being allowed to edit blind and then told off for it.
+    ...(describesRuntimeSymptom(input.payload.text) ? { isBugFix: true } : {}),
     thinkingLevel: input.payload.thinkingLevel,
     mode: runMode,
     transcriptMode: 'compact',
@@ -488,11 +555,29 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     // is not silently dropped.
     emitReasoning: true,
     emitText: true,
-    maxStepsPerStep: WORK_LOOP_MAX_TOOL_TURNS,
+    // NO TURN CAP. The loop ends when the model stops calling tools — i.e. when
+    // the work is done — or when it stops making progress.
+    //
+    // There used to be a 30-turn budget here. Outside plan mode `skipPlan: true`
+    // means ONE work loop covers the whole task, so that number was not "30 turns
+    // per step", it was the entire job: a plan with eight real steps spent its
+    // budget partway through and the run stopped mid-task, reporting success on
+    // work it had not finished. Raising the number only moves where that happens.
+    //
+    // A count was never the right guard anyway, because it cannot tell a long
+    // task from a stuck one. `StallGuard` can: it ends the loop on repeated
+    // identical calls or consecutive failures (with bounded graces), which is
+    // the actual failure being feared. Abort and the model's own FINISH turn
+    // cover the rest. Pass `maxStepsPerStep` again only for a deliberately
+    // latency-bounded run.
   })
-  // The flat loop driver only consults the 'perform' phase-model slug (the
-  // other three were 4P-specific and are inert under run()). The constructor's
-  // `model` already sets the orchestrator default; this pins the work-loop model.
+  // Under run() the four `models` keys are ROLE SLOTS, not phases: 'perform' is
+  // the work-loop driver, 'prepare' is the intent router and the conversational
+  // reply, 'perfect' is the end-of-run summary, and only 'plan' is genuinely
+  // inert. The constructor's `model` writes the 'orchestrator' override, which is
+  // what every unset slot falls back to — so router and summary already run on
+  // the user's model. This line pins the driver explicitly.
+  // See turing-harness docs/models.md#the-model-slots.
   agent.setPhaseModel('perform', llmConfig.modelSlug)
 
   // Build the runtime prompt WITH the resolved bridge so the model sees the
@@ -528,26 +613,6 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   }
 
   const onEvent = (event: AgentTransportEvent) => input.onEvent(event)
-  // #region debug-point T:permission-mode
-  void fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sessionId: 'permission-flow',
-      runId: 'pre-fix',
-      hypothesisId: '1',
-      location: 'turing-classic-run.ts:runTuringSession',
-      msg: '[DEBUG] Turing session received permission mode',
-      data: {
-        sessionId: String(input.session.id),
-        model: input.model,
-        toolPermissionMode: input.toolPermissionMode ?? null,
-        mappedPermissionMode: mapToolPermissionMode(input.toolPermissionMode ?? 'ask'),
-      },
-      ts: Date.now(),
-    }),
-  }).catch(() => {})
-  // #endregion
   turingSession.setPermissionMode(mapToolPermissionMode(input.toolPermissionMode ?? 'ask'))
   // The candidate pool the harness selects from per call, ordered cheap → capable.
   // It must be set per RUN, not at session creation: the session is warm-cached per
@@ -557,6 +622,14 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   // and the tool stays single-stage.
   const escalationModel = llmConfig.escalationModelSlug
   turingSession.setToolModelCandidates([...toolModelCandidatesFor(llmConfig)])
+  // The escalation grid (kind x category x rating x attachment). This was only
+  // ever passed at session CREATION — which the memory prewarm does and this run
+  // path does not — so a run on a warm session had no router at all: write/edit
+  // escalation could not fire, and the driver's own draft was written verbatim
+  // however the call was rated. Reads still escalated via `toolModelCandidates`,
+  // which is why upstream logs showed a stronger model working while the file on
+  // disk was plainly the driver's.
+  turingSession.setRouteModel(routeModel)
   // Per-tool reasoning-effort overrides, keyed by exact tool name. A tool listed
   // here runs the NEXT phase-model turn (the one after its result is processed)
   // at this effort instead of the harness-wide `thinkingLevel` (medium). Use it
@@ -663,27 +736,6 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
       summary,
     }
 
-    // #region debug-point T:permission-request
-    void fetch('http://127.0.0.1:7777/event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'permission-flow',
-        runId: 'pre-fix',
-        hypothesisId: '2',
-        location: 'turing-classic-run.ts:permissionCallback',
-        msg: '[DEBUG] Turing emitted tool permission request',
-        data: {
-          sessionId: String(input.session.id),
-          toolCallId: requestForUi.toolCallId,
-          toolName: requestForUi.toolName,
-          mutates: request.mutates,
-          optionCount: request.options?.length ?? 0,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
-    // #endregion
     emitCustomEvent(
       onEvent,
       input.model,
@@ -741,6 +793,11 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   // plan. The user approves it, or sends it back with comments to be re-planned —
   // and either way may attach notes/files to individual steps, which ride on the
   // plan into that step's own execution.
+  // Whether the user has already accepted a plan in this run. Read only by the
+  // unauthorized-run recovery below, which must not put a second approval card
+  // in front of someone who already approved this exact work.
+  let planApproved = false
+
   turingSession.setPlanApprovalCallback(async (request) => {
     const planReviewId = `turing-plan-${randomUUID()}`
     const pending: PendingPlanReviewRequest = {
@@ -764,6 +821,7 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
         planReviewId,
         decision: resolution.decision,
       })
+      if (resolution.decision === 'approved') planApproved = true
       return {
         approved: resolution.decision === 'approved',
         ...(resolution.decision === 'cancelled' ? { cancelled: true } : {}),
@@ -817,8 +875,21 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
         phase: resolution.request.phase,
         question: resolution.request.question,
         answer: resolution.answer,
+        ...(resolution.attachments?.length
+          ? { attachments: resolution.attachments.map((a) => ({ ...a })) }
+          : {}),
       } as unknown as JsonValue)
-      return resolution.answer
+      // Return the structured shape whenever the user attached files. The
+      // harness threads images from here into the run's live attachment set, so
+      // the next write/edit authors from the pixels — a file returned only as a
+      // sentence would be named once and never looked at again. A plain string
+      // stays the answer when there is nothing attached: same value the harness
+      // accepted before attachments existed, and fewer moving parts.
+      if (!resolution.attachments?.length) return resolution.answer
+      return {
+        text: resolution.answer,
+        attachments: resolution.attachments.map((a) => ({ ...a })),
+      }
     } catch (error) {
       emitCustomEvent(onEvent, input.model, USER_QUESTION_RESOLVED_EVENT, {
         phase: questionRequest.phase,
@@ -893,17 +964,59 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
       .catch(() => undefined)
   }
 
+  // Machine mode => plan mode: decompose, surface the plan for approval via
+  // the `planApproval` callback wired above (PLAN_REVIEW_REQUEST_EVENT), then
+  // run each approved step as its own sub-loop. Off => one flat work loop.
+  const runAgentPrompt = async (
+    prompt: string,
+    attachments: typeof turingAttachments,
+    planMode: boolean = input.payload.planMode === true,
+  ): Promise<string | undefined> => {
+    try {
+      await agent.prompt(prompt, attachments, { planMode })
+      return agent.state.error
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error)
+    }
+  }
+
   let terminalError: string | undefined
   try {
-    // Machine mode => plan mode: decompose, surface the plan for approval via
-    // the `planApproval` callback wired above (PLAN_REVIEW_REQUEST_EVENT), then
-    // run each approved step as its own sub-loop. Off => one flat work loop.
-    await agent.prompt(promptWithAttachments, turingAttachments, {
-      planMode: input.payload.planMode === true,
-    })
-    terminalError = agent.state.error
-  } catch (error) {
-    terminalError = error instanceof Error ? error.message : String(error)
+    terminalError = await runAgentPrompt(promptWithAttachments, turingAttachments)
+
+    // The backend refused our credential rather than the work failing. Renew the
+    // session and carry on from where the chain stopped: `agent.prompt` clears
+    // the previous error and keeps the session's transcript, so the continuation
+    // sees every tool result the dead turn had already gathered instead of
+    // redoing an hour of work. Once only — if the second attempt is unauthorized
+    // too, the problem is the session, not the token.
+    if (isBackendAuthError(terminalError) && !input.signal.aborted) {
+      logger.warn('Run ended unauthorized; refreshing the backend token to continue', {
+        error: terminalError,
+      })
+      if (await refreshBackendTokenAfterAuthFailure()) {
+        if (!input.signal.aborted) {
+          const continuation = resolveAuthRecoveryContinuation({
+            planApproved,
+            planMode: input.payload.planMode === true,
+          })
+          // No attachments: they were consumed by the first prompt and are
+          // already in the transcript the continuation inherits.
+          terminalError = await runAgentPrompt(continuation.prompt, [], continuation.planMode)
+          logger.info('Continued the chain after refreshing the backend token', {
+            recovered: !terminalError,
+            planApproved,
+            continuationPlanMode: continuation.planMode,
+            ...(terminalError ? { error: terminalError } : {}),
+          })
+        }
+      } else {
+        // Say what actually happened. Left alone this surfaces as "Invalid API
+        // key", which sends the user hunting for a settings field that does not
+        // exist on the backend path.
+        terminalError = 'Your session expired and could not be renewed. Please sign in again.'
+      }
+    }
   } finally {
     input.signal.removeEventListener('abort', abortListener)
     unsubscribe()
@@ -934,7 +1047,15 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
         : {}),
     })),
   })
-  const phaseTranscriptNode = buildRunTranscriptNode(agent.state, appended, Date.now())
+  // The tools the run COULD have reached: every MCP tool that actually attached.
+  // The audit uses this so it only faults a run for skipping verification that
+  // was genuinely available — on a machine with no simulator and no browser MCP
+  // there is nothing to skip.
+  const availableToolNames = Object.values(bridge?.connectedMcpToolNames ?? {}).flat()
+  const phaseTranscriptNode = buildRunTranscriptNode(agent.state, appended, Date.now(), {
+    userText: input.payload.text,
+    availableToolNames,
+  })
   const threadSnapshotNode = buildThreadSnapshotPersistedNode(
     agent.state.lastThreadSnapshot,
     Date.now(),

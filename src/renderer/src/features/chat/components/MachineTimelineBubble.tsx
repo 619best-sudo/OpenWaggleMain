@@ -3,7 +3,11 @@ import { CheckCircle2, Circle, PlayCircle, XCircle } from 'lucide-react'
 import { Fragment } from 'react'
 import { Button } from '@/shared/ui/Button'
 
-function TaskStatusIcon({ status }: { readonly status: MachineExecutionState['tasks'][number]['status'] }) {
+function TaskStatusIcon({
+  status,
+}: {
+  readonly status: MachineExecutionState['tasks'][number]['status']
+}) {
   switch (status) {
     case 'completed':
       return <CheckCircle2 className="size-4 text-emerald-500" />

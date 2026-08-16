@@ -151,9 +151,9 @@ const testMcpView = {
     {
       name: 'playwright',
       enabled: true,
-      sourceId: 'project-openwaggle',
+      sourceId: 'project-turing-machine',
       sourceLabel: 'Project Turing Machine',
-      sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+      sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
       command: 'npx',
       transport: 'stdio',
       directTools: 'inherited',

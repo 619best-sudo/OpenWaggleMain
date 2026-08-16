@@ -42,7 +42,7 @@ description: Imports cleanly.
     expect(result).toEqual({ status: 'imported', skillId: 'remote-skill' })
     await expect(
       fs.readFile(
-        path.join(projectPath, '.openwaggle', 'skills', 'remote-skill', 'SKILL.md'),
+        path.join(projectPath, '.turing-machine', 'skills', 'remote-skill', 'SKILL.md'),
         'utf8',
       ),
     ).resolves.toContain('name: Remote Skill')
@@ -130,7 +130,7 @@ description: Imports cleanly.
       fs.readFile(
         path.join(
           projectPath,
-          '.openwaggle',
+          '.turing-machine',
           'skills',
           'ui-ux-pro-max',
           'templates',
@@ -253,7 +253,7 @@ description: Imports cleanly.
 
   it('rejects duplicate imports for an existing skill id', async () => {
     const projectPath = await makeTempProject()
-    const skillDir = path.join(projectPath, '.openwaggle', 'skills', 'remote-skill')
+    const skillDir = path.join(projectPath, '.turing-machine', 'skills', 'remote-skill')
     await fs.mkdir(skillDir, { recursive: true })
     await fs.writeFile(path.join(skillDir, 'SKILL.md'), 'existing\n', 'utf8')
     vi.mocked(fetch).mockResolvedValue(

@@ -34,6 +34,16 @@ export interface PiMcpConfigServiceOptions {
   readonly agentDir: string
   readonly installAdapterPackage: (source: string, projectPath?: string | null) => Promise<void>
   readonly warmMcpMetadataCache?: (configPath: string) => Promise<void>
+  /**
+   * Called after any mutation that changes the effective MCP config, with the
+   * freshly merged view. Fire-and-forget: the service does NOT await it, so a
+   * slow warm-up can't stall the settings IPC round-trip.
+   *
+   * The turing adapter uses this to bring its shared `McpRuntimePool` in line
+   * with the new config while the user is still on the MCP page — that's the
+   * whole point, since the alternative is paying the spawn on the next prompt.
+   */
+  readonly onConfigChanged?: (view: McpSettingsView, projectPath?: string | null) => void
 }
 
 export interface OpenWaggleMcpRuntimeContext {

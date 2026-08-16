@@ -11,6 +11,33 @@ export function getUIMessageText(message: UIMessage) {
     .join('\n\n')
 }
 
+/**
+ * Identity-memoized {@link getUIMessageText}.
+ *
+ * Transcript resolution and row building re-walk every message on every stream
+ * event (the `messages` array gets a fresh reference each token), and call this
+ * helper several times per message — filter checks, hidden-prompt detection,
+ * machine-request reordering, row summaries. That's O(total transcript text) of
+ * string work per token, growing with session length.
+ *
+ * During streaming the messages array is prefix-stable: every message except the
+ * one currently being typed keeps its object identity across events, so keying on
+ * the message itself returns the cached text and only the active message pays for
+ * a re-extraction. `UIMessage` objects are treated immutably (the stream reducer
+ * always allocates a new object on change), so the cache never goes stale.
+ */
+const messageTextCache = new WeakMap<UIMessage, string>()
+
+export function getUIMessageTextCached(message: UIMessage): string {
+  const cached = messageTextCache.get(message)
+  if (cached !== undefined) {
+    return cached
+  }
+  const text = getUIMessageText(message)
+  messageTextCache.set(message, text)
+  return text
+}
+
 export function isInternalTeamOrchestrationPromptText(text: string) {
   const normalized = text.replace(/\s+/g, ' ').trim()
   if (!normalized) {

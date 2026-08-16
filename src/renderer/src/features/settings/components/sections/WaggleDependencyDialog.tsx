@@ -49,8 +49,8 @@ export function WaggleDependencyDialog({
           <div className="space-y-1">
             <h2 className="text-[15px] font-semibold text-text-primary">{preset.name} Setup</h2>
             <p className="max-w-[580px] text-[12px] leading-5 text-text-tertiary">
-              These checks apply only to this Council of Experts workflow. Standard chat and
-              non-app Council of Experts flows are unchanged.
+              These checks apply only to this Council of Experts workflow. Standard chat and non-app
+              Council of Experts flows are unchanged.
             </p>
           </div>
           <Button

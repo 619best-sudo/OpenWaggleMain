@@ -114,7 +114,7 @@ class FileWriter {
     const dateStr = new Date().toISOString().slice(0, SLICE_ARG_2_VALUE_10) // YYYY-MM-DD
     if (dateStr === this.currentDate) return
     this.currentDate = dateStr
-    this.currentPath = path.join(this.logsDir ?? '', `openwaggle-${dateStr}.log`)
+    this.currentPath = path.join(this.logsDir ?? '', `turing-machine-${dateStr}.log`)
   }
 
   private flush() {
@@ -144,7 +144,11 @@ class FileWriter {
           TIME_UNIT.MILLISECONDS_PER_SECOND
       const entries = await readdir(logsDir)
       const deletions = entries
-        .filter((entry) => entry.startsWith('openwaggle-') && entry.endsWith('.log'))
+        .filter(
+          (entry) =>
+            (entry.startsWith('turing-machine-') || entry.startsWith('openwaggle-')) &&
+            entry.endsWith('.log'),
+        )
         .map(async (entry) => {
           const filePath = path.join(logsDir, entry)
           const st = await stat(filePath)

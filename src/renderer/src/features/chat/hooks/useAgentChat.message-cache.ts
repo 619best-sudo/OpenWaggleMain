@@ -24,6 +24,14 @@ function previewMessageText(message: UIMessage): string | null {
   return text.length > 50 ? `${text.slice(0, 50)}…` : text
 }
 
+function findLastUserMessage(messages: readonly UIMessage[]) {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index]
+    if (message?.role === 'user') return message
+  }
+  return undefined
+}
+
 export function createPendingRunWaiter() {
   let resolveRun = () => {}
   let rejectRun = (_error: Error) => {}
@@ -76,31 +84,34 @@ export function setMessagesForSession(
   messagesBySessionIdRef.current = nextMessagesBySessionId
   setMessagesBySessionId(nextMessagesBySessionId)
 
-  const lastMessage = nextMessages[nextMessages.length - 1]
-  const lastUserMessage = [...nextMessages].reverse().find((message) => message.role === 'user')
+  // This runs on every stream delta. Building the ORDER DEBUG payload walks
+  // every message and every part, so it is only assembled when debug logging is
+  // actually on — otherwise a long transcript pays for it dozens of times a
+  // second while the assistant is typing.
+  if (logger.isDebugEnabled?.() === true) {
+    const lastMessage = nextMessages[nextMessages.length - 1]
+    const lastUserMessage = findLastUserMessage(nextMessages)
 
-  logger.info('Updated cached session messages', {
-    sessionId: String(targetSessionId),
-    reason: options.reason ?? 'unspecified',
-    messageCount: nextMessages.length,
-    // ORDER DEBUG: full ordered list so we can see exactly how messages are
-    // sequenced after each stream event / hydration. role + id + a short text
-    // preview + any tool-call ids in the message.
-    order: nextMessages.map((message) => ({
-      id: message.id,
-      role: message.role,
-      text: previewMessageText(message),
-      toolCallIds: message.parts
-        .filter((part) => part.type === 'tool-call')
-        .map((part) => (part as { id: string }).id),
-    })),
-    lastMessageId: lastMessage?.id ?? null,
-    lastMessageRole: lastMessage?.role ?? null,
-    lastMessageText: lastMessage ? getUIMessageText(lastMessage) : null,
-    lastUserMessageId: lastUserMessage?.id ?? null,
-    lastUserMessageText: lastUserMessage ? getUIMessageText(lastUserMessage) : null,
-    cacheRunSnapshot: options.cacheRunSnapshot ?? false,
-  })
+    logger.debug('Updated cached session messages', {
+      sessionId: String(targetSessionId),
+      reason: options.reason ?? 'unspecified',
+      messageCount: nextMessages.length,
+      order: nextMessages.map((message) => ({
+        id: message.id,
+        role: message.role,
+        text: previewMessageText(message),
+        toolCallIds: message.parts
+          .filter((part) => part.type === 'tool-call')
+          .map((part) => (part as { id: string }).id),
+      })),
+      lastMessageId: lastMessage?.id ?? null,
+      lastMessageRole: lastMessage?.role ?? null,
+      lastMessageText: lastMessage ? getUIMessageText(lastMessage) : null,
+      lastUserMessageId: lastUserMessage?.id ?? null,
+      lastUserMessageText: lastUserMessage ? getUIMessageText(lastUserMessage) : null,
+      cacheRunSnapshot: options.cacheRunSnapshot ?? false,
+    })
+  }
 
   if (options.cacheRunSnapshot) {
     setRunRenderMessages(targetSessionId, nextMessages)

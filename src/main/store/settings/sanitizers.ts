@@ -166,3 +166,7 @@ export function sanitizeProjectDisplayNames(raw: unknown) {
 export function resolveShowCustomExecutionTeam(raw: unknown) {
   return typeof raw === 'boolean' ? raw : DEFAULT_SETTINGS.showCustomExecutionTeam
 }
+
+export function resolveDefaultMcpServersSeeded(raw: unknown) {
+  return typeof raw === 'boolean' ? raw : DEFAULT_SETTINGS.defaultMcpServersSeeded
+}

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import type { MachineExecutionState } from '@shared/types/machine'
+import { describe, expect, it } from 'vitest'
 import {
   buildChatRows,
   createUserMessage,
@@ -153,7 +153,8 @@ describe('buildChatRows machine timeline', () => {
   it('synthesizes the original machine request as a user row when the planner prompt is hidden', () => {
     const machinePlan: MachineExecutionState = {
       goal: 'Create a single file solar system animation',
-      originalRequest: 'create a single file index.html to design physics realistic solar system animation',
+      originalRequest:
+        'create a single file index.html to design physics realistic solar system animation',
       phase: 'awaiting_approval',
       tasks: [
         {
@@ -203,7 +204,8 @@ describe('buildChatRows machine timeline', () => {
   it('places the synthetic machine request before post-plan assistant transcript rows', () => {
     const machinePlan: MachineExecutionState = {
       goal: 'Create a single file solar system animation',
-      originalRequest: 'create a single file index.html to design physics realistic solar system animation',
+      originalRequest:
+        'create a single file index.html to design physics realistic solar system animation',
       phase: 'running',
       tasks: [
         {
@@ -256,7 +258,8 @@ describe('buildChatRows machine timeline', () => {
   it('appends a completed machine summary card at the end of the transcript', () => {
     const machinePlan: MachineExecutionState = {
       goal: 'Create a single file solar system animation',
-      originalRequest: 'create a single file index.html to design physics realistic solar system animation',
+      originalRequest:
+        'create a single file index.html to design physics realistic solar system animation',
       phase: 'completed',
       tasks: [
         {
@@ -328,7 +331,8 @@ describe('buildChatRows machine timeline', () => {
   it('keeps machine task transcript in the flat transcript when task message ids are persisted', () => {
     const machinePlan: MachineExecutionState = {
       goal: 'Create a single file solar system animation',
-      originalRequest: 'create a single file index.html to design physics realistic solar system animation',
+      originalRequest:
+        'create a single file index.html to design physics realistic solar system animation',
       phase: 'completed',
       tasks: [
         {
@@ -388,7 +392,8 @@ describe('buildChatRows machine timeline', () => {
   it('keeps thinking-only and mixed machine task transcript parts in the flat transcript', () => {
     const machinePlan: MachineExecutionState = {
       goal: 'Create a single file solar system animation',
-      originalRequest: 'create a single file index.html to design physics realistic solar system animation',
+      originalRequest:
+        'create a single file index.html to design physics realistic solar system animation',
       phase: 'running',
       currentTaskId: 'task-1',
       tasks: [

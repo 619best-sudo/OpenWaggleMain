@@ -1,11 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { codeToTokensBaseMock, getHighlighterMock, warnMock } = vi.hoisted(() => ({
-  codeToTokensBaseMock: vi.fn(),
-  getHighlighterMock: vi.fn(),
-  warnMock: vi.fn(),
-}))
+const { codeToTokensBaseMock, ensureLanguageMock, getHighlighterMock, warnMock } = vi.hoisted(
+  () => ({
+    codeToTokensBaseMock: vi.fn(),
+    ensureLanguageMock: vi.fn(),
+    getHighlighterMock: vi.fn(),
+    warnMock: vi.fn(),
+  }),
+)
 
 vi.mock('@/shared/lib/logger', () => ({
   createRendererLogger: vi.fn(() => ({
@@ -15,6 +18,7 @@ vi.mock('@/shared/lib/logger', () => ({
 
 vi.mock('@/shared/lib/shiki/highlighter', () => ({
   DEFAULT_THEME: 'waggle-dark',
+  ensureLanguage: ensureLanguageMock,
   getHighlighter: getHighlighterMock,
   resolveLanguage: vi.fn((language: string) => (language === 'json' ? 'json' : undefined)),
 }))
@@ -25,6 +29,8 @@ describe('Textarea', () => {
   beforeEach(() => {
     codeToTokensBaseMock.mockReset()
     warnMock.mockReset()
+    ensureLanguageMock.mockReset()
+    ensureLanguageMock.mockResolvedValue(true)
     getHighlighterMock.mockReset()
     getHighlighterMock.mockResolvedValue({
       codeToTokensBase: codeToTokensBaseMock,

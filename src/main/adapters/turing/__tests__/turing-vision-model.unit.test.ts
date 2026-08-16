@@ -13,7 +13,7 @@ describe('resolveVisionModel', () => {
   it('defaults to a multimodal slug, never the text-only run model', () => {
     envMock.OPENWAGGLE_VISION_MODEL = undefined
     expect(resolveVisionModel()).toBe(DEFAULT_VISION_MODEL)
-    expect(resolveVisionModel()).not.toContain('laguna')
+    expect(resolveVisionModel()).not.toContain('mimo')
   })
 
   it('honours the env override', () => {

@@ -1,5 +1,9 @@
-import { resolve, isAbsolute } from 'node:path'
-import type { AgentToolResult, ExtensionContext, ToolDefinition } from '@mariozechner/pi-coding-agent'
+import { isAbsolute, resolve } from 'node:path'
+import type {
+  AgentToolResult,
+  ExtensionContext,
+  ToolDefinition,
+} from '@mariozechner/pi-coding-agent'
 
 /**
  * mark_concern_lines — a custom agent tool that lets the model flag the specific
@@ -29,7 +33,10 @@ const markConcernLinesParameters = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    path: { type: 'string', description: 'File path (absolute, or relative to cwd). Must match a file you just read.' },
+    path: {
+      type: 'string',
+      description: 'File path (absolute, or relative to cwd). Must match a file you just read.',
+    },
     lines: {
       type: 'array',
       description: '1-based line numbers that matter for the task.',
@@ -63,7 +70,8 @@ export const markConcernLinesToolDefinition: ToolDefinition = {
   label: 'Mark Concern Lines',
   description:
     'Flag the specific lines of a file you just read that matter for the task (the lines a change targets, or the evidence behind a finding). Call it right after `read` when specific lines stand out; skip it when the whole file is relevant or nothing does.',
-  promptSnippet: 'mark_concern_lines(path, lines, why?) — flag the specific lines of a file you just read that matter for the task (highlighted in the UI). Skip when nothing stands out.',
+  promptSnippet:
+    'mark_concern_lines(path, lines, why?) — flag the specific lines of a file you just read that matter for the task (highlighted in the UI). Skip when nothing stands out.',
   promptGuidelines: [
     'After `read`, if SPECIFIC lines of that file matter for the task, call `mark_concern_lines` with those lines so they surface as highlights. Pass an optional `why`. Skip it when the whole file is relevant or nothing stands out — do not call it for every read.',
   ],
@@ -99,7 +107,10 @@ export const markConcernLinesToolDefinition: ToolDefinition = {
     const details: MarkConcernLinesDetails = why ? { path, lines, why } : { path, lines }
     return {
       content: [
-        { type: 'text', text: `Marked ${String(lines.length)} concern line(s) in ${path}: ${lines.join(',')}.` },
+        {
+          type: 'text',
+          text: `Marked ${String(lines.length)} concern line(s) in ${path}: ${lines.join(',')}.`,
+        },
       ],
       details,
     }

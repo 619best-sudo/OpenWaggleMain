@@ -53,3 +53,6 @@ release
 *.tmp
 *.temp
 .cache
+
+# Curated runtime env shipped in the packaged app (contains credentials).
+build/app.env

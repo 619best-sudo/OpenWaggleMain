@@ -1,0 +1,2316 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e4]:
+    - generic [ref=e6]: NEW|Epik raised $1M pre-seed, led by InfoEdge.
+    - generic [ref=e7]:
+      - generic [ref=e9]:
+        - link "Epik Logo" [ref=e11] [cursor=pointer]:
+          - /url: /
+          - img "Epik Logo" [ref=e12]
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - generic:
+              - generic:
+                - generic: Demo in 60 Minutes
+            - textbox "Search" [ref=e21]:
+              - /placeholder: " "
+            - generic: Search for Robot Vaccum
+          - button "Search" [ref=e22]:
+            - img [ref=e23]
+        - generic [ref=e26]:
+          - button "Ask Epik AI" [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+            - generic [ref=e32]: Ask Epik AI
+          - link "Login" [ref=e33] [cursor=pointer]:
+            - /url: /login
+            - img [ref=e34]
+          - button "My Bag" [ref=e37]:
+            - img [ref=e38]
+            - generic [ref=e40]: "3"
+      - navigation [ref=e42]:
+        - generic [ref=e44]:
+          - button "Home Home" [ref=e45] [cursor=pointer]:
+            - img "Home" [ref=e47]
+            - generic [ref=e48]:
+              - generic [ref=e49]: Home
+              - img [ref=e50]
+          - button "Kitchen Kitchen" [ref=e52] [cursor=pointer]:
+            - img "Kitchen" [ref=e54]
+            - generic [ref=e55]:
+              - generic [ref=e56]: Kitchen
+              - img [ref=e57]
+          - button "Health & Wellness Health & Wellness" [ref=e59] [cursor=pointer]:
+            - img "Health & Wellness" [ref=e61]
+            - generic [ref=e62]:
+              - generic [ref=e63]: Health & Wellness
+              - img [ref=e64]
+          - button "Gadgets Gadgets" [ref=e66] [cursor=pointer]:
+            - img "Gadgets" [ref=e68]
+            - generic [ref=e69]:
+              - generic [ref=e70]: Gadgets
+              - img [ref=e71]
+          - button "Beauty & Personal Care Beauty & Personal Care" [ref=e73] [cursor=pointer]:
+            - img "Beauty & Personal Care" [ref=e75]
+            - generic [ref=e76]:
+              - generic [ref=e77]: Beauty & Personal Care
+              - img [ref=e78]
+          - button "Personal Luxury Personal Luxury" [ref=e80] [cursor=pointer]:
+            - img "Personal Luxury" [ref=e82]
+            - generic [ref=e83]:
+              - generic [ref=e84]: Personal Luxury
+              - img [ref=e85]
+          - button "Kids Kids" [ref=e87] [cursor=pointer]:
+            - img "Kids" [ref=e89]
+            - generic [ref=e90]:
+              - generic [ref=e91]: Kids
+              - img [ref=e92]
+          - button "Music & Instruments Music & Instruments" [ref=e94] [cursor=pointer]:
+            - img "Music & Instruments" [ref=e96]
+            - generic [ref=e97]:
+              - generic [ref=e98]: Music & Instruments
+              - img [ref=e99]
+          - button "Sports & Outdoors Sports & Outdoors" [ref=e101] [cursor=pointer]:
+            - img "Sports & Outdoors" [ref=e103]
+            - generic [ref=e104]:
+              - generic [ref=e105]: Sports & Outdoors
+              - img [ref=e106]
+  - alert [ref=e3230]: Buy ECOVACS DEEBOT N30 White 2 in 1 Robot Vacuum Cleaner & Mop, 10000 Pa Suction, 5200mAh Battery, Covers 3500+ Sq ft in Single Charge, Zero Tangle 2.0 Technology, Advanced TrueMapping Online - Shop with Free Home Demo in Bangalore | Epik
+  - generic:
+    - generic:
+      - iframe
+  - main [ref=e4388]:
+    - navigation "Breadcrumb" [ref=e4389]:
+      - link "Epik" [ref=e4390] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e4391]: Epik
+      - img [ref=e4392]
+      - link "Ecovacs" [ref=e4394] [cursor=pointer]:
+        - /url: /collections/Ecovacs
+      - img [ref=e4395]
+      - generic "ECOVACS DEEBOT N30 White 2 in 1 Robot Vacuum Cleaner & Mop, 10000 Pa Suction, 5200mAh Battery, Covers 3500+ Sq ft in Single Charge, Zero Tangle 2.0 Technology, Advanced TrueMapping" [ref=e4397]: ECOVACS DEEBOT N30 White 2 in 1 Robot Vacuum Cleaner & Mop,…
+    - generic [ref=e4398]:
+      - generic [ref=e4401]:
+        - generic [ref=e4405] [cursor=pointer]:
+          - img "Main product"
+        - generic [ref=e4415]:
+          - button "Previous image" [ref=e4416]:
+            - img [ref=e4417]
+          - button "Next image" [ref=e4419]:
+            - img [ref=e4420]
+          - generic [ref=e4422]:
+            - img "ECOVACS DEEBOT N30 White 2 in 1 Robot Vacuum Cleaner & Mop, 10000 Pa Suction, 5200mAh Battery, Covers 3500+ Sq ft in Single Charge, Zero Tangle 2.0 Technology, Advanced TrueMapping – product image" [ref=e4423]
+            - generic [ref=e4424]:
+              - button "Add to wishlist" [ref=e4425]:
+                - img [ref=e4426]
+              - button "Share product" [ref=e4428]:
+                - img [ref=e4429]
+      - generic [ref=e4437]:
+        - generic [ref=e4438]:
+          - heading "ECOVACS DEEBOT N30 White 2 in 1 Robot Vacuum Cleaner & Mop, 10000 Pa Suction, 5200mAh Battery, Covers 3500+ Sq ft in Single Charge, Zero Tangle 2.0 Technology, Advanced TrueMapping" [level=1] [ref=e4439]
+          - link "Ecovacs" [ref=e4442] [cursor=pointer]:
+            - /url: /ecovacs-online-store-in-bangalore
+            - generic [ref=e4443]: Ecovacs
+        - generic "Based on reviews from leading marketplaces" [ref=e4445]:
+          - generic [ref=e4446]:
+            - generic [ref=e4447]:
+              - img [ref=e4448]
+              - img [ref=e4450]
+              - img [ref=e4452]
+              - img [ref=e4454]
+              - generic [ref=e4456]:
+                - img [ref=e4457]
+                - img [ref=e4459]
+            - generic [ref=e4461]: "4.5"
+          - generic [ref=e4463]: 3,352 reviews
+          - generic [ref=e4464]:
+            - img [ref=e4465]
+            - text: Verified
+        - generic [ref=e4467]:
+          - generic [ref=e4468]:
+            - generic [ref=e4469]:
+              - generic [ref=e4470]: EPIK Price
+              - generic [ref=e4471]: ₹23,999
+            - generic [ref=e4474]:
+              - generic [ref=e4475]: Regular Price
+              - generic [ref=e4476]:
+                - generic [ref=e4477]: ₹99,990
+                - generic [ref=e4478]: 76% off
+          - paragraph [ref=e4480]: Inclusive of all taxes
+          - generic [ref=e5621] [cursor=pointer]:
+            - generic [ref=e5622]:
+              - generic [ref=e5623]:
+                - generic [ref=e5624]: ₹
+                - generic [ref=e5625]: "2050"
+                - generic [ref=e5626]: /month,
+                - generic [ref=e5628]:
+                  - generic [ref=e5629]: 3/6/9
+                  - text: EMI options
+              - generic [ref=e5632]:
+                - generic [ref=e5633]:
+                  - generic [ref=e5634]: 0% EMI
+                  - text: "on"
+                - img "UPI" [ref=e5635]
+                - text: via
+                - img "Snapmint" [ref=e5636]
+            - img "Buy on EMI" [ref=e5638]
+        - generic [ref=e4481]:
+          - generic [ref=e4483]:
+            - button "Add to bag" [ref=e4484] [cursor=pointer]:
+              - img
+              - generic [ref=e4485]: Add to bag
+            - button "Home Demo" [ref=e4486] [cursor=pointer]
+          - paragraph [ref=e4490]: ⚡ Only 75 Demo Slots Left for today ⚡
+          - generic [ref=e4491]:
+            - generic [ref=e4492]:
+              - generic [ref=e4493]:
+                - generic [ref=e4494]:
+                  - img [ref=e4495]
+                  - generic [ref=e4497]: Expert Home Demo
+                - generic [ref=e4498]:
+                  - generic [ref=e4499]: ₹199
+                  - generic [ref=e4500]: Free
+                - paragraph [ref=e4501]:
+                  - text: Experience it at your convenience,
+                  - text: No obligation to buy.
+              - button "What's Included?" [ref=e4503] [cursor=pointer]:
+                - generic [ref=e4504]: What's Included?
+                - img [ref=e4505]
+            - region:
+              - generic [ref=e4507]:
+                - heading "Included in your Home Demo:" [level=2] [ref=e4508]
+                - list [ref=e4509]:
+                  - listitem [ref=e4510]:
+                    - img [ref=e4511]
+                    - generic [ref=e4513]: Demo preparation & setup
+                  - listitem [ref=e4514]:
+                    - img [ref=e4515]
+                    - generic [ref=e4517]: Expert-led live walkthrough
+                  - listitem [ref=e4518]:
+                    - img [ref=e4519]
+                    - generic [ref=e4521]: Use-case specific explanation
+                  - listitem [ref=e4522]:
+                    - img [ref=e4523]
+                    - generic [ref=e4525]: Q&A, buying guidance & next steps
+                - paragraph [ref=e4527]: "* This is a premium, expert-led service by Epik. Offered free to help you make the right choice."
+    - generic [ref=e4532]:
+      - generic [ref=e4533]:
+        - img [ref=e4535]
+        - generic [ref=e4537]:
+          - paragraph [ref=e4538]: 1 Year
+          - paragraph [ref=e4539]: Warranty
+      - generic [ref=e4540]:
+        - img [ref=e4542]
+        - generic [ref=e4544]:
+          - paragraph [ref=e4545]: Call Support
+          - paragraph [ref=e4546]: Assistance
+      - generic [ref=e4547]:
+        - img [ref=e4549]
+        - generic [ref=e4552]:
+          - paragraph [ref=e4553]: 24/7 Help
+          - paragraph [ref=e4554]: Support
+      - generic [ref=e4555]:
+        - img [ref=e4557]
+        - generic [ref=e4560]:
+          - paragraph [ref=e4561]: Free Delivery
+          - paragraph [ref=e4562]: Shipping
+    - generic [ref=e4565]:
+      - generic [ref=e4566]:
+        - generic [ref=e4567]:
+          - heading "Description" [level=2] [ref=e4570]
+          - generic [ref=e4571]:
+            - generic [ref=e4574]:
+              - heading "Upgrade your everyday cleaning with the smart and powerful Ecovacs Deebot N30 Robotic Vacuum Cleaner, designed for effortless vacuuming and mopping across modern homes. Featuring powerful 10,000Pa suction, ZeroTangle 2.0 technology, and advanced TrueMapping navigation, this intelligent robot vacuum cleaner delivers deep cleaning performance on hard floors, tiles, carpets, and rugs." [level=4] [ref=e5651]
+              - heading "Key Features" [level=4] [ref=e5652]:
+                - strong [ref=e5653]: Key Features
+                - strong
+              - heading "• ECOVACS DEEBOT N30 PLUS White Robot Vacuum Cleaner & Mop delivers powerful smart home cleaning with advanced vacuuming and mopping technology for Indian homes" [level=4] [ref=e5654]
+              - heading "• Powerful 10,000Pa suction removes dust, debris, pet hair, crumbs, and fine particles from tiles, hardwood floors, marble, carpets, rugs, and corners" [level=4] [ref=e5655]
+              - heading "• Vacuum and mop simultaneously in a single pass for faster, deeper, and more efficient floor cleaning performance" [level=4] [ref=e5656]
+              - heading "• ZeroTangle 2.0 technology with triple V-shaped roller brush provides 99.8% hair-free cleaning, ideal for homes with pets and long hair" [level=4] [ref=e5657]
+              - heading "• Advanced TrueMapping and Quick Mapping technology create precise home maps for intelligent navigation, efficient route planning, and wider cleaning coverage" [level=4] [ref=e5658]
+              - heading "• High-speed motor and optimized airflow design ensure deep carpet cleaning with minimal suction loss and better dust pickup efficiency" [level=4] [ref=e5659]
+              - heading "• Long-lasting 5200mAh battery offers up to 300 minutes runtime, making it ideal for large homes and uninterrupted cleaning sessions" [level=4] [ref=e5660]
+              - heading "• Smart app control allows remote cleaning, cleaning schedules, suction adjustment, water flow control, and customized cleaning modes anytime, anywhere" [level=4] [ref=e5661]
+              - heading "• Specially designed robot vacuum cleaner for Indian homes with efficient cleaning across multiple floor types and edge cleaning performance" [level=4] [ref=e5662]
+              - heading "• Perfect smart robot vacuum and mop for pet owners, busy households, carpets, hardwood floors, tiles, and modern automated cleaning need" [level=4] [ref=e5663]
+              - heading "• Includes a 1-year manufacturer warranty with reliable after-sales support" [level=4] [ref=e5664]
+            - button "Read more" [ref=e4589] [cursor=pointer]:
+              - generic [ref=e4590]: Read more
+              - img [ref=e4591]
+        - generic [ref=e4593]:
+          - heading "Highlights" [level=2] [ref=e4596]
+          - generic [ref=e4598]:
+            - generic [ref=e4599]:
+              - term [ref=e4600]: Brand
+              - definition [ref=e4601]: Ecovacs
+            - generic [ref=e4602]:
+              - term [ref=e4603]: Category
+              - definition [ref=e4604]: Robot Vacuum Cleaners
+            - generic [ref=e4605]:
+              - term [ref=e4606]: Availability
+              - definition [ref=e4607]: In Stock
+      - link "Epik delivery How an Epik Logo demo works in 60 minutes Know More" [ref=e4610] [cursor=pointer]:
+        - /url: /how-demo-works
+        - img "Epik delivery"
+        - generic [ref=e4611]:
+          - generic [ref=e4612]: How an
+          - img "Epik Logo" [ref=e4613]
+          - generic [ref=e4619]: demo
+        - paragraph [ref=e4620]: works in 60 minutes
+        - generic [ref=e4622]: Know More
+    - generic [ref=e4625]:
+      - heading "You May Also Like" [level=2] [ref=e4626]
+      - generic [ref=e5667]:
+        - generic [ref=e5669]:
+          - link "DREAME D20 Ultra Robot Vacuum Cleaner, 13,000Pa Suction, Self-Cleaning & Drying Mop, Auto-Empty for 100 Days, 370-Min Long Battery, Smart Carpet Detection, App & Voice Control" [ref=e5670] [cursor=pointer]:
+            - /url: /products/dreame-d20-ultra-robot-vacuum-cleaner-13-000pa-suction-self-cleaning-drying-mop-auto-empty-for-100-days-370-min-long-battery-smart-carpet-detection-app-voice-control
+            - generic [ref=e5671]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "DREAME D20 Ultra Robot Vacuum Cleaner, 13,000Pa Suction, Self-Cleaning & Drying Mop, Auto-Empty for 100 Days, 370-Min Long Battery, Smart Carpet Detection, App & Voice Control" [ref=e5672]
+          - generic [ref=e5673]:
+            - link "DREAME D20 Ultra Robot Vacuum Cleaner, 13,000Pa Suction, Self-Cleaning & Drying Mop, Auto-Empty for 100 Days, 370-Min Long Battery, Smart Carpet Detection, App & Voice Control" [ref=e5674] [cursor=pointer]:
+              - /url: /products/dreame-d20-ultra-robot-vacuum-cleaner-13-000pa-suction-self-cleaning-drying-mop-auto-empty-for-100-days-370-min-long-battery-smart-carpet-detection-app-voice-control
+              - heading "DREAME D20 Ultra Robot Vacuum Cleaner, 13,000Pa Suction, Self-Cleaning & Drying Mop, Auto-Empty for 100 Days, 370-Min Long Battery, Smart Carpet Detection, App & Voice Control" [level=3] [ref=e5675]
+            - generic [ref=e5678]:
+              - generic [ref=e5679]:
+                - paragraph [ref=e5680]: Epik Price
+                - generic [ref=e5681]: ₹46,999
+              - generic [ref=e5683]:
+                - paragraph [ref=e5684]: Regular Price
+                - generic [ref=e5685]:
+                  - generic [ref=e5686]: ₹79,999
+                  - generic [ref=e5687]: 41% off
+            - generic [ref=e5689]:
+              - img [ref=e5690]
+              - paragraph [ref=e5692]: ₹3,917 / Month EMI
+            - generic [ref=e5694]:
+              - button "Add to bag" [ref=e5695] [cursor=pointer]:
+                - img [ref=e5696]
+              - button "Home Demo" [ref=e5699] [cursor=pointer]:
+                - generic [ref=e5700]: Home Demo
+        - generic [ref=e5702]:
+          - link "Add to bag DREAME L10 Prime Robot Vacuum and Mop, Self-Cleaning Dual Mop Pads with Auto Drying, 3L Clean/Used Water Tank, 7mm Mop Lifting for Carpets, LDS Navigation with 3D Mapping, WiFi/App Control" [ref=e5703] [cursor=pointer]:
+            - /url: /products/l10-prime
+            - generic [ref=e5704]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - button "Add to bag" [ref=e5705]:
+                - img [ref=e5706]
+              - img "DREAME L10 Prime Robot Vacuum and Mop, Self-Cleaning Dual Mop Pads with Auto Drying, 3L Clean/Used Water Tank, 7mm Mop Lifting for Carpets, LDS Navigation with 3D Mapping, WiFi/App Control" [ref=e5709]
+          - generic [ref=e5710]:
+            - link "DREAME L10 Prime Robot Vacuum and Mop, Self-Cleaning Dual Mop Pads with Auto Drying, 3L Clean/Used Water Tank, 7mm Mop Lifting for Carpets, LDS Navigation with 3D Mapping, WiFi/App Control" [ref=e5711] [cursor=pointer]:
+              - /url: /products/l10-prime
+              - heading "DREAME L10 Prime Robot Vacuum and Mop, Self-Cleaning Dual Mop Pads with Auto Drying, 3L Clean/Used Water Tank, 7mm Mop Lifting for Carpets, LDS Navigation with 3D Mapping, WiFi/App Control" [level=3] [ref=e5712]
+            - generic [ref=e5714]:
+              - generic [ref=e5715]:
+                - img [ref=e5716]
+                - img [ref=e5718]
+                - img [ref=e5720]
+                - img [ref=e5722]
+                - img [ref=e5724]
+              - generic [ref=e5726]: "4.2"
+              - generic [ref=e5727]: (3.8k+)
+            - generic [ref=e5729]:
+              - generic [ref=e5730]:
+                - paragraph [ref=e5731]: Epik Price
+                - generic [ref=e5732]: ₹33,999
+              - generic [ref=e5734]:
+                - paragraph [ref=e5735]: Regular Price
+                - generic [ref=e5736]:
+                  - generic [ref=e5737]: ₹69,998
+                  - generic [ref=e5738]: 51% off
+            - generic [ref=e5740]:
+              - img [ref=e5741]
+              - paragraph [ref=e5743]: ₹2,833 / Month EMI
+            - generic [ref=e5745]:
+              - button "Home Demo" [ref=e5746] [cursor=pointer]:
+                - generic [ref=e5747]: Home Demo
+              - button "Live Demo" [ref=e5748] [cursor=pointer]:
+                - generic [ref=e5749]: Live Demo
+        - generic [ref=e5751]:
+          - link "Eureka Forbes SmartClean Home Mapping Turbo Robotic Vacuum Cleaner | 7000Pa HyperSuction | LiDAR 3.0 & Quick Home Mapping | Wet Mopping | 3-Hour Run Time | Smart App & Voice Control" [ref=e5752] [cursor=pointer]:
+            - /url: /products/forbes-smartclean-with-home-mapping-pro-hi-b70-rov-mappingpro
+            - img "Eureka Forbes SmartClean Home Mapping Turbo Robotic Vacuum Cleaner | 7000Pa HyperSuction | LiDAR 3.0 & Quick Home Mapping | Wet Mopping | 3-Hour Run Time | Smart App & Voice Control" [ref=e5754]
+          - generic [ref=e5755]:
+            - link "Eureka Forbes SmartClean Home Mapping Turbo Robotic Vacuum Cleaner | 7000Pa HyperSuction | LiDAR 3.0 & Quick Home Mapping | Wet Mopping | 3-Hour Run Time | Smart App & Voice Control" [ref=e5756] [cursor=pointer]:
+              - /url: /products/forbes-smartclean-with-home-mapping-pro-hi-b70-rov-mappingpro
+              - heading "Eureka Forbes SmartClean Home Mapping Turbo Robotic Vacuum Cleaner | 7000Pa HyperSuction | LiDAR 3.0 & Quick Home Mapping | Wet Mopping | 3-Hour Run Time | Smart App & Voice Control" [level=3] [ref=e5757]
+            - generic [ref=e5759]:
+              - generic [ref=e5760]:
+                - img [ref=e5761]
+                - img [ref=e5763]
+                - img [ref=e5765]
+                - img [ref=e5767]
+                - img [ref=e5769]
+              - generic [ref=e5771]: "4.1"
+              - generic [ref=e5772]: (4.4k+)
+            - generic [ref=e5774]:
+              - generic [ref=e5775]:
+                - paragraph [ref=e5776]: Epik Price
+                - generic [ref=e5777]: ₹19,999
+              - generic [ref=e5779]:
+                - paragraph [ref=e5780]: Regular Price
+                - generic [ref=e5781]:
+                  - generic [ref=e5782]: ₹33,100
+                  - generic [ref=e5783]: 40% off
+            - generic [ref=e5785]:
+              - img [ref=e5786]
+              - paragraph [ref=e5788]: ₹1,667 / Month EMI
+            - generic [ref=e5790]:
+              - button "Add to bag" [ref=e5791] [cursor=pointer]:
+                - img [ref=e5792]
+              - button "Buy Now" [ref=e5795] [cursor=pointer]:
+                - generic [ref=e5796]: Buy Now
+        - generic [ref=e5798]:
+          - link "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e5799] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-n30-white-2-in-1-robot-vacuum-cleaner-mop-2025-new-launch-10000-pa-suction-5200mah-battery-covers-3500-sq-ft-in-single-charge-zero-tangle-2-0-technology-advanced-truemapping-copy
+            - generic [ref=e5800]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e5801]
+          - generic [ref=e5802]:
+            - link "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e5803] [cursor=pointer]:
+              - /url: /products/ecovacs-deebot-n30-white-2-in-1-robot-vacuum-cleaner-mop-2025-new-launch-10000-pa-suction-5200mah-battery-covers-3500-sq-ft-in-single-charge-zero-tangle-2-0-technology-advanced-truemapping-copy
+              - heading "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [level=3] [ref=e5804]
+            - generic [ref=e5806]:
+              - generic [ref=e5807]:
+                - img [ref=e5808]
+                - img [ref=e5810]
+                - img [ref=e5812]
+                - img [ref=e5814]
+                - img [ref=e5816]
+              - generic [ref=e5818]: "4.1"
+              - generic [ref=e5819]: (3.2k+)
+            - generic [ref=e5821]:
+              - generic [ref=e5822]:
+                - paragraph [ref=e5823]: Epik Price
+                - generic [ref=e5824]: ₹32,999
+              - generic [ref=e5826]:
+                - paragraph [ref=e5827]: Regular Price
+                - generic [ref=e5828]:
+                  - generic [ref=e5829]: ₹89,999
+                  - generic [ref=e5830]: 63% off
+            - generic [ref=e5832]:
+              - img [ref=e5833]
+              - paragraph [ref=e5835]: ₹2,750 / Month EMI
+            - generic [ref=e5837]:
+              - button "Add to bag" [ref=e5838] [cursor=pointer]:
+                - img [ref=e5839]
+              - button "Home Demo" [ref=e5842] [cursor=pointer]:
+                - generic [ref=e5843]: Home Demo
+        - generic [ref=e5845]:
+          - link "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [ref=e5846] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-n50-pro-omni-2-in-1-robotic-vacuum-cleaner-mop-2026-new-launch-25000-pa-suction-self-emptying-omni-station-zerotangle-2-0-hot-air-drying-auto-lift-mop-on-carpet-upto-300-mins
+            - generic [ref=e5847]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [ref=e5848]
+          - generic [ref=e5849]:
+            - link "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [ref=e5850] [cursor=pointer]:
+              - /url: /products/ecovacs-deebot-n50-pro-omni-2-in-1-robotic-vacuum-cleaner-mop-2026-new-launch-25000-pa-suction-self-emptying-omni-station-zerotangle-2-0-hot-air-drying-auto-lift-mop-on-carpet-upto-300-mins
+              - heading "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [level=3] [ref=e5851]
+            - generic [ref=e5853]:
+              - generic [ref=e5854]:
+                - img [ref=e5855]
+                - img [ref=e5857]
+                - img [ref=e5859]
+                - img [ref=e5861]
+                - img [ref=e5863]
+              - generic [ref=e5865]: "4.0"
+              - generic [ref=e5866]: (7.4k+)
+            - generic [ref=e5868]:
+              - generic [ref=e5869]:
+                - paragraph [ref=e5870]: Epik Price
+                - generic [ref=e5871]: ₹59,999
+              - generic [ref=e5873]:
+                - paragraph [ref=e5874]: Regular Price
+                - generic [ref=e5875]:
+                  - generic [ref=e5876]: ₹1,69,999
+                  - generic [ref=e5877]: 65% off
+            - generic [ref=e5879]:
+              - img [ref=e5880]
+              - paragraph [ref=e5882]: ₹5,000 / Month EMI
+            - generic [ref=e5884]:
+              - button "Add to bag" [ref=e5885] [cursor=pointer]:
+                - img [ref=e5886]
+              - button "Home Demo" [ref=e5889] [cursor=pointer]:
+                - generic [ref=e5890]: Home Demo
+        - generic [ref=e5892]:
+          - link "ILIFE A30 Pro Robotic Vacuum Cleaner with Self-Empty Station, 5000Pa Suction, LiDAR Navigation, Vacuum and Mop Combo, Multi-Floor Mapping, Customize Cleaning, Remote Control, App, Alexa & Google Home" [ref=e5893] [cursor=pointer]:
+            - /url: /products/a30-pro
+            - generic [ref=e5894]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ILIFE A30 Pro Robotic Vacuum Cleaner with Self-Empty Station, 5000Pa Suction, LiDAR Navigation, Vacuum and Mop Combo, Multi-Floor Mapping, Customize Cleaning, Remote Control, App, Alexa & Google Home" [ref=e5897]
+          - generic [ref=e5898]:
+            - link "ILIFE A30 Pro Robotic Vacuum Cleaner with Self-Empty Station, 5000Pa Suction, LiDAR Navigation, Vacuum and Mop Combo, Multi-Floor Mapping, Customize Cleaning, Remote Control, App, Alexa & Google Home" [ref=e5899] [cursor=pointer]:
+              - /url: /products/a30-pro
+              - heading "ILIFE A30 Pro Robotic Vacuum Cleaner with Self-Empty Station, 5000Pa Suction, LiDAR Navigation, Vacuum and Mop Combo, Multi-Floor Mapping, Customize Cleaning, Remote Control, App, Alexa & Google Home" [level=3] [ref=e5900]
+            - generic [ref=e5902]:
+              - generic [ref=e5903]:
+                - img [ref=e5904]
+                - img [ref=e5906]
+                - img [ref=e5908]
+                - img [ref=e5910]
+                - img [ref=e5912]
+              - generic [ref=e5914]: "4.3"
+              - generic [ref=e5915]: (26.3k+)
+            - generic [ref=e5917]:
+              - generic [ref=e5918]:
+                - paragraph [ref=e5919]: Epik Price
+                - generic [ref=e5920]: ₹19,900
+              - generic [ref=e5922]:
+                - paragraph [ref=e5923]: Regular Price
+                - generic [ref=e5924]:
+                  - generic [ref=e5925]: ₹69,999
+                  - generic [ref=e5926]: 72% off
+            - generic [ref=e5928]:
+              - img [ref=e5929]
+              - paragraph [ref=e5931]: ₹1,658 / Month EMI
+            - generic [ref=e5933]:
+              - button "Add to bag" [ref=e5934] [cursor=pointer]:
+                - img [ref=e5935]
+              - button "Home Demo" [ref=e5938] [cursor=pointer]:
+                - generic [ref=e5939]: Home Demo
+        - generic [ref=e5941]:
+          - link "Eureka Forbes SmartClean Robotic Vacuum Cleaner with Auto Bin | Powerful Suction | Automatic Dust Collection | Smart App & Voice Control | Multi-Surface Cleaning" [ref=e5942] [cursor=pointer]:
+            - /url: /products/forbes-smartclean-with-auto-bin-hi-b70-rov-smartcleanwithauto-bin
+            - img "Eureka Forbes SmartClean Robotic Vacuum Cleaner with Auto Bin | Powerful Suction | Automatic Dust Collection | Smart App & Voice Control | Multi-Surface Cleaning" [ref=e5946]
+          - generic [ref=e5947]:
+            - link "Eureka Forbes SmartClean Robotic Vacuum Cleaner with Auto Bin | Powerful Suction | Automatic Dust Collection | Smart App & Voice Control | Multi-Surface Cleaning" [ref=e5948] [cursor=pointer]:
+              - /url: /products/forbes-smartclean-with-auto-bin-hi-b70-rov-smartcleanwithauto-bin
+              - heading "Eureka Forbes SmartClean Robotic Vacuum Cleaner with Auto Bin | Powerful Suction | Automatic Dust Collection | Smart App & Voice Control | Multi-Surface Cleaning" [level=3] [ref=e5949]
+            - generic [ref=e5951]:
+              - generic [ref=e5952]:
+                - img [ref=e5953]
+                - img [ref=e5955]
+                - img [ref=e5957]
+                - img [ref=e5959]
+                - img [ref=e5961]
+              - generic [ref=e5963]: "4.1"
+              - generic [ref=e5964]: (4.4k+)
+            - generic [ref=e5966]:
+              - generic [ref=e5967]:
+                - paragraph [ref=e5968]: Epik Price
+                - generic [ref=e5969]: ₹34,999
+              - generic [ref=e5971]:
+                - paragraph [ref=e5972]: Regular Price
+                - generic [ref=e5973]:
+                  - generic [ref=e5974]: ₹46,800
+                  - generic [ref=e5975]: 25% off
+            - generic [ref=e5977]:
+              - img [ref=e5978]
+              - paragraph [ref=e5980]: ₹2,917 / Month EMI
+            - generic [ref=e5982]:
+              - button "Add to bag" [ref=e5983] [cursor=pointer]:
+                - img [ref=e5984]
+              - button "Buy Now" [ref=e5987] [cursor=pointer]:
+                - generic [ref=e5988]: Buy Now
+        - generic [ref=e5990]:
+          - link "Hammer BeatBox Bluetooth Soundbar 24W Output, RGB Lights, AUX, USB, TF Card & TWS Connectivity, Upto 8Hr Playtime, 52mm Drivers, Easy to Carry, BT Speaker for TV, Mobile, PC, Laptops, Tablets (Black)" [ref=e5991] [cursor=pointer]:
+            - /url: /products/hammer-beatbox-bluetooth-soundbar-24w-output-rgb-lights-aux-usb-tf-card-tws-connectivity-upto-8hr-playtime-52mm-drivers-easy-to-carry-bt-speaker-for-tv-mobile-pc-laptops-tablets-black
+            - img "Hammer BeatBox Bluetooth Soundbar 24W Output, RGB Lights, AUX, USB, TF Card & TWS Connectivity, Upto 8Hr Playtime, 52mm Drivers, Easy to Carry, BT Speaker for TV, Mobile, PC, Laptops, Tablets (Black)" [ref=e5995]
+          - generic [ref=e5996]:
+            - link "Hammer BeatBox Bluetooth Soundbar 24W Output, RGB Lights, AUX, USB, TF Card & TWS Connectivity, Upto 8Hr Playtime, 52mm Drivers, Easy to Carry, BT Speaker for TV, Mobile, PC, Laptops, Tablets (Black)" [ref=e5997] [cursor=pointer]:
+              - /url: /products/hammer-beatbox-bluetooth-soundbar-24w-output-rgb-lights-aux-usb-tf-card-tws-connectivity-upto-8hr-playtime-52mm-drivers-easy-to-carry-bt-speaker-for-tv-mobile-pc-laptops-tablets-black
+              - heading "Hammer BeatBox Bluetooth Soundbar 24W Output, RGB Lights, AUX, USB, TF Card & TWS Connectivity, Upto 8Hr Playtime, 52mm Drivers, Easy to Carry, BT Speaker for TV, Mobile, PC, Laptops, Tablets (Black)" [level=3] [ref=e5998]
+            - generic [ref=e6000]:
+              - generic [ref=e6001]:
+                - img [ref=e6002]
+                - img [ref=e6004]
+                - img [ref=e6006]
+                - img [ref=e6008]
+                - img [ref=e6010]
+              - generic [ref=e6012]: "3.6"
+              - generic [ref=e6013]: (213)
+            - generic [ref=e6015]:
+              - generic [ref=e6016]:
+                - paragraph [ref=e6017]: Epik Price
+                - generic [ref=e6018]: ₹1,399
+              - generic [ref=e6020]:
+                - paragraph [ref=e6021]: Regular Price
+                - generic [ref=e6022]:
+                  - generic [ref=e6023]: ₹5,999
+                  - generic [ref=e6024]: 77% off
+            - generic [ref=e6026]:
+              - img [ref=e6027]
+              - paragraph [ref=e6029]: ₹117 / Month EMI
+            - generic [ref=e6031]:
+              - button "Add to bag" [ref=e6032] [cursor=pointer]:
+                - img [ref=e6033]
+              - button "Buy Now" [ref=e6036] [cursor=pointer]:
+                - generic [ref=e6037]: Buy Now
+        - generic [ref=e6039]:
+          - link "Philips Lumea Prestige IPL Hair Removal Device (BRI946)" [ref=e6040] [cursor=pointer]:
+            - /url: /products/philips-lumea-prestige-ipl-hair-removal-device-bri946-00
+            - generic [ref=e6041]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "Philips Lumea Prestige IPL Hair Removal Device (BRI946)" [ref=e6042]
+          - generic [ref=e6043]:
+            - link "Philips Lumea Prestige IPL Hair Removal Device (BRI946)" [ref=e6044] [cursor=pointer]:
+              - /url: /products/philips-lumea-prestige-ipl-hair-removal-device-bri946-00
+              - heading "Philips Lumea Prestige IPL Hair Removal Device (BRI946)" [level=3] [ref=e6045]
+            - generic [ref=e6047]:
+              - generic [ref=e6048]:
+                - img [ref=e6049]
+                - img [ref=e6051]
+                - img [ref=e6053]
+                - img [ref=e6055]
+                - img [ref=e6057]
+              - generic [ref=e6059]: "3.7"
+              - generic [ref=e6060]: (2.3k+)
+            - generic [ref=e6063]:
+              - paragraph [ref=e6064]: Epik Price
+              - generic [ref=e6065]: ₹47,999
+            - generic [ref=e6067]:
+              - img [ref=e6068]
+              - paragraph [ref=e6070]: ₹4,000 / Month EMI
+            - generic [ref=e6072]:
+              - button "Add to bag" [ref=e6073] [cursor=pointer]:
+                - img [ref=e6074]
+              - button "Home Demo" [ref=e6077] [cursor=pointer]:
+                - generic [ref=e6078]: Home Demo
+        - generic [ref=e6080]:
+          - link "Add to bag ILIFE A20 Pro Robot Vacuum Cleaner with Advanced LiDAR Navigation, Strong Suction, Customised Cleaning Up to 4500sft, 5200mAh, WiFi App, Alexa, Google Home, Ideal for Cats, Dogs Hair" [ref=e6081] [cursor=pointer]:
+            - /url: /products/a20-pro-vaccum
+            - generic [ref=e6082]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - button "Add to bag" [ref=e6083]:
+                - img [ref=e6084]
+              - img "ILIFE A20 Pro Robot Vacuum Cleaner with Advanced LiDAR Navigation, Strong Suction, Customised Cleaning Up to 4500sft, 5200mAh, WiFi App, Alexa, Google Home, Ideal for Cats, Dogs Hair" [ref=e6087]
+          - generic [ref=e6088]:
+            - link "ILIFE A20 Pro Robot Vacuum Cleaner with Advanced LiDAR Navigation, Strong Suction, Customised Cleaning Up to 4500sft, 5200mAh, WiFi App, Alexa, Google Home, Ideal for Cats, Dogs Hair" [ref=e6089] [cursor=pointer]:
+              - /url: /products/a20-pro-vaccum
+              - heading "ILIFE A20 Pro Robot Vacuum Cleaner with Advanced LiDAR Navigation, Strong Suction, Customised Cleaning Up to 4500sft, 5200mAh, WiFi App, Alexa, Google Home, Ideal for Cats, Dogs Hair" [level=3] [ref=e6090]
+            - generic [ref=e6092]:
+              - generic [ref=e6093]:
+                - img [ref=e6094]
+                - img [ref=e6096]
+                - img [ref=e6098]
+                - img [ref=e6100]
+                - img [ref=e6102]
+              - generic [ref=e6104]: "4.4"
+              - generic [ref=e6105]: (5.8k+)
+            - generic [ref=e6107]:
+              - generic [ref=e6108]:
+                - paragraph [ref=e6109]: Epik Price
+                - generic [ref=e6110]: ₹18,900
+              - generic [ref=e6112]:
+                - paragraph [ref=e6113]: Regular Price
+                - generic [ref=e6114]:
+                  - generic [ref=e6115]: ₹69,999
+                  - generic [ref=e6116]: 73% off
+            - generic [ref=e6118]:
+              - img [ref=e6119]
+              - paragraph [ref=e6121]: ₹1,575 / Month EMI
+            - generic [ref=e6123]:
+              - button "Home Demo" [ref=e6124] [cursor=pointer]:
+                - generic [ref=e6125]: Home Demo
+              - button "Live Demo" [ref=e6126] [cursor=pointer]:
+                - generic [ref=e6127]: Live Demo
+        - generic [ref=e6129]:
+          - link "Eureka Forbes Kordfree K11 Lite Hand Held Vacuum Cleaner | Cordless & Lightweight | Powerful Suction | Multi-Surface Cleaning | Easy to Use & Portable" [ref=e6130] [cursor=pointer]:
+            - /url: /products/forbes-kordfree-k11-lite-hi-b70-hhv-kordfreek11lite
+            - img "Eureka Forbes Kordfree K11 Lite Hand Held Vacuum Cleaner | Cordless & Lightweight | Powerful Suction | Multi-Surface Cleaning | Easy to Use & Portable" [ref=e6134]
+          - generic [ref=e6135]:
+            - link "Eureka Forbes Kordfree K11 Lite Hand Held Vacuum Cleaner | Cordless & Lightweight | Powerful Suction | Multi-Surface Cleaning | Easy to Use & Portable" [ref=e6136] [cursor=pointer]:
+              - /url: /products/forbes-kordfree-k11-lite-hi-b70-hhv-kordfreek11lite
+              - heading "Eureka Forbes Kordfree K11 Lite Hand Held Vacuum Cleaner | Cordless & Lightweight | Powerful Suction | Multi-Surface Cleaning | Easy to Use & Portable" [level=3] [ref=e6137]
+            - generic [ref=e6139]:
+              - generic [ref=e6140]:
+                - img [ref=e6141]
+                - img [ref=e6143]
+                - img [ref=e6145]
+                - img [ref=e6147]
+                - img [ref=e6149]
+              - generic [ref=e6151]: "3.9"
+              - generic [ref=e6152]: (1.3k+)
+            - generic [ref=e6154]:
+              - generic [ref=e6155]:
+                - paragraph [ref=e6156]: Epik Price
+                - generic [ref=e6157]: ₹9,499
+              - generic [ref=e6159]:
+                - paragraph [ref=e6160]: Regular Price
+                - generic [ref=e6161]:
+                  - generic [ref=e6162]: ₹11,700
+                  - generic [ref=e6163]: 19% off
+            - generic [ref=e6165]:
+              - img [ref=e6166]
+              - paragraph [ref=e6168]: ₹792 / Month EMI
+            - generic [ref=e6170]:
+              - button "Add to bag" [ref=e6171] [cursor=pointer]:
+                - img [ref=e6172]
+              - button "Buy Now" [ref=e6175] [cursor=pointer]:
+                - generic [ref=e6176]: Buy Now
+        - generic [ref=e6178]:
+          - link "ILIFE T20s Pro Robot Vacuum Cleaner with Advanced LiDAR Navigation, Self-Emptying for Up to 10 Weeks, 6500Pa Suction, Simultaneous Vac and Mop, Multi Floor Maps, Customized Cleaning, App, Alexa & Google Home" [ref=e6179] [cursor=pointer]:
+            - /url: /products/t20s-pro-vaccum
+            - generic [ref=e6180]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ILIFE T20s Pro Robot Vacuum Cleaner with Advanced LiDAR Navigation, Self-Emptying for Up to 10 Weeks, 6500Pa Suction, Simultaneous Vac and Mop, Multi Floor Maps, Customized Cleaning, App, Alexa & Google Home" [ref=e6181]
+          - generic [ref=e6182]:
+            - link "ILIFE T20s Pro Robot Vacuum Cleaner with Advanced LiDAR Navigation, Self-Emptying for Up to 10 Weeks, 6500Pa Suction, Simultaneous Vac and Mop, Multi Floor Maps, Customized Cleaning, App, Alexa & Google Home" [ref=e6183] [cursor=pointer]:
+              - /url: /products/t20s-pro-vaccum
+              - heading "ILIFE T20s Pro Robot Vacuum Cleaner with Advanced LiDAR Navigation, Self-Emptying for Up to 10 Weeks, 6500Pa Suction, Simultaneous Vac and Mop, Multi Floor Maps, Customized Cleaning, App, Alexa & Google Home" [level=3] [ref=e6184]
+            - generic [ref=e6186]:
+              - generic [ref=e6187]:
+                - img [ref=e6188]
+                - img [ref=e6190]
+                - img [ref=e6192]
+                - img [ref=e6194]
+                - img [ref=e6196]
+              - generic [ref=e6198]: "4.4"
+              - generic [ref=e6199]: (5.8k+)
+            - generic [ref=e6201]:
+              - generic [ref=e6202]:
+                - paragraph [ref=e6203]: Epik Price
+                - generic [ref=e6204]: ₹25,900
+              - generic [ref=e6206]:
+                - paragraph [ref=e6207]: Regular Price
+                - generic [ref=e6208]:
+                  - generic [ref=e6209]: ₹99,990
+                  - generic [ref=e6210]: 74% off
+            - generic [ref=e6212]:
+              - img [ref=e6213]
+              - paragraph [ref=e6215]: ₹2,158 / Month EMI
+            - generic [ref=e6217]:
+              - button "Add to bag" [ref=e6218] [cursor=pointer]:
+                - img [ref=e6219]
+              - button "Home Demo" [ref=e6222] [cursor=pointer]:
+                - generic [ref=e6223]: Home Demo
+        - generic [ref=e6225]:
+          - link "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e6226] [cursor=pointer]:
+            - /url: /products/ecovacs-t50-pro
+            - generic [ref=e6227]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e6228]
+          - generic [ref=e6229]:
+            - link "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e6230] [cursor=pointer]:
+              - /url: /products/ecovacs-t50-pro
+              - heading "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [level=3] [ref=e6231]
+            - generic [ref=e6233]:
+              - generic [ref=e6234]:
+                - img [ref=e6235]
+                - img [ref=e6237]
+                - img [ref=e6239]
+                - img [ref=e6241]
+                - img [ref=e6243]
+              - generic [ref=e6245]: "4.5"
+              - generic [ref=e6246]: (3.4k+)
+            - generic [ref=e6248]:
+              - generic [ref=e6249]:
+                - paragraph [ref=e6250]: Epik Price
+                - generic [ref=e6251]: ₹79,999
+              - generic [ref=e6253]:
+                - paragraph [ref=e6254]: Regular Price
+                - generic [ref=e6255]:
+                  - generic [ref=e6256]: ₹1,99,900
+                  - generic [ref=e6257]: 60% off
+            - generic [ref=e6259]:
+              - img [ref=e6260]
+              - paragraph [ref=e6262]: ₹6,667 / Month EMI
+            - generic [ref=e6264]:
+              - button "Add to bag" [ref=e6265] [cursor=pointer]:
+                - img [ref=e6266]
+              - button "Home Demo" [ref=e6269] [cursor=pointer]:
+                - generic [ref=e6270]: Home Demo
+    - generic [ref=e4654]:
+      - heading "More Products from Ecovacs" [level=2] [ref=e4655]
+      - generic [ref=e6272]:
+        - generic [ref=e6274]:
+          - link "ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025 Launch, PowerBoost Charging, OZMO Roller 2.0 Instant Self-Washing Mop, 19500Pa Blast Suction, Bagless OmniCyclone Station" [ref=e6275] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-x11-omnicyclone
+            - generic [ref=e6276]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025 Launch, PowerBoost Charging, OZMO Roller 2.0 Instant Self-Washing Mop, 19500Pa Blast Suction, Bagless OmniCyclone Station" [ref=e6277]
+          - generic [ref=e6278]:
+            - link "ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025 Launch, PowerBoost Charging, OZMO Roller 2.0 Instant Self-Washing Mop, 19500Pa Blast Suction, Bagless OmniCyclone Station" [ref=e6279] [cursor=pointer]:
+              - /url: /products/ecovacs-deebot-x11-omnicyclone
+              - heading "ECOVACS DEEBOT X11 OmniCyclone Robot Vacuum & Mop, Sep 2025 Launch, PowerBoost Charging, OZMO Roller 2.0 Instant Self-Washing Mop, 19500Pa Blast Suction, Bagless OmniCyclone Station" [level=3] [ref=e6280]
+            - generic [ref=e6282]:
+              - generic [ref=e6283]:
+                - img [ref=e6284]
+                - img [ref=e6286]
+                - img [ref=e6288]
+                - img [ref=e6290]
+                - img [ref=e6292]
+              - generic [ref=e6294]: "4.4"
+              - generic [ref=e6295]: (1.2k+)
+            - generic [ref=e6297]:
+              - generic [ref=e6298]:
+                - paragraph [ref=e6299]: Epik Price
+                - generic [ref=e6300]: ₹1,34,999
+              - generic [ref=e6302]:
+                - paragraph [ref=e6303]: Regular Price
+                - generic [ref=e6304]:
+                  - generic [ref=e6305]: ₹2,49,999
+                  - generic [ref=e6306]: 46% off
+            - generic [ref=e6308]:
+              - img [ref=e6309]
+              - paragraph [ref=e6311]: ₹11,250 / Month EMI
+            - generic [ref=e6313]:
+              - button "Add to bag" [ref=e6314] [cursor=pointer]:
+                - img [ref=e6315]
+              - button "Home Demo" [ref=e6318] [cursor=pointer]:
+                - generic [ref=e6319]: Home Demo
+        - generic [ref=e6321]:
+          - link "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [ref=e6322] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-n50-pro-omni-2-in-1-robotic-vacuum-cleaner-mop-2026-new-launch-25000-pa-suction-self-emptying-omni-station-zerotangle-2-0-hot-air-drying-auto-lift-mop-on-carpet-upto-300-mins
+            - generic [ref=e6323]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [ref=e6324]
+          - generic [ref=e6325]:
+            - link "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [ref=e6326] [cursor=pointer]:
+              - /url: /products/ecovacs-deebot-n50-pro-omni-2-in-1-robotic-vacuum-cleaner-mop-2026-new-launch-25000-pa-suction-self-emptying-omni-station-zerotangle-2-0-hot-air-drying-auto-lift-mop-on-carpet-upto-300-mins
+              - heading "ECOVACS Deebot N50 PRO Omni 2 in 1 Robotic Vacuum Cleaner & Mop, 2026 New Launch 25000 Pa Suction, Self-Emptying Omni-Station, Zerotangle 3.0, Hot Air-Drying, Auto-Lift Mop On Carpet, Upto 300 Mins" [level=3] [ref=e6327]
+            - generic [ref=e6329]:
+              - generic [ref=e6330]:
+                - img [ref=e6331]
+                - img [ref=e6333]
+                - img [ref=e6335]
+                - img [ref=e6337]
+                - img [ref=e6339]
+              - generic [ref=e6341]: "4.0"
+              - generic [ref=e6342]: (7.4k+)
+            - generic [ref=e6344]:
+              - generic [ref=e6345]:
+                - paragraph [ref=e6346]: Epik Price
+                - generic [ref=e6347]: ₹59,999
+              - generic [ref=e6349]:
+                - paragraph [ref=e6350]: Regular Price
+                - generic [ref=e6351]:
+                  - generic [ref=e6352]: ₹1,69,999
+                  - generic [ref=e6353]: 65% off
+            - generic [ref=e6355]:
+              - img [ref=e6356]
+              - paragraph [ref=e6358]: ₹5,000 / Month EMI
+            - generic [ref=e6360]:
+              - button "Add to bag" [ref=e6361] [cursor=pointer]:
+                - img [ref=e6362]
+              - button "Home Demo" [ref=e6365] [cursor=pointer]:
+                - generic [ref=e6366]: Home Demo
+        - generic [ref=e6368]:
+          - link "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e6369] [cursor=pointer]:
+            - /url: /products/ecovacs-t50-pro
+            - generic [ref=e6370]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e6371]
+          - generic [ref=e6372]:
+            - link "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e6373] [cursor=pointer]:
+              - /url: /products/ecovacs-t50-pro
+              - heading "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [level=3] [ref=e6374]
+            - generic [ref=e6376]:
+              - generic [ref=e6377]:
+                - img [ref=e6378]
+                - img [ref=e6380]
+                - img [ref=e6382]
+                - img [ref=e6384]
+                - img [ref=e6386]
+              - generic [ref=e6388]: "4.5"
+              - generic [ref=e6389]: (3.4k+)
+            - generic [ref=e6391]:
+              - generic [ref=e6392]:
+                - paragraph [ref=e6393]: Epik Price
+                - generic [ref=e6394]: ₹79,999
+              - generic [ref=e6396]:
+                - paragraph [ref=e6397]: Regular Price
+                - generic [ref=e6398]:
+                  - generic [ref=e6399]: ₹1,99,900
+                  - generic [ref=e6400]: 60% off
+            - generic [ref=e6402]:
+              - img [ref=e6403]
+              - paragraph [ref=e6405]: ₹6,667 / Month EMI
+            - generic [ref=e6407]:
+              - button "Add to bag" [ref=e6408] [cursor=pointer]:
+                - img [ref=e6409]
+              - button "Home Demo" [ref=e6412] [cursor=pointer]:
+                - generic [ref=e6413]: Home Demo
+        - generic [ref=e6415]:
+          - link "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e6416] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-n30-white-2-in-1-robot-vacuum-cleaner-mop-2025-new-launch-10000-pa-suction-5200mah-battery-covers-3500-sq-ft-in-single-charge-zero-tangle-2-0-technology-advanced-truemapping-copy
+            - generic [ref=e6417]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e6418]
+          - generic [ref=e6419]:
+            - link "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e6420] [cursor=pointer]:
+              - /url: /products/ecovacs-deebot-n30-white-2-in-1-robot-vacuum-cleaner-mop-2025-new-launch-10000-pa-suction-5200mah-battery-covers-3500-sq-ft-in-single-charge-zero-tangle-2-0-technology-advanced-truemapping-copy
+              - heading "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [level=3] [ref=e6421]
+            - generic [ref=e6423]:
+              - generic [ref=e6424]:
+                - img [ref=e6425]
+                - img [ref=e6427]
+                - img [ref=e6429]
+                - img [ref=e6431]
+                - img [ref=e6433]
+              - generic [ref=e6435]: "4.1"
+              - generic [ref=e6436]: (3.2k+)
+            - generic [ref=e6438]:
+              - generic [ref=e6439]:
+                - paragraph [ref=e6440]: Epik Price
+                - generic [ref=e6441]: ₹32,999
+              - generic [ref=e6443]:
+                - paragraph [ref=e6444]: Regular Price
+                - generic [ref=e6445]:
+                  - generic [ref=e6446]: ₹89,999
+                  - generic [ref=e6447]: 63% off
+            - generic [ref=e6449]:
+              - img [ref=e6450]
+              - paragraph [ref=e6452]: ₹2,750 / Month EMI
+            - generic [ref=e6454]:
+              - button "Add to bag" [ref=e6455] [cursor=pointer]:
+                - img [ref=e6456]
+              - button "Home Demo" [ref=e6459] [cursor=pointer]:
+                - generic [ref=e6460]: Home Demo
+        - generic [ref=e6462]:
+          - link "ECOVACS DEEBOT T80 Omni 2 in 1 Robot Vacuum Cleaner & Mop, New Launch, 18000 Pa, 6400 mAh Battery, OZMO Roller Real-Time Mop Washing, Self-Emptying, Hot Air Drying, AI ReMop 2.0, ZeroTangle 3.0" [ref=e6463] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-t80-pro-omni-robot
+            - generic [ref=e6464]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS DEEBOT T80 Omni 2 in 1 Robot Vacuum Cleaner & Mop, New Launch, 18000 Pa, 6400 mAh Battery, OZMO Roller Real-Time Mop Washing, Self-Emptying, Hot Air Drying, AI ReMop 2.0, ZeroTangle 3.0" [ref=e6465]
+          - generic [ref=e6466]:
+            - link "ECOVACS DEEBOT T80 Omni 2 in 1 Robot Vacuum Cleaner & Mop, New Launch, 18000 Pa, 6400 mAh Battery, OZMO Roller Real-Time Mop Washing, Self-Emptying, Hot Air Drying, AI ReMop 2.0, ZeroTangle 3.0" [ref=e6467] [cursor=pointer]:
+              - /url: /products/ecovacs-deebot-t80-pro-omni-robot
+              - heading "ECOVACS DEEBOT T80 Omni 2 in 1 Robot Vacuum Cleaner & Mop, New Launch, 18000 Pa, 6400 mAh Battery, OZMO Roller Real-Time Mop Washing, Self-Emptying, Hot Air Drying, AI ReMop 2.0, ZeroTangle 3.0" [level=3] [ref=e6468]
+            - generic [ref=e6470]:
+              - generic [ref=e6471]:
+                - img [ref=e6472]
+                - img [ref=e6474]
+                - img [ref=e6476]
+                - img [ref=e6478]
+                - img [ref=e6480]
+              - generic [ref=e6482]: "4.5"
+              - generic [ref=e6483]: (4.3k+)
+            - generic [ref=e6485]:
+              - generic [ref=e6486]:
+                - paragraph [ref=e6487]: Epik Price
+                - generic [ref=e6488]: ₹99,999
+              - generic [ref=e6490]:
+                - paragraph [ref=e6491]: Regular Price
+                - generic [ref=e6492]:
+                  - generic [ref=e6493]: ₹1,99,999
+                  - generic [ref=e6494]: 50% off
+            - generic [ref=e6496]:
+              - img [ref=e6497]
+              - paragraph [ref=e6499]: ₹8,333 / Month EMI
+            - generic [ref=e6501]:
+              - button "Add to bag" [ref=e6502] [cursor=pointer]:
+                - img [ref=e6503]
+              - button "Home Demo" [ref=e6506] [cursor=pointer]:
+                - generic [ref=e6507]: Home Demo
+        - generic [ref=e6509]:
+          - link "ECOVACS DEEBOT X1 Omni 2 In 1 Robotic Vacuum & Mop with Powerful Suction, All In One Omni Station, AIVI 3D Navigation, TrueMapping, YIKO Voice Assistant" [ref=e6510] [cursor=pointer]:
+            - /url: /products/deebot-x1-omni-ecovacs-brand-new-all-in-one-vacuum-and-mopping-flagship
+            - generic [ref=e6511]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS DEEBOT X1 Omni 2 In 1 Robotic Vacuum & Mop with Powerful Suction, All In One Omni Station, AIVI 3D Navigation, TrueMapping, YIKO Voice Assistant" [ref=e6512]
+          - generic [ref=e6513]:
+            - link "ECOVACS DEEBOT X1 Omni 2 In 1 Robotic Vacuum & Mop with Powerful Suction, All In One Omni Station, AIVI 3D Navigation, TrueMapping, YIKO Voice Assistant" [ref=e6514] [cursor=pointer]:
+              - /url: /products/deebot-x1-omni-ecovacs-brand-new-all-in-one-vacuum-and-mopping-flagship
+              - heading "ECOVACS DEEBOT X1 Omni 2 In 1 Robotic Vacuum & Mop with Powerful Suction, All In One Omni Station, AIVI 3D Navigation, TrueMapping, YIKO Voice Assistant" [level=3] [ref=e6515]
+            - generic [ref=e6518]:
+              - generic [ref=e6519]:
+                - paragraph [ref=e6520]: Epik Price
+                - generic [ref=e6521]: ₹49,999
+              - generic [ref=e6523]:
+                - paragraph [ref=e6524]: Regular Price
+                - generic [ref=e6525]:
+                  - generic [ref=e6526]: ₹1,19,999
+                  - generic [ref=e6527]: 58% off
+            - generic [ref=e6529]:
+              - img [ref=e6530]
+              - paragraph [ref=e6532]: ₹4,167 / Month EMI
+            - generic [ref=e6534]:
+              - button "Add to bag" [ref=e6535] [cursor=pointer]:
+                - img [ref=e6536]
+              - button "Home Demo" [ref=e6539] [cursor=pointer]:
+                - generic [ref=e6540]: Home Demo
+        - generic [ref=e6542]:
+          - link "ECOVACS WINBOT Window Cleaning Robot - Compact Design, Dual Nozzles with Ultrasonic Spray, 9-Stage Protection System, Intelligent Path Planning, 3 Cleaning Modes, Anti-Slipping System" [ref=e6543] [cursor=pointer]:
+            - /url: /products/ecovacs-winbot-window-cleaning-robot-compact-design-dual-nozzles-with-ultrasonic-spray-9-stage-protection-system-intelligent-path-planning-3-cleaning-modes-anti-slipping-system
+            - generic [ref=e6544]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS WINBOT Window Cleaning Robot - Compact Design, Dual Nozzles with Ultrasonic Spray, 9-Stage Protection System, Intelligent Path Planning, 3 Cleaning Modes, Anti-Slipping System" [ref=e6545]
+          - generic [ref=e6546]:
+            - link "ECOVACS WINBOT Window Cleaning Robot - Compact Design, Dual Nozzles with Ultrasonic Spray, 9-Stage Protection System, Intelligent Path Planning, 3 Cleaning Modes, Anti-Slipping System" [ref=e6547] [cursor=pointer]:
+              - /url: /products/ecovacs-winbot-window-cleaning-robot-compact-design-dual-nozzles-with-ultrasonic-spray-9-stage-protection-system-intelligent-path-planning-3-cleaning-modes-anti-slipping-system
+              - heading "ECOVACS WINBOT Window Cleaning Robot - Compact Design, Dual Nozzles with Ultrasonic Spray, 9-Stage Protection System, Intelligent Path Planning, 3 Cleaning Modes, Anti-Slipping System" [level=3] [ref=e6548]
+            - generic [ref=e6551]:
+              - generic [ref=e6552]:
+                - paragraph [ref=e6553]: Epik Price
+                - generic [ref=e6554]: ₹19,999
+              - generic [ref=e6556]:
+                - paragraph [ref=e6557]: Regular Price
+                - generic [ref=e6558]:
+                  - generic [ref=e6559]: ₹59,999
+                  - generic [ref=e6560]: 67% off
+            - generic [ref=e6562]:
+              - img [ref=e6563]
+              - paragraph [ref=e6565]: ₹1,667 / Month EMI
+            - generic [ref=e6567]:
+              - button "Add to bag" [ref=e6568] [cursor=pointer]:
+                - img [ref=e6569]
+              - button "Home Demo" [ref=e6572] [cursor=pointer]:
+                - generic [ref=e6573]: Home Demo
+        - generic [ref=e6575]:
+          - link "ECOVACS DEEBOT N30 / N30 PLUS Reusable Mopping Pads (Pack of 3)" [ref=e6576] [cursor=pointer]:
+            - /url: /products/reusable-mopping-pads-pack-of-3
+            - img "ECOVACS DEEBOT N30 / N30 PLUS Reusable Mopping Pads (Pack of 3)" [ref=e6578]
+          - generic [ref=e6579]:
+            - link "ECOVACS DEEBOT N30 / N30 PLUS Reusable Mopping Pads (Pack of 3)" [ref=e6580] [cursor=pointer]:
+              - /url: /products/reusable-mopping-pads-pack-of-3
+              - heading "ECOVACS DEEBOT N30 / N30 PLUS Reusable Mopping Pads (Pack of 3)" [level=3] [ref=e6581]
+            - generic [ref=e6584]:
+              - generic [ref=e6585]:
+                - paragraph [ref=e6586]: Epik Price
+                - generic [ref=e6587]: ₹2,499
+              - generic [ref=e6589]:
+                - paragraph [ref=e6590]: Regular Price
+                - generic [ref=e6591]:
+                  - generic [ref=e6592]: ₹3,999
+                  - generic [ref=e6593]: 38% off
+            - generic [ref=e6595]:
+              - img [ref=e6596]
+              - paragraph [ref=e6598]: ₹208 / Month EMI
+            - generic [ref=e6600]:
+              - button "Add to bag" [ref=e6601] [cursor=pointer]:
+                - img [ref=e6602]
+              - button "Buy Now" [ref=e6605] [cursor=pointer]:
+                - generic [ref=e6606]: Buy Now
+        - generic [ref=e6608]:
+          - link "ECOVACS DEEBOT N30 / N30 Plus Accessory Kit" [ref=e6609] [cursor=pointer]:
+            - /url: /products/accessory-kit
+            - img "ECOVACS DEEBOT N30 / N30 Plus Accessory Kit" [ref=e6611]
+          - generic [ref=e6612]:
+            - link "ECOVACS DEEBOT N30 / N30 Plus Accessory Kit" [ref=e6613] [cursor=pointer]:
+              - /url: /products/accessory-kit
+              - heading "ECOVACS DEEBOT N30 / N30 Plus Accessory Kit" [level=3] [ref=e6614]
+            - generic [ref=e6617]:
+              - generic [ref=e6618]:
+                - paragraph [ref=e6619]: Epik Price
+                - generic [ref=e6620]: ₹3,499
+              - generic [ref=e6622]:
+                - paragraph [ref=e6623]: Regular Price
+                - generic [ref=e6624]:
+                  - generic [ref=e6625]: ₹5,999
+                  - generic [ref=e6626]: 42% off
+            - generic [ref=e6628]:
+              - img [ref=e6629]
+              - paragraph [ref=e6631]: ₹292 / Month EMI
+            - generic [ref=e6633]:
+              - button "Add to bag" [ref=e6634] [cursor=pointer]:
+                - img [ref=e6635]
+              - button "Buy Now" [ref=e6638] [cursor=pointer]:
+                - generic [ref=e6639]: Buy Now
+        - generic [ref=e6641]:
+          - link "ECOVACS DEEBOT N30 / N30 PLUS Accessory Kit & Mop Set" [ref=e6642] [cursor=pointer]:
+            - /url: /products/accessory-kit-mop-set
+            - img "ECOVACS DEEBOT N30 / N30 PLUS Accessory Kit & Mop Set" [ref=e6644]
+          - generic [ref=e6645]:
+            - link "ECOVACS DEEBOT N30 / N30 PLUS Accessory Kit & Mop Set" [ref=e6646] [cursor=pointer]:
+              - /url: /products/accessory-kit-mop-set
+              - heading "ECOVACS DEEBOT N30 / N30 PLUS Accessory Kit & Mop Set" [level=3] [ref=e6647]
+            - generic [ref=e6650]:
+              - generic [ref=e6651]:
+                - paragraph [ref=e6652]: Epik Price
+                - generic [ref=e6653]: ₹4,999
+              - generic [ref=e6655]:
+                - paragraph [ref=e6656]: Regular Price
+                - generic [ref=e6657]:
+                  - generic [ref=e6658]: ₹9,999
+                  - generic [ref=e6659]: 50% off
+            - generic [ref=e6661]:
+              - img [ref=e6662]
+              - paragraph [ref=e6664]: ₹417 / Month EMI
+            - generic [ref=e6666]:
+              - button "Add to bag" [ref=e6667] [cursor=pointer]:
+                - img [ref=e6668]
+              - button "Buy Now" [ref=e6671] [cursor=pointer]:
+                - generic [ref=e6672]: Buy Now
+        - generic [ref=e6674]:
+          - link "Out of Stock ECOVACS DEEBOT MINI Omni 2 in 1 Robot Vacuum Cleaner & Mop, 2025 New Launch, 9000 Pa, Self-Emptying Omni Station, ZeroTangle 2.0, TrueMapping 2.0, 45℃ Hot Air Dry, Deep Mopping, One-Touch Self-Clean Visit the ECOVACS Store" [ref=e6675] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-omni-mini
+            - generic [ref=e6676]:
+              - generic [ref=e6677]: Out of Stock
+              - img "ECOVACS DEEBOT MINI Omni 2 in 1 Robot Vacuum Cleaner & Mop, 2025 New Launch, 9000 Pa, Self-Emptying Omni Station, ZeroTangle 2.0, TrueMapping 2.0, 45℃ Hot Air Dry, Deep Mopping, One-Touch Self-Clean Visit the ECOVACS Store" [ref=e6680]
+          - generic [ref=e6681]:
+            - link "ECOVACS DEEBOT MINI Omni 2 in 1 Robot Vacuum Cleaner & Mop, 2025 New Launch, 9000 Pa, Self-Emptying Omni Station, ZeroTangle 2.0, TrueMapping 2.0, 45℃ Hot Air Dry, Deep Mopping, One-Touch Self-Clean Visit the ECOVACS Store" [ref=e6682] [cursor=pointer]:
+              - /url: /products/ecovacs-deebot-omni-mini
+              - heading "ECOVACS DEEBOT MINI Omni 2 in 1 Robot Vacuum Cleaner & Mop, 2025 New Launch, 9000 Pa, Self-Emptying Omni Station, ZeroTangle 2.0, TrueMapping 2.0, 45℃ Hot Air Dry, Deep Mopping, One-Touch Self-Clean Visit the ECOVACS Store" [level=3] [ref=e6683]
+            - generic [ref=e6685]:
+              - generic [ref=e6686]:
+                - img [ref=e6687]
+                - img [ref=e6689]
+                - img [ref=e6691]
+                - img [ref=e6693]
+                - img [ref=e6695]
+              - generic [ref=e6697]: "4.5"
+              - generic [ref=e6698]: (4.4k+)
+            - generic [ref=e6700]:
+              - generic [ref=e6701]:
+                - paragraph [ref=e6702]: Epik Price
+                - generic [ref=e6703]: ₹36,999
+              - generic [ref=e6705]:
+                - paragraph [ref=e6706]: Regular Price
+                - generic [ref=e6707]:
+                  - generic [ref=e6708]: ₹1,39,999
+                  - generic [ref=e6709]: 74% off
+            - generic [ref=e6711]:
+              - img [ref=e6712]
+              - paragraph [ref=e6714]: ₹3,083 / Month EMI
+            - generic [ref=e6717]: Out of Stock
+    - generic [ref=e4707]:
+      - heading "Top Selling Products in Bangalore" [level=2] [ref=e4708]
+      - generic [ref=e6719]:
+        - generic [ref=e6721]:
+          - link "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e6722] [cursor=pointer]:
+            - /url: /products/ecovacs-t50-pro
+            - generic [ref=e6723]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e6724]
+          - generic [ref=e6725]:
+            - link "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [ref=e6726] [cursor=pointer]:
+              - /url: /products/ecovacs-t50-pro
+              - heading "ECOVACS Deebot T50 PRO Omni 2 In 1 Robot Vacuum Cleaner & Mop 2025 Launch with 15000Pa Suction, 6400mAh Battery, 8.1 Cm Ultra Thin Design, ZeroTangle 2.0, AIVI 3.0 Obstacle Avoidance, Auto Wash/Dry/Refill & 320 Minutes Runtime" [level=3] [ref=e6727]
+            - generic [ref=e6729]:
+              - generic [ref=e6730]:
+                - img [ref=e6731]
+                - img [ref=e6733]
+                - img [ref=e6735]
+                - img [ref=e6737]
+                - img [ref=e6739]
+              - generic [ref=e6741]: "4.5"
+              - generic [ref=e6742]: (3.4k+)
+            - generic [ref=e6744]:
+              - generic [ref=e6745]:
+                - paragraph [ref=e6746]: Epik Price
+                - generic [ref=e6747]: ₹79,999
+              - generic [ref=e6749]:
+                - paragraph [ref=e6750]: Regular Price
+                - generic [ref=e6751]:
+                  - generic [ref=e6752]: ₹1,99,900
+                  - generic [ref=e6753]: 60% off
+            - generic [ref=e6755]:
+              - img [ref=e6756]
+              - paragraph [ref=e6758]: ₹6,667 / Month EMI
+            - generic [ref=e6760]:
+              - button "Add to bag" [ref=e6761] [cursor=pointer]:
+                - img [ref=e6762]
+              - button "Home Demo" [ref=e6765] [cursor=pointer]:
+                - generic [ref=e6766]: Home Demo
+        - generic [ref=e6768]:
+          - link "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e6769] [cursor=pointer]:
+            - /url: /products/ecovacs-deebot-n30-white-2-in-1-robot-vacuum-cleaner-mop-2025-new-launch-10000-pa-suction-5200mah-battery-covers-3500-sq-ft-in-single-charge-zero-tangle-2-0-technology-advanced-truemapping-copy
+            - generic [ref=e6770]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e6771]
+          - generic [ref=e6772]:
+            - link "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [ref=e6773] [cursor=pointer]:
+              - /url: /products/ecovacs-deebot-n30-white-2-in-1-robot-vacuum-cleaner-mop-2025-new-launch-10000-pa-suction-5200mah-battery-covers-3500-sq-ft-in-single-charge-zero-tangle-2-0-technology-advanced-truemapping-copy
+              - heading "ECOVACS DEEBOT N30 Plus White 2 in 1 Robot Vacuum & Mop, Bagless Eco Friendly Multi-Cyclone Auto Empty Station, 10000 Pa Suction, 5200mAh Battery, Covers 3500+sq ft, Zero Tangle 2.0" [level=3] [ref=e6774]
+            - generic [ref=e6776]:
+              - generic [ref=e6777]:
+                - img [ref=e6778]
+                - img [ref=e6780]
+                - img [ref=e6782]
+                - img [ref=e6784]
+                - img [ref=e6786]
+              - generic [ref=e6788]: "4.1"
+              - generic [ref=e6789]: (3.2k+)
+            - generic [ref=e6791]:
+              - generic [ref=e6792]:
+                - paragraph [ref=e6793]: Epik Price
+                - generic [ref=e6794]: ₹32,999
+              - generic [ref=e6796]:
+                - paragraph [ref=e6797]: Regular Price
+                - generic [ref=e6798]:
+                  - generic [ref=e6799]: ₹89,999
+                  - generic [ref=e6800]: 63% off
+            - generic [ref=e6802]:
+              - img [ref=e6803]
+              - paragraph [ref=e6805]: ₹2,750 / Month EMI
+            - generic [ref=e6807]:
+              - button "Add to bag" [ref=e6808] [cursor=pointer]:
+                - img [ref=e6809]
+              - button "Home Demo" [ref=e6812] [cursor=pointer]:
+                - generic [ref=e6813]: Home Demo
+        - generic [ref=e6815]:
+          - link "Add to bag Upliance 1.0 AI Cooking Robot | 750+ Pre-Loaded Recipes (Pav Bhaji, Pasta, Soup & More) | 10 Cooking Modes | Built-In Weighing Scale | Wi-Fi & Phone App | 1-Year Warranty" [ref=e6816] [cursor=pointer]:
+            - /url: /products/upliance-1-ai-cooking-robot-750-pre-loaded-recipes-10-cooking-modes-built-in-weighing-scale-wifi-app-1-year-warranty
+            - generic [ref=e6817]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - button "Add to bag" [ref=e6818]:
+                - img [ref=e6819]
+              - img "Upliance 1.0 AI Cooking Robot | 750+ Pre-Loaded Recipes (Pav Bhaji, Pasta, Soup & More) | 10 Cooking Modes | Built-In Weighing Scale | Wi-Fi & Phone App | 1-Year Warranty" [ref=e6824]
+          - generic [ref=e6825]:
+            - link "Upliance 1.0 AI Cooking Robot | 750+ Pre-Loaded Recipes (Pav Bhaji, Pasta, Soup & More) | 10 Cooking Modes | Built-In Weighing Scale | Wi-Fi & Phone App | 1-Year Warranty" [ref=e6826] [cursor=pointer]:
+              - /url: /products/upliance-1-ai-cooking-robot-750-pre-loaded-recipes-10-cooking-modes-built-in-weighing-scale-wifi-app-1-year-warranty
+              - heading "Upliance 1.0 AI Cooking Robot | 750+ Pre-Loaded Recipes (Pav Bhaji, Pasta, Soup & More) | 10 Cooking Modes | Built-In Weighing Scale | Wi-Fi & Phone App | 1-Year Warranty" [level=3] [ref=e6827]
+            - generic [ref=e6829]:
+              - generic [ref=e6830]:
+                - img [ref=e6831]
+                - img [ref=e6833]
+                - img [ref=e6835]
+                - img [ref=e6837]
+                - img [ref=e6839]
+              - generic [ref=e6841]: "4.0"
+              - generic [ref=e6842]: (365)
+            - generic [ref=e6844]:
+              - generic [ref=e6845]:
+                - paragraph [ref=e6846]: Epik Price
+                - generic [ref=e6847]: ₹24,999
+              - generic [ref=e6849]:
+                - paragraph [ref=e6850]: Regular Price
+                - generic [ref=e6851]:
+                  - generic [ref=e6852]: ₹39,999
+                  - generic [ref=e6853]: 38% off
+            - generic [ref=e6855]:
+              - img [ref=e6856]
+              - paragraph [ref=e6858]: ₹2,083 / Month EMI
+            - generic [ref=e6860]:
+              - button "Home Demo" [ref=e6861] [cursor=pointer]:
+                - generic [ref=e6862]: Home Demo
+              - button "Live Demo" [ref=e6863] [cursor=pointer]:
+                - generic [ref=e6864]: Live Demo
+        - generic [ref=e6866]:
+          - link "Add to bag Ray-Ban Meta (Gen 2) Wayfarer Smart AI Glasses, Shiny Cosmic Blue | Transitions Sapphire Lenses, 12MP Ultra-Wide Camera, 3K Ultra HD Video, Open-Ear Audio, Voice Assistant, Live Streaming, Enhanced Battery Life, Unisex, Large" [ref=e6867] [cursor=pointer]:
+            - /url: /products/ray-ban-smart-eyewear-meta-wayfarer-shiny-cosmic-blue-gen-2-meta-advanced-ai-camera-audio-technology
+            - generic [ref=e6868]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - button "Add to bag" [ref=e6869]:
+                - img [ref=e6870]
+              - img "Ray-Ban Meta (Gen 2) Wayfarer Smart AI Glasses, Shiny Cosmic Blue | Transitions Sapphire Lenses, 12MP Ultra-Wide Camera, 3K Ultra HD Video, Open-Ear Audio, Voice Assistant, Live Streaming, Enhanced Battery Life, Unisex, Large" [ref=e6873]
+          - generic [ref=e6874]:
+            - link "Ray-Ban Meta (Gen 2) Wayfarer Smart AI Glasses, Shiny Cosmic Blue | Transitions Sapphire Lenses, 12MP Ultra-Wide Camera, 3K Ultra HD Video, Open-Ear Audio, Voice Assistant, Live Streaming, Enhanced Battery Life, Unisex, Large" [ref=e6875] [cursor=pointer]:
+              - /url: /products/ray-ban-smart-eyewear-meta-wayfarer-shiny-cosmic-blue-gen-2-meta-advanced-ai-camera-audio-technology
+              - heading "Ray-Ban Meta (Gen 2) Wayfarer Smart AI Glasses, Shiny Cosmic Blue | Transitions Sapphire Lenses, 12MP Ultra-Wide Camera, 3K Ultra HD Video, Open-Ear Audio, Voice Assistant, Live Streaming, Enhanced Battery Life, Unisex, Large" [level=3] [ref=e6876]
+            - generic [ref=e6878]:
+              - generic [ref=e6879]:
+                - img [ref=e6880]
+                - img [ref=e6882]
+                - img [ref=e6884]
+                - img [ref=e6886]
+                - img [ref=e6888]
+              - generic [ref=e6890]: "4.1"
+              - generic [ref=e6891]: (40)
+            - generic [ref=e6894]:
+              - paragraph [ref=e6895]: Epik Price
+              - generic [ref=e6896]: ₹45,700
+            - generic [ref=e6898]:
+              - img [ref=e6899]
+              - paragraph [ref=e6901]: ₹3,808 / Month EMI
+            - generic [ref=e6903]:
+              - button "Home Demo" [ref=e6904] [cursor=pointer]:
+                - generic [ref=e6905]: Home Demo
+              - button "Live Demo" [ref=e6906] [cursor=pointer]:
+                - generic [ref=e6907]: Live Demo
+        - generic [ref=e6909]:
+          - link "XGIMI 2025 New Launch Vibe One Mini 1080P Smart Portable Projector Google TV with Licensed Netflix, Built-in Battery, Auto Focus Auto Keystone, HD Outtdoor Movie Projector for Home" [ref=e6910] [cursor=pointer]:
+            - /url: /products/xgimi-vibe-one-mini-1080p-smart-portable-hd-projector-for-home-google-tv-licensed-netflix-built-in-battery-auto-focus-auto-keystone
+            - generic [ref=e6911]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "XGIMI 2025 New Launch Vibe One Mini 1080P Smart Portable Projector Google TV with Licensed Netflix, Built-in Battery, Auto Focus Auto Keystone, HD Outtdoor Movie Projector for Home" [ref=e6914]
+          - generic [ref=e6915]:
+            - link "XGIMI 2025 New Launch Vibe One Mini 1080P Smart Portable Projector Google TV with Licensed Netflix, Built-in Battery, Auto Focus Auto Keystone, HD Outtdoor Movie Projector for Home" [ref=e6916] [cursor=pointer]:
+              - /url: /products/xgimi-vibe-one-mini-1080p-smart-portable-hd-projector-for-home-google-tv-licensed-netflix-built-in-battery-auto-focus-auto-keystone
+              - heading "XGIMI 2025 New Launch Vibe One Mini 1080P Smart Portable Projector Google TV with Licensed Netflix, Built-in Battery, Auto Focus Auto Keystone, HD Outtdoor Movie Projector for Home" [level=3] [ref=e6917]
+            - generic [ref=e6919]:
+              - generic [ref=e6920]:
+                - img [ref=e6921]
+                - img [ref=e6923]
+                - img [ref=e6925]
+                - img [ref=e6927]
+                - img [ref=e6929]
+              - generic [ref=e6931]: "4.4"
+              - generic [ref=e6932]: (14)
+            - generic [ref=e6934]:
+              - generic [ref=e6935]:
+                - paragraph [ref=e6936]: Epik Price
+                - generic [ref=e6937]: ₹24,999
+              - generic [ref=e6939]:
+                - paragraph [ref=e6940]: Regular Price
+                - generic [ref=e6941]:
+                  - generic [ref=e6942]: ₹49,999
+                  - generic [ref=e6943]: 50% off
+            - generic [ref=e6945]:
+              - img [ref=e6946]
+              - paragraph [ref=e6948]: ₹2,083 / Month EMI
+            - generic [ref=e6950]:
+              - button "Add to bag" [ref=e6951] [cursor=pointer]:
+                - img [ref=e6952]
+              - button "Home Demo" [ref=e6955] [cursor=pointer]:
+                - generic [ref=e6956]: Home Demo
+        - generic [ref=e6958]:
+          - link "Dyson Airwrap I.D. Multi-Styler & Dryer – Ceramic Patina & Topaz (2024/2025 Edition)" [ref=e6959] [cursor=pointer]:
+            - /url: /products/dyson-airwrap-i-d-™-multi-styler-dryer-ceramic-patina-topaz-2024-2025-edition
+            - generic [ref=e6960]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "Dyson Airwrap I.D. Multi-Styler & Dryer – Ceramic Patina & Topaz (2024/2025 Edition)" [ref=e6963]
+          - generic [ref=e6964]:
+            - link "Dyson Airwrap I.D. Multi-Styler & Dryer – Ceramic Patina & Topaz (2024/2025 Edition)" [ref=e6965] [cursor=pointer]:
+              - /url: /products/dyson-airwrap-i-d-™-multi-styler-dryer-ceramic-patina-topaz-2024-2025-edition
+              - heading "Dyson Airwrap I.D. Multi-Styler & Dryer – Ceramic Patina & Topaz (2024/2025 Edition)" [level=3] [ref=e6966]
+            - generic [ref=e6968]:
+              - generic [ref=e6969]:
+                - img [ref=e6970]
+                - img [ref=e6972]
+                - img [ref=e6974]
+                - img [ref=e6976]
+                - img [ref=e6978]
+              - generic [ref=e6980]: "4.3"
+              - generic [ref=e6981]: (4.5k+)
+            - generic [ref=e6983]:
+              - generic [ref=e6984]:
+                - paragraph [ref=e6985]: Epik Price
+                - generic [ref=e6986]: ₹42,900
+              - generic [ref=e6988]:
+                - paragraph [ref=e6989]: Regular Price
+                - generic [ref=e6990]:
+                  - generic [ref=e6991]: ₹49,900
+                  - generic [ref=e6992]: 14% off
+            - generic [ref=e6994]:
+              - img [ref=e6995]
+              - paragraph [ref=e6997]: ₹3,575 / Month EMI
+            - generic [ref=e6999]:
+              - button "Add to bag" [ref=e7000] [cursor=pointer]:
+                - img [ref=e7001]
+              - button "Home Demo" [ref=e7004] [cursor=pointer]:
+                - generic [ref=e7005]: Home Demo
+        - generic [ref=e7007]:
+          - link "Samsung Galaxy Z Fold7 5G Smartphone with Galaxy AI (Blue Shadow, 12GB RAM, 256GB Storage), Ultra Sleek Design with 200MP Camera, Powerful Snapdragon 8 Elite, Google Gemini" [ref=e7008] [cursor=pointer]:
+            - /url: /products/samsung-galaxy-z-fold7-5g-smartphone-with-galaxy-ai-blue-shadow-12gb-ram-256gb-storage-ultra-sleek-design-with-200mp-camera-powerful-snapdragon-8-elite-google-gemini
+            - generic [ref=e7009]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "Samsung Galaxy Z Fold7 5G Smartphone with Galaxy AI (Blue Shadow, 12GB RAM, 256GB Storage), Ultra Sleek Design with 200MP Camera, Powerful Snapdragon 8 Elite, Google Gemini" [ref=e7012]
+          - generic [ref=e7013]:
+            - link "Samsung Galaxy Z Fold7 5G Smartphone with Galaxy AI (Blue Shadow, 12GB RAM, 256GB Storage), Ultra Sleek Design with 200MP Camera, Powerful Snapdragon 8 Elite, Google Gemini" [ref=e7014] [cursor=pointer]:
+              - /url: /products/samsung-galaxy-z-fold7-5g-smartphone-with-galaxy-ai-blue-shadow-12gb-ram-256gb-storage-ultra-sleek-design-with-200mp-camera-powerful-snapdragon-8-elite-google-gemini
+              - heading "Samsung Galaxy Z Fold7 5G Smartphone with Galaxy AI (Blue Shadow, 12GB RAM, 256GB Storage), Ultra Sleek Design with 200MP Camera, Powerful Snapdragon 8 Elite, Google Gemini" [level=3] [ref=e7015]
+            - generic [ref=e7017]:
+              - generic [ref=e7018]:
+                - img [ref=e7019]
+                - img [ref=e7021]
+                - img [ref=e7023]
+                - img [ref=e7025]
+                - img [ref=e7027]
+              - generic [ref=e7029]: "4.2"
+              - generic [ref=e7030]: (49)
+            - generic [ref=e7032]:
+              - generic [ref=e7033]:
+                - paragraph [ref=e7034]: Epik Price
+                - generic [ref=e7035]: ₹1,74,999
+              - generic [ref=e7037]:
+                - paragraph [ref=e7038]: Regular Price
+                - generic [ref=e7039]:
+                  - generic [ref=e7040]: ₹1,99,999
+                  - generic [ref=e7041]: 13% off
+            - generic [ref=e7043]:
+              - img [ref=e7044]
+              - paragraph [ref=e7046]: ₹14,583 / Month EMI
+            - generic [ref=e7048]:
+              - button "Add to bag" [ref=e7049] [cursor=pointer]:
+                - img [ref=e7050]
+              - button "Home Demo" [ref=e7053] [cursor=pointer]:
+                - generic [ref=e7054]: Home Demo
+        - generic [ref=e7056]:
+          - link "Add to bag Wonderchef Chef Magic All-in-One Kitchen Robot | Chopping, Stirring, Kneading, Steaming & More | Wi-Fi & Mobile App | Pre-Loaded Recipes by Chef Sanjeev Kapoor | 2-Year Warranty" [ref=e7057] [cursor=pointer]:
+            - /url: /products/sanjeev-kapoor-wonderchef-chef-magic-all-in-one-kitchen-robot-pre-loaded-recipes-wi-fi-app-2-year-warranty
+            - generic [ref=e7058]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - button "Add to bag" [ref=e7059]:
+                - img [ref=e7060]
+              - img "Wonderchef Chef Magic All-in-One Kitchen Robot | Chopping, Stirring, Kneading, Steaming & More | Wi-Fi & Mobile App | Pre-Loaded Recipes by Chef Sanjeev Kapoor | 2-Year Warranty" [ref=e7065]
+          - generic [ref=e7066]:
+            - link "Wonderchef Chef Magic All-in-One Kitchen Robot | Chopping, Stirring, Kneading, Steaming & More | Wi-Fi & Mobile App | Pre-Loaded Recipes by Chef Sanjeev Kapoor | 2-Year Warranty" [ref=e7067] [cursor=pointer]:
+              - /url: /products/sanjeev-kapoor-wonderchef-chef-magic-all-in-one-kitchen-robot-pre-loaded-recipes-wi-fi-app-2-year-warranty
+              - heading "Wonderchef Chef Magic All-in-One Kitchen Robot | Chopping, Stirring, Kneading, Steaming & More | Wi-Fi & Mobile App | Pre-Loaded Recipes by Chef Sanjeev Kapoor | 2-Year Warranty" [level=3] [ref=e7068]
+            - generic [ref=e7070]:
+              - generic [ref=e7071]:
+                - img [ref=e7072]
+                - img [ref=e7074]
+                - img [ref=e7076]
+                - img [ref=e7078]
+                - img [ref=e7080]
+              - generic [ref=e7082]: "4.1"
+              - generic [ref=e7083]: (124)
+            - generic [ref=e7085]:
+              - generic [ref=e7086]:
+                - paragraph [ref=e7087]: Epik Price
+                - generic [ref=e7088]: ₹29,999
+              - generic [ref=e7090]:
+                - paragraph [ref=e7091]: Regular Price
+                - generic [ref=e7092]:
+                  - generic [ref=e7093]: ₹1,00,800
+                  - generic [ref=e7094]: 70% off
+            - generic [ref=e7096]:
+              - img [ref=e7097]
+              - paragraph [ref=e7099]: ₹2,500 / Month EMI
+            - generic [ref=e7101]:
+              - button "Home Demo" [ref=e7102] [cursor=pointer]:
+                - generic [ref=e7103]: Home Demo
+              - button "Live Demo" [ref=e7104] [cursor=pointer]:
+                - generic [ref=e7105]: Live Demo
+        - generic [ref=e7107]:
+          - link "Samsung Galaxy S25 5G Smartphone with Galaxy AI (Silver Shadow, 12GB RAM, 256GB Storage), Snapdragon 8 Elite, 50 MP Camera with ProVisual Engine and 4000mAh Battery" [ref=e7108] [cursor=pointer]:
+            - /url: /products/samsung-galaxy-s25-ultra-5g-smartphone-with-galaxy-ai-titanium-gray-12gb-ram-256gb-storage-titanium-frame-snapdragon-8-elite-200-mp-camera-with-provisual-engine-and-5000mah-battery-copy
+            - generic [ref=e7109]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - img "Samsung Galaxy S25 5G Smartphone with Galaxy AI (Silver Shadow, 12GB RAM, 256GB Storage), Snapdragon 8 Elite, 50 MP Camera with ProVisual Engine and 4000mAh Battery" [ref=e7112]
+          - generic [ref=e7113]:
+            - link "Samsung Galaxy S25 5G Smartphone with Galaxy AI (Silver Shadow, 12GB RAM, 256GB Storage), Snapdragon 8 Elite, 50 MP Camera with ProVisual Engine and 4000mAh Battery" [ref=e7114] [cursor=pointer]:
+              - /url: /products/samsung-galaxy-s25-ultra-5g-smartphone-with-galaxy-ai-titanium-gray-12gb-ram-256gb-storage-titanium-frame-snapdragon-8-elite-200-mp-camera-with-provisual-engine-and-5000mah-battery-copy
+              - heading "Samsung Galaxy S25 5G Smartphone with Galaxy AI (Silver Shadow, 12GB RAM, 256GB Storage), Snapdragon 8 Elite, 50 MP Camera with ProVisual Engine and 4000mAh Battery" [level=3] [ref=e7115]
+            - generic [ref=e7117]:
+              - generic [ref=e7118]:
+                - img [ref=e7119]
+                - img [ref=e7121]
+                - img [ref=e7123]
+                - img [ref=e7125]
+                - img [ref=e7127]
+              - generic [ref=e7129]: "4.5"
+              - generic [ref=e7130]: (675)
+            - generic [ref=e7132]:
+              - generic [ref=e7133]:
+                - paragraph [ref=e7134]: Epik Price
+                - generic [ref=e7135]: ₹80,999
+              - generic [ref=e7137]:
+                - paragraph [ref=e7138]: Regular Price
+                - generic [ref=e7139]:
+                  - generic [ref=e7140]: ₹99,999
+                  - generic [ref=e7141]: 19% off
+            - generic [ref=e7143]:
+              - img [ref=e7144]
+              - paragraph [ref=e7146]: ₹6,750 / Month EMI
+            - generic [ref=e7148]:
+              - button "Add to bag" [ref=e7149] [cursor=pointer]:
+                - img [ref=e7150]
+              - button "Home Demo" [ref=e7153] [cursor=pointer]:
+                - generic [ref=e7154]: Home Demo
+        - generic [ref=e7156]:
+          - link "Add to bag Ray-Ban Meta (Gen 2) Wayfarer Smart AI Glasses, Shiny Cosmic Blue | Transitions Sapphire Lenses, 12MP Ultra-Wide Camera, 3K Ultra HD Video, Open-Ear Audio, Voice Assistant, Live Streaming, Enhanced Battery Life, Unisex, Medium" [ref=e7157] [cursor=pointer]:
+            - /url: /products/ray-ban-meta-gen-2-wayfarer-smart-ai-glasses-shiny-cosmic-blue-transitions-sapphire-lenses-12mp-ultra-wide-camera-3k-ultra-hd-video-open-ear-audio-voice-assistant-live-streaming-enhanced-battery-life-unisex-medium
+            - generic [ref=e7158]:
+              - generic:
+                - generic: Demo in 60 Mins
+              - button "Add to bag" [ref=e7159]:
+                - img [ref=e7160]
+              - img "Ray-Ban Meta (Gen 2) Wayfarer Smart AI Glasses, Shiny Cosmic Blue | Transitions Sapphire Lenses, 12MP Ultra-Wide Camera, 3K Ultra HD Video, Open-Ear Audio, Voice Assistant, Live Streaming, Enhanced Battery Life, Unisex, Medium" [ref=e7163]
+          - generic [ref=e7164]:
+            - link "Ray-Ban Meta (Gen 2) Wayfarer Smart AI Glasses, Shiny Cosmic Blue | Transitions Sapphire Lenses, 12MP Ultra-Wide Camera, 3K Ultra HD Video, Open-Ear Audio, Voice Assistant, Live Streaming, Enhanced Battery Life, Unisex, Medium" [ref=e7165] [cursor=pointer]:
+              - /url: /products/ray-ban-meta-gen-2-wayfarer-smart-ai-glasses-shiny-cosmic-blue-transitions-sapphire-lenses-12mp-ultra-wide-camera-3k-ultra-hd-video-open-ear-audio-voice-assistant-live-streaming-enhanced-battery-life-unisex-medium
+              - heading "Ray-Ban Meta (Gen 2) Wayfarer Smart AI Glasses, Shiny Cosmic Blue | Transitions Sapphire Lenses, 12MP Ultra-Wide Camera, 3K Ultra HD Video, Open-Ear Audio, Voice Assistant, Live Streaming, Enhanced Battery Life, Unisex, Medium" [level=3] [ref=e7166]
+            - generic [ref=e7168]:
+              - generic [ref=e7169]:
+                - img [ref=e7170]
+                - img [ref=e7172]
+                - img [ref=e7174]
+                - img [ref=e7176]
+                - img [ref=e7178]
+              - generic [ref=e7180]: "4.1"
+              - generic [ref=e7181]: (40)
+            - generic [ref=e7184]:
+              - paragraph [ref=e7185]: Epik Price
+              - generic [ref=e7186]: ₹45,700
+            - generic [ref=e7188]:
+              - img [ref=e7189]
+              - paragraph [ref=e7191]: ₹3,808 / Month EMI
+            - generic [ref=e7193]:
+              - button "Home Demo" [ref=e7194] [cursor=pointer]:
+                - generic [ref=e7195]: Home Demo
+              - button "Live Demo" [ref=e7196] [cursor=pointer]:
+                - generic [ref=e7197]: Live Demo
+        - generic [ref=e7199]:
+          - link "Dyson V15 Detect – Cordless Vacuum Cleaner" [ref=e7200] [cursor=pointer]:
+            - /url: /products/dyson-v15-detect-cordless-vacuum-cleaner
+            - img "Dyson V15 Detect – Cordless Vacuum Cleaner" [ref=e7204]
+          - generic [ref=e7205]:
+            - link "Dyson V15 Detect – Cordless Vacuum Cleaner" [ref=e7206] [cursor=pointer]:
+              - /url: /products/dyson-v15-detect-cordless-vacuum-cleaner
+              - heading "Dyson V15 Detect – Cordless Vacuum Cleaner" [level=3] [ref=e7207]
+            - generic [ref=e7209]:
+              - generic [ref=e7210]:
+                - img [ref=e7211]
+                - img [ref=e7213]
+                - img [ref=e7215]
+                - img [ref=e7217]
+                - img [ref=e7219]
+              - generic [ref=e7221]: "4.0"
+              - generic [ref=e7222]: (23.9k+)
+            - generic [ref=e7225]:
+              - paragraph [ref=e7226]: Epik Price
+              - generic [ref=e7227]: ₹65,900
+            - generic [ref=e7229]:
+              - img [ref=e7230]
+              - paragraph [ref=e7232]: ₹5,492 / Month EMI
+            - generic [ref=e7234]:
+              - button "Add to bag" [ref=e7235] [cursor=pointer]:
+                - img [ref=e7236]
+              - button "Buy Now" [ref=e7239] [cursor=pointer]:
+                - generic [ref=e7240]: Buy Now
+        - generic [ref=e7242]:
+          - link "Dyson V8 Absolute Vacuum Cleaner" [ref=e7243] [cursor=pointer]:
+            - /url: /products/dyson-v8-absolute-vacuum-cleaner
+            - img "Dyson V8 Absolute Vacuum Cleaner" [ref=e7247]
+          - generic [ref=e7248]:
+            - link "Dyson V8 Absolute Vacuum Cleaner" [ref=e7249] [cursor=pointer]:
+              - /url: /products/dyson-v8-absolute-vacuum-cleaner
+              - heading "Dyson V8 Absolute Vacuum Cleaner" [level=3] [ref=e7250]
+            - generic [ref=e7252]:
+              - generic [ref=e7253]:
+                - img [ref=e7254]
+                - img [ref=e7256]
+                - img [ref=e7258]
+                - img [ref=e7260]
+                - img [ref=e7262]
+              - generic [ref=e7264]: "4.3"
+              - generic [ref=e7265]: (39k+)
+            - generic [ref=e7267]:
+              - generic [ref=e7268]:
+                - paragraph [ref=e7269]: Epik Price
+                - generic [ref=e7270]: ₹27,900
+              - generic [ref=e7272]:
+                - paragraph [ref=e7273]: Regular Price
+                - generic [ref=e7274]:
+                  - generic [ref=e7275]: ₹36,900
+                  - generic [ref=e7276]: 24% off
+            - generic [ref=e7278]:
+              - img [ref=e7279]
+              - paragraph [ref=e7281]: ₹2,325 / Month EMI
+            - generic [ref=e7283]:
+              - button "Add to bag" [ref=e7284] [cursor=pointer]:
+                - img [ref=e7285]
+              - button "Buy Now" [ref=e7288] [cursor=pointer]:
+                - generic [ref=e7289]: Buy Now
+    - generic [ref=e4759]:
+      - heading "What People Are Saying" [level=2] [ref=e4763]:
+        - text: What People Are Saying
+        - img [ref=e4764]
+      - generic [ref=e4768]:
+        - generic [ref=e4770]:
+          - img "Demo engineer view 1" [ref=e4774]
+          - img "Demo engineer view 2" [ref=e4778]
+          - img "Demo engineer view 3" [ref=e4782]
+          - img "Demo engineer view 4" [ref=e4786]
+          - img "Demo engineer view 5" [ref=e4790]
+          - img "Demo engineer view 6" [ref=e4794]
+          - img "Demo engineer view 7" [ref=e4798]
+          - img "Demo engineer view 8" [ref=e4802]
+          - img "Demo engineer view 9" [ref=e4806]
+          - img "Demo engineer view 10" [ref=e4810]
+          - img "Demo engineer view 11" [ref=e4814]
+          - img "Demo engineer view 12" [ref=e4818]
+          - img "Demo engineer view 13" [ref=e4822]
+          - img "Demo engineer view 14" [ref=e4826]
+          - img "Demo engineer view 15" [ref=e4830]
+          - img "Demo engineer view 16" [ref=e4834]
+        - generic [ref=e4835]:
+          - img "Demo engineer view 1" [ref=e4839]
+          - img "Demo engineer view 2" [ref=e4843]
+          - img "Demo engineer view 3" [ref=e4847]
+          - img "Demo engineer view 4" [ref=e4851]
+          - img "Demo engineer view 5" [ref=e4855]
+          - img "Demo engineer view 6" [ref=e4859]
+          - img "Demo engineer view 7" [ref=e4863]
+          - img "Demo engineer view 8" [ref=e4867]
+          - img "Demo engineer view 9" [ref=e4871]
+          - img "Demo engineer view 10" [ref=e4875]
+          - img "Demo engineer view 11" [ref=e4879]
+          - img "Demo engineer view 12" [ref=e4883]
+          - img "Demo engineer view 13" [ref=e4887]
+          - img "Demo engineer view 14" [ref=e4891]
+          - img "Demo engineer view 15" [ref=e4895]
+          - img "Demo engineer view 16" [ref=e4899]
+      - generic [ref=e4902]:
+        - generic [ref=e4904]:
+          - generic [ref=e7290]:
+            - generic [ref=e7291]:
+              - generic [ref=e7292]: ★
+              - generic [ref=e7293]: ★
+              - generic [ref=e7294]: ★
+              - generic [ref=e7295]: ★
+              - generic [ref=e7296]: ★
+            - heading "A Kethineni" [level=3] [ref=e7297]
+            - paragraph [ref=e7298]: We bought winston products from the team.. demo was detailed and they explained and showed all the features properly. Great experience!
+          - generic [ref=e7299]:
+            - generic [ref=e7300]:
+              - generic [ref=e7301]: ★
+              - generic [ref=e7302]: ★
+              - generic [ref=e7303]: ★
+              - generic [ref=e7304]: ★
+              - generic [ref=e7305]: ★
+            - heading "Vidhya Pradeep" [level=3] [ref=e7306]
+            - paragraph [ref=e7307]: We had a wonderful experience of having a demo of mopping, swiping robot and cooking assistant. The team was very professional.
+          - generic [ref=e7308]:
+            - generic [ref=e7309]:
+              - generic [ref=e7310]: ★
+              - generic [ref=e7311]: ★
+              - generic [ref=e7312]: ★
+              - generic [ref=e7313]: ★
+              - generic [ref=e7314]: ★
+            - heading "Rameez kaladgi" [level=3] [ref=e7315]
+            - paragraph [ref=e7316]: The Home demo was an great experience and the products are also amazing and the staff was very helpful throughout the process.
+          - generic [ref=e7317]:
+            - generic [ref=e7318]:
+              - generic [ref=e7319]: ★
+              - generic [ref=e7320]: ★
+              - generic [ref=e7321]: ★
+              - generic [ref=e7322]: ★
+              - generic [ref=e7323]: ★
+            - heading "Tina sherbet" [level=3] [ref=e7324]
+            - paragraph [ref=e7325]: I was considering purchasing the cooking assistant Upliance, but had mixed opinions and was hoping for a good demo. EPIK delivered!
+          - generic [ref=e7326]:
+            - generic [ref=e7327]:
+              - generic [ref=e7328]: ★
+              - generic [ref=e7329]: ★
+              - generic [ref=e7330]: ★
+              - generic [ref=e7331]: ★
+              - generic [ref=e7332]: ★
+            - heading "Ananth Ganesh" [level=3] [ref=e7333]
+            - paragraph [ref=e7334]: Had an great experience with EPIK in terms of demo as well as sales got a delivery on immediate basis. Highly recommended!
+          - generic [ref=e7335]:
+            - generic [ref=e7336]:
+              - generic [ref=e7337]: ★
+              - generic [ref=e7338]: ★
+              - generic [ref=e7339]: ★
+              - generic [ref=e7340]: ★
+              - generic [ref=e7341]: ★
+            - heading "Sireesha Machiraju" [level=3] [ref=e7342]
+            - paragraph [ref=e7343]: Likhith did an excellent job in giving us a demo of Uppliance. He has been extremely professional and knowledgeable about the products.
+          - generic [ref=e7344]:
+            - generic [ref=e7345]:
+              - generic [ref=e7346]: ★
+              - generic [ref=e7347]: ★
+              - generic [ref=e7348]: ★
+              - generic [ref=e7349]: ★
+              - generic [ref=e7350]: ★
+            - heading "Nandan Shetty" [level=3] [ref=e7351]
+            - paragraph [ref=e7352]: I am very pleased with their home demonstration! Mr. Gautam had visited with the RoboVacum and explained everything clearly.
+          - generic [ref=e7353]:
+            - generic [ref=e7354]:
+              - generic [ref=e7355]: ★
+              - generic [ref=e7356]: ★
+              - generic [ref=e7357]: ★
+              - generic [ref=e7358]: ★
+              - generic [ref=e7359]: ★
+            - heading "Raja Kumar" [level=3] [ref=e7360]
+            - paragraph [ref=e7361]: Hi team, Suman has given demo of Robotic vacuum cleaner and it was good understandable explanation. Great service!
+          - generic [ref=e7362]:
+            - generic [ref=e7363]:
+              - generic [ref=e7364]: ★
+              - generic [ref=e7365]: ★
+              - generic [ref=e7366]: ★
+              - generic [ref=e7367]: ★
+              - generic [ref=e7368]: ★
+            - heading "Meghana Krishna" [level=3] [ref=e7369]
+            - paragraph [ref=e7370]: Excellent service and demo by the team. The product exceeded my expectations. Highly satisfied!
+          - generic [ref=e7371]:
+            - generic [ref=e7372]:
+              - generic [ref=e7373]: ★
+              - generic [ref=e7374]: ★
+              - generic [ref=e7375]: ★
+              - generic [ref=e7376]: ★
+              - generic [ref=e7377]: ★
+            - heading "Saurabh Patil" [level=3] [ref=e7378]
+            - paragraph [ref=e7379]: Very professional approach and informative demo. Looking forward to using the product.
+          - generic [ref=e7380]:
+            - generic [ref=e7381]:
+              - generic [ref=e7382]: ★
+              - generic [ref=e7383]: ★
+              - generic [ref=e7384]: ★
+              - generic [ref=e7385]: ★
+              - generic [ref=e7386]: ★
+            - heading "Priya Sharma" [level=3] [ref=e7387]
+            - paragraph [ref=e7388]: The demonstration was thorough and all my questions were answered. Great staff and service!
+          - generic [ref=e7389]:
+            - generic [ref=e7390]:
+              - generic [ref=e7391]: ★
+              - generic [ref=e7392]: ★
+              - generic [ref=e7393]: ★
+              - generic [ref=e7394]: ★
+              - generic [ref=e7395]: ★
+            - heading "Rakesh Nair" [level=3] [ref=e7396]
+            - paragraph [ref=e7397]: Impressed with the quick delivery and installation after a detailed demo. Recommend to all!
+          - generic [ref=e7398]:
+            - generic [ref=e7399]:
+              - generic [ref=e7400]: ★
+              - generic [ref=e7401]: ★
+              - generic [ref=e7402]: ★
+              - generic [ref=e7403]: ★
+              - generic [ref=e7404]: ★
+            - heading "Deepa Srinivas" [level=3] [ref=e7405]
+            - paragraph [ref=e7406]: The team helped us understand all the product features. Truly a seamless experience.
+          - generic [ref=e7407]:
+            - generic [ref=e7408]:
+              - generic [ref=e7409]: ★
+              - generic [ref=e7410]: ★
+              - generic [ref=e7411]: ★
+              - generic [ref=e7412]: ★
+              - generic [ref=e7413]: ★
+            - heading "Rahul Mishra" [level=3] [ref=e7414]
+            - paragraph [ref=e7415]: Good demo and support. The vacuum works as promised and the staff is responsive.
+          - generic [ref=e7416]:
+            - generic [ref=e7417]:
+              - generic [ref=e7418]: ★
+              - generic [ref=e7419]: ★
+              - generic [ref=e7420]: ★
+              - generic [ref=e7421]: ★
+              - generic [ref=e7422]: ★
+            - heading "Anjali Desai" [level=3] [ref=e7423]
+            - paragraph [ref=e7424]: Exceptional service from start to finish. The cooking assistant is a life saver!
+          - generic [ref=e7425]:
+            - generic [ref=e7426]:
+              - generic [ref=e7427]: ★
+              - generic [ref=e7428]: ★
+              - generic [ref=e7429]: ★
+              - generic [ref=e7430]: ★
+              - generic [ref=e7431]: ★
+            - heading "Karthik Subramanian" [level=3] [ref=e7432]
+            - paragraph [ref=e7433]: Fast delivery, amazing demo, and friendly team. Completely satisfied with the entire process.
+          - generic [ref=e7434]:
+            - generic [ref=e7435]:
+              - generic [ref=e7436]: ★
+              - generic [ref=e7437]: ★
+              - generic [ref=e7438]: ★
+              - generic [ref=e7439]: ★
+              - generic [ref=e7440]: ★
+            - heading "A Kethineni" [level=3] [ref=e7441]
+            - paragraph [ref=e7442]: We bought winston products from the team.. demo was detailed and they explained and showed all the features properly. Great experience!
+          - generic [ref=e7443]:
+            - generic [ref=e7444]:
+              - generic [ref=e7445]: ★
+              - generic [ref=e7446]: ★
+              - generic [ref=e7447]: ★
+              - generic [ref=e7448]: ★
+              - generic [ref=e7449]: ★
+            - heading "Vidhya Pradeep" [level=3] [ref=e7450]
+            - paragraph [ref=e7451]: We had a wonderful experience of having a demo of mopping, swiping robot and cooking assistant. The team was very professional.
+          - generic [ref=e7452]:
+            - generic [ref=e7453]:
+              - generic [ref=e7454]: ★
+              - generic [ref=e7455]: ★
+              - generic [ref=e7456]: ★
+              - generic [ref=e7457]: ★
+              - generic [ref=e7458]: ★
+            - heading "Rameez kaladgi" [level=3] [ref=e7459]
+            - paragraph [ref=e7460]: The Home demo was an great experience and the products are also amazing and the staff was very helpful throughout the process.
+          - generic [ref=e7461]:
+            - generic [ref=e7462]:
+              - generic [ref=e7463]: ★
+              - generic [ref=e7464]: ★
+              - generic [ref=e7465]: ★
+              - generic [ref=e7466]: ★
+              - generic [ref=e7467]: ★
+            - heading "Tina sherbet" [level=3] [ref=e7468]
+            - paragraph [ref=e7469]: I was considering purchasing the cooking assistant Upliance, but had mixed opinions and was hoping for a good demo. EPIK delivered!
+          - generic [ref=e7470]:
+            - generic [ref=e7471]:
+              - generic [ref=e7472]: ★
+              - generic [ref=e7473]: ★
+              - generic [ref=e7474]: ★
+              - generic [ref=e7475]: ★
+              - generic [ref=e7476]: ★
+            - heading "Ananth Ganesh" [level=3] [ref=e7477]
+            - paragraph [ref=e7478]: Had an great experience with EPIK in terms of demo as well as sales got a delivery on immediate basis. Highly recommended!
+          - generic [ref=e7479]:
+            - generic [ref=e7480]:
+              - generic [ref=e7481]: ★
+              - generic [ref=e7482]: ★
+              - generic [ref=e7483]: ★
+              - generic [ref=e7484]: ★
+              - generic [ref=e7485]: ★
+            - heading "Sireesha Machiraju" [level=3] [ref=e7486]
+            - paragraph [ref=e7487]: Likhith did an excellent job in giving us a demo of Uppliance. He has been extremely professional and knowledgeable about the products.
+          - generic [ref=e7488]:
+            - generic [ref=e7489]:
+              - generic [ref=e7490]: ★
+              - generic [ref=e7491]: ★
+              - generic [ref=e7492]: ★
+              - generic [ref=e7493]: ★
+              - generic [ref=e7494]: ★
+            - heading "Nandan Shetty" [level=3] [ref=e7495]
+            - paragraph [ref=e7496]: I am very pleased with their home demonstration! Mr. Gautam had visited with the RoboVacum and explained everything clearly.
+          - generic [ref=e7497]:
+            - generic [ref=e7498]:
+              - generic [ref=e7499]: ★
+              - generic [ref=e7500]: ★
+              - generic [ref=e7501]: ★
+              - generic [ref=e7502]: ★
+              - generic [ref=e7503]: ★
+            - heading "Raja Kumar" [level=3] [ref=e7504]
+            - paragraph [ref=e7505]: Hi team, Suman has given demo of Robotic vacuum cleaner and it was good understandable explanation. Great service!
+          - generic [ref=e7506]:
+            - generic [ref=e7507]:
+              - generic [ref=e7508]: ★
+              - generic [ref=e7509]: ★
+              - generic [ref=e7510]: ★
+              - generic [ref=e7511]: ★
+              - generic [ref=e7512]: ★
+            - heading "Meghana Krishna" [level=3] [ref=e7513]
+            - paragraph [ref=e7514]: Excellent service and demo by the team. The product exceeded my expectations. Highly satisfied!
+          - generic [ref=e7515]:
+            - generic [ref=e7516]:
+              - generic [ref=e7517]: ★
+              - generic [ref=e7518]: ★
+              - generic [ref=e7519]: ★
+              - generic [ref=e7520]: ★
+              - generic [ref=e7521]: ★
+            - heading "Saurabh Patil" [level=3] [ref=e7522]
+            - paragraph [ref=e7523]: Very professional approach and informative demo. Looking forward to using the product.
+          - generic [ref=e7524]:
+            - generic [ref=e7525]:
+              - generic [ref=e7526]: ★
+              - generic [ref=e7527]: ★
+              - generic [ref=e7528]: ★
+              - generic [ref=e7529]: ★
+              - generic [ref=e7530]: ★
+            - heading "Priya Sharma" [level=3] [ref=e7531]
+            - paragraph [ref=e7532]: The demonstration was thorough and all my questions were answered. Great staff and service!
+          - generic [ref=e7533]:
+            - generic [ref=e7534]:
+              - generic [ref=e7535]: ★
+              - generic [ref=e7536]: ★
+              - generic [ref=e7537]: ★
+              - generic [ref=e7538]: ★
+              - generic [ref=e7539]: ★
+            - heading "Rakesh Nair" [level=3] [ref=e7540]
+            - paragraph [ref=e7541]: Impressed with the quick delivery and installation after a detailed demo. Recommend to all!
+          - generic [ref=e7542]:
+            - generic [ref=e7543]:
+              - generic [ref=e7544]: ★
+              - generic [ref=e7545]: ★
+              - generic [ref=e7546]: ★
+              - generic [ref=e7547]: ★
+              - generic [ref=e7548]: ★
+            - heading "Deepa Srinivas" [level=3] [ref=e7549]
+            - paragraph [ref=e7550]: The team helped us understand all the product features. Truly a seamless experience.
+          - generic [ref=e7551]:
+            - generic [ref=e7552]:
+              - generic [ref=e7553]: ★
+              - generic [ref=e7554]: ★
+              - generic [ref=e7555]: ★
+              - generic [ref=e7556]: ★
+              - generic [ref=e7557]: ★
+            - heading "Rahul Mishra" [level=3] [ref=e7558]
+            - paragraph [ref=e7559]: Good demo and support. The vacuum works as promised and the staff is responsive.
+          - generic [ref=e7560]:
+            - generic [ref=e7561]:
+              - generic [ref=e7562]: ★
+              - generic [ref=e7563]: ★
+              - generic [ref=e7564]: ★
+              - generic [ref=e7565]: ★
+              - generic [ref=e7566]: ★
+            - heading "Anjali Desai" [level=3] [ref=e7567]
+            - paragraph [ref=e7568]: Exceptional service from start to finish. The cooking assistant is a life saver!
+          - generic [ref=e7569]:
+            - generic [ref=e7570]:
+              - generic [ref=e7571]: ★
+              - generic [ref=e7572]: ★
+              - generic [ref=e7573]: ★
+              - generic [ref=e7574]: ★
+              - generic [ref=e7575]: ★
+            - heading "Karthik Subramanian" [level=3] [ref=e7576]
+            - paragraph [ref=e7577]: Fast delivery, amazing demo, and friendly team. Completely satisfied with the entire process.
+        - generic [ref=e5257]:
+          - generic [ref=e7578]:
+            - generic [ref=e7579]:
+              - generic [ref=e7580]: ★
+              - generic [ref=e7581]: ★
+              - generic [ref=e7582]: ★
+              - generic [ref=e7583]: ★
+              - generic [ref=e7584]: ★
+            - heading "A Kethineni" [level=3] [ref=e7585]
+            - paragraph [ref=e7586]: We bought winston products from the team.. demo was detailed and they explained and showed all the features properly. Great experience!
+          - generic [ref=e7587]:
+            - generic [ref=e7588]:
+              - generic [ref=e7589]: ★
+              - generic [ref=e7590]: ★
+              - generic [ref=e7591]: ★
+              - generic [ref=e7592]: ★
+              - generic [ref=e7593]: ★
+            - heading "Vidhya Pradeep" [level=3] [ref=e7594]
+            - paragraph [ref=e7595]: We had a wonderful experience of having a demo of mopping, swiping robot and cooking assistant. The team was very professional.
+          - generic [ref=e7596]:
+            - generic [ref=e7597]:
+              - generic [ref=e7598]: ★
+              - generic [ref=e7599]: ★
+              - generic [ref=e7600]: ★
+              - generic [ref=e7601]: ★
+              - generic [ref=e7602]: ★
+            - heading "Rameez kaladgi" [level=3] [ref=e7603]
+            - paragraph [ref=e7604]: The Home demo was an great experience and the products are also amazing and the staff was very helpful throughout the process.
+          - generic [ref=e7605]:
+            - generic [ref=e7606]:
+              - generic [ref=e7607]: ★
+              - generic [ref=e7608]: ★
+              - generic [ref=e7609]: ★
+              - generic [ref=e7610]: ★
+              - generic [ref=e7611]: ★
+            - heading "Tina sherbet" [level=3] [ref=e7612]
+            - paragraph [ref=e7613]: I was considering purchasing the cooking assistant Upliance, but had mixed opinions and was hoping for a good demo. EPIK delivered!
+          - generic [ref=e7614]:
+            - generic [ref=e7615]:
+              - generic [ref=e7616]: ★
+              - generic [ref=e7617]: ★
+              - generic [ref=e7618]: ★
+              - generic [ref=e7619]: ★
+              - generic [ref=e7620]: ★
+            - heading "Ananth Ganesh" [level=3] [ref=e7621]
+            - paragraph [ref=e7622]: Had an great experience with EPIK in terms of demo as well as sales got a delivery on immediate basis. Highly recommended!
+          - generic [ref=e7623]:
+            - generic [ref=e7624]:
+              - generic [ref=e7625]: ★
+              - generic [ref=e7626]: ★
+              - generic [ref=e7627]: ★
+              - generic [ref=e7628]: ★
+              - generic [ref=e7629]: ★
+            - heading "Sireesha Machiraju" [level=3] [ref=e7630]
+            - paragraph [ref=e7631]: Likhith did an excellent job in giving us a demo of Uppliance. He has been extremely professional and knowledgeable about the products.
+          - generic [ref=e7632]:
+            - generic [ref=e7633]:
+              - generic [ref=e7634]: ★
+              - generic [ref=e7635]: ★
+              - generic [ref=e7636]: ★
+              - generic [ref=e7637]: ★
+              - generic [ref=e7638]: ★
+            - heading "Nandan Shetty" [level=3] [ref=e7639]
+            - paragraph [ref=e7640]: I am very pleased with their home demonstration! Mr. Gautam had visited with the RoboVacum and explained everything clearly.
+          - generic [ref=e7641]:
+            - generic [ref=e7642]:
+              - generic [ref=e7643]: ★
+              - generic [ref=e7644]: ★
+              - generic [ref=e7645]: ★
+              - generic [ref=e7646]: ★
+              - generic [ref=e7647]: ★
+            - heading "Raja Kumar" [level=3] [ref=e7648]
+            - paragraph [ref=e7649]: Hi team, Suman has given demo of Robotic vacuum cleaner and it was good understandable explanation. Great service!
+          - generic [ref=e7650]:
+            - generic [ref=e7651]:
+              - generic [ref=e7652]: ★
+              - generic [ref=e7653]: ★
+              - generic [ref=e7654]: ★
+              - generic [ref=e7655]: ★
+              - generic [ref=e7656]: ★
+            - heading "Meghana Krishna" [level=3] [ref=e7657]
+            - paragraph [ref=e7658]: Excellent service and demo by the team. The product exceeded my expectations. Highly satisfied!
+          - generic [ref=e7659]:
+            - generic [ref=e7660]:
+              - generic [ref=e7661]: ★
+              - generic [ref=e7662]: ★
+              - generic [ref=e7663]: ★
+              - generic [ref=e7664]: ★
+              - generic [ref=e7665]: ★
+            - heading "Saurabh Patil" [level=3] [ref=e7666]
+            - paragraph [ref=e7667]: Very professional approach and informative demo. Looking forward to using the product.
+          - generic [ref=e7668]:
+            - generic [ref=e7669]:
+              - generic [ref=e7670]: ★
+              - generic [ref=e7671]: ★
+              - generic [ref=e7672]: ★
+              - generic [ref=e7673]: ★
+              - generic [ref=e7674]: ★
+            - heading "Priya Sharma" [level=3] [ref=e7675]
+            - paragraph [ref=e7676]: The demonstration was thorough and all my questions were answered. Great staff and service!
+          - generic [ref=e7677]:
+            - generic [ref=e7678]:
+              - generic [ref=e7679]: ★
+              - generic [ref=e7680]: ★
+              - generic [ref=e7681]: ★
+              - generic [ref=e7682]: ★
+              - generic [ref=e7683]: ★
+            - heading "Rakesh Nair" [level=3] [ref=e7684]
+            - paragraph [ref=e7685]: Impressed with the quick delivery and installation after a detailed demo. Recommend to all!
+          - generic [ref=e7686]:
+            - generic [ref=e7687]:
+              - generic [ref=e7688]: ★
+              - generic [ref=e7689]: ★
+              - generic [ref=e7690]: ★
+              - generic [ref=e7691]: ★
+              - generic [ref=e7692]: ★
+            - heading "Deepa Srinivas" [level=3] [ref=e7693]
+            - paragraph [ref=e7694]: The team helped us understand all the product features. Truly a seamless experience.
+          - generic [ref=e7695]:
+            - generic [ref=e7696]:
+              - generic [ref=e7697]: ★
+              - generic [ref=e7698]: ★
+              - generic [ref=e7699]: ★
+              - generic [ref=e7700]: ★
+              - generic [ref=e7701]: ★
+            - heading "Rahul Mishra" [level=3] [ref=e7702]
+            - paragraph [ref=e7703]: Good demo and support. The vacuum works as promised and the staff is responsive.
+          - generic [ref=e7704]:
+            - generic [ref=e7705]:
+              - generic [ref=e7706]: ★
+              - generic [ref=e7707]: ★
+              - generic [ref=e7708]: ★
+              - generic [ref=e7709]: ★
+              - generic [ref=e7710]: ★
+            - heading "Anjali Desai" [level=3] [ref=e7711]
+            - paragraph [ref=e7712]: Exceptional service from start to finish. The cooking assistant is a life saver!
+          - generic [ref=e7713]:
+            - generic [ref=e7714]:
+              - generic [ref=e7715]: ★
+              - generic [ref=e7716]: ★
+              - generic [ref=e7717]: ★
+              - generic [ref=e7718]: ★
+              - generic [ref=e7719]: ★
+            - heading "Karthik Subramanian" [level=3] [ref=e7720]
+            - paragraph [ref=e7721]: Fast delivery, amazing demo, and friendly team. Completely satisfied with the entire process.
+          - generic [ref=e7722]:
+            - generic [ref=e7723]:
+              - generic [ref=e7724]: ★
+              - generic [ref=e7725]: ★
+              - generic [ref=e7726]: ★
+              - generic [ref=e7727]: ★
+              - generic [ref=e7728]: ★
+            - heading "A Kethineni" [level=3] [ref=e7729]
+            - paragraph [ref=e7730]: We bought winston products from the team.. demo was detailed and they explained and showed all the features properly. Great experience!
+          - generic [ref=e7731]:
+            - generic [ref=e7732]:
+              - generic [ref=e7733]: ★
+              - generic [ref=e7734]: ★
+              - generic [ref=e7735]: ★
+              - generic [ref=e7736]: ★
+              - generic [ref=e7737]: ★
+            - heading "Vidhya Pradeep" [level=3] [ref=e7738]
+            - paragraph [ref=e7739]: We had a wonderful experience of having a demo of mopping, swiping robot and cooking assistant. The team was very professional.
+          - generic [ref=e7740]:
+            - generic [ref=e7741]:
+              - generic [ref=e7742]: ★
+              - generic [ref=e7743]: ★
+              - generic [ref=e7744]: ★
+              - generic [ref=e7745]: ★
+              - generic [ref=e7746]: ★
+            - heading "Rameez kaladgi" [level=3] [ref=e7747]
+            - paragraph [ref=e7748]: The Home demo was an great experience and the products are also amazing and the staff was very helpful throughout the process.
+          - generic [ref=e7749]:
+            - generic [ref=e7750]:
+              - generic [ref=e7751]: ★
+              - generic [ref=e7752]: ★
+              - generic [ref=e7753]: ★
+              - generic [ref=e7754]: ★
+              - generic [ref=e7755]: ★
+            - heading "Tina sherbet" [level=3] [ref=e7756]
+            - paragraph [ref=e7757]: I was considering purchasing the cooking assistant Upliance, but had mixed opinions and was hoping for a good demo. EPIK delivered!
+          - generic [ref=e7758]:
+            - generic [ref=e7759]:
+              - generic [ref=e7760]: ★
+              - generic [ref=e7761]: ★
+              - generic [ref=e7762]: ★
+              - generic [ref=e7763]: ★
+              - generic [ref=e7764]: ★
+            - heading "Ananth Ganesh" [level=3] [ref=e7765]
+            - paragraph [ref=e7766]: Had an great experience with EPIK in terms of demo as well as sales got a delivery on immediate basis. Highly recommended!
+          - generic [ref=e7767]:
+            - generic [ref=e7768]:
+              - generic [ref=e7769]: ★
+              - generic [ref=e7770]: ★
+              - generic [ref=e7771]: ★
+              - generic [ref=e7772]: ★
+              - generic [ref=e7773]: ★
+            - heading "Sireesha Machiraju" [level=3] [ref=e7774]
+            - paragraph [ref=e7775]: Likhith did an excellent job in giving us a demo of Uppliance. He has been extremely professional and knowledgeable about the products.
+          - generic [ref=e7776]:
+            - generic [ref=e7777]:
+              - generic [ref=e7778]: ★
+              - generic [ref=e7779]: ★
+              - generic [ref=e7780]: ★
+              - generic [ref=e7781]: ★
+              - generic [ref=e7782]: ★
+            - heading "Nandan Shetty" [level=3] [ref=e7783]
+            - paragraph [ref=e7784]: I am very pleased with their home demonstration! Mr. Gautam had visited with the RoboVacum and explained everything clearly.
+          - generic [ref=e7785]:
+            - generic [ref=e7786]:
+              - generic [ref=e7787]: ★
+              - generic [ref=e7788]: ★
+              - generic [ref=e7789]: ★
+              - generic [ref=e7790]: ★
+              - generic [ref=e7791]: ★
+            - heading "Raja Kumar" [level=3] [ref=e7792]
+            - paragraph [ref=e7793]: Hi team, Suman has given demo of Robotic vacuum cleaner and it was good understandable explanation. Great service!
+          - generic [ref=e7794]:
+            - generic [ref=e7795]:
+              - generic [ref=e7796]: ★
+              - generic [ref=e7797]: ★
+              - generic [ref=e7798]: ★
+              - generic [ref=e7799]: ★
+              - generic [ref=e7800]: ★
+            - heading "Meghana Krishna" [level=3] [ref=e7801]
+            - paragraph [ref=e7802]: Excellent service and demo by the team. The product exceeded my expectations. Highly satisfied!
+          - generic [ref=e7803]:
+            - generic [ref=e7804]:
+              - generic [ref=e7805]: ★
+              - generic [ref=e7806]: ★
+              - generic [ref=e7807]: ★
+              - generic [ref=e7808]: ★
+              - generic [ref=e7809]: ★
+            - heading "Saurabh Patil" [level=3] [ref=e7810]
+            - paragraph [ref=e7811]: Very professional approach and informative demo. Looking forward to using the product.
+          - generic [ref=e7812]:
+            - generic [ref=e7813]:
+              - generic [ref=e7814]: ★
+              - generic [ref=e7815]: ★
+              - generic [ref=e7816]: ★
+              - generic [ref=e7817]: ★
+              - generic [ref=e7818]: ★
+            - heading "Priya Sharma" [level=3] [ref=e7819]
+            - paragraph [ref=e7820]: The demonstration was thorough and all my questions were answered. Great staff and service!
+          - generic [ref=e7821]:
+            - generic [ref=e7822]:
+              - generic [ref=e7823]: ★
+              - generic [ref=e7824]: ★
+              - generic [ref=e7825]: ★
+              - generic [ref=e7826]: ★
+              - generic [ref=e7827]: ★
+            - heading "Rakesh Nair" [level=3] [ref=e7828]
+            - paragraph [ref=e7829]: Impressed with the quick delivery and installation after a detailed demo. Recommend to all!
+          - generic [ref=e7830]:
+            - generic [ref=e7831]:
+              - generic [ref=e7832]: ★
+              - generic [ref=e7833]: ★
+              - generic [ref=e7834]: ★
+              - generic [ref=e7835]: ★
+              - generic [ref=e7836]: ★
+            - heading "Deepa Srinivas" [level=3] [ref=e7837]
+            - paragraph [ref=e7838]: The team helped us understand all the product features. Truly a seamless experience.
+          - generic [ref=e7839]:
+            - generic [ref=e7840]:
+              - generic [ref=e7841]: ★
+              - generic [ref=e7842]: ★
+              - generic [ref=e7843]: ★
+              - generic [ref=e7844]: ★
+              - generic [ref=e7845]: ★
+            - heading "Rahul Mishra" [level=3] [ref=e7846]
+            - paragraph [ref=e7847]: Good demo and support. The vacuum works as promised and the staff is responsive.
+          - generic [ref=e7848]:
+            - generic [ref=e7849]:
+              - generic [ref=e7850]: ★
+              - generic [ref=e7851]: ★
+              - generic [ref=e7852]: ★
+              - generic [ref=e7853]: ★
+              - generic [ref=e7854]: ★
+            - heading "Anjali Desai" [level=3] [ref=e7855]
+            - paragraph [ref=e7856]: Exceptional service from start to finish. The cooking assistant is a life saver!
+          - generic [ref=e7857]:
+            - generic [ref=e7858]:
+              - generic [ref=e7859]: ★
+              - generic [ref=e7860]: ★
+              - generic [ref=e7861]: ★
+              - generic [ref=e7862]: ★
+              - generic [ref=e7863]: ★
+            - heading "Karthik Subramanian" [level=3] [ref=e7864]
+            - paragraph [ref=e7865]: Fast delivery, amazing demo, and friendly team. Completely satisfied with the entire process.
+  - generic [ref=e3232]:
+    - generic [ref=e3233]:
+      - img [ref=e3235]
+      - paragraph [ref=e3239]: The Trusted Choice for 10,000+ Families
+    - generic [ref=e3240]:
+      - img [ref=e3242]
+      - paragraph [ref=e3249]: Backed by India’s Top Investors
+    - generic [ref=e3250]:
+      - img [ref=e3252]
+      - paragraph [ref=e3257]: Rated 5.0 for Demo Experience
+  - contentinfo [ref=e3258]:
+    - generic [ref=e3259]:
+      - generic [ref=e3260]:
+        - generic [ref=e3263]:
+          - img "Epik Logo" [ref=e3264]
+          - generic [ref=e3270]:
+            - generic [ref=e3271]:
+              - text: Free Demo
+              - text: in
+            - text: 60 Minutes
+          - generic [ref=e3272]:
+            - link "Download on the App Store" [ref=e3273] [cursor=pointer]:
+              - /url: https://apps.apple.com/in/app/id6756187208
+              - img "Download on the App Store" [ref=e3274]
+            - link "Get it on Google Play" [ref=e3275] [cursor=pointer]:
+              - /url: https://play.google.com/store/apps/details?id=com.epik.app
+              - img "Get it on Google Play" [ref=e3276]
+          - 'link "Chat with Epik: Free Home Demo Of Electronics on ChatGPT" [ref=e3278] [cursor=pointer]':
+            - /url: https://chatgpt.com/apps/getepik/asdk_app_6a14854d64e08191ad53123ae40ce9ad
+            - 'img "Chat with Epik: Free Home Demo Of Electronics on ChatGPT" [ref=e3279]'
+        - generic [ref=e3280]:
+          - heading "LINKS" [level=3] [ref=e3281]
+          - list [ref=e3282]:
+            - listitem [ref=e3283]:
+              - link "Contact Us" [ref=e3284] [cursor=pointer]:
+                - /url: /pages/contact-us
+            - listitem [ref=e3285]:
+              - link "Shipping Policy" [ref=e3286] [cursor=pointer]:
+                - /url: /pages/shipping-policy
+            - listitem [ref=e3287]:
+              - link "Privacy Policy" [ref=e3288] [cursor=pointer]:
+                - /url: /pages/privacy-policy
+            - listitem [ref=e3289]:
+              - link "Cancellation & Refund Policy" [ref=e3290] [cursor=pointer]:
+                - /url: /pages/refund-policy
+            - listitem [ref=e3291]:
+              - link "Terms Of Service" [ref=e3292] [cursor=pointer]:
+                - /url: /pages/terms-of-service
+        - generic [ref=e3293]:
+          - generic [ref=e3294]:
+            - heading "CONTACT US" [level=3] [ref=e3295]
+            - generic [ref=e3296]:
+              - paragraph [ref=e3297]:
+                - text: 767, Sector 3, HSR Layout,
+                - text: Bengaluru, Karnataka - 560102
+              - generic [ref=e3298]:
+                - img [ref=e3299]
+                - link "+91 76250 01413" [ref=e3301] [cursor=pointer]:
+                  - /url: tel:+917625001413
+              - generic [ref=e3302]:
+                - img [ref=e3303]
+                - link "support@getepik.in" [ref=e3305] [cursor=pointer]:
+                  - /url: mailto:support@getepik.in
+          - generic [ref=e3306]:
+            - heading "FOLLOW US" [level=3] [ref=e3307]
+            - generic [ref=e3308]:
+              - link "Follow us on Instagram" [ref=e3309] [cursor=pointer]:
+                - /url: https://www.instagram.com/getepik.in?igsh=MTEyMzNzeHBvZTBpNg%3D%3D&utm_source=qr
+                - img [ref=e3310]
+              - link "Subscribe to our YouTube channel" [ref=e3312] [cursor=pointer]:
+                - /url: https://youtube.com/@getepik_in?feature=shared
+                - img [ref=e3313]
+              - link "Follow us on X (Twitter)" [ref=e3315] [cursor=pointer]:
+                - /url: https://x.com/getepik_in?s=21
+                - img [ref=e3316]
+              - link "Like our Facebook page" [ref=e3318] [cursor=pointer]:
+                - /url: https://www.facebook.com/share/176JKieb7w/?mibextid=wwXIfr
+                - img [ref=e3319]
+      - generic [ref=e3323]:
+        - generic [ref=e3325]:
+          - button "Brand Store" [ref=e3326] [cursor=pointer]: Brand Store
+          - button "Cleaning" [ref=e3328] [cursor=pointer]
+          - button "Entertainment" [ref=e3329] [cursor=pointer]
+          - button "Gadgets" [ref=e3330] [cursor=pointer]
+          - button "HealthTech" [ref=e3331] [cursor=pointer]
+          - button "Home Appliances" [ref=e3332] [cursor=pointer]
+          - button "Home Automation" [ref=e3333] [cursor=pointer]
+          - button "Kitchen Appliances" [ref=e3334] [cursor=pointer]
+          - button "Personal Care" [ref=e3335] [cursor=pointer]
+          - button "Security & Surveillance" [ref=e3336] [cursor=pointer]
+          - button "Smart Phones" [ref=e3337] [cursor=pointer]
+          - button "Bangalore" [ref=e3338] [cursor=pointer]
+          - button "Delhi NCR" [ref=e3339] [cursor=pointer]
+        - generic [ref=e3340]:
+          - generic [ref=e3341]:
+            - list [ref=e3342]:
+              - listitem [ref=e3343]:
+                - link "Agaro in Bangalore" [ref=e3344] [cursor=pointer]:
+                  - /url: /agaro-online-store-in-bangalore
+              - listitem [ref=e3345]:
+                - link "Bombay Shaving Co in Bangalore" [ref=e3346] [cursor=pointer]:
+                  - /url: /bombay-shaving-co-online-store-in-bangalore
+              - listitem [ref=e3347]:
+                - link "Curapod in Bangalore" [ref=e3348] [cursor=pointer]:
+                  - /url: /curapod-online-store-in-bangalore
+              - listitem [ref=e3349]:
+                - link "Ecovacs in Bangalore" [ref=e3350] [cursor=pointer]:
+                  - /url: /ecovacs-online-store-in-bangalore
+              - listitem [ref=e3351]:
+                - link "Hammer in Bangalore" [ref=e3352] [cursor=pointer]:
+                  - /url: /hammer-online-store-in-bangalore
+              - listitem [ref=e3353]:
+                - link "Ilife in Bangalore" [ref=e3354] [cursor=pointer]:
+                  - /url: /ilife-online-store-in-bangalore
+            - list [ref=e3355]:
+              - listitem [ref=e3356]:
+                - link "AO Smith in Bangalore" [ref=e3357] [cursor=pointer]:
+                  - /url: /ao-smith-online-store-in-bangalore
+              - listitem [ref=e3358]:
+                - link "Bosch in Bangalore" [ref=e3359] [cursor=pointer]:
+                  - /url: /bosch-online-store-in-bangalore
+              - listitem [ref=e3360]:
+                - link "Daikin in Bangalore" [ref=e3361] [cursor=pointer]:
+                  - /url: /daikin-online-store-in-bangalore
+              - listitem [ref=e3362]:
+                - link "Geek in Bangalore" [ref=e3363] [cursor=pointer]:
+                  - /url: /geek-online-store-in-bangalore
+              - listitem [ref=e3364]:
+                - link "Happinetz in Bangalore" [ref=e3365] [cursor=pointer]:
+                  - /url: /happinetz-online-store-in-bangalore
+              - listitem [ref=e3366]:
+                - link "JBL in Bangalore" [ref=e3367] [cursor=pointer]:
+                  - /url: /jbl-online-store-in-bangalore
+            - list [ref=e3368]:
+              - listitem [ref=e3369]:
+                - link "Apple in Bangalore" [ref=e3370] [cursor=pointer]:
+                  - /url: /apple-online-store-in-bangalore
+              - listitem [ref=e3371]:
+                - link "Bose in Bangalore" [ref=e3372] [cursor=pointer]:
+                  - /url: /bose-online-store-in-bangalore
+              - listitem [ref=e3373]:
+                - link "Dashcam in Bangalore" [ref=e3374] [cursor=pointer]:
+                  - /url: /dashcam-online-store-in-bangalore
+              - listitem [ref=e3375]:
+                - link "GM in Bangalore" [ref=e3376] [cursor=pointer]:
+                  - /url: /gm-online-store-in-bangalore
+              - listitem [ref=e3377]:
+                - link "Hindware in Bangalore" [ref=e3378] [cursor=pointer]:
+                  - /url: /hindware-online-store-in-bangalore
+              - listitem [ref=e3379]:
+                - link "Jovs in Bangalore" [ref=e3380] [cursor=pointer]:
+                  - /url: /jovs-online-store-in-bangalore
+            - list [ref=e3381]:
+              - listitem [ref=e3382]:
+                - link "Atomberg in Bangalore" [ref=e3383] [cursor=pointer]:
+                  - /url: /atomberg-online-store-in-bangalore
+              - listitem [ref=e3384]:
+                - link "Callmate in Bangalore" [ref=e3385] [cursor=pointer]:
+                  - /url: /callmate-online-store-in-bangalore
+              - listitem [ref=e3386]:
+                - link "Dell in Bangalore" [ref=e3387] [cursor=pointer]:
+                  - /url: /dell-online-store-in-bangalore
+              - listitem [ref=e3388]:
+                - link "Godrej in Bangalore" [ref=e3389] [cursor=pointer]:
+                  - /url: /godrej-online-store-in-bangalore
+              - listitem [ref=e3390]:
+                - link "HP in Bangalore" [ref=e3391] [cursor=pointer]:
+                  - /url: /hp-online-store-in-bangalore
+              - listitem [ref=e3392]:
+                - link "Kent in Bangalore" [ref=e3393] [cursor=pointer]:
+                  - /url: /kent-online-store-in-bangalore
+            - list [ref=e3394]:
+              - listitem [ref=e3395]:
+                - link "Blue Star in Bangalore" [ref=e3396] [cursor=pointer]:
+                  - /url: /blue-star-online-store-in-bangalore
+              - listitem [ref=e3397]:
+                - link "Caresmith in Bangalore" [ref=e3398] [cursor=pointer]:
+                  - /url: /caresmith-online-store-in-bangalore
+              - listitem [ref=e3399]:
+                - link "Dyson in Bangalore" [ref=e3400] [cursor=pointer]:
+                  - /url: /dyson-online-store-in-bangalore
+              - listitem [ref=e3401]:
+                - link "Haier in Bangalore" [ref=e3402] [cursor=pointer]:
+                  - /url: /haier-online-store-in-bangalore
+              - listitem [ref=e3403]:
+                - link "IFB in Bangalore" [ref=e3404] [cursor=pointer]:
+                  - /url: /ifb-online-store-in-bangalore
+              - listitem [ref=e3405]:
+                - link "Kroff in Bangalore" [ref=e3406] [cursor=pointer]:
+                  - /url: /kroff-online-store-in-bangalore
+          - button "Show More" [ref=e3408] [cursor=pointer]:
+            - text: Show More
+            - img [ref=e3409]
+      - generic [ref=e3412]: © 2025 VIVAVILLA RETAIL PRIVATE LIMITED (Epik) | All Rights Reserved
+  - button "Chat on WhatsApp" [ref=e3414] [cursor=pointer]:
+    - img [ref=e3416]

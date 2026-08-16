@@ -1,10 +1,14 @@
 import type { ExtensionFactory } from '@mariozechner/pi-coding-agent'
 import type { ToolPermissionMode } from '@shared/types/settings'
 import {
+  isCodeEditingTool,
+  normalizeToolName,
+  resolveToolRoute,
+} from '../../application/tool-model-route'
+import {
   consumeApprovedToolPermission,
   registerApprovedToolPermission,
 } from '../../application/tool-permission-approvals'
-import { isCodeEditingTool, normalizeToolName, resolveToolRoute } from '../../application/tool-model-route'
 
 type JsonRecord = Record<string, unknown>
 type ToolCallEvent = {

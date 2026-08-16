@@ -1,16 +1,26 @@
+import { spawn } from 'node:child_process'
 import path from 'node:path'
 import type { McpSettingsView } from '@shared/types/mcp'
-import { FileMemory, Harness, McpRuntimePool, type PoolLogger, type Session } from 'turing-harness'
+import {
+  FileMemory,
+  Harness,
+  McpRuntimePool,
+  McpToolCache,
+  type PoolLogger,
+  type Session,
+} from 'turing-harness'
 import type { ProjectMemoryStatus } from '../../../shared/types/project-memory'
 import { createLogger } from '../../logger'
 import type { AgentKernelStandardsContext } from '../../ports/agent-kernel-service'
+import { createInspirationBackend } from './inspiration/inspiration-backend'
 import { resolveTuringLlmConfig } from './turing-llm-config'
 import { assetBackends, mediaAnalysisConfig } from './turing-media-providers'
-import { createInspirationBackend } from './inspiration/inspiration-backend'
 import { routeModel } from './turing-model-routing'
 import { resolveVisionModel } from './turing-vision-model'
 
 const logger = createLogger('turing-memory-prewarm')
+/** Harness-internal diagnostics, tagged separately so they can be filtered. */
+const harnessLogger = createLogger('turing-harness')
 
 // Adapter so the harness MCP pool writes into the same app log file the user
 // reads. The harness PoolLogger uses `data?: unknown`; the app Logger uses
@@ -58,6 +68,28 @@ interface WarmProjectMemoryRuntime {
   refreshAllSummaries(): Promise<void>
 }
 
+/**
+ * Where the MCP tool-metadata cache lives. Set once at startup from the app's
+ * userData dir (see `setMcpToolCachePath`); until then the harness default (a
+ * temp path) applies, which still works but does not survive a reboot.
+ *
+ * Kept as a setter rather than importing `electron` here so this module stays
+ * unit-testable without an Electron runtime.
+ */
+let mcpToolCachePath: string | undefined
+let mcpToolCache: McpToolCache | undefined
+
+/** Point the MCP tool cache at a durable location. Call once, before any run. */
+export function setMcpToolCachePath(filePath: string): void {
+  mcpToolCachePath = filePath
+  mcpToolCache = undefined
+}
+
+function getMcpToolCache(): McpToolCache {
+  mcpToolCache ??= new McpToolCache(mcpToolCachePath ? { path: mcpToolCachePath } : {})
+  return mcpToolCache
+}
+
 const inflight = new Map<string, InflightWarmProjectSession>()
 const spareSessions = new Map<string, WarmProjectSession>()
 const assignedSessions = new Map<string, WarmProjectSession>()
@@ -76,7 +108,16 @@ export function getSharedMcpPool(projectPath: string): McpRuntimePool {
   const normalized = normalizeProjectPath(projectPath)
   let pool = sharedMcpPools.get(normalized)
   if (!pool) {
-    pool = new McpRuntimePool({ idleTimeoutMs: 24 * 60 * 60 * 1000, log: poolLog })
+    pool = new McpRuntimePool({
+      idleTimeoutMs: 24 * 60 * 60 * 1000,
+      // With a warm cache a server's tools are registered from disk in ~2ms and
+      // the child process starts only when a tool is actually called. That is
+      // what removes the multi-second wait before the first turn: previously
+      // every launch had to spawn and handshake every server just to learn what
+      // tools existed, and readiness was bounded by the slowest one.
+      toolCache: getMcpToolCache(),
+      log: poolLog,
+    })
     sharedMcpPools.set(normalized, pool)
     logger.info('Created new persistent shared MCP pool', {
       projectPath: normalized,
@@ -97,12 +138,64 @@ function normalizeProjectPath(projectPath: string) {
   return path.resolve(projectPath)
 }
 
+/**
+ * Whether write/edit register in content-less author-only mode (the schema drops
+ * `content`/`newString`). Single source of truth: both the Harness config below
+ * and the warm-session cache signature read this, so flipping it invalidates any
+ * stale pre-flag session instead of silently serving the old content-required
+ * `write` tool.
+ */
+const AUTHOR_ONLY_WRITES = true
+
+/**
+ * Cache key for a warm session's LLM wiring.
+ *
+ * Deliberately excludes the credential. The backend token is the signed-in
+ * user's JWT, renewed on a ~15-minute timer, and the harness now resolves it per
+ * request (see `apiKey` below) — so a rotated token needs no new session. Keying
+ * on it threw away the warm session (memory index + staleness scan) on every
+ * silent renew, which is pure cost for a value that is no longer captured.
+ *
+ * DOES include tool-shaping config (vision model, content-less writes). Those
+ * change what the session's tools actually DO — a warm session built before
+ * such a flag flipped is stale and must be rebuilt, but the model slug is
+ * unchanged so it would otherwise be served from cache indefinitely.
+ */
 function buildLlmSignature(modelRef?: string) {
   const llm = resolveTuringLlmConfig(modelRef ?? DEFAULT_MODEL_REF)
+  const visionModel = resolveVisionModel()
   return {
     config: llm,
-    signature: `${llm.baseUrl}::${llm.apiKey}`,
+    signature: `${llm.baseUrl}::${llm.modelSlug}::vision=${visionModel ?? ''}::authorOnlyWrites=${AUTHOR_ONLY_WRITES}`,
   }
+}
+
+/** Log levels the harness emits, mapped onto the app logger. */
+function forwardHarnessLogs(session: Session): void {
+  const store = (
+    session as unknown as { logStore?: { subscribe?: (fn: (e: unknown) => void) => () => void } }
+  ).logStore
+  if (!store?.subscribe) return
+  store.subscribe((entry) => {
+    const e = entry as {
+      level?: string
+      message?: string
+      tags?: string[]
+      data?: unknown
+    }
+    const message = typeof e.message === 'string' ? e.message : ''
+    if (!message) return
+    const context = {
+      ...(e.tags?.length ? { tags: e.tags } : {}),
+      ...(e.data && typeof e.data === 'object' ? { data: e.data } : {}),
+    }
+    // `debug` is dropped unless the app is running at debug level anyway, so
+    // forwarding it costs nothing and keeps the harness's own levels intact.
+    if (e.level === 'error') harnessLogger.error(message, context)
+    else if (e.level === 'warn') harnessLogger.warn(message, context)
+    else if (e.level === 'debug') harnessLogger.debug(message, context)
+    else harnessLogger.info(message, context)
+  })
 }
 
 async function createWarmProjectSession(
@@ -118,7 +211,13 @@ async function createWarmProjectSession(
     visionModel,
   })
   const harness = new Harness({
-    apiKey: config.apiKey,
+    // Resolved per request, not captured. The backend credential is the user's
+    // JWT (15-minute TTL, renewed on a timer by the renderer auth store); a
+    // snapshot taken here went stale mid-run and every later turn 401'd — which
+    // the app then reported as "Invalid API key", pointing at a Settings tab
+    // that does not exist. Re-reading the credential slot per call means a
+    // renewal lands on the very next turn of an in-flight run.
+    apiKey: () => resolveTuringLlmConfig(runtime.modelRef ?? DEFAULT_MODEL_REF).apiKey,
     baseUrl: config.baseUrl,
     cwd: normalizedProjectPath,
     permissionMode: 'bypass',
@@ -133,6 +232,12 @@ async function createWarmProjectSession(
     // OPENWAGGLE_ASSET_PROVIDER=turing, route the vision call through the backend
     // `/media/analysis` proxy (JWT auth + central billing) instead of OpenRouter.
     mediaAnalysis: mediaAnalysisConfig(visionModel),
+    // Same model, second job: when a TOOL returns an image (a Playwright
+    // screenshot) and the run's own model is text-only, the image is described
+    // by this model and the description is fed back as text. Without it the
+    // screenshot is dropped — and before that, sending it verbatim made the
+    // provider reject the entire request and killed the run.
+    visionModel,
     // Internal keyword→blueprint lookup for `inspiration_generator`, used when a
     // UI/poster is built without a reference image. The backend resolves the
     // user JWT per call and silently returns null (no token / no match / backend
@@ -144,6 +249,14 @@ async function createWarmProjectSession(
     // escalation falls back to indexing `toolModelCandidates` by complexity
     // score, where which model a rating lands on depends on the pool's length.
     routeModel,
+    // Content-less authoring for write/edit: the schema drops `content`/
+    // `newString`, so the driver never spends tokens generating a full-file
+    // draft the authoring model re-authors anyway. The authoring model (strong
+    // for medium/high via routeModel, the driver itself for unrouted low writes)
+    // is the sole author of the bytes. Paired with routeModel above, so a
+    // routed write still escalates and a low write falls back to the driver
+    // rather than erroring.
+    authorOnlyWrites: AUTHOR_ONLY_WRITES,
   })
   const { session } = await (
     harness.createProjectSession as (opts: Record<string, unknown>) => Promise<{ session: Session }>
@@ -162,6 +275,17 @@ async function createWarmProjectSession(
       llmSyncEnabled: true,
     },
   })
+
+  // Forward the harness's own diagnostics into the app log.
+  //
+  // Without this the harness logs to an in-memory LogStore nobody reads, so the
+  // most useful signals are invisible from outside: which tools the loop started
+  // with (including whether project/file/graph memory were registered at all),
+  // when the search ladder advises the model to ask memory before grepping, MCP
+  // pool hits and misses, and why a tool call was rejected. Diagnosing "memory
+  // isn't being used" from the app log alone is impossible without it — the
+  // absence of those lines reads as absence of the behaviour.
+  forwardHarnessLogs(session)
 
   // Eagerly prewarm the SHARED MCP POOL in the background. We do NOT attach the
   // servers to this session's registry here (that happens at run time via
@@ -190,38 +314,121 @@ async function createWarmProjectSession(
   }
 }
 
+async function prewarmMcpPool(projectPath: string, runtime: PrewarmRuntime): Promise<void> {
+  if (!runtime.mcpSettings) return
+  await reconcileMcpPool(projectPath, runtime.mcpSettings)
+}
+
 /**
- * Eagerly connect every enabled stdio MCP server into the project's shared pool.
- * Fire-and-forget by design: callers don't await this. Each server that connects
- * stays in the pool (24h idle timeout) so subsequent runs borrow it instantly.
+ * Bring the project's shared MCP pool in line with a settings view: connect
+ * every enabled stdio server that isn't pooled yet, and kill every pooled
+ * server that is no longer enabled.
+ *
+ * Fire-and-forget by design — callers must not await this on a latency-
+ * sensitive path. Each server that connects stays in the pool (24h idle
+ * timeout) so subsequent runs borrow it instantly.
+ *
+ * Called from two places, both of them off the prompt path:
+ *   - project open / model change, via {@link createWarmProjectSession}
+ *   - a save on the MCP settings page, via the turing MCP config service
  *
  * This deliberately touches only the POOL — it does not register providers on any
  * session. Run-time code (`connectMcpBackground`) borrows from the warm pool and
  * registers on the live session then. Splitting warm (pool) from attach (session)
  * is what lets a spare session stay MCP-free while the pool is shared + hot.
  */
-async function prewarmMcpPool(projectPath: string, runtime: PrewarmRuntime): Promise<void> {
-  if (!runtime.mcpSettings) return
-  const pool = getSharedMcpPool(projectPath)
+/**
+ * One-time Chromium bootstrap for the Playwright MCP.
+ *
+ * `@playwright/mcp` needs a browser binary that neither it nor the app ships. This
+ * runs `npx playwright install chromium` the first time a Playwright server is
+ * about to cold-spawn, gated by `playwrightChromiumEnsured` so it never repeats in
+ * a process lifetime. Playwright's own installer is idempotent, so even if the
+ * guard raced it would be a fast skip, not a re-download. Best-effort: a failure
+ * logs and moves on — the missing binary then surfaces as a normal tool error.
+ */
+let playwrightChromiumEnsured = false
+
+async function ensurePlaywrightChromiumOnce(
+  servers: readonly { readonly command?: string; readonly args?: readonly string[] }[],
+): Promise<void> {
+  if (playwrightChromiumEnsured) return
+  const isPlaywrightServer = servers.some(
+    (s) => s.args?.some((arg) => arg.includes('@playwright/mcp')) === true,
+  )
+  if (!isPlaywrightServer) return
+  playwrightChromiumEnsured = true
+
+  logger.info('Bootstrapping Playwright Chromium (one-time, for @playwright/mcp)')
+  await new Promise<void>((resolve) => {
+    const child = spawn('npx', ['playwright', 'install', 'chromium'], {
+      stdio: 'ignore',
+      shell: process.platform === 'win32',
+    })
+    child.on('close', () => resolve())
+    child.on('error', () => resolve())
+  })
+}
+
+export async function reconcileMcpPool(
+  projectPath: string,
+  mcpSettings: McpSettingsView,
+): Promise<void> {
+  const normalized = normalizeProjectPath(projectPath)
+  const pool = getSharedMcpPool(normalized)
+  // A reconcile is triggered by something CHANGING — a project opening, a model
+  // switch, or a save on the MCP page. Any of those can be the fix for a server
+  // that previously failed, so forget recorded failures and let them retry.
+  pool.clearFailureCooldowns()
   // Resolve the same server options the run-time bridge will use. We import the
   // resolver lazily to avoid a cycle (the bridge imports prewarm's pool getter).
   const { resolveOpenWaggleMcpServers } = await import('./turing-openwaggle-bridge')
-  const { servers } = resolveOpenWaggleMcpServers(runtime.mcpSettings)
+  const { servers } = resolveOpenWaggleMcpServers(mcpSettings)
+
+  // Kill anything the user just disabled or deleted. Without this a toggled-off
+  // server keeps its child process — and keeps serving tools to the next run —
+  // for the pool's full 24h idle window. `evictById` matches on provider id, so
+  // it also catches a server whose command/env changed (the new options produce
+  // a different signature, and the stale process would otherwise linger).
+  const wantedIds = new Set(
+    servers.filter((options) => pool.has(options)).map((options) => options.id),
+  )
+  const stale = pool.pooledIds().filter((id) => !wantedIds.has(id))
+  if (stale.length > 0) {
+    await Promise.allSettled(stale.map((id) => pool.evictById(id)))
+    logger.info('Evicted stale MCP servers from pool', { projectPath: normalized, stale })
+  }
+
   if (servers.length === 0) return
 
-  // Borrow each server into the pool with a throwaway session id. We never
-  // return them — they're meant to stay warm. allSettled so a single failing
-  // server (e.g. a bad command) doesn't reject the whole prewarm.
+  // Lazy one-time Chromium bootstrap for Playwright MCP. `@playwright/mcp` ships
+  // the server but NOT the browser binary; without it the first tool call dies
+  // with "Executable doesn't exist". We run `npx playwright install chromium`
+  // once per process lifetime, only when a Playwright server is actually about to
+  // cold-spawn, so non-Playwright projects pay nothing. Idempotent on Playwright's
+  // side too (it skips when the binary is already present), so a redundant trigger
+  // is a fast no-op rather than a re-download.
+  await ensurePlaywrightChromiumOnce(servers).catch((error: unknown) => {
+    logger.warn('Playwright Chromium bootstrap failed (non-fatal)', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  })
+
+  // npm cache priming is the POOL's job now: it happens inside the cold-spawn
+  // path, so it delays only the server actually spawning. Doing it here meant an
+  // up-front barrier over every cold server before any of them was connected.
+  const cold = servers.filter((options) => !pool.has(options))
+  if (cold.length === 0) return
   const t0 = Date.now()
-  const results = await Promise.allSettled(
-    servers.map((options) => pool.borrow(options, 'prewarm')),
-  )
+  // allSettled so a single failing server (e.g. a bad command) doesn't reject
+  // the whole warm-up.
+  const results = await Promise.allSettled(cold.map((options) => pool.prewarm(options)))
   const fulfilled = results.filter((r) => r.status === 'fulfilled').length
   logger.info('MCP pool prewarm complete', {
-    projectPath,
-    servers: servers.length,
+    projectPath: normalized,
+    servers: cold.length,
     connected: fulfilled,
-    failed: servers.length - fulfilled,
+    failed: cold.length - fulfilled,
     ms: Date.now() - t0,
   })
 }

@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { PROJECT_SKILLS_DIR_SEGMENTS } from '@shared/constants/project-config'
 import type { SkillImportChoice, SkillImportResult } from '@shared/types/standards'
 import { normalizeSkillId } from '@shared/utils/skill-id'
 import { parseSkillDocument } from './skill-document'
@@ -240,7 +241,7 @@ async function importRawSkillMarkdown(projectPath: string, url: string) {
 
   const parsed = parseSkillDocument(markdown)
   const skillId = normalizeSkillId(parsed.name)
-  const skillDir = path.join(projectPath, '.openwaggle', 'skills', skillId)
+  const skillDir = path.join(projectPath, ...PROJECT_SKILLS_DIR_SEGMENTS, skillId)
   const skillPath = path.join(skillDir, 'SKILL.md')
 
   await assertImportDestinationAvailable(skillDir, skillId)
@@ -277,7 +278,7 @@ async function importGitHubSkillFolder(projectPath: string, target: GitHubFolder
   )
   const parsed = parseSkillDocument(skillMarkdown)
   const skillId = normalizeSkillId(parsed.name)
-  const skillDir = path.join(projectPath, '.openwaggle', 'skills', skillId)
+  const skillDir = path.join(projectPath, ...PROJECT_SKILLS_DIR_SEGMENTS, skillId)
 
   await assertImportDestinationAvailable(skillDir, skillId)
 

@@ -1,6 +1,7 @@
 import { MessageId, SessionBranchId, SessionId, SessionNodeId } from '@shared/types/brand'
 import type { SessionNode } from '@shared/types/session'
 import { describe, expect, it } from 'vitest'
+import { getUIMessageText, getUIMessageTextCached } from '../chat-message-text'
 import { mergeBackgroundReconnectMessages } from '../chat-reconnect-merge'
 import { resolveTranscriptMessages } from '../session-workspace-transcript'
 
@@ -784,5 +785,32 @@ create a beautifull sass page in single file index.html`,
     })
 
     expect(resolved.map((message) => message.id)).toEqual(['assistant-task'])
+  })
+})
+
+describe('getUIMessageTextCached', () => {
+  it('returns the same value as getUIMessageText', () => {
+    const message = uiMessage('m-1', 'user', 'hello world')
+    expect(getUIMessageTextCached(message)).toBe(getUIMessageText(message))
+  })
+
+  it('concatenates multiple text parts (correctness of the cached path)', () => {
+    const message = {
+      id: 'm-2',
+      role: 'assistant' as const,
+      parts: [
+        { type: 'text', content: 'first' },
+        { type: 'tool-call', id: 'tc', name: 'read', arguments: '', state: 'complete' },
+        { type: 'text', content: 'second' },
+      ],
+      createdAt: new Date(1),
+    }
+    expect(getUIMessageTextCached(message)).toBe('first\n\nsecond')
+  })
+
+  it('is stable across repeated calls on the same message object', () => {
+    const message = uiMessage('m-3', 'user', 'unchanged')
+    expect(getUIMessageTextCached(message)).toBe('unchanged')
+    expect(getUIMessageTextCached(message)).toBe('unchanged')
   })
 })

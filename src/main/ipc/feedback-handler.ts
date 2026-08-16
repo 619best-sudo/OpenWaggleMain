@@ -18,7 +18,9 @@ import { typedHandle } from './typed-ipc'
 
 const logger = createLogger('ipc:feedback')
 
-const FEEDBACK_REPO = 'OpenWaggle/OpenWaggle'
+// TODO(branding): point this at the Turing Machine repo once the public repo
+// URL is decided. Currently still pointing at the fork's origin repo.
+const FEEDBACK_REPO = '619best-sudo/OpenWaggleMain'
 
 function execFilePromise(
   command: string,
@@ -134,7 +136,8 @@ async function collectGithubRepoStats(): Promise<GithubRepoStatsSnapshot | null>
           {
             name,
             stargazerCount:
-              typeof candidate.stargazerCount === 'number' && Number.isFinite(candidate.stargazerCount)
+              typeof candidate.stargazerCount === 'number' &&
+              Number.isFinite(candidate.stargazerCount)
                 ? Math.max(0, Math.trunc(candidate.stargazerCount))
                 : 0,
             forkCount:

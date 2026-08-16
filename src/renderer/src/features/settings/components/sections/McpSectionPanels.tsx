@@ -7,7 +7,6 @@ import type {
 import {
   AlertTriangle,
   CheckCircle2,
-  GitBranch,
   Globe,
   Network,
   Plus,
@@ -26,12 +25,6 @@ function formatServerDetail(server: McpServerSummary) {
   if (server.transport === 'http' && server.url) return server.url
   if (server.transport === 'stdio' && server.command) return server.command
   return 'No transport configured'
-}
-
-function formatDisplayPath(path: string) {
-  return path
-    .replaceAll('.openwaggle', '.turing-machine')
-    .replaceAll('openwaggle-mcp', 'turing-machine-mcp')
 }
 
 function SourceButton({
@@ -60,7 +53,7 @@ function SourceButton({
         <div className="min-w-0">
           <div className="text-[13px] font-medium">{source.label}</div>
           <div className="mt-1 truncate text-[11px] text-text-muted">
-            {formatDisplayPath(source.path)}
+            {source.path}
           </div>
         </div>
         <span
@@ -134,14 +127,6 @@ function ServerRow({
         </span>
       </div>
       <div className="flex items-center gap-3 shrink-0">
-        <span
-          className={cn(
-            'text-[11px] font-medium',
-            server.enabled ? 'text-success' : 'text-text-muted',
-          )}
-        >
-          {server.enabled ? 'Enabled' : 'Disabled'}
-        </span>
         <ToggleSwitch
           checked={server.enabled}
           disabled={busy}
@@ -173,8 +158,7 @@ export function McpSectionHeading() {
     <div className="space-y-1">
       <h2 className="text-[20px] font-semibold text-text-primary">MCP</h2>
       <p className="max-w-[760px] text-[13px] leading-5 text-text-tertiary">
-        Connect external tools, APIs, and file systems to your assistant using the Model Context
-        Protocol.
+        Connect external tools and services to Turing Machine using the Model Context Protocol.
       </p>
     </div>
   )
@@ -268,7 +252,6 @@ interface McpQuickInstallPanelProps {
   }) => Promise<void>
 }
 
-type McpInstallMethod = 'manual' | 'github'
 type McpInstallTarget = {
   readonly id: McpConfigSourceId
   readonly label: string
@@ -276,7 +259,7 @@ type McpInstallTarget = {
 }
 
 const PROJECT_SOURCE_PREFERENCE: readonly McpConfigSourceId[] = [
-  'project-openwaggle',
+  'project-turing-machine',
   'project-standard',
   'project-agents',
   'project-pi',
@@ -294,46 +277,17 @@ export function McpQuickInstallPanel({
   onSelectSource,
   onAddServer,
 }: McpQuickInstallPanelProps) {
-  const [installMethod, setInstallMethod] = useState<McpInstallMethod>('manual')
   const [transport, setTransport] = useState<'stdio' | 'http'>('stdio')
   const [name, setName] = useState('')
   const [command, setCommand] = useState('')
   const [args, setArgs] = useState('')
   const [url, setUrl] = useState('')
-  const [githubUrl, setGitHubUrl] = useState('')
-
-  const githubInstall = useMemo(() => {
-    if (githubUrl.trim().length === 0) {
-      return null
-    }
-
-    try {
-      return buildGitHubInstallInput(githubUrl)
-    } catch {
-      return null
-    }
-  }, [githubUrl])
-
-  const githubValidationMessage = useMemo(() => {
-    if (githubUrl.trim().length === 0) {
-      return 'Paste a GitHub repository URL to generate a ready-to-run MCP command.'
-    }
-
-    try {
-      buildGitHubInstallInput(githubUrl)
-      return null
-    } catch (error) {
-      return error instanceof Error ? error.message : 'Enter a valid GitHub repository URL.'
-    }
-  }, [githubUrl])
 
   const canInstall =
     !busy &&
     !!selectedSource?.editable &&
-    (installMethod === 'github'
-      ? githubInstall !== null
-      : name.trim().length > 0 &&
-        (transport === 'http' ? url.trim().length > 0 : command.trim().length > 0))
+    name.trim().length > 0 &&
+    (transport === 'http' ? url.trim().length > 0 : command.trim().length > 0)
 
   const installTargets = useMemo(() => {
     const editableSources = sources.filter((source) => source.editable)
@@ -383,12 +337,6 @@ export function McpQuickInstallPanel({
   }, [selectedInstallTarget, selectedSource])
 
   async function handleAdd() {
-    if (installMethod === 'github') {
-      if (!githubInstall) return
-      await onAddServer(githubInstall)
-      return
-    }
-
     await onAddServer({
       transport,
       name,
@@ -403,8 +351,7 @@ export function McpQuickInstallPanel({
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="space-y-1">
           <p className="max-w-[500px] text-[13px] leading-5 text-text-tertiary">
-            Technical users can configure a server manually. Everyone else can paste a GitHub
-            repository URL and let Turing Machine prepare the command for them.
+            Configure a server manually by giving its command and arguments, or a remote URL.
           </p>
         </div>
         {sources.length > 0 && (
@@ -429,46 +376,7 @@ export function McpQuickInstallPanel({
         )}
       </div>
 
-      <div className="mb-6 space-y-3">
-        <div
-          className="grid w-full grid-cols-2 rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-1"
-          aria-label="MCP install method"
-        >
-          <Button
-            variant="unstyled"
-            disabled={busy}
-            aria-pressed={installMethod === 'manual'}
-            onClick={() => setInstallMethod('manual')}
-            fullWidth
-            className={cn(
-              'rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors',
-              installMethod === 'manual'
-                ? 'bg-[var(--theme-surface-overlay)] text-text-primary shadow-sm'
-                : 'text-text-tertiary hover:bg-[var(--theme-surface-overlay)] hover:text-text-secondary',
-            )}
-          >
-            Manual Setup
-          </Button>
-          <Button
-            variant="unstyled"
-            disabled={busy}
-            aria-pressed={installMethod === 'github'}
-            onClick={() => setInstallMethod('github')}
-            fullWidth
-            className={cn(
-              'rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors',
-              installMethod === 'github'
-                ? 'bg-[var(--theme-surface-overlay)] text-text-primary shadow-sm'
-                : 'text-text-tertiary hover:bg-[var(--theme-surface-overlay)] hover:text-text-secondary',
-            )}
-          >
-            GitHub URL
-          </Button>
-        </div>
-      </div>
-
-      {installMethod === 'manual' ? (
-        <div className="space-y-3">
+      <div className="space-y-3">
           <div className="grid gap-3 rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4 md:grid-cols-[180px_minmax(0,1fr)]">
             <label className="space-y-1.5">
               <span className="text-[12px] font-medium text-text-primary">Connection Type</span>
@@ -538,51 +446,6 @@ export function McpQuickInstallPanel({
             </div>
           )}
         </div>
-      ) : (
-        <div className="space-y-3">
-          <div className="rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4">
-            <label className="space-y-1.5">
-              <span className="flex items-center gap-1.5 text-[12px] font-medium text-text-primary">
-                <GitBranch className="size-3.5 text-text-tertiary" />
-                GitHub Repository URL
-              </span>
-              <TextInput
-                value={githubUrl}
-                disabled={busy}
-                placeholder="https://github.com/owner/repo"
-                onChange={(event) => setGitHubUrl(event.target.value)}
-                className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
-              />
-            </label>
-            <p
-              className={cn(
-                'mt-2 text-[11px] leading-5',
-                githubValidationMessage ? 'text-text-tertiary' : 'text-text-muted',
-              )}
-            >
-              {githubValidationMessage ??
-                'Turing Machine will save a generated npx command so the MCP is ready to run from this repository.'}
-            </p>
-          </div>
-
-          <div className="grid gap-3 rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4 md:grid-cols-2">
-            <div className="space-y-1.5">
-              <span className="text-[12px] font-medium text-text-primary">Server Name</span>
-              <div className="flex min-h-10 items-center rounded-lg border border-transparent bg-[var(--theme-surface-overlay)] px-3 py-2 text-[12px] text-text-secondary">
-                {githubInstall?.name ?? 'Derived from the repository name'}
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <span className="text-[12px] font-medium text-text-primary">Generated Command</span>
-              <div className="flex min-h-10 items-center rounded-lg border border-transparent bg-[var(--theme-surface-overlay)] px-3 py-2 font-mono text-[11px] text-text-secondary">
-                {githubInstall
-                  ? `${githubInstall.command} ${githubInstall.args ?? ''}`.trim()
-                  : 'npx -y github:owner/repo'}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="mt-8 flex items-center justify-between gap-4 border-t border-[var(--theme-border-overlay-subtle)] pt-4">
         <p className="min-w-0 text-[12px] text-text-muted">{availableTarget}</p>
@@ -597,76 +460,11 @@ export function McpQuickInstallPanel({
               : 'px-6'
           }
         >
-          {installMethod === 'github' ? 'Add From GitHub' : 'Add Server'}
+          Add Server
         </Button>
       </div>
     </div>
   )
-}
-
-function buildGitHubInstallInput(sourceUrl: string): {
-  transport: 'stdio'
-  name: string
-  command: string
-  args: string
-} {
-  const url = parseGitHubUrl(sourceUrl)
-  const packageSpec = url.ref
-    ? `github:${url.owner}/${url.repo}#${url.ref}`
-    : `github:${url.owner}/${url.repo}`
-
-  return {
-    transport: 'stdio',
-    name: normalizeGitHubRepoName(url.repo),
-    command: 'npx',
-    args: `-y ${packageSpec}`,
-  }
-}
-
-function parseGitHubUrl(sourceUrl: string) {
-  let url: URL
-  try {
-    url = new URL(sourceUrl.trim())
-  } catch {
-    throw new Error('Enter a valid GitHub repository URL.')
-  }
-
-  if (
-    (url.protocol !== 'http:' && url.protocol !== 'https:') ||
-    !['github.com', 'www.github.com'].includes(url.hostname)
-  ) {
-    throw new Error('Enter a valid GitHub repository URL.')
-  }
-
-  const segments = url.pathname
-    .replace(/\.git$/, '')
-    .split('/')
-    .filter(Boolean)
-  const [owner, repo, mode, ref] = segments
-
-  if (!owner || !repo) {
-    throw new Error('GitHub URLs must include both an owner and repository name.')
-  }
-
-  return {
-    owner,
-    repo,
-    ref: mode === 'tree' || mode === 'blob' ? ref : undefined,
-  }
-}
-
-function normalizeGitHubRepoName(repo: string) {
-  const normalized = repo
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-
-  if (!normalized) {
-    throw new Error('Could not derive an MCP server name from that repository URL.')
-  }
-
-  return normalized
 }
 
 function choosePreferredSource(

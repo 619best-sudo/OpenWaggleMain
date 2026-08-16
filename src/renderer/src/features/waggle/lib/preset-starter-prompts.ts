@@ -128,7 +128,7 @@ const PRESET_STARTER_PROMPTS: Readonly<Record<string, readonly WaggleStarterProm
       id: 'existing-mobile-feature-edit',
       title: 'Edit existing mobile feature',
       prompt:
-        'This is an edit to an existing mobile feature, not a greenfield build. First inspect the current implementation, provided design references, and the adjacent screens, navigation paths, or shared logic that could be disturbed. Then update the existing feature safely, add microinteractions only if the request or UX warrants them, avoid unnecessary media generation, and verify the changed path plus nearby mobile flows with mobile-mcp before sign-off.',
+        'This is an edit to an existing mobile feature, not a greenfield build. First inspect the current implementation, provided design references, and the adjacent screens, navigation paths, or shared logic that could be disturbed. Then update the existing feature safely, add microinteractions only if the request or UX warrants them, avoid unnecessary media generation, and verify the changed path plus nearby mobile flows with the built-in mobile automation before sign-off.',
     },
     {
       id: 'figma-to-mobile-ui',
@@ -140,7 +140,7 @@ const PRESET_STARTER_PROMPTS: Readonly<Record<string, readonly WaggleStarterProm
       id: 'mobile-regression-fix',
       title: 'Mobile regression and blast radius',
       prompt:
-        'Investigate and fix a mobile regression in this repository. First identify the main broken screen or flow and the other screens, navigation paths, shared state, APIs, or data flows whose behavior may have been disturbed by the change. Then implement the safest fix in the real code path, use animation or generated media only if the request clearly needs it, and verify both the main regression and the adjacent disturbed mobile flows with mobile-mcp before declaring the work complete.',
+        'Investigate and fix a mobile regression in this repository. First identify the main broken screen or flow and the other screens, navigation paths, shared state, APIs, or data flows whose behavior may have been disturbed by the change. Then implement the safest fix in the real code path, use animation or generated media only if the request clearly needs it, and verify both the main regression and the adjacent disturbed mobile flows with the built-in mobile automation before declaring the work complete.',
     },
   ],
   'backend-engineer': [
@@ -174,7 +174,7 @@ const PRESET_STARTER_PROMPTS: Readonly<Record<string, readonly WaggleStarterProm
       id: 'mobile-qa-regression',
       title: 'Mobile QA and regressions',
       prompt:
-        'Run a complete mobile QA cycle for this change. First plan the full mobile test suite for the changed screen, navigation path, or app flow, including happy paths, edge cases, failure states, device or runtime risks, and regressions in adjacent screens or flows that may have been disturbed. Then execute the planned cases with mobile-mcp, record pass/fail/blocked outcomes, capture evidence, and finish with a final QA judgment on whether the mobile change is safe to ship.',
+        'Run a complete mobile QA cycle for this change. First plan the full mobile test suite for the changed screen, navigation path, or app flow, including happy paths, edge cases, failure states, device or runtime risks, and regressions in adjacent screens or flows that may have been disturbed. Then execute the planned cases with the built-in mobile automation, record pass/fail/blocked outcomes, capture evidence, and finish with a final QA judgment on whether the mobile change is safe to ship.',
     },
     {
       id: 'backend-qa-api-sql',
@@ -186,7 +186,7 @@ const PRESET_STARTER_PROMPTS: Readonly<Record<string, readonly WaggleStarterProm
       id: 'cross-flow-blast-radius',
       title: 'Disturbed flow blast radius',
       prompt:
-        'Do a QA pass focused on ripple effects from this change. First identify the primary feature that changed and then plan all the other files, routes, screens, APIs, database behaviors, and user flows whose functionality may have been disturbed indirectly. Cover web, mobile, and backend surfaces when relevant. Execute the planned tests with the right tools such as Playwright, mobile-mcp, API-call MCP, and SQL MCP, record evidence for confirmed regressions or blocked areas, and finish with a final QA judgment that clearly states what still needs retesting before ship.',
+        'Do a QA pass focused on ripple effects from this change. First identify the primary feature that changed and then plan all the other files, routes, screens, APIs, database behaviors, and user flows whose functionality may have been disturbed indirectly. Cover web, mobile, and backend surfaces when relevant. Execute the planned tests with the right tools such as Playwright, the built-in mobile automation, API-call MCP, and SQL MCP, record evidence for confirmed regressions or blocked areas, and finish with a final QA judgment that clearly states what still needs retesting before ship.',
     },
   ],
   'qa-debug': [

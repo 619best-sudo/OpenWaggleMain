@@ -1,10 +1,34 @@
-import type { PlanReviewStepEdit, PlanStepAttachment } from '@shared/types/plan-review'
+import type {
+  PlanReviewStepEdit,
+  PlanReviewTask,
+  PlanStepAttachment,
+} from '@shared/types/plan-review'
 import { useRef, useState } from 'react'
 import type { PlanStepDraft } from '../components/PlanReviewStepRow'
 import { draftHasEdits, emptyDraft } from '../components/PlanReviewStepRow'
 
 /** Per-step edits the user is composing, keyed by task id. */
 type DraftEdits = Record<string, PlanStepDraft>
+
+/**
+ * Start a draft round from the additions the user already made.
+ *
+ * On a re-plan the harness echoes each step's `userNotes`/`attachments` back on
+ * the task. Starting from an empty map dropped them from the screen — the user
+ * saw no trace of the mockup they attached last round, and re-attaching it was
+ * the only way to be sure. Seeding makes the new draft carry them forward, both
+ * visibly and in the next submission.
+ */
+function seedDrafts(tasks: readonly PlanReviewTask[]): DraftEdits {
+  const seeded: DraftEdits = {}
+  for (const task of tasks) {
+    const notes = task.userNotes?.trim() ?? ''
+    const attachments = task.attachments ?? []
+    if (!notes && attachments.length === 0) continue
+    seeded[task.id] = { notes, attachments: [...attachments] }
+  }
+  return seeded
+}
 
 /**
  * Collapse the drafts into the wire shape, dropping steps the user never
@@ -22,6 +46,8 @@ function toStepEdits(drafts: DraftEdits): PlanReviewStepEdit[] {
 }
 
 interface UsePlanStepDraftsInput {
+  /** The draft's steps, in execution order — the seed for this round's edits. */
+  readonly tasks: readonly PlanReviewTask[]
   /**
    * Project root the picked files are staged into. Absent ⇒ attaching fails with
    * a message, because there is nowhere to put the files.
@@ -38,15 +64,17 @@ interface UsePlanStepDraftsInput {
  * map, which step is expanded, the hidden file input, and the staging round trip
  * that turns picked files into stable on-disk paths.
  */
-export function usePlanStepDrafts({ projectPath, onError }: UsePlanStepDraftsInput) {
-  const [drafts, setDrafts] = useState<DraftEdits>({})
+export function usePlanStepDrafts({ tasks, projectPath, onError }: UsePlanStepDraftsInput) {
+  const [drafts, setDrafts] = useState<DraftEdits>(() => seedDrafts(tasks))
   const [expanded, setExpanded] = useState<string | null>(null)
   const [staging, setStaging] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const attachTargetRef = useRef<string | null>(null)
 
+  // Called during the render that first sees a new draft, so `tasks` is already
+  // the new draft's steps and the seed lands on the right ids.
   function reset() {
-    setDrafts({})
+    setDrafts(seedDrafts(tasks))
     setExpanded(null)
     setStaging(null)
   }
@@ -88,7 +116,7 @@ export function usePlanStepDrafts({ projectPath, onError }: UsePlanStepDraftsInp
       // path could be a temp file that is gone by then.
       const prepared = await window.api.prepareAttachments(projectPath, Array.from(fileList))
       if (!prepared.length) {
-        onError('Could not read the selected file(s).')
+        onError('Could not read the selected files.')
         return
       }
       const existing = drafts[taskId]?.attachments ?? []

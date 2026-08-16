@@ -4,7 +4,7 @@ import { PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE } from '@shared/types/phase'
 import type { SessionDetail, SessionSummary } from '@shared/types/session'
 import * as Effect from 'effect/Effect'
 import { runStoreEffect } from '../store-runtime'
-import { EMPTY_INDEX, MESSAGE_ENTRY_TYPE } from './constants'
+import { EMPTY_INDEX } from './constants'
 import { hydrateWaggleConfig, parseJsonValue } from './json'
 import {
   getActivePathRows,
@@ -143,12 +143,7 @@ function summaryCountSql(sql: SqlClient.SqlClient, archived: number, limit: numb
       s.archived,
       s.created_at,
       s.updated_at,
-      (
-        SELECT COUNT(*)
-        FROM session_nodes sn
-        WHERE sn.session_id = s.id
-          AND sn.pi_entry_type = ${MESSAGE_ENTRY_TYPE}
-      ) AS message_count
+      s.message_count AS message_count
     FROM sessions s
     WHERE s.archived = ${archived}
     ORDER BY s.updated_at DESC

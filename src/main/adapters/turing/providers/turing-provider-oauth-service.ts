@@ -7,8 +7,9 @@
  * no connected accounts, keeping the renderer's auth UI consistent: providers are
  * API-key/configured only.
  */
-import * as Effect from 'effect/Effect'
+
 import { Layer } from 'effect'
+import * as Effect from 'effect/Effect'
 import { ProviderOAuthService } from '../../../ports/provider-oauth-service'
 
 export const TuringProviderOAuthLive = Layer.succeed(
@@ -17,9 +18,7 @@ export const TuringProviderOAuthLive = Layer.succeed(
     listProviders: () => Effect.succeed([]),
 
     login: () =>
-      Effect.fail(
-        new Error('OAuth login is not supported by the turing-harness runtime yet.'),
-      ),
+      Effect.fail(new Error('OAuth login is not supported by the turing-harness runtime yet.')),
 
     logout: () => Effect.void,
 

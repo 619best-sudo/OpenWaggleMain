@@ -34,9 +34,10 @@ function sortBranchRefs(left: GitBranchInfo, right: GitBranchInfo) {
   return left.name.localeCompare(right.name)
 }
 
-export async function listGitBranches(projectPath: string): Promise<GitBranchListResult> {
+/** Returns `null` for non-repository folders — see the note on `getGitStatus`. */
+export async function listGitBranches(projectPath: string): Promise<GitBranchListResult | null> {
   if (!(await isGitRepository(projectPath))) {
-    throw new Error('Selected folder is not a Git repository.')
+    return null
   }
 
   const currentResult = await runGit(projectPath, ['rev-parse', '--abbrev-ref', 'HEAD'])

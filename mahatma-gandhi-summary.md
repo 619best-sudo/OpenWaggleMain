@@ -1,0 +1,12 @@
+- generic [active] [ref=e1]:
+  - link "Jump to content" [ref=e2] [cursor=pointer]:
+    - /url: "#bodyContent"
+  - banner [ref=e4]:
+    - generic [ref=e5]
+    - generic [ref=e16]
+  - generic [ref=e38]:
+    - navigation "Contents" [ref=e42]
+    - main [ref=e110]
+    - contentinfo [ref=e5318]
+  - generic [ref=e5357]:
+    - list

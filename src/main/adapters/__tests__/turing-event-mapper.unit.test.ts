@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
 import type { AgentTransportEvent } from '@shared/types/stream'
 import type { AgentEvent as TuringAgentEvent } from 'turing-harness'
+import { describe, expect, it } from 'vitest'
 import { createTuringEventMapper } from '../turing/turing-event-mapper'
 
 /**
@@ -78,7 +78,12 @@ describe('turing event mapper: working-phase projection', () => {
  * the runner's real id so tool_execution_* binds to the SAME part (no duplicate).
  */
 describe('turing event mapper: tool-call streaming', () => {
-  type ToolCallBlock = { type: 'toolCall'; id: string; name: string; arguments: Record<string, unknown> }
+  type ToolCallBlock = {
+    type: 'toolCall'
+    id: string
+    name: string
+    arguments: Record<string, unknown>
+  }
   type PartialMsg = { content: ToolCallBlock[] }
 
   function assistant(event: TuringAgentEvent) {
@@ -134,7 +139,11 @@ describe('turing event mapper: tool-call streaming', () => {
 
     const toolUpdates = emitted
       .filter((e) => e.type === 'message_update')
-      .map((e) => (e as { assistantMessageEvent: { type: string; toolCallId?: string } }).assistantMessageEvent)
+      .map(
+        (e) =>
+          (e as { assistantMessageEvent: { type: string; toolCallId?: string } })
+            .assistantMessageEvent,
+      )
 
     expect(toolUpdates.map((u) => u.type)).toEqual([
       'toolcall_start',
@@ -161,7 +170,11 @@ describe('turing event mapper: tool-call streaming', () => {
       assistant({
         type: 'message_update',
         message: {} as never,
-        assistantMessageEvent: { type: 'toolcall_start', contentIndex: 0, partial: partialNoId() as never },
+        assistantMessageEvent: {
+          type: 'toolcall_start',
+          contentIndex: 0,
+          partial: partialNoId() as never,
+        },
       }),
       assistant({
         type: 'message_update',
@@ -197,7 +210,11 @@ describe('turing event mapper: tool-call streaming', () => {
 
     const toolUpdates = emitted
       .filter((e) => e.type === 'message_update')
-      .map((e) => (e as { assistantMessageEvent: { type: string; toolCallId?: string; delta?: string } }).assistantMessageEvent)
+      .map(
+        (e) =>
+          (e as { assistantMessageEvent: { type: string; toolCallId?: string; delta?: string } })
+            .assistantMessageEvent,
+      )
 
     // start is deferred until the id is known; deltas are preserved in order.
     expect(toolUpdates.map((u) => u.type)).toEqual([
@@ -221,12 +238,23 @@ describe('turing event mapper: tool-call streaming', () => {
       assistant({
         type: 'message_update',
         message: {} as never,
-        assistantMessageEvent: { type: 'toolcall_start', contentIndex: 0, partial: partial([['call-a', 'read']]) as never },
+        assistantMessageEvent: {
+          type: 'toolcall_start',
+          contentIndex: 0,
+          partial: partial([['call-a', 'read']]) as never,
+        },
       }),
       assistant({
         type: 'message_update',
         message: {} as never,
-        assistantMessageEvent: { type: 'toolcall_start', contentIndex: 1, partial: partial([['call-a', 'read'], ['call-b', 'grep']]) as never },
+        assistantMessageEvent: {
+          type: 'toolcall_start',
+          contentIndex: 1,
+          partial: partial([
+            ['call-a', 'read'],
+            ['call-b', 'grep'],
+          ]) as never,
+        },
       }),
       assistant({
         type: 'message_update',
@@ -235,7 +263,10 @@ describe('turing event mapper: tool-call streaming', () => {
           type: 'toolcall_end',
           contentIndex: 0,
           toolCall: { type: 'toolCall', id: 'call-a', name: 'read', arguments: {} },
-          partial: partial([['call-a', 'read'], ['call-b', 'grep']]) as never,
+          partial: partial([
+            ['call-a', 'read'],
+            ['call-b', 'grep'],
+          ]) as never,
         },
       }),
       assistant({
@@ -245,14 +276,21 @@ describe('turing event mapper: tool-call streaming', () => {
           type: 'toolcall_end',
           contentIndex: 1,
           toolCall: { type: 'toolCall', id: 'call-b', name: 'grep', arguments: {} },
-          partial: partial([['call-a', 'read'], ['call-b', 'grep']]) as never,
+          partial: partial([
+            ['call-a', 'read'],
+            ['call-b', 'grep'],
+          ]) as never,
         },
       }),
     ])
 
     const toolUpdates = emitted
       .filter((e) => e.type === 'message_update')
-      .map((e) => (e as { assistantMessageEvent: { type: string; toolCallId?: string } }).assistantMessageEvent)
+      .map(
+        (e) =>
+          (e as { assistantMessageEvent: { type: string; toolCallId?: string } })
+            .assistantMessageEvent,
+      )
 
     expect(toolUpdates.map((u) => `${u.type}:${u.toolCallId}`)).toEqual([
       'toolcall_start:call-a',
@@ -273,14 +311,20 @@ describe('turing event mapper: streamed message-id recording', () => {
     })
 
     // Two assistant turns. Each is a message_start → (content) → message_end.
-    mapEvent({ type: 'message_start', message: { role: 'assistant' } } as unknown as TuringAgentEvent)
+    mapEvent({
+      type: 'message_start',
+      message: { role: 'assistant' },
+    } as unknown as TuringAgentEvent)
     mapEvent({
       type: 'message_update',
       message: {} as never,
       assistantMessageEvent: { type: 'text_delta', contentIndex: 0, delta: 'first' },
     } as unknown as TuringAgentEvent)
     mapEvent({ type: 'message_end', message: { role: 'assistant' } } as unknown as TuringAgentEvent)
-    mapEvent({ type: 'message_start', message: { role: 'assistant' } } as unknown as TuringAgentEvent)
+    mapEvent({
+      type: 'message_start',
+      message: { role: 'assistant' },
+    } as unknown as TuringAgentEvent)
     mapEvent({
       type: 'message_update',
       message: {} as never,

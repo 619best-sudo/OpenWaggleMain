@@ -2,18 +2,29 @@
  * Unified diff view with syntax-highlighted code, a pinned line-number gutter
  * and +/- marks. Renders flush inside a tool strip: only a top divider.
  */
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import {
   inferLanguageFromPath,
   type UnifiedDiffData,
   type UnifiedDiffLine,
 } from '@/features/chat/lib/tool-call-block'
 import { useHighlightedLines } from '@/features/chat/lib/use-highlighted-lines'
+import { useWindowedRows } from '@/features/chat/lib/use-windowed-rows'
 import { cn } from '@/shared/lib/cn'
 import { CodeLineTokens } from './CodeLineTokens'
 
 /** Minimum gutter width, in characters, so narrow diffs still align. */
 const MIN_GUTTER_CHARS = 2
+/**
+ * Row height in px, applied as an explicit `lineHeight` below. Windowing maps a
+ * scroll offset to a row index, so every row must be exactly this tall — which
+ * is also why the hunk-header row carries no extra vertical padding.
+ */
+const LINE_HEIGHT_PX = 20.625
+/** Height of the compact diff viewport, matching `max-h-[320px]` below. */
+const COMPACT_VIEWPORT_PX = 320
+/** Gutter (1.25) + mark column (1.5) + code-cell padding (1), in rem. */
+const ROW_PADDING_REM = 3.75
 
 /**
  * Is this meta line the `--- a/file` / `+++ b/file` header? Those repeat the file
@@ -41,7 +52,7 @@ interface DiffRow {
  *   from `@@ -1,426 +1,426 @@`.
  * - The +/- counts live in the strip header, so there's no header row here.
  */
-export function UnifiedDiffView({
+function UnifiedDiffViewImpl({
   diff,
   compact = false,
   path,
@@ -74,32 +85,68 @@ export function UnifiedDiffView({
     })
   }, [diff.lines])
 
-  // Tokenize with the +/- markers stripped, one input line per rendered row, so
-  // tokens stay aligned. Hunk lines highlight together, preserving grammar context.
-  const codeText = useMemo(
-    () => rows.map(({ line }) => (line.type === 'meta' ? '' : line.content.slice(1))).join('\n'),
-    [rows],
-  )
-  const highlighted = useHighlightedLines(codeText, inferLanguageFromPath(path ?? null))
   const gutterWidth = Math.max(
     MIN_GUTTER_CHARS,
     String(rows.reduce((max, row) => Math.max(max, row.lineNumber ?? 0), 0)).length,
   )
 
+  // Windowing — see useWindowedRows. A whole-file `write`/`edit` produces a diff
+  // with a row per line of the file, each carrying a sticky gutter.
+  const { scrollRef, onScroll, firstRow, lastRow, topSpacerPx, bottomSpacerPx } = useWindowedRows(
+    rows.length,
+    LINE_HEIGHT_PX,
+    COMPACT_VIEWPORT_PX,
+  )
+  // Taken over ALL rows so the horizontal scroll extent does not change as rows
+  // window in and out; the font is monospace, so characters map to `ch` exactly.
+  const longestRowChars = useMemo(
+    () => rows.reduce((widest, row) => Math.max(widest, row.line.content.length), 0),
+    [rows],
+  )
+  // Windowing needs a scrolling viewport to read an offset from. Without
+  // `compact` this container has no max height, so it never scrolls and
+  // `scrollTop` stays 0 — windowing would then hide every row past the first
+  // screenful with no way to reach them. Render the lot in that case.
+  const windowed = compact
+  const visibleRows = windowed ? rows.slice(firstRow, lastRow) : rows
+  const firstVisibleRowIndex = windowed ? firstRow : 0
+
+  // Tokenize with the +/- markers stripped, one input line per RENDERED row, so
+  // tokens stay aligned. Only the rendered window is tokenized: `codeToTokens`
+  // is synchronous and a whole-file diff cost hundreds of ms on expand.
+  const windowCodeText = useMemo(
+    () =>
+      visibleRows.map(({ line }) => (line.type === 'meta' ? '' : line.content.slice(1))).join('\n'),
+    [visibleRows],
+  )
+  const highlighted = useHighlightedLines(windowCodeText, inferLanguageFromPath(path ?? null))
+
   return (
     <div
+      ref={scrollRef}
+      onScroll={onScroll}
       className={cn(
-        'diff-scroll overflow-auto border-t border-code-view-border bg-code-view-bg font-mono text-[12.5px] leading-[1.65]',
+        'diff-scroll overflow-auto border-t border-code-view-border bg-code-view-bg font-mono text-[12.5px]',
         compact && 'max-h-[320px]',
       )}
+      style={{ lineHeight: `${String(LINE_HEIGHT_PX)}px` }}
     >
-      <div className="min-w-full w-max">
-        {rows.map(({ line, lineNumber }, index) => {
+      <div
+        className="min-w-full w-max"
+        style={{
+          minWidth: `calc(${String(gutterWidth + longestRowChars)}ch + ${String(ROW_PADDING_REM)}rem)`,
+        }}
+      >
+        {/* Spacers stand in for the un-rendered rows, so the scrollbar reflects
+            the whole diff and scroll position maps to the right row. */}
+        <div style={{ height: windowed ? topSpacerPx : 0 }} aria-hidden />
+        {visibleRows.map(({ line, lineNumber }, windowIndex) => {
+          const index = firstVisibleRowIndex + windowIndex
           if (line.type === 'meta') {
             return (
               <div
                 key={`${String(index)}-hunk`}
-                className="whitespace-pre bg-code-view-gutter-bg px-3 py-0.5 text-code-view-gutter-text"
+                className="whitespace-pre bg-code-view-gutter-bg px-3 text-code-view-gutter-text"
               >
                 {line.content}
               </div>
@@ -146,12 +193,22 @@ export function UnifiedDiffView({
                   land. Applied to the code cell only, so the gutter keeps its own
                   weights. */}
               <span className="pr-4 font-semibold text-[color:var(--color-code-card-text)]">
-                <CodeLineTokens tokens={highlighted?.[index]} fallback={line.content.slice(1)} />
+                <CodeLineTokens
+                  tokens={highlighted?.[windowIndex]}
+                  fallback={line.content.slice(1)}
+                />
               </span>
             </div>
           )
         })}
+        <div style={{ height: windowed ? bottomSpacerPx : 0 }} aria-hidden />
       </div>
     </div>
   )
 }
+
+/**
+ * Memoized for the same reason as FileContentView: the active assistant message
+ * re-renders on every stream event, and this subtree is one row per diff line.
+ */
+export const UnifiedDiffView = memo(UnifiedDiffViewImpl)

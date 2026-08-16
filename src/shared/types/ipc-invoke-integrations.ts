@@ -65,7 +65,8 @@ export interface IpcIntegrationInvokeChannelMap {
   }
   'git:status': {
     args: [projectPath: string]
-    return: GitStatusSummary
+    /** `null` when the folder is not a Git repository. */
+    return: GitStatusSummary | null
   }
   'git:commit': {
     args: [projectPath: string, payload: GitCommitPayload]
@@ -77,7 +78,8 @@ export interface IpcIntegrationInvokeChannelMap {
   }
   'git:branches:list': {
     args: [projectPath: string]
-    return: GitBranchListResult
+    /** `null` when the folder is not a Git repository. */
+    return: GitBranchListResult | null
   }
   'git:branches:checkout': {
     args: [projectPath: string, payload: GitBranchCheckoutPayload]

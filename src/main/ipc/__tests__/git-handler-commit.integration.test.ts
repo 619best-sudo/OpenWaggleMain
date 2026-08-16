@@ -12,11 +12,16 @@ describe('registerGitHandlers commit', () => {
   let invalidateGitStatusCache: Awaited<
     ReturnType<typeof loadGitHandlers>
   >['invalidateGitStatusCache']
+  let invalidateGitRepositoryCache: Awaited<
+    ReturnType<typeof loadGitHandlers>
+  >['invalidateGitRepositoryCache']
 
   beforeEach(async () => {
     resetGitHandlerMocks()
-    ;({ invalidateGitStatusCache, registerGitHandlers } = await loadGitHandlers())
+    ;({ invalidateGitRepositoryCache, invalidateGitStatusCache, registerGitHandlers } =
+      await loadGitHandlers())
     invalidateGitStatusCache()
+    invalidateGitRepositoryCache()
   })
 
   it('stages only specified paths when committing', async () => {

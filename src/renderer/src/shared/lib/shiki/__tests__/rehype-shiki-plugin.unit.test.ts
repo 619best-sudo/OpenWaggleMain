@@ -140,6 +140,29 @@ describe('createRehypeShikiPlugin', () => {
     expect(cache.size).toBe(1)
   })
 
+  it('leaves a not-yet-loaded grammar as plain text, then highlights it once loaded', async () => {
+    const highlighter = await loadHighlighter()
+    const cache = new ShikiCache()
+
+    // `dart` isn't in this highlighter's langs — the block must survive as text
+    // rather than throwing, and nothing may be cached for it.
+    const tree = makeTree('dart', 'void main() { print("hi"); }')
+    runPlugin({ highlighter, cache }, tree)
+    expect(getCodeElement(tree).children[0]).toMatchObject({ type: 'text' })
+    expect(cache.size).toBe(0)
+
+    // Once the grammar is registered (what `requestLanguage` does in the app),
+    // the same block highlights.
+    await highlighter.loadLanguage('dart')
+    const tree2 = makeTree('dart', 'void main() { print("hi"); }')
+    runPlugin({ highlighter, cache }, tree2)
+    expect(getCodeElement(tree2).children[0]).toMatchObject({
+      type: 'element',
+      tagName: 'span',
+    })
+    expect(cache.size).toBe(1)
+  })
+
   it('preserves language class after highlighting', async () => {
     const highlighter = await loadHighlighter()
     const cache = new ShikiCache()

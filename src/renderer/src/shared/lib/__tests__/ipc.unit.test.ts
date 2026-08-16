@@ -35,7 +35,7 @@ describe('ipc', () => {
     it('delegates to the real api object', async () => {
       const fakeApi = {
         getSettings: vi.fn().mockResolvedValue({ providers: {} }),
-        onAgentEvent: vi.fn(() => () => {}),
+        onAgentEventBatch: vi.fn(() => () => {}),
       }
       setWindow({ api: fakeApi })
 
@@ -82,7 +82,7 @@ describe('ipc', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const { api } = await import('../ipc')
 
-      const unsubscribe = api.onAgentEvent(() => {})
+      const unsubscribe = api.onAgentEventBatch(() => {})
       expect(typeof unsubscribe).toBe('function')
       // Calling unsubscribe should not throw
       expect(() => unsubscribe()).not.toThrow()

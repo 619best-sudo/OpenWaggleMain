@@ -1,0 +1,26 @@
+- generic [active] [ref=e1]:
+  - heading "Directory listing for /" [level=1] [ref=e2]
+  - separator [ref=e3]
+  - list [ref=e4]:
+    - listitem [ref=e5]:
+      - link ".DS_Store" [ref=e6] [cursor=pointer]:
+        - /url: .DS_Store
+    - listitem [ref=e7]:
+      - link ".expo/" [ref=e8] [cursor=pointer]:
+        - /url: .expo/
+    - listitem [ref=e9]:
+      - link ".openwaggle/" [ref=e10] [cursor=pointer]:
+        - /url: .openwaggle/
+    - listitem [ref=e11]:
+      - link ".pi/" [ref=e12] [cursor=pointer]:
+        - /url: .pi/
+    - listitem [ref=e13]:
+      - link "portfolio/" [ref=e14] [cursor=pointer]:
+        - /url: portfolio/
+    - listitem [ref=e15]:
+      - link "portfolio-website/" [ref=e16] [cursor=pointer]:
+        - /url: portfolio-website/
+    - listitem [ref=e17]:
+      - link "portfolio-website-plan.md" [ref=e18] [cursor=pointer]:
+        - /url: portfolio-website-plan.md
+  - separator [ref=e19]

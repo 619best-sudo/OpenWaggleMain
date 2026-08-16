@@ -147,8 +147,7 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
       : activePreset?.description?.trim()
         ? activePreset.description
         : 'Adjust the selected Council of Experts workflow here after reviewing it from the list.'
-  const primaryActionLabel =
-    editorMode === 'create' ? 'Create Council of Experts' : 'Save Changes'
+  const primaryActionLabel = editorMode === 'create' ? 'Create Council of Experts' : 'Save Changes'
   const isDialogOpen = editorMode !== 'closed'
 
   return (

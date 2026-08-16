@@ -184,6 +184,29 @@ export async function ensureFreshAppSessionProviderTokenForTuringMachine() {
   })
 }
 
+/**
+ * Mint a new backend token because a run in flight was rejected as unauthorized.
+ *
+ * Unlike {@link ensureFreshAppSessionProviderTokenForTuringMachine} this does NOT
+ * consult the expiry skew before refreshing. The backend has already told us the
+ * token is no good, which is stronger evidence than anything the local `exp`
+ * claim can offer — and the two disagree precisely in the cases that matter:
+ * a clock skew, an early server-side revocation, or a token that lapsed while
+ * the renderer's own refresh timer was throttled or the machine was asleep.
+ *
+ * Never throws: the caller is a run that has already failed, and its recovery
+ * must not be able to make things worse.
+ */
+export async function recoverAppSessionForUnauthorizedRun(): Promise<void> {
+  try {
+    await refreshAuthenticatedSession('run-unauthorized')
+  } catch (error) {
+    logger.warn('Failed to recover app auth session for an unauthorized run', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
 async function refreshSubscriptionSnapshotForUser(
   user: AppAuthUser,
   warningMessage: string,
@@ -460,7 +483,9 @@ async function clearAuthenticatedSession(error: string | null) {
   })
 }
 
-async function refreshAuthenticatedSession(reason: 'restore' | 'scheduled' | 'pre-run') {
+type SessionRefreshReason = 'restore' | 'scheduled' | 'pre-run' | 'run-unauthorized'
+
+async function refreshAuthenticatedSession(reason: SessionRefreshReason) {
   const currentUser = useAppAuthStore.getState().user
   if (!currentUser) return
 
@@ -476,7 +501,9 @@ async function refreshAuthenticatedSession(reason: 'restore' | 'scheduled' | 'pr
         ? 'Failed to sync backend model token after restoring session'
         : reason === 'pre-run'
           ? 'Failed to sync backend model token before starting a Turing Machine run'
-          : 'Failed to sync backend model token after refreshing session',
+          : reason === 'run-unauthorized'
+            ? 'Failed to sync backend model token while recovering an unauthorized run'
+            : 'Failed to sync backend model token after refreshing session',
       { syncGithubRepoStats: reason === 'restore' },
     )
   } catch (error) {
@@ -485,7 +512,9 @@ async function refreshAuthenticatedSession(reason: 'restore' | 'scheduled' | 'pr
         ? 'Failed to restore app auth session'
         : reason === 'pre-run'
           ? 'Failed to refresh app auth session before starting a Turing Machine run'
-        : 'Failed to refresh app auth session',
+          : reason === 'run-unauthorized'
+            ? 'Failed to refresh app auth session for an unauthorized run'
+            : 'Failed to refresh app auth session',
       {
         error: error instanceof Error ? error.message : String(error),
       },
@@ -694,4 +723,19 @@ export function useAppAuth() {
 
 if (initialUser) {
   void initializeStoredSession(initialUser)
+}
+
+// Subscribed at module scope rather than from a component: the run that needs
+// recovery is owned by the main process and can fail at any moment, including
+// while no auth-aware view is mounted. Tying this to a component's lifetime
+// would make recovery depend on which screen the user happens to be looking at.
+//
+// The capability check is for test doubles, not for production — the preload
+// surface is contract-tested, so the method is always there in a real renderer.
+// Importing this module must not explode just because a suite stubbed `api`
+// with only the handful of methods its own subject calls.
+if (typeof window !== 'undefined' && typeof api.onAppAuthRefreshRequired === 'function') {
+  api.onAppAuthRefreshRequired(() => {
+    void recoverAppSessionForUnauthorizedRun()
+  })
 }

@@ -102,4 +102,34 @@ describe('UnifiedDiffView presentation', () => {
     expect(scroller).not.toBeNull()
     expect(scroller?.className).toContain('overflow-auto')
   })
+
+  it('windows a long compact diff instead of rendering every row', () => {
+    // A whole-file write/edit yields a diff row per line of the file, each with
+    // a `position: sticky` gutter, into a 320px-tall box. Rendering them all put
+    // the document into six figures of nodes once a few strips were expanded,
+    // which is what made the whole UI lag — not just the strip.
+    const diff = toDiff(
+      Array.from({ length: 1200 }, (_unused, index) => `+line ${String(index + 1)}`).join('\n'),
+    )
+
+    const { container } = render(<UnifiedDiffView diff={diff} compact path="/x/a.ts" />)
+
+    const rowCount = container.querySelectorAll('span.sticky').length
+    expect(rowCount).toBeGreaterThan(0)
+    expect(rowCount).toBeLessThan(80)
+    expect(screen.getByText(/line 1$/)).toBeInTheDocument()
+    expect(screen.queryByText(/line 900$/)).toBeNull()
+  })
+
+  it('renders every row when NOT compact, where there is no scrolling viewport', () => {
+    // Without `compact` the container has no max height, so it never scrolls and
+    // there is no offset to window against — hiding rows would strand them.
+    const diff = toDiff(
+      Array.from({ length: 300 }, (_unused, index) => `+line ${String(index + 1)}`).join('\n'),
+    )
+
+    const { container } = render(<UnifiedDiffView diff={diff} path="/x/a.ts" />)
+
+    expect(container.querySelectorAll('span.sticky')).toHaveLength(300)
+  })
 })

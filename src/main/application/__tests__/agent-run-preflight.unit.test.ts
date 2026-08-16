@@ -114,7 +114,9 @@ describe('loadAgentRunPreflight', () => {
   })
 
   it('resolves mcpSettings from McpConfigService and threads it into the success result', async () => {
-    const result = await Effect.runPromise(loadAgentRunPreflight(baseInput).pipe(Effect.provide(TestLayer)))
+    const result = await Effect.runPromise(
+      loadAgentRunPreflight(baseInput).pipe(Effect.provide(TestLayer)),
+    )
 
     expect(result.ok).toBe(true)
     if (!result.ok) return
@@ -122,7 +124,9 @@ describe('loadAgentRunPreflight', () => {
   })
 
   it('resolves a turing standards context with all-enabled skills', async () => {
-    const result = await Effect.runPromise(loadAgentRunPreflight(baseInput).pipe(Effect.provide(TestLayer)))
+    const result = await Effect.runPromise(
+      loadAgentRunPreflight(baseInput).pipe(Effect.provide(TestLayer)),
+    )
 
     expect(result.ok).toBe(true)
     if (!result.ok) return
@@ -174,7 +178,9 @@ describe('loadAgentRunPreflight', () => {
       }),
     )
 
-    const result = await Effect.runPromise(loadAgentRunPreflight(baseInput).pipe(Effect.provide(layer)))
+    const result = await Effect.runPromise(
+      loadAgentRunPreflight(baseInput).pipe(Effect.provide(layer)),
+    )
 
     expect(result.ok).toBe(true)
     if (!result.ok) return

@@ -14,10 +14,14 @@ const {
   useBackgroundRunStoreMock,
   upsertSessionMock,
   useChatStoreMock,
-  agentEventHandlers,
+  agentEventBatchHandlers,
+  markLivePipelineSessionMock,
+  unmarkLivePipelineSessionMock,
   runCompletedHandlers,
 } = vi.hoisted(() => {
-  const agentEventHandlers: Array<(payload: unknown) => void> = []
+  const agentEventBatchHandlers: Array<(payload: unknown) => void> = []
+  const markLivePipelineSessionMock = vi.fn()
+  const unmarkLivePipelineSessionMock = vi.fn()
   const runCompletedHandlers: Array<(payload: unknown) => void> = []
   const runRenderSnapshots = new Map<
     string,
@@ -47,6 +51,12 @@ const {
         setRunRenderMessages: setRunRenderMessagesMock,
       }),
   )
+  // zustand exposes getState() on the hook itself; the ownership claim in
+  // useAgentChat.effects calls that form.
+  ;(useBackgroundRunStoreMock as unknown as { getState: () => unknown }).getState = () => ({
+    markLivePipelineSession: markLivePipelineSessionMock,
+    unmarkLivePipelineSession: unmarkLivePipelineSessionMock,
+  })
   const upsertSessionMock = vi.fn()
   const useChatStoreMock = vi.fn(
     (selector: (state: { upsertSession: (value: unknown) => void }) => unknown) =>
@@ -55,8 +65,8 @@ const {
 
   return {
     apiMock: {
-      onAgentEvent: vi.fn((handler: (payload: unknown) => void) => {
-        agentEventHandlers.push(handler)
+      onAgentEventBatch: vi.fn((handler: (payload: unknown) => void) => {
+        agentEventBatchHandlers.push(handler)
         return () => {}
       }),
       onRunCompleted: vi.fn((handler: (payload: unknown) => void) => {
@@ -77,7 +87,9 @@ const {
     useBackgroundRunStoreMock,
     upsertSessionMock,
     useChatStoreMock,
-    agentEventHandlers,
+    agentEventBatchHandlers,
+    markLivePipelineSessionMock,
+    unmarkLivePipelineSessionMock,
     runCompletedHandlers,
   }
 })
@@ -97,7 +109,16 @@ vi.mock('@/features/chat/state/chat-store', () => ({
 const { useAgentChat } = await import('../useAgentChat')
 
 function emitAgentEvent(payload: unknown) {
-  for (const handler of agentEventHandlers) {
+  // Transport events only reach the renderer batched. Tests that assert
+  // per-event behaviour stay readable by emitting one event at a time; this
+  // wraps each into a single-event batch, which is exactly what main sends when
+  // an event arrives alone in a frame.
+  const { sessionId, event } = payload as { sessionId?: unknown; event?: unknown }
+  emitAgentEventBatch({ sessionId, events: [event] })
+}
+
+function emitAgentEventBatch(payload: unknown) {
+  for (const handler of agentEventBatchHandlers) {
     handler(payload)
   }
 }
@@ -199,7 +220,9 @@ export function installUseAgentChatTestLifecycle() {
   })
 
   beforeEach(() => {
-    apiMock.onAgentEvent.mockClear()
+    apiMock.onAgentEventBatch.mockClear()
+    markLivePipelineSessionMock.mockClear()
+    unmarkLivePipelineSessionMock.mockClear()
     apiMock.onRunCompleted.mockClear()
     apiMock.getBackgroundRun.mockReset()
     apiMock.getSessionDetail.mockReset()
@@ -215,7 +238,6 @@ export function installUseAgentChatTestLifecycle() {
     setRunRenderMessagesMock.mockClear()
     upsertSessionMock.mockReset()
     useChatStoreMock.mockClear()
-    agentEventHandlers.length = 0
     runCompletedHandlers.length = 0
     useOptimisticUserMessageStore.setState({ messagesBySessionId: new Map() })
   })
@@ -229,11 +251,14 @@ export {
   createSessionWithIdAndMessages,
   createSessionWithMessages,
   emitAgentEvent,
+  emitAgentEventBatch,
   emitRunCompleted,
   getRunRenderSnapshotMock,
   hasActiveRunMock,
+  markLivePipelineSessionMock,
   runRenderSnapshots,
   SEND_PAYLOAD,
   setRunRenderMessagesMock,
+  unmarkLivePipelineSessionMock,
   useAgentChat,
 }

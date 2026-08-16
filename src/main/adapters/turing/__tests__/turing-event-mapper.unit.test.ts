@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
 import type { AgentTransportEvent } from '@shared/types/stream'
+import { describe, expect, it, vi } from 'vitest'
 import { createTuringEventMapper } from '../turing-event-mapper'
 
 describe('turing-event-mapper', () => {
@@ -24,7 +24,9 @@ describe('turing-event-mapper', () => {
         contentIndex: 0,
         partial: {
           role: 'assistant',
-          content: [{ type: 'toolCall', id: 'tool-1', name: 'read', arguments: { path: 'index.html' } }],
+          content: [
+            { type: 'toolCall', id: 'tool-1', name: 'read', arguments: { path: 'index.html' } },
+          ],
         },
       },
     } as never)
@@ -78,7 +80,11 @@ describe('turing-event-mapper', () => {
     } as never)
     mapEvent({ type: 'message_end', message: { role: 'assistant', content: [] } } as never)
 
-    expect(emitted.map((event) => event.type)).toEqual(['message_start', 'message_update', 'message_end'])
+    expect(emitted.map((event) => event.type)).toEqual([
+      'message_start',
+      'message_update',
+      'message_end',
+    ])
     const [messageStart, messageUpdate] = emitted
     expect(messageStart?.type).toBe('message_start')
     expect(messageUpdate?.type).toBe('message_update')

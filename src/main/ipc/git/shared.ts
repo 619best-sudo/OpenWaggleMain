@@ -3,6 +3,7 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 import { DOUBLE_FACTOR } from '@shared/constants/math'
 import { BYTES_PER_KIBIBYTE } from '@shared/constants/resource-limits'
+import { GIT_CACHE } from '@shared/constants/time'
 import { Schema, safeDecodeUnknown } from '@shared/schema'
 import { jsonObjectSchema } from '@shared/schemas/validation'
 
@@ -68,9 +69,33 @@ export async function runGit(
   }
 }
 
+/**
+ * `rev-parse --is-inside-work-tree` spawns a process on every call, and the
+ * renderer re-checks git state on window focus, route changes and every
+ * terminal transport event. Cache the answer per path — a folder does not flip
+ * between "repo" and "not a repo" often, and a stale answer self-heals within
+ * the TTL.
+ */
+const repositoryCheckCache = new Map<string, { isRepository: boolean; timestamp: number }>()
+
+export function invalidateGitRepositoryCache(projectPath?: string) {
+  if (projectPath) {
+    repositoryCheckCache.delete(projectPath)
+    return
+  }
+  repositoryCheckCache.clear()
+}
+
 export async function isGitRepository(projectPath: string): Promise<boolean> {
+  const cached = repositoryCheckCache.get(projectPath)
+  if (cached && Date.now() - cached.timestamp < GIT_CACHE.REPOSITORY_CHECK_TTL_MS) {
+    return cached.isRepository
+  }
+
   const result = await runGit(projectPath, ['rev-parse', '--is-inside-work-tree'])
-  return result.code === 0 && result.stdout.trim() === 'true'
+  const isRepository = result.code === 0 && result.stdout.trim() === 'true'
+  repositoryCheckCache.set(projectPath, { isRepository, timestamp: Date.now() })
+  return isRepository
 }
 
 export function stripSurroundingQuotes(value: string): string {

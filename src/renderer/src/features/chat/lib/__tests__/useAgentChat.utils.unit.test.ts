@@ -391,6 +391,106 @@ describe('mergeBackgroundReconnectMessages', () => {
   })
 })
 
+describe('sessionToUIMessages identity stability', () => {
+  // Transcript rows memoize on message identity. When every hydration rebuilt
+  // every message object, all rows re-rendered and all completed markdown was
+  // re-parsed — the visible hitch at the end of a run. These tests pin the
+  // invariant that makes the memoization work; breaking them reintroduces the
+  // lag silently, with no failing behavioural test anywhere.
+  function sessionWith(sessionId: string, answer: string, output?: string): SessionDetail {
+    return {
+      id: SessionId(sessionId),
+      title: 'Session',
+      projectPath: '/repo',
+      createdAt: 1,
+      updatedAt: 1,
+      messages: [
+        {
+          id: MessageId('msg-1'),
+          role: 'assistant',
+          createdAt: 1,
+          parts: [
+            { type: 'text', text: answer },
+            {
+              type: 'tool-call',
+              toolCall: {
+                id: ToolCallId('tool-1'),
+                name: 'read',
+                args: { path: 'a.txt' },
+                state: 'input-complete',
+              },
+            },
+          ],
+        },
+        ...(output === undefined
+          ? []
+          : [
+              {
+                id: MessageId('msg-2'),
+                role: 'assistant' as const,
+                createdAt: 2,
+                parts: [
+                  {
+                    type: 'tool-result' as const,
+                    toolResult: {
+                      id: ToolCallId('tool-1'),
+                      name: 'read',
+                      args: { path: 'a.txt' },
+                      result: output,
+                      isError: false,
+                      duration: 3,
+                    },
+                  },
+                ],
+              },
+            ]),
+      ],
+    } as SessionDetail
+  }
+
+  it('returns the SAME message objects when nothing changed', () => {
+    const session = sessionWith('session-stable', 'Answer')
+
+    const first = sessionToUIMessages(session)
+    const second = sessionToUIMessages(sessionWith('session-stable', 'Answer'))
+
+    expect(second[0]).toBe(first[0])
+  })
+
+  it('rebuilds only the message whose content changed', () => {
+    const session = sessionWith('session-partial', 'Answer', 'file body')
+    const first = sessionToUIMessages(session)
+
+    const edited = sessionWith('session-partial', 'Answer edited', 'file body')
+    const second = sessionToUIMessages(edited)
+
+    expect(second[0]).not.toBe(first[0])
+    // The untouched tool-result message keeps its identity.
+    expect(second[1]).toBe(first[1])
+  })
+
+  it('rebuilds a tool-call message when a result persisted in ANOTHER message arrives', () => {
+    // The output is attached cross-message, so the call's rendered shape depends
+    // on a sibling. A fingerprint covering only the message itself would hand
+    // back a stale object with no output and collapse the tool strip.
+    const before = sessionToUIMessages(sessionWith('session-xmsg', 'Answer'))
+    const after = sessionToUIMessages(sessionWith('session-xmsg', 'Answer', 'file body'))
+
+    expect(after[0]).not.toBe(before[0])
+    const toolCall = after[0]?.parts.find((part) => part.type === 'tool-call')
+    expect(toolCall).toMatchObject({ output: 'file body' })
+  })
+
+  it('keeps caches separate per session', () => {
+    const a = sessionToUIMessages(sessionWith('session-a', 'Answer'))
+    const b = sessionToUIMessages(sessionWith('session-b', 'Answer'))
+
+    // Same message id and identical content, different sessions — must not
+    // cross-pollinate, or switching sessions would render the wrong transcript.
+    expect(b[0]).not.toBe(a[0])
+  })
+})
+
 describe('sessionToUIMessages', () => {
   it('preserves persisted tool-call state on tool-call parts', () => {
     const session: SessionDetail = {

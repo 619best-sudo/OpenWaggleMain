@@ -3,20 +3,20 @@ import type { UIMessage } from '@shared/types/chat-ui'
 import type { JsonObject } from '@shared/types/json'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { WaggleAgentColor } from '@shared/types/waggle'
-import { Brain, ChevronDown, GitBranch, LoaderCircle } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Brain, ChevronDown, CornerDownRight, GitBranch, LoaderCircle } from 'lucide-react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { looksLikeMachinePlanText } from '../lib/machine-plan-detection'
 import { relativeToProject } from '../lib/project-paths'
 import {
-  getConcernLinesFromResult,
+  getConcernLinesFromResultCached,
   getToolDiffData,
   getToolResultText,
   type LineConcern,
   READ_VIEW_MAX_HEIGHT_PX,
 } from '../lib/tool-call-block'
-import { summarizeToolTarget } from '../lib/tool-display'
+import { ASK_USER_QUESTION_TITLE_MAX, summarizeToolTarget } from '../lib/tool-display'
 import { getToolMediaOutput, type ToolMediaOutput } from '../lib/tool-media-output'
 import { useActiveProjectPath } from '../lib/use-active-project-path'
 import { AgentLabel } from './AgentLabel'
@@ -70,15 +70,41 @@ function toolTone(name: string) {
   return 'bg-text-tertiary/10 text-text-secondary'
 }
 
+/**
+ * Cache keyed on the args STRING identity: the stream reducer preserves part
+ * (and therefore arguments-string) identity for every part it does not touch,
+ * so a completed tool call's args object is stable across stream ticks. Without
+ * this cache the args of EVERY tool call — including `write`/`edit` calls whose
+ * args embed whole files — were JSON.parse'd again on every tick of the active
+ * message's re-render.
+ */
+const pathByArgsString = new Map<string, string | null>()
+
 function parsePathFromArgs(args: string): string | null {
+  const cached = pathByArgsString.get(args)
+  if (cached !== undefined) return cached
+  let parsedPath: string | null = null
   try {
     const parsed = JSON.parse(args) as Record<string, unknown>
-    if (typeof parsed.path === 'string' && parsed.path.trim()) return parsed.path.trim()
-    if (typeof parsed.command === 'string' && parsed.command.trim()) return parsed.command.trim()
-    return null
+    if (typeof parsed.path === 'string' && parsed.path.trim()) parsedPath = parsed.path.trim()
+    else if (typeof parsed.command === 'string' && parsed.command.trim()) {
+      parsedPath = parsed.command.trim()
+    }
   } catch {
+    // A FAILED parse is never cached. While a tool's arguments stream in they
+    // are partial JSON that always fails to parse, and each delta produces a
+    // brand-new (longer) string — caching those would key the map on every
+    // intermediate prefix and retain all of them. For a large `write` that is
+    // thousands of entries whose keys sum to hundreds of megabytes, which is
+    // GC pressure, not a cache.
     return null
   }
+  // Only complete, parseable args reach here, so entries are bounded by the
+  // number of tool calls made this app lifetime, and only tiny path strings are
+  // retained — never the parsed bodies.
+  if (pathByArgsString.size > 4096) pathByArgsString.clear()
+  pathByArgsString.set(args, parsedPath)
+  return parsedPath
 }
 
 /**
@@ -120,8 +146,10 @@ function toolDiffLineCount(
 }
 
 const FILE_VIEW_TOOLS = new Set(['read', 'write', 'edit'])
+/** Shared empty args object, so the streaming path allocates nothing per delta. */
+const EMPTY_ARGS: JsonObject = Object.freeze({})
 
-function InlineToolBlock({
+function InlineToolBlockImpl({
   toolName,
   args,
   state,
@@ -141,12 +169,26 @@ function InlineToolBlock({
   const isDone = state === 'complete'
   const lower = toolName.toLowerCase()
   const projectPath = useActiveProjectPath()
-  const parsedArgs = useMemo(() => safeParseArgs(args), [args])
+  // Arguments arrive as a growing string (`part.arguments + delta`) while the
+  // model writes the call, and only `input-streaming` carries that partial
+  // state — every other state is set from a complete, stringified input.
+  //
+  // Partial JSON can never parse, but `JSON.parse` still scans the WHOLE string
+  // before throwing. Parsing on every delta is therefore O(n²) in the argument
+  // size, on the main thread, for the entire time a tool is "working" — which
+  // for a `write` carrying a large file body is the choppiness itself. Skip the
+  // parse until the arguments are complete; the fallbacks below already render
+  // exactly what a failed parse produced, so nothing is lost visually.
+  const argsStreaming = state === 'input-streaming'
+  const parsedArgs = useMemo(
+    () => (argsStreaming ? EMPTY_ARGS : safeParseArgs(args)),
+    [argsStreaming, args],
+  )
   // Title shown next to the action chip: the tool's target (file path, command,
   // pattern, …) relativized to the open repo, falling back to a short arg
   // summary. Never repeats the tool name — the chip already shows the verb.
   const title = useMemo(() => {
-    const rawPath = parsePathFromArgs(args)
+    const rawPath = argsStreaming ? null : parsePathFromArgs(args)
     if (rawPath) {
       // `path` is a real file path → relativize; `command` is a shell command
       // (no relativization needed, but it's stored under the same field).
@@ -154,10 +196,13 @@ function InlineToolBlock({
       return isCommand ? rawPath : relativeToProject(projectPath, rawPath)
     }
     return summarizeToolTarget(lower, parsedArgs)
-  }, [args, lower, parsedArgs, projectPath])
+  }, [args, argsStreaming, lower, parsedArgs, projectPath])
   // Raw target path (unrelativized) — used to infer the syntax-highlighting
   // language for the file/diff bodies.
-  const filePath = useMemo(() => parsePathFromArgs(args), [args])
+  const filePath = useMemo(
+    () => (argsStreaming ? null : parsePathFromArgs(args)),
+    [argsStreaming, args],
+  )
   const diff = useMemo(
     () => (output ? toolDiffLineCount(args, toolName, output) : null),
     [args, toolName, output],
@@ -186,8 +231,20 @@ function InlineToolBlock({
   // diff below is the body the user wants. Letting a media match win means
   // writing `index.html` replaces a +437-line diff with a preview card — which
   // is strictly less information about what the agent just did.
+  //
+  // read is excluded for the symmetric reason: its result is the file's SOURCE
+  // text, and the numbered FileContentView below is the body the user wants.
+  // Without this exclusion, reading an `.html` file lets getToolMediaOutput
+  // treat `details.path` as an HTML media reference, so a page-preview card
+  // (HtmlPreview) renders in place of the source — and when the path is outside
+  // the active project the preview resolves to nothing, so the read appears
+  // EMPTY. Reads of `.ts`/`.py`/etc. never matched media in the first place,
+  // which is why only HTML reads were broken.
   const media = useMemo(
-    () => (output && lower !== 'write' && lower !== 'edit' ? getToolMediaOutput(output) : null),
+    () =>
+      output && lower !== 'read' && lower !== 'write' && lower !== 'edit'
+        ? getToolMediaOutput(output)
+        : null,
     [output, lower],
   )
   // ask_user_question: surface the question + options (and the user's selected
@@ -209,12 +266,33 @@ function InlineToolBlock({
     (lower === 'write' && (writeContent != null || output != null)) ||
     (lower === 'edit' && output != null) ||
     !!media ||
-    !!askUserDetail
+    askUserHasContent(askUserDetail)
   // read/write/edit, media, and ask_user_question tools default expanded; other
   // tools stay header-only.
   const [expanded, setExpanded] = useState(
     (FILE_VIEW_TOOLS.has(lower) || !!media || !!askUserDetail) && hasBody,
   )
+  // `useState`'s initializer only runs once, at first mount. For a tool whose
+  // "default expanded" signal arrives AFTER mount — a screenshot/media tool,
+  // whose `media` is null until `tool_execution_end` streams the result — the
+  // block mounts collapsed and then never re-evaluates the initializer, so the
+  // image stays hidden behind the header until the run completes and the
+  // session re-hydrates (which re-mounts the block with `media` already set).
+  // read/write/edit are unaffected because FILE_VIEW_TOOLS makes them expand at
+  // mount regardless of when output arrives.
+  //
+  // Track whether the user has manually toggled, and the body-signal we already
+  // auto-expanded for, so the FIRST appearance of an expandable body opens it —
+  // without fighting a user who deliberately collapsed it.
+  const userToggledRef = useRef(false)
+  const autoExpandedBodyRef = useRef(false)
+  useEffect(() => {
+    if (userToggledRef.current) return
+    if (autoExpandedBodyRef.current) return
+    if (!hasBody) return
+    autoExpandedBodyRef.current = true
+    setExpanded(true)
+  }, [hasBody])
 
   const mediaLabel = mediaActionLabel(media)
   const showAction = mediaLabel ?? toolActionLabel(toolName)
@@ -238,7 +316,10 @@ function InlineToolBlock({
           type="button"
           aria-expanded={hasBody ? expanded : undefined}
           onClick={() => {
-            if (hasBody) setExpanded((value) => !value)
+            if (hasBody) {
+              userToggledRef.current = true
+              setExpanded((value) => !value)
+            }
           }}
           className={cn(
             'flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px]',
@@ -349,6 +430,20 @@ function InlineToolBlock({
   )
 }
 
+/**
+ * Memoized so a completed tool strip (e.g. a finished `read` of a large file)
+ * does not re-render on every stream event. The active assistant message gets a
+ * fresh object reference on each token / tool start-end, which re-renders its
+ * bubble and — without this memo — every InlineToolBlock beneath it, including
+ * the O(fileLines) FileContentView line tree for reads. Props (`toolName`,
+ * `args`, `state`, `output`, `concern`) are referentially stable for an
+ * unchanged tool call, so the shallow compare holds and completed strips bail
+ * out. The only store read inside is `useActiveProjectPath` (the repo root used
+ * to relativize the title path), which is stable for a given session and only
+ * changes on a session switch that remounts the transcript anyway.
+ */
+const InlineToolBlock = memo(InlineToolBlockImpl)
+
 function safeParseArgs(args: string): JsonObject {
   try {
     const parsed = JSON.parse(args)
@@ -358,11 +453,51 @@ function safeParseArgs(args: string): JsonObject {
   }
 }
 
+interface AskUserOption {
+  readonly label: string
+  readonly description?: string
+  readonly recommended?: boolean
+}
+
+interface AskUserAnswer {
+  readonly text?: string
+  readonly attachmentCount: number
+}
+
 interface AskUserDetail {
   readonly question: string
   readonly reason?: string
-  readonly options: readonly string[]
-  readonly answer?: string
+  readonly options: readonly AskUserOption[]
+  readonly answer?: AskUserAnswer
+}
+
+/**
+ * Normalize one entry of `args.options`, which the agent may write either way.
+ *
+ * The schema accepts a bare string OR `{label, description, recommended}` — the
+ * object form is the one the agent is told to prefer, because a label alone
+ * makes the user do the thinking. This used to filter to `typeof === 'string'`,
+ * so every richly-described question rendered as an EMPTY options list in the
+ * transcript: the live card showed the trade-offs, and the replay showed
+ * nothing. Reading both forms is what keeps the two views telling the same story.
+ */
+function toAskUserOption(entry: unknown): AskUserOption | null {
+  if (typeof entry === 'string') {
+    const label = entry.trim()
+    return label ? { label } : null
+  }
+  if (!entry || typeof entry !== 'object') return null
+  const o = entry as Record<string, unknown>
+  const raw = o.label ?? o.value ?? o.title
+  const label = typeof raw === 'string' ? raw.trim() : ''
+  if (!label) return null
+  const description =
+    typeof o.description === 'string' && o.description.trim() ? o.description.trim() : undefined
+  return {
+    label,
+    ...(description ? { description } : {}),
+    ...(o.recommended === true ? { recommended: true } : {}),
+  }
 }
 
 /**
@@ -377,46 +512,124 @@ function extractAskUserDetail(args: JsonObject, output: unknown): AskUserDetail 
   const reason =
     typeof args.reason === 'string' && args.reason.trim() ? args.reason.trim() : undefined
   const options = Array.isArray(args.options)
-    ? args.options.filter((o): o is string => typeof o === 'string' && o.trim().length > 0)
+    ? args.options.map(toAskUserOption).filter((o): o is AskUserOption => o !== null)
     : []
   const answerRaw = output ? getToolResultText(output).trim() : ''
-  const answer = answerRaw || undefined
-  return { question, reason, options, answer }
+  return { question, reason, options, answer: parseAskUserAnswer(answerRaw) }
 }
 
+/**
+ * The `ask_user_question` result is written for the MODEL, not the reader: it
+ * re-states the question and the reason so the LLM keeps its bearings when the
+ * answer lands many turns later. The card shows both already, so strip that
+ * envelope and keep only what the user actually said.
+ */
+function parseAskUserAnswer(raw: string): AskUserAnswer | undefined {
+  if (!raw) return undefined
+  let text: string | undefined
+  let attachmentCount = 0
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed) continue
+    if (trimmed.startsWith('(clarification for:')) continue
+    if (trimmed.startsWith('Reason this was needed:')) continue
+    if (trimmed.startsWith('The user attached ')) continue
+    if (trimmed.startsWith('- ')) {
+      attachmentCount += 1
+      continue
+    }
+    // "User answered with a file and no text." carries no words to show.
+    if (/^User answered with .+ and no text\.$/.test(trimmed)) continue
+    const answered = trimmed.match(/^User answered:\s*(.*)$/)
+    const value = answered ? (answered[1]?.trim() ?? '') : trimmed
+    if (!value || value === '(empty)') continue
+    text = text ? `${text}\n${value}` : value
+  }
+  if (!text && attachmentCount === 0) return undefined
+  return { ...(text ? { text } : {}), attachmentCount }
+}
+
+/**
+ * Whether the expanded card would show anything the header doesn't. A short
+ * question that was answered inline needs no drawer at all.
+ */
+function askUserHasContent(detail: AskUserDetail | null): boolean {
+  if (!detail) return false
+  return (
+    !!detail.answer ||
+    !!detail.reason ||
+    detail.options.length > 0 ||
+    detail.question.length > ASK_USER_QUESTION_TITLE_MAX
+  )
+}
+
+/**
+ * The answered card is a two-line exchange: the question, then what the user
+ * said. Everything else the tool result carries — the restated question, the
+ * agent's justification, the list of options once one was chosen — is context
+ * the model needs and the reader has already seen, so it stays out of the UI.
+ */
 function AskUserQuestionBody({ detail }: { readonly detail: AskUserDetail }) {
+  const { answer } = detail
+  // The collapsed header is the question, so restate it only when it was long
+  // enough to get cut off there.
+  const showQuestion = detail.question.length > ASK_USER_QUESTION_TITLE_MAX
+  const attachmentNote = answer?.attachmentCount
+    ? `${answer.attachmentCount} file${answer.attachmentCount === 1 ? '' : 's'} attached`
+    : null
+
   return (
     <div className="rounded-[12px] border border-border/40 bg-bg-secondary/30 px-3.5 py-3">
-      <div className="text-[14px] leading-[1.5] text-text-primary">{detail.question}</div>
-      {detail.reason ? (
-        <div className="mt-1 text-[13px] leading-[1.5] text-text-secondary">{detail.reason}</div>
+      {showQuestion ? (
+        <div className="text-[14px] leading-[1.5] text-text-primary">{detail.question}</div>
       ) : null}
-      {detail.options.length > 0 ? (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {detail.options.map((option) => {
-            const selected = !!detail.answer && detail.answer === option
-            return (
-              <span
-                key={option}
-                className={cn(
-                  'rounded-[8px] border px-2 py-1 text-[13px] leading-[1.4]',
-                  selected
-                    ? 'border-accent/50 bg-accent/10 text-text-primary'
-                    : 'border-border/35 bg-bg-primary/60 text-text-secondary',
-                )}
-              >
-                {option}
-              </span>
-            )
-          })}
+
+      {/* Why the agent had to ask only matters while it is still waiting. */}
+      {!answer && detail.reason ? (
+        <div
+          className={cn('text-[13px] leading-[1.5] text-text-secondary', showQuestion && 'mt-1')}
+        >
+          {detail.reason}
         </div>
       ) : null}
-      {detail.answer ? (
-        <div className="mt-2.5 rounded-[10px] bg-bg-primary/50 px-3 py-2 ring-1 ring-inset ring-border/40">
-          <div className="text-[11px] font-medium uppercase tracking-[0.06em] text-text-tertiary">
-            Your answer
+
+      {!answer && detail.options.length > 0 ? (
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {detail.options.map((option) => (
+            <span
+              key={option.label}
+              title={option.description}
+              className="rounded-[8px] border border-border/35 bg-bg-primary/60 px-2 py-1 text-[13px] leading-[1.4] text-text-secondary"
+            >
+              {option.label}
+              {option.recommended ? (
+                <span className="ml-1 text-[11px] leading-[1.4] text-accent">· Recommended</span>
+              ) : null}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {answer ? (
+        <div className={cn('flex gap-2', showQuestion && 'mt-2')}>
+          <CornerDownRight className="mt-[4px] size-3.5 shrink-0 text-text-tertiary" />
+          <div className="min-w-0">
+            {answer.text ? (
+              <div className="whitespace-pre-wrap break-words text-[14px] leading-[1.5] text-text-primary">
+                {answer.text}
+              </div>
+            ) : null}
+            {attachmentNote ? (
+              <div
+                className={cn(
+                  'text-[12px] leading-[1.5] text-text-tertiary',
+                  answer.text && 'mt-1',
+                )}
+              >
+                {attachmentNote}
+              </div>
+            ) : null}
           </div>
-          <div className="mt-0.5 text-[14px] leading-[1.5] text-text-primary">{detail.answer}</div>
         </div>
       ) : null}
     </div>
@@ -471,6 +684,89 @@ function AssistantTextPart({
   // so match that here — otherwise the text reads a hair further left and the
   // turn looks ragged.
   return <StreamingText text={content} isStreaming={isStreaming} className="pl-[13px]" />
+}
+
+/** Reasoning is context, not the answer — it never grows past this many lines. */
+const REASONING_MAX_LINES = 5
+/** Must match the `leading-[1.5]` on the body; the height cap is derived from it. */
+const REASONING_LINE_HEIGHT = 1.5
+
+/**
+ * The reasoning text itself, capped at {@link REASONING_MAX_LINES}.
+ *
+ * A long chain of thought used to push the answer — and every tool call after
+ * it — off the screen, so the transcript scrolled past the parts you actually
+ * came for. Short reasoning still renders at its natural height; only the
+ * overlong case becomes a scroller. The cap is in `em`, so it tracks the body's
+ * own font size rather than a pixel number that drifts when the type scale moves.
+ */
+function ReasoningBody({
+  content,
+  isStreaming,
+  className,
+  textClassName,
+}: {
+  readonly content: string
+  readonly isStreaming: boolean
+  readonly className?: string
+  readonly textClassName?: string
+}) {
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const contentRef = useRef<HTMLDivElement | null>(null)
+  const [overflowing, setOverflowing] = useState(false)
+
+  // Whether this block actually hit the cap. Chromium applies
+  // `overscroll-behavior: contain` to a scroll container even when it has
+  // nothing to scroll, which turned every SHORT thinking block into a dead zone
+  // that swallowed the wheel instead of passing it to the transcript. So the
+  // containment goes on only once there is really something to scroll.
+  //
+  // Both boxes are observed rather than re-measuring on every `content` change:
+  // the inner box grows as text streams in, and the outer one changes when the
+  // bubble is resized — a narrower bubble rewraps the text and can push a block
+  // over the cap without its content changing at all. Watching the DOM directly
+  // also means no observer is torn down and rebuilt on each streamed token.
+  useEffect(() => {
+    const el = scrollRef.current
+    const inner = contentRef.current
+    if (!el || !inner || typeof ResizeObserver === 'undefined') return
+    const measure = () => setOverflowing(el.scrollHeight > el.clientHeight + 1)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    observer.observe(inner)
+    return () => observer.disconnect()
+  }, [])
+
+  // Pin to the newest text while it streams, so a capped block reads as live
+  // thinking instead of a frozen first five lines.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el || !isStreaming || content.length === 0) return
+    el.scrollTop = el.scrollHeight
+  }, [content, isStreaming])
+
+  return (
+    // Padding lives on the frame, not the scroller, so the cap measures five
+    // lines of text rather than five lines minus the padding (`border-box`).
+    <div className={className}>
+      <div
+        ref={scrollRef}
+        className={cn(
+          'diff-scroll overflow-y-auto text-[13px] leading-[1.5]',
+          // `overflow-y-auto` on its own never blocks the wheel — a container
+          // with nothing to scroll chains normally. Only the containment has to
+          // wait until there is something to contain.
+          overflowing && 'overscroll-contain',
+        )}
+        style={{ maxHeight: `${REASONING_MAX_LINES * REASONING_LINE_HEIGHT}em` }}
+      >
+        <div ref={contentRef}>
+          <StreamingText text={content} isStreaming={isStreaming} className={textClassName} />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 /**
@@ -539,13 +835,12 @@ function ReasoningBlock({
           {!open && <ChevronDown className="size-3 shrink-0" />}
         </button>
         {open && content.trim() ? (
-          <div className="px-3 pb-2 pt-0.5">
-            <StreamingText
-              text={content}
-              isStreaming={isStreaming}
-              className="text-text-muted text-[13px] italic"
-            />
-          </div>
+          <ReasoningBody
+            content={content}
+            isStreaming={isStreaming}
+            className="px-3 pb-2 pt-0.5"
+            textClassName="text-text-muted italic"
+          />
         ) : null}
       </div>
     )
@@ -571,13 +866,12 @@ function ReasoningBlock({
         )}
       </button>
       {open && content.trim() ? (
-        <div className="px-3 pb-2.5 pt-0.5 border-t border-border/20">
-          <StreamingText
-            text={content}
-            isStreaming={isStreaming}
-            className="text-text-muted text-[13px]"
-          />
-        </div>
+        <ReasoningBody
+          content={content}
+          isStreaming={isStreaming}
+          className="border-t border-border/20 px-3 pb-2.5 pt-0.5"
+          textClassName="text-text-muted"
+        />
       ) : null}
     </div>
   )
@@ -653,11 +947,13 @@ export function AssistantMessageBubble({
     for (const part of message.parts) {
       if (part.type !== 'tool-call') continue
       if (part.name !== 'mark_concern_lines') continue
-      const concern = part.output ? getConcernLinesFromResult(part.output) : null
-      const argPath = parsePathFromArgs(part.arguments)
+      const concern = part.output ? getConcernLinesFromResultCached(part.output) : null
       if (concern) {
         // Index under every form we might look up by: the resolved path the tool
-        // returned AND the raw arg path the model passed.
+        // returned AND the raw arg path the model passed. Parsed only once a
+        // concern exists — until then the call may still be streaming, and this
+        // memo re-runs on every delta of the message.
+        const argPath = parsePathFromArgs(part.arguments)
         map.set(normalizeConcernPath(concern.path), concern)
         if (argPath) map.set(normalizeConcernPath(argPath), concern)
       }
@@ -691,7 +987,11 @@ export function AssistantMessageBubble({
       // Correlate this call with a concern entry by the raw path arg the model
       // passed (the same string it passed to mark_concern_lines). pi's read
       // details carry no path, so the arg path is the source of truth here.
-      const argPath = parsePathFromArgs(part.arguments)
+      // Same reason as inside the block: while a call's arguments stream in they
+      // are partial JSON, so this parse can only fail — after scanning the whole
+      // (growing) string, on every delta. A streaming call has no concern
+      // highlights to correlate yet in any case.
+      const argPath = part.state === 'input-streaming' ? null : parsePathFromArgs(part.arguments)
       const concern = argPath ? concernsByPath.get(normalizeConcernPath(argPath)) : undefined
       // Hydrated sessions: the call part has no `output`, so fall back to the
       // paired tool-result part's content (same payload shape) to recover the
@@ -712,7 +1012,7 @@ export function AssistantMessageBubble({
       // Orphan mark_concern_lines results are also hidden (they only carry a
       // concerns payload that's folded onto reads). Detect by shape, since the
       // tool-result part has no toolName field.
-      if (getConcernLinesFromResult(part.content)) return null
+      if (getConcernLinesFromResultCached(part.content)) return null
       const isError = part.state === 'error' || !!part.error
       const resultText =
         part.error ||

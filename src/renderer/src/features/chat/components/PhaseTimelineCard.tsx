@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm'
 import { relativeToProject } from '@/features/chat/lib/project-paths'
 import { parseToolArgs } from '@/features/chat/lib/tool-args'
 import {
-  getConcernLinesFromResult,
+  getConcernLinesFromResultCached,
   getResultError,
   getResultPath,
   getToolDiffData,
@@ -197,7 +197,7 @@ function collectConcernsAndVisibleTools(tools: readonly PhaseTimelineToolDetail[
   for (const tool of tools) {
     if (tool.toolName === 'mark_concern_lines') {
       const result = toToolResultPayload(tool)
-      const concern = result ? getConcernLinesFromResult(result.content) : null
+      const concern = result ? getConcernLinesFromResultCached(result.content) : null
       if (concern) {
         // Last-write-wins: a later call refines the concern set for a path.
         concernsByPath.set(concern.path, concern)
@@ -369,16 +369,18 @@ function ToolStrip({
                         </div>
                       )}
 
-                    {tool.toolName === 'edit' && tool.toolCall && !(diff && diff.lines.length > 0) && (
-                      <div className="px-3 pb-3">
-                        <ToolArgs
-                          name={tool.toolName}
-                          args={parsedArgs}
-                          rawArgs={tool.toolCall.arguments}
-                          path={pathOrQuery}
-                        />
-                      </div>
-                    )}
+                    {tool.toolName === 'edit' &&
+                      tool.toolCall &&
+                      !(diff && diff.lines.length > 0) && (
+                        <div className="px-3 pb-3">
+                          <ToolArgs
+                            name={tool.toolName}
+                            args={parsedArgs}
+                            rawArgs={tool.toolCall.arguments}
+                            path={pathOrQuery}
+                          />
+                        </div>
+                      )}
                   </>
                 )}
               </div>

@@ -52,6 +52,17 @@ function resetStore() {
   })
 }
 
+function toSummary(session: ReturnType<typeof makeSessionDetail>) {
+  return {
+    id: session.id,
+    title: session.title,
+    projectPath: session.projectPath,
+    messageCount: session.messages.length,
+    createdAt: session.createdAt,
+    updatedAt: session.updatedAt,
+  }
+}
+
 function makeSessionDetail(id: SessionId, title = 'Session') {
   return {
     id,
@@ -121,10 +132,11 @@ describe('useChatStore integration', () => {
     expect(useChatStore.getState().draftSession).toEqual({ projectPath: '/repo/draft' })
   })
 
-  it('loads full sessions and switches between them without fetching on click', async () => {
+  it('lists sessions from summaries and fetches a session detail lazily on click', async () => {
     const first = makeSessionDetail(SessionId('session-first'), 'First')
     const second = makeSessionDetail(SessionId('session-second'), 'Second')
-    mockApi.listSessionDetails.mockResolvedValue([first, second])
+    mockApi.listSessions.mockResolvedValue([toSummary(first), toSummary(second)])
+    mockApi.getSessionDetail.mockResolvedValue(second)
 
     await useChatStore.getState().loadSessions()
     useChatStore.getState().setActiveSessionId(second.id)
@@ -133,7 +145,24 @@ describe('useChatStore integration', () => {
       first.id,
       second.id,
     ])
-    expect(useChatStore.getState().activeSession).toBe(second)
+    // The list never hydrates full transcripts — only the opened session does.
+    expect(mockApi.listSessionDetails).not.toHaveBeenCalled()
+    expect(mockApi.getSessionDetail).toHaveBeenCalledExactlyOnceWith(second.id)
+
+    await vi.waitFor(() => {
+      expect(useChatStore.getState().activeSession).toBe(second)
+    })
+  })
+
+  it('reuses an already-cached session detail instead of refetching on click', async () => {
+    const session = makeSessionDetail(SessionId('session-cached'), 'Cached')
+    mockApi.listSessions.mockResolvedValue([toSummary(session)])
+    useChatStore.getState().upsertSession(session)
+
+    await useChatStore.getState().loadSessions()
+    useChatStore.getState().setActiveSessionId(session.id)
+
+    expect(useChatStore.getState().activeSession).toBe(session)
     expect(mockApi.getSessionDetail).not.toHaveBeenCalled()
   })
 

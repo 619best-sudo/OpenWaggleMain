@@ -9,42 +9,12 @@ interface ToolPermissionInlineCardProps {
   readonly onDeny: () => Promise<void>
 }
 
-const COMPLEXITY_CHIP_CLASS: Record<'low' | 'medium' | 'high', string> = {
-  low: 'bg-bg-secondary/60 text-text-tertiary',
-  medium: 'bg-warning/15 text-warning',
-  high: 'bg-error/15 text-error',
-}
-
-const COMPLEXITY_SOURCE_LABEL: Record<string, string> = {
-  'prepare-file': 'from Prepare',
-  'plan-task': 'from Plan',
-  // Measured by a tool that actually read the file this run (the staged `read`),
-  // rather than inherited from a plan or guessed pre-flight.
-  'tool-measured': 'measured from file',
-  estimated: 'estimated',
-}
-
-/** A small pill showing the call's complexity rating and where it came from
- *  (inherited from Prepare's per-file rating / Plan's per-task rating, or freshly
- *  estimated). Renders nothing when the harness didn't attach a rating. */
-function ComplexityChip({ request }: { request: PendingToolPermissionRequest }) {
-  const rating = request.complexityRating
-  if (rating !== 'low' && rating !== 'medium' && rating !== 'high') return null
-  const source = request.complexitySource
-    ? COMPLEXITY_SOURCE_LABEL[request.complexitySource]
-    : undefined
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-medium leading-[1.4] ${COMPLEXITY_CHIP_CLASS[rating]}`}
-      title={
-        source ? `Estimated complexity: ${rating} (${source})` : `Estimated complexity: ${rating}`
-      }
-    >
-      {rating}
-      {source ? <span className="font-normal opacity-70">· {source}</span> : null}
-    </span>
-  )
-}
+// NOTE: this card deliberately shows no complexity rating. `complexityRating` /
+// `complexitySource` are still on the request — the harness uses them to pick
+// which model authors a file — but they are an internal routing signal, not
+// something the person deciding "may this run?" can act on. A coloured
+// low/medium/high pill next to the buttons only added weight to the one moment
+// that has to be read in a glance.
 
 // Verb chosen from the tool's input shape so the prompt reads naturally:
 // "run" for shell commands, "access" for file paths, and a per-action verb
@@ -219,7 +189,6 @@ export function ToolPermissionInlineCard({
       <div className="flex items-center justify-between gap-3 rounded-[15px] bg-bg-secondary/20 px-3.5 py-2.5 ring-1 ring-inset ring-border/20">
         <div className="min-w-0 flex-1 text-[14px] leading-[1.5] text-text-secondary">{prompt}</div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <ComplexityChip request={request} />
           <Button
             variant="ghost"
             size="sm"

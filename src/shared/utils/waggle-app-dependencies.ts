@@ -753,21 +753,6 @@ const WAGGLE_APP_MCP_RECIPES = {
       'Keep secrets in project config or environment variables, not inside the Waggle app manifest.',
     ],
   },
-  'mobile-mcp': {
-    id: 'mobile-mcp',
-    label: 'Mobile MCP',
-    description:
-      'Lets Waggle agents inspect and automate iOS and Android apps on simulators, emulators, or real devices.',
-    serverName: 'mobile-mcp',
-    definition: {
-      command: 'npx',
-      args: ['-y', '@mobilenext/mobile-mcp@latest'],
-    },
-    setupSteps: [
-      'Ensure the project can run on the target simulator, emulator, or device before using mobile automation.',
-      'Configure any required Android SDK, Xcode, or device-access prerequisites in project MCP config after install.',
-    ],
-  },
   'mobile-device': {
     id: 'mobile-device',
     label: 'Mobile Device MCP',
@@ -1173,13 +1158,13 @@ function buildWaggleAppPreflightStatus(input: {
     allDependencyIds,
     checkId: 'mobile-verification',
     label: 'Mobile Verification',
-    capabilityIds: ['mobile-mcp'],
-    supplementalIds: ['mobile-device'],
+    capabilityIds: ['mobile-device'],
     passDetail:
-      'Mobile runtime verification is available through simulator, emulator, or device tooling.',
+      'Mobile runtime verification is available through the built-in device toolkit.',
     warnDetail:
       'Mobile runtime verification has limited coverage until mobile automation tooling is installed.',
-    failDetail: 'Mobile runtime verification is blocked until Mobile MCP is installed.',
+    failDetail:
+      'Mobile runtime verification is blocked until mobile automation tooling is installed.',
   })
 
   maybeAddCapabilityCheck({

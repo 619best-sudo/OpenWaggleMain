@@ -43,7 +43,7 @@ describe('createToolPermissionRequestExtension', () => {
       expect.objectContaining({
         terminate: true,
         request: expect.objectContaining({
-          model: 'poolside/laguna-xs-2.1',
+          model: 'xiaomi/mimo-v2.5',
           permission: expect.objectContaining({
             kind: 'user-approval',
             toolName: 'bash',
@@ -55,7 +55,7 @@ describe('createToolPermissionRequestExtension', () => {
           toolName: 'bash',
           input: { command: 'ls -la', timeout: 5000 },
           request: expect.objectContaining({
-            model: 'poolside/laguna-xs-2.1',
+            model: 'xiaomi/mimo-v2.5',
           }),
         }),
       }),
@@ -171,9 +171,14 @@ describe('createToolPermissionRequestExtension', () => {
     expect(result).toEqual(
       expect.objectContaining({
         request: expect.objectContaining({
-          model: 'tencent/hy3',
+          model: 'xiaomi/mimo-v2.5',
         }),
-        route: { id: 'editing', model: 'tencent/hy3', authorFinalArgs: true, reasonOverResult: false },
+        route: {
+          id: 'editing',
+          model: 'xiaomi/mimo-v2.5',
+          authorFinalArgs: true,
+          reasonOverResult: false,
+        },
       }),
     )
   })
@@ -225,7 +230,12 @@ describe('createToolPermissionRequestExtension', () => {
         input: { path: 'src/main.ts', content: 'console.log("hi")' },
       }),
     ).resolves.toEqual({
-      route: { id: 'editing', model: 'tencent/hy3', authorFinalArgs: true, reasonOverResult: false },
+      route: {
+        id: 'editing',
+        model: 'xiaomi/mimo-v2.5',
+        authorFinalArgs: true,
+        reasonOverResult: false,
+      },
     })
   })
 
@@ -273,7 +283,12 @@ describe('createToolPermissionRequestExtension', () => {
         input: { path: 'src/main.ts', content: 'x' },
       }),
     ).resolves.toEqual({
-      route: { id: 'editing', model: 'tencent/hy3', authorFinalArgs: true, reasonOverResult: false },
+      route: {
+        id: 'editing',
+        model: 'xiaomi/mimo-v2.5',
+        authorFinalArgs: true,
+        reasonOverResult: false,
+      },
     })
   })
 
@@ -300,7 +315,7 @@ describe('createToolPermissionRequestExtension', () => {
       expect.objectContaining({
         terminate: true,
         request: expect.objectContaining({
-          model: 'tencent/hy3',
+          model: 'xiaomi/mimo-v2.5',
         }),
       }),
     )
@@ -346,7 +361,7 @@ describe('createToolPermissionRequestExtension', () => {
       expect.objectContaining({
         terminate: true,
         request: expect.objectContaining({
-          model: 'tencent/hy3',
+          model: 'xiaomi/mimo-v2.5',
           permission: expect.objectContaining({
             toolName: 'write-file',
           }),

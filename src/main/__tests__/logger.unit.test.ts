@@ -64,7 +64,7 @@ describe('file logger', () => {
 
     const logPath = getLogFilePath()
     const dateStr = new Date().toISOString().slice(0, 10)
-    expect(logPath).toContain(`openwaggle-${dateStr}.log`)
+    expect(logPath).toContain(`turing-machine-${dateStr}.log`)
   })
 
   it('prunes old log files on init', async () => {

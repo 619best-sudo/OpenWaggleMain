@@ -5,6 +5,7 @@ import {
   type WaggleConfig,
   type WaggleMessageMetadata,
 } from '@shared/types/waggle'
+import { useMemo } from 'react'
 import { useWaggleStore } from '@/features/waggle/state'
 
 const EMPTY_WAGGLE_METADATA_LOOKUP: Readonly<Record<string, WaggleMessageMetadata>> = Object.freeze(
@@ -127,41 +128,56 @@ export function useWaggleMetadataLookup(
   const currentAgentLabel = useWaggleStore((s) => s.currentAgentLabel)
 
   const config = getSessionConfig(session, activeConfig, activeCollaborationId, configSessionId)
-  if (!config) {
-    return EMPTY_WAGGLE_METADATA_LOOKUP
-  }
 
-  const lookup: Record<string, WaggleMessageMetadata> = {}
-  const persistedMeta = buildPersistedMetaMap(session)
-  const lastUserMessageIndex = findLastUserMessageIndex(messages)
-  const isLive = status === 'running'
-  let assistantIndex = 0
-
-  for (let messageIndex = 0; messageIndex < messages.length; messageIndex += 1) {
-    const message = messages[messageIndex]
-    if (!message || message.role !== 'assistant') {
-      continue
+  // Rebuilding this walks the whole transcript and hands back a fresh object,
+  // which would invalidate the memoized row builder on every render.
+  return useMemo(() => {
+    if (!config) {
+      return EMPTY_WAGGLE_METADATA_LOOKUP
     }
 
-    const meta = resolveAssistantMetadata({
-      message,
-      messageIndex,
-      assistantIndex,
-      lastUserMessageIndex,
-      persistedMeta,
-      liveMessageMetadata,
-      completedTurnMeta,
-      initialTurnMeta,
-      config,
-      currentAgentIndex,
-      currentAgentLabel,
-      useRunningFallbacks: isLive,
-    })
-    if (meta) {
-      lookup[message.id] = meta
-    }
-    assistantIndex += 1
-  }
+    const lookup: Record<string, WaggleMessageMetadata> = {}
+    const persistedMeta = buildPersistedMetaMap(session)
+    const lastUserMessageIndex = findLastUserMessageIndex(messages)
+    const isLive = status === 'running'
+    let assistantIndex = 0
 
-  return Object.freeze(lookup)
+    for (let messageIndex = 0; messageIndex < messages.length; messageIndex += 1) {
+      const message = messages[messageIndex]
+      if (!message || message.role !== 'assistant') {
+        continue
+      }
+
+      const meta = resolveAssistantMetadata({
+        message,
+        messageIndex,
+        assistantIndex,
+        lastUserMessageIndex,
+        persistedMeta,
+        liveMessageMetadata,
+        completedTurnMeta,
+        initialTurnMeta,
+        config,
+        currentAgentIndex,
+        currentAgentLabel,
+        useRunningFallbacks: isLive,
+      })
+      if (meta) {
+        lookup[message.id] = meta
+      }
+      assistantIndex += 1
+    }
+
+    return Object.freeze(lookup)
+  }, [
+    completedTurnMeta,
+    config,
+    currentAgentIndex,
+    currentAgentLabel,
+    initialTurnMeta,
+    liveMessageMetadata,
+    messages,
+    session,
+    status,
+  ])
 }

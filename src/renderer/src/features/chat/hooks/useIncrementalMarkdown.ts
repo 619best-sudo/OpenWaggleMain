@@ -30,6 +30,12 @@ interface IncrementalMarkdownResult {
 interface ShikiOptions {
   highlighter: Highlighter | undefined
   cache: ShikiCache
+  /**
+   * Counter bumped when an on-demand grammar finishes loading. Changing it
+   * invalidates the parsed prefix so blocks that were rendered before their
+   * language was registered get re-highlighted.
+   */
+  languageVersion?: number
 }
 
 /**
@@ -178,10 +184,16 @@ export function useIncrementalMarkdown(
   const prefixStateRef = useRef<PrefixState | null>(null)
   const splitStateRef = useRef<SplitScanState>({ ...INITIAL_SPLIT_STATE })
 
-  // Invalidate prefix cache when highlighter changes (e.g., from undefined to loaded)
+  // Invalidate prefix cache when the highlighter changes (e.g., from undefined
+  // to loaded) or when a new grammar was loaded on demand.
   const prevHighlighterRef = useRef(shikiOptions.highlighter)
-  if (prevHighlighterRef.current !== shikiOptions.highlighter) {
+  const prevLanguageVersionRef = useRef(shikiOptions.languageVersion)
+  if (
+    prevHighlighterRef.current !== shikiOptions.highlighter ||
+    prevLanguageVersionRef.current !== shikiOptions.languageVersion
+  ) {
     prevHighlighterRef.current = shikiOptions.highlighter
+    prevLanguageVersionRef.current = shikiOptions.languageVersion
     prefixStateRef.current = null
   }
 

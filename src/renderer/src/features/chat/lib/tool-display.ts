@@ -200,12 +200,19 @@ function formatProjectMemoryTarget(args: JsonObject): string {
 }
 
 /**
+ * How much of the question fits in the collapsed tool chip. Exported because the
+ * expanded card uses it to decide whether the question still needs restating:
+ * if the header already shows it in full, repeating it below is just noise.
+ */
+export const ASK_USER_QUESTION_TITLE_MAX = 70
+
+/**
  * Title for an `ask_user_question` call: a short version of the question.
  */
 function formatAskUserQuestionTarget(args: JsonObject): string {
   const question = typeof args.question === 'string' ? args.question.trim() : ''
   if (!question) return ''
-  return truncate(question, 70)
+  return truncate(question, ASK_USER_QUESTION_TITLE_MAX)
 }
 
 interface ActionTextParams {

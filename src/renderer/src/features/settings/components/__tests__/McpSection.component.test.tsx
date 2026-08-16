@@ -39,7 +39,7 @@ const MCP_VIEW = {
   adapter: {
     enabled: true,
     packageSource: MCP_ADAPTER_PACKAGE_SOURCE,
-    runtimeConfigPath: '/tmp/pi-agent/openwaggle-mcp/project/mcp.json',
+    runtimeConfigPath: '/tmp/pi-agent/turing-machine-mcp/project/mcp.json',
   },
   sources: [
     {
@@ -67,11 +67,11 @@ const MCP_VIEW = {
       rawJson: '{\n  "mcpServers": {\n    "playwright": { "command": "npx" }\n  }\n}\n',
     },
     {
-      id: 'project-openwaggle',
+      id: 'project-turing-machine',
       label: 'Project Turing Machine MCP',
-      path: `${PROJECT_PATH}/.openwaggle/agent/mcp.json`,
+      path: `${PROJECT_PATH}/.turing-machine/agent/mcp.json`,
       scope: 'project',
-      kind: 'openwaggle',
+      kind: 'turing-machine',
       exists: true,
       editable: true,
       serverCount: 1,
@@ -92,15 +92,15 @@ const MCP_VIEW = {
     {
       name: 'alpha',
       enabled: true,
-      sourceId: 'project-openwaggle',
+      sourceId: 'project-turing-machine',
       sourceLabel: 'Project Turing Machine MCP',
-      sourcePath: `${PROJECT_PATH}/.openwaggle/agent/mcp.json`,
+      sourcePath: `${PROJECT_PATH}/.turing-machine/agent/mcp.json`,
       command: 'alpha',
       transport: 'stdio',
       directTools: 'inherited',
     },
   ],
-  runtimeConfigPath: '/tmp/pi-agent/openwaggle-mcp/project/mcp.json',
+  runtimeConfigPath: '/tmp/pi-agent/turing-machine-mcp/project/mcp.json',
 } satisfies McpSettingsView
 
 function sourceAt(index: number) {
@@ -155,7 +155,7 @@ describe('McpSection', () => {
     await waitFor(() => {
       expect(setMcpServerEnabledMock).toHaveBeenCalledWith({
         projectPath: PROJECT_PATH,
-        sourceId: 'project-openwaggle',
+        sourceId: 'project-turing-machine',
         serverName: 'alpha',
         enabled: false,
       })
@@ -201,7 +201,7 @@ describe('McpSection', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Add Server' }))
 
     const sourceSelect = screen.getByRole('combobox', { name: /Install for/i })
-    fireEvent.change(sourceSelect, { target: { value: 'project-openwaggle' } })
+    fireEvent.change(sourceSelect, { target: { value: 'project-turing-machine' } })
 
     fireEvent.change(screen.getByPlaceholderText('playwright'), {
       target: { value: 'filesystem' },
@@ -219,7 +219,7 @@ describe('McpSection', () => {
     await waitFor(() => {
       expect(writeMcpSourceConfigMock).toHaveBeenCalledWith({
         projectPath: PROJECT_PATH,
-        sourceId: 'project-openwaggle',
+        sourceId: 'project-turing-machine',
         rawJson:
           '{\n' +
           '  "mcpServers": {\n' +
@@ -246,7 +246,7 @@ describe('McpSection', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Add Server' }))
 
     const sourceSelect = screen.getByRole('combobox', { name: /Install for/i })
-    fireEvent.change(sourceSelect, { target: { value: 'project-openwaggle' } })
+    fireEvent.change(sourceSelect, { target: { value: 'project-turing-machine' } })
 
     fireEvent.click(screen.getByRole('button', { name: 'GitHub URL' }))
     fireEvent.change(screen.getByPlaceholderText('https://github.com/owner/repo'), {
@@ -258,7 +258,7 @@ describe('McpSection', () => {
     await waitFor(() => {
       expect(writeMcpSourceConfigMock).toHaveBeenCalledWith({
         projectPath: PROJECT_PATH,
-        sourceId: 'project-openwaggle',
+        sourceId: 'project-turing-machine',
         rawJson:
           '{\n' +
           '  "mcpServers": {\n' +
@@ -348,7 +348,7 @@ describe('McpSection', () => {
     showConfirmMock.mockResolvedValue(true)
     render(<McpSection />)
 
-    // The "alpha" server lives in the project-openwaggle source (editable).
+    // The "alpha" server lives in the project-turing-machine source (editable).
     fireEvent.click(await screen.findByRole('button', { name: 'Remove alpha' }))
 
     await waitFor(() => {
@@ -360,8 +360,8 @@ describe('McpSection', () => {
     await waitFor(() => {
       expect(writeMcpSourceConfigMock).toHaveBeenCalledWith({
         projectPath: PROJECT_PATH,
-        sourceId: 'project-openwaggle',
-        // The alpha entry is stripped from the project-openwaggle source, which
+        sourceId: 'project-turing-machine',
+        // The alpha entry is stripped from the project-turing-machine source, which
         // originally held only alpha — so the resulting mcpServers is empty.
         rawJson: '{\n  "mcpServers": {}\n}\n',
       })

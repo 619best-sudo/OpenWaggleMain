@@ -49,6 +49,21 @@ interface GitState {
   ) => Promise<GitBranchMutationResult>
 }
 
+const NOT_A_GIT_REPO_MESSAGE = 'Selected folder is not a Git repository.'
+
+/**
+ * Paths the main process has already reported as non-repositories. Git refreshes
+ * are triggered by window focus, route changes and every terminal transport
+ * event; without this guard a plain folder re-runs the whole status/branch IPC
+ * round-trip (and its `git` subprocesses) on each one, forever.
+ */
+const nonRepositoryPaths = new Set<string>()
+
+/** Called when the user explicitly asks for a refresh, so `git init` is picked up. */
+export function forgetNonRepositoryPath(projectPath: string | null) {
+  if (projectPath) nonRepositoryPaths.delete(projectPath)
+}
+
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message.trim().length > 0 ? error.message : fallback
 }
@@ -122,9 +137,19 @@ export const useGitStore = create<GitState>((set, get) => ({
       return
     }
 
+    if (nonRepositoryPaths.has(projectPath)) {
+      set({ status: null, isLoading: false, statusError: NOT_A_GIT_REPO_MESSAGE })
+      return
+    }
+
     set({ isLoading: true, statusError: null })
     try {
       const status = await api.getGitStatus(projectPath)
+      if (status === null) {
+        nonRepositoryPaths.add(projectPath)
+        set({ status: null, isLoading: false, statusError: NOT_A_GIT_REPO_MESSAGE })
+        return
+      }
       set({ status, isLoading: false, statusError: null })
     } catch (err) {
       set({
@@ -141,8 +166,18 @@ export const useGitStore = create<GitState>((set, get) => ({
       return
     }
 
+    if (nonRepositoryPaths.has(projectPath)) {
+      set({ branches: null, branchesError: NOT_A_GIT_REPO_MESSAGE })
+      return
+    }
+
     try {
       const branches = await api.listGitBranches(projectPath)
+      if (branches === null) {
+        nonRepositoryPaths.add(projectPath)
+        set({ branches: null, branchesError: NOT_A_GIT_REPO_MESSAGE })
+        return
+      }
       set({ branches, branchesError: null })
     } catch (err) {
       set({

@@ -7,10 +7,13 @@ import {
   buildPersistedUserMessageParts,
   type PersistedUserMessagePartsPayload,
 } from '../../agent/shared'
-import type { ProjectedSessionNodeInput } from '../../ports/session-repository'
-import { buildMessageNodeContentJson, buildRawNodeContentJson } from '../message-projection/message-parts'
-import { historyToProjectedMessages } from '../message-projection/message-mapper'
 import { createLogger } from '../../logger'
+import type { ProjectedSessionNodeInput } from '../../ports/session-repository'
+import { historyToProjectedMessages } from '../message-projection/message-mapper'
+import {
+  buildMessageNodeContentJson,
+  buildRawNodeContentJson,
+} from '../message-projection/message-parts'
 
 const logger = createLogger('turing-message-projection')
 
@@ -108,7 +111,9 @@ function isHandoffContractText(text: string): boolean {
  * parses). When absent, the whole block is contract → drop it (empty string).
  */
 function extractUserFacingProse(text: string): string {
-  const match = text.match(/(?:^|\n)\s*\*?\*?UI SUMMARY:?\s*\*?\*?\s*([\s\S]*?)(?:\n\s*\*?\*?[A-Z][A-Z _]{2,}:|\n\s*```|$)/i)
+  const match = text.match(
+    /(?:^|\n)\s*\*?\*?UI SUMMARY:?\s*\*?\*?\s*([\s\S]*?)(?:\n\s*\*?\*?[A-Z][A-Z _]{2,}:|\n\s*```|$)/i,
+  )
   const prose = match?.[1]?.trim()
   if (prose) return prose
   // No UI SUMMARY section → the entire text is machine contract; nothing user-facing.
@@ -125,13 +130,15 @@ function stripHandoffContractFromMessages(messages: readonly Message[]): Message
   return messages.map((message) => {
     if (message.role !== 'assistant') return message
     let changed = false
-    const nextParts = message.parts.map((part) => {
-      if (part.type !== 'text') return part
-      if (!isHandoffContractText(part.text)) return part
-      changed = true
-      const prose = extractUserFacingProse(part.text)
-      return prose ? { ...part, text: prose } : null
-    }).filter((part): part is NonNullable<typeof part> => part !== null)
+    const nextParts = message.parts
+      .map((part) => {
+        if (part.type !== 'text') return part
+        if (!isHandoffContractText(part.text)) return part
+        changed = true
+        const prose = extractUserFacingProse(part.text)
+        return prose ? { ...part, text: prose } : null
+      })
+      .filter((part): part is NonNullable<typeof part> => part !== null)
     if (!changed) return message
     return { ...message, parts: nextParts }
   })

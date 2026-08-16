@@ -188,15 +188,30 @@ export function updateToolCall(
   toolCallId: string,
   update: (part: Extract<UIMessagePart, { type: 'tool-call' }>) => UIMessagePart,
 ) {
-  return messages.map((message) => ({
-    ...message,
-    parts: message.parts.map((part) => {
+  // Preserve the identity of every message that does NOT contain this tool call.
+  // Spreading every message (`{ ...message, parts: ... }`) on every tool event
+  // gives ALL messages a fresh reference, which defeats the row memo
+  // (`areChatRowsEqual` compares `message` by reference) and re-renders the whole
+  // transcript on every tool_execution_start/end — the cost grows with each
+  // accumulated read/edit/write. Now only the message whose parts actually change
+  // gets a new object; everything else is returned by reference.
+  let changed = false
+  const nextMessages = messages.map((message) => {
+    let touched = false
+    const nextParts = message.parts.map((part) => {
       if (part.type !== 'tool-call' || part.id !== toolCallId) {
         return part
       }
+      touched = true
       return update(part)
-    }),
-  }))
+    })
+    if (!touched) {
+      return message
+    }
+    changed = true
+    return { ...message, parts: nextParts }
+  })
+  return changed ? nextMessages : [...messages]
 }
 
 export function appendToolCallArgs(

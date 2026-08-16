@@ -116,7 +116,7 @@ export function ImportSkillDialog({ isImporting, onImport, onClose }: ImportSkil
                   Back
                 </Button>
               </div>
-              <div className="space-y-1 rounded-lg border border-white/6 bg-white/[0.02] p-1">
+              <div className="max-h-[50vh] space-y-1 overflow-y-auto rounded-lg border border-white/6 bg-white/[0.02] p-1">
                 {choices.map((choice) => (
                   <button
                     key={choice.sourceUrl}

@@ -3,6 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 import { MCP_CONFIG } from '@shared/constants/mcp'
+import { PROJECT_SKILLS_DIR_SEGMENTS } from '@shared/constants/project-config'
 import type { McpConfigFile, McpConfigSourceId, McpSettingsView } from '@shared/types/mcp'
 import type {
   WaggleAppInstallResult,
@@ -22,7 +23,7 @@ const execFileAsync = promisify(execFile)
 const TOOL_PROBE_TIMEOUT_MS = 2_000
 
 const MCP_INSTALL_SOURCE_PREFERENCE: readonly McpConfigSourceId[] = [
-  'project-openwaggle',
+  'project-turing-machine',
   'project-standard',
   'project-agents',
   'project-pi',
@@ -715,7 +716,7 @@ async function pathExists(filePath: string) {
 }
 
 async function writeStarterSkill(projectPath: string, skillId: string, markdown: string) {
-  const skillDir = path.join(projectPath, '.openwaggle', 'skills', skillId)
+  const skillDir = path.join(projectPath, ...PROJECT_SKILLS_DIR_SEGMENTS, skillId)
   await fs.mkdir(skillDir, { recursive: true })
   await fs.writeFile(path.join(skillDir, 'SKILL.md'), markdown, {
     encoding: 'utf8',

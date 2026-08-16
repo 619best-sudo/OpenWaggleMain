@@ -3,8 +3,7 @@ import { SessionId, SupportedModelId } from '@shared/types/brand'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleConfig } from '@shared/types/waggle'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createSendHandlers } from '../useSendMessage'
-import { useSendMessage } from '../useSendMessage'
+import { createSendHandlers, useSendMessage } from '../useSendMessage'
 
 const { authStoreMock } = vi.hoisted(() => ({
   authStoreMock: {
@@ -31,7 +30,9 @@ function makeDeps(overrides: Partial<SendDeps> = {}) {
     thinkingLevel: 'medium',
     createSession: vi.fn<SendDeps['createSession']>().mockResolvedValue(SessionId('new-session')),
     sendMessage: vi.fn<(p: AgentSendPayload) => Promise<void>>().mockResolvedValue(undefined),
-    sendMachineMessage: vi.fn<(p: AgentSendPayload) => Promise<void>>().mockResolvedValue(undefined),
+    sendMachineMessage: vi
+      .fn<(p: AgentSendPayload) => Promise<void>>()
+      .mockResolvedValue(undefined),
     sendFirstMessageToSession: vi
       .fn<SendDeps['sendFirstMessageToSession']>()
       .mockResolvedValue(undefined),
@@ -241,7 +242,9 @@ describe('createSendHandlers', () => {
         attachments: [],
       })
 
-      expect(authStoreMock.ensureFreshAppSessionProviderTokenForTuringMachine).toHaveBeenCalledOnce()
+      expect(
+        authStoreMock.ensureFreshAppSessionProviderTokenForTuringMachine,
+      ).toHaveBeenCalledOnce()
     })
   })
 })

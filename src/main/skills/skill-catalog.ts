@@ -1,6 +1,7 @@
 import type { Dirent } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { PROJECT_SKILLS_DIR_SEGMENTS } from '@shared/constants/project-config'
 import type { SkillCatalogResult, SkillDiscoveryItem } from '@shared/types/standards'
 import { isEnoent } from '@shared/utils/node-error'
 import { normalizeSkillId as normalizeSkillIdValue } from '@shared/utils/skill-id'
@@ -18,12 +19,12 @@ export interface LoadedSkillInstructions extends SkillDiscoveryItem {
 }
 
 /**
- * Skill directories scanned in order. Both `.openwaggle/skills` and
+ * Skill directories scanned in order. Both `.turing-machine/skills` and
  * `.agents/skills` are supported. When a skill ID exists in both,
- * the first directory wins (`.openwaggle` takes precedence).
+ * the first directory wins (`.turing-machine` takes precedence).
  */
 const SKILL_DIRS = [
-  ['.openwaggle', 'skills'],
+  [...PROJECT_SKILLS_DIR_SEGMENTS],
   ['.agents', 'skills'],
 ] as const
 

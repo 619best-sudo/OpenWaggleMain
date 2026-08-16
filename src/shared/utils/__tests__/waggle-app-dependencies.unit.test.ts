@@ -25,9 +25,9 @@ describe('buildWaggleAppInstallStatus', () => {
           {
             name: 'playwright',
             enabled: true,
-            sourceId: 'project-openwaggle',
+            sourceId: 'project-turing-machine',
             sourceLabel: 'Project Turing Machine',
-            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
             directTools: 'inherited',
@@ -42,8 +42,8 @@ describe('buildWaggleAppInstallStatus', () => {
             id: 'ui-critic',
             name: 'ui-critic',
             description: 'Critiques UI changes.',
-            folderPath: '/tmp/project/.openwaggle/skills/ui-critic',
-            skillPath: '/tmp/project/.openwaggle/skills/ui-critic/SKILL.md',
+            folderPath: '/tmp/project/.turing-machine/skills/ui-critic',
+            skillPath: '/tmp/project/.turing-machine/skills/ui-critic/SKILL.md',
             hasScripts: false,
             enabled: true,
             loadStatus: 'ok',
@@ -128,9 +128,9 @@ describe('buildWaggleAppInstallStatus', () => {
           {
             name: 'playwright',
             enabled: true,
-            sourceId: 'project-openwaggle',
+            sourceId: 'project-turing-machine',
             sourceLabel: 'Project Turing Machine',
-            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
             directTools: 'inherited',
@@ -187,9 +187,9 @@ describe('buildWaggleAppInstallStatus', () => {
           {
             name: 'database',
             enabled: true,
-            sourceId: 'project-openwaggle',
+            sourceId: 'project-turing-machine',
             sourceLabel: 'Project Turing Machine',
-            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
             directTools: 'inherited',
@@ -231,9 +231,9 @@ describe('buildWaggleAppInstallStatus', () => {
           {
             name: 'playwright',
             enabled: false,
-            sourceId: 'project-openwaggle',
+            sourceId: 'project-turing-machine',
             sourceLabel: 'Project Turing Machine',
-            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
             directTools: 'inherited',
@@ -248,8 +248,8 @@ describe('buildWaggleAppInstallStatus', () => {
             id: 'ui-critic',
             name: 'ui-critic',
             description: 'Critiques UI changes.',
-            folderPath: '/tmp/project/.openwaggle/skills/ui-critic',
-            skillPath: '/tmp/project/.openwaggle/skills/ui-critic/SKILL.md',
+            folderPath: '/tmp/project/.turing-machine/skills/ui-critic',
+            skillPath: '/tmp/project/.turing-machine/skills/ui-critic/SKILL.md',
             hasScripts: false,
             enabled: false,
             loadStatus: 'ok',
@@ -316,9 +316,9 @@ describe('buildWaggleAppInstallStatus', () => {
           {
             name: 'playwright',
             enabled: true,
-            sourceId: 'project-openwaggle',
+            sourceId: 'project-turing-machine',
             sourceLabel: 'Project Turing Machine',
-            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
             directTools: 'inherited',
@@ -326,9 +326,9 @@ describe('buildWaggleAppInstallStatus', () => {
           {
             name: 'figma',
             enabled: true,
-            sourceId: 'project-openwaggle',
+            sourceId: 'project-turing-machine',
             sourceLabel: 'Project Turing Machine',
-            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
             directTools: 'inherited',
@@ -343,8 +343,8 @@ describe('buildWaggleAppInstallStatus', () => {
             id: 'frontend-implementer',
             name: 'frontend-implementer',
             description: 'Implements frontend UI.',
-            folderPath: '/tmp/project/.openwaggle/skills/frontend-implementer',
-            skillPath: '/tmp/project/.openwaggle/skills/frontend-implementer/SKILL.md',
+            folderPath: '/tmp/project/.turing-machine/skills/frontend-implementer',
+            skillPath: '/tmp/project/.turing-machine/skills/frontend-implementer/SKILL.md',
             hasScripts: false,
             enabled: true,
             loadStatus: 'ok',
@@ -353,8 +353,8 @@ describe('buildWaggleAppInstallStatus', () => {
             id: 'ui-screenshot-auditor',
             name: 'ui-screenshot-auditor',
             description: 'Audits rendered UI.',
-            folderPath: '/tmp/project/.openwaggle/skills/ui-screenshot-auditor',
-            skillPath: '/tmp/project/.openwaggle/skills/ui-screenshot-auditor/SKILL.md',
+            folderPath: '/tmp/project/.turing-machine/skills/ui-screenshot-auditor',
+            skillPath: '/tmp/project/.turing-machine/skills/ui-screenshot-auditor/SKILL.md',
             hasScripts: false,
             enabled: true,
             loadStatus: 'ok',
@@ -381,7 +381,7 @@ describe('buildWaggleAppInstallStatus', () => {
     const status = buildWaggleAppInstallStatus({
       presetId: 'mobile-build',
       app: {
-        requiredMcps: ['mobile-mcp'],
+        requiredMcps: ['mobile-device'],
         requiredSkills: ['frontend-implementer'],
       },
       repoProfile: {
@@ -419,11 +419,11 @@ describe('buildWaggleAppInstallStatus', () => {
         },
         servers: [
           {
-            name: 'mobile-mcp',
+            name: 'mobile-device',
             enabled: true,
-            sourceId: 'project-openwaggle',
+            sourceId: 'project-turing-machine',
             sourceLabel: 'Project Turing Machine',
-            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
             directTools: 'inherited',
@@ -438,8 +438,8 @@ describe('buildWaggleAppInstallStatus', () => {
             id: 'frontend-implementer',
             name: 'frontend-implementer',
             description: 'Implements frontend UI.',
-            folderPath: '/tmp/project/.openwaggle/skills/frontend-implementer',
-            skillPath: '/tmp/project/.openwaggle/skills/frontend-implementer/SKILL.md',
+            folderPath: '/tmp/project/.turing-machine/skills/frontend-implementer',
+            skillPath: '/tmp/project/.turing-machine/skills/frontend-implementer/SKILL.md',
             hasScripts: false,
             enabled: true,
             loadStatus: 'ok',
@@ -506,9 +506,9 @@ describe('buildWaggleAppInstallStatus', () => {
           {
             name: 'playwright',
             enabled: true,
-            sourceId: 'project-openwaggle',
+            sourceId: 'project-turing-machine',
             sourceLabel: 'Project Turing Machine',
-            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
             directTools: 'inherited',
@@ -523,8 +523,8 @@ describe('buildWaggleAppInstallStatus', () => {
             id: 'frontend-implementer',
             name: 'frontend-implementer',
             description: 'Implements frontend UI.',
-            folderPath: '/tmp/project/.openwaggle/skills/frontend-implementer',
-            skillPath: '/tmp/project/.openwaggle/skills/frontend-implementer/SKILL.md',
+            folderPath: '/tmp/project/.turing-machine/skills/frontend-implementer',
+            skillPath: '/tmp/project/.turing-machine/skills/frontend-implementer/SKILL.md',
             hasScripts: false,
             enabled: true,
             loadStatus: 'ok',
@@ -606,9 +606,9 @@ describe('buildWaggleAppInstallStatus', () => {
           {
             name: 'playwright',
             enabled: true,
-            sourceId: 'project-openwaggle',
+            sourceId: 'project-turing-machine',
             sourceLabel: 'Project Turing Machine',
-            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
             directTools: 'inherited',
@@ -623,8 +623,8 @@ describe('buildWaggleAppInstallStatus', () => {
             id: 'frontend-implementer',
             name: 'frontend-implementer',
             description: 'Implements frontend UI.',
-            folderPath: '/tmp/project/.openwaggle/skills/frontend-implementer',
-            skillPath: '/tmp/project/.openwaggle/skills/frontend-implementer/SKILL.md',
+            folderPath: '/tmp/project/.turing-machine/skills/frontend-implementer',
+            skillPath: '/tmp/project/.turing-machine/skills/frontend-implementer/SKILL.md',
             hasScripts: false,
             enabled: true,
             loadStatus: 'ok',
@@ -686,9 +686,9 @@ describe('buildWaggleAppInstallStatus', () => {
           {
             name: 'playwright',
             enabled: true,
-            sourceId: 'project-openwaggle',
+            sourceId: 'project-turing-machine',
             sourceLabel: 'Project Turing Machine',
-            sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+            sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
             command: 'npx',
             transport: 'stdio',
             directTools: 'inherited',
@@ -703,8 +703,8 @@ describe('buildWaggleAppInstallStatus', () => {
             id: 'frontend-implementer',
             name: 'frontend-implementer',
             description: 'Implements frontend UI.',
-            folderPath: '/tmp/project/.openwaggle/skills/frontend-implementer',
-            skillPath: '/tmp/project/.openwaggle/skills/frontend-implementer/SKILL.md',
+            folderPath: '/tmp/project/.turing-machine/skills/frontend-implementer',
+            skillPath: '/tmp/project/.turing-machine/skills/frontend-implementer/SKILL.md',
             hasScripts: false,
             enabled: true,
             loadStatus: 'ok',
@@ -760,7 +760,7 @@ describe('buildWaggleAppInstallStatus', () => {
       app: {
         requiredMcps: [],
         requiredSkills: [],
-        optionalMcps: ['playwright', 'mobile-mcp', 'mobile-device', 'postman', 'database'],
+        optionalMcps: ['playwright', 'mobile-device', 'postman', 'database'],
         optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor', 'backend-auditor'],
       },
       mcpSettings: null,
@@ -771,11 +771,10 @@ describe('buildWaggleAppInstallStatus', () => {
     expect(status.installedCount).toBe(0)
     expect(status.missingCount).toBe(0)
     expect(status.unsupportedCount).toBe(0)
-    expect(status.optionalMissingCount).toBe(8)
+    expect(status.optionalMissingCount).toBe(7)
     expect(status.dependencies).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'playwright', required: false, state: 'missing' }),
-        expect.objectContaining({ id: 'mobile-mcp', required: false, state: 'missing' }),
         expect.objectContaining({ id: 'mobile-device', required: false, state: 'missing' }),
         expect.objectContaining({ id: 'postman', required: false, state: 'missing' }),
         expect.objectContaining({ id: 'database', required: false, state: 'missing' }),
@@ -789,7 +788,7 @@ describe('buildWaggleAppInstallStatus', () => {
   it('recognizes development-qa starter dependency ids as supported', () => {
     const status = buildWaggleAppInstallStatus({
       app: {
-        requiredMcps: ['playwright', 'mobile-mcp', 'postman', 'database'],
+        requiredMcps: ['playwright', 'mobile-device', 'postman', 'database'],
         requiredSkills: ['ui-screenshot-auditor', 'backend-auditor'],
       },
       mcpSettings: null,
@@ -803,7 +802,7 @@ describe('buildWaggleAppInstallStatus', () => {
     expect(status.dependencies).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'playwright', state: 'missing' }),
-        expect.objectContaining({ id: 'mobile-mcp', state: 'missing' }),
+        expect.objectContaining({ id: 'mobile-device', state: 'missing' }),
         expect.objectContaining({ id: 'postman', state: 'missing' }),
         expect.objectContaining({ id: 'database', state: 'missing' }),
         expect.objectContaining({ id: 'ui-screenshot-auditor', state: 'missing' }),
@@ -836,7 +835,7 @@ describe('buildWaggleAppInstallStatus', () => {
   it('recognizes performance-inspector starter dependency ids as supported', () => {
     const status = buildWaggleAppInstallStatus({
       app: {
-        requiredMcps: ['chrome-devtools', 'mobile-mcp', 'postman', 'sql'],
+        requiredMcps: ['chrome-devtools', 'mobile-device', 'postman', 'sql'],
         requiredSkills: ['performance-auditor'],
       },
       mcpSettings: null,
@@ -850,7 +849,7 @@ describe('buildWaggleAppInstallStatus', () => {
     expect(status.dependencies).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: 'chrome-devtools', state: 'missing' }),
-        expect.objectContaining({ id: 'mobile-mcp', state: 'missing' }),
+        expect.objectContaining({ id: 'mobile-device', state: 'missing' }),
         expect.objectContaining({ id: 'postman', state: 'missing' }),
         expect.objectContaining({ id: 'sql', state: 'missing' }),
         expect.objectContaining({ id: 'performance-auditor', state: 'missing' }),
@@ -909,7 +908,7 @@ describe('buildWaggleAppInstallStatus', () => {
   it('recognizes figma-backed web and mobile dependency ids as supported', () => {
     const status = buildWaggleAppInstallStatus({
       app: {
-        requiredMcps: ['playwright', 'figma', 'mobile-mcp'],
+        requiredMcps: ['playwright', 'figma', 'mobile-device'],
         requiredSkills: ['frontend-implementer', 'ui-screenshot-auditor'],
       },
       mcpSettings: null,
@@ -929,7 +928,7 @@ describe('buildWaggleAppInstallStatus', () => {
           description:
             'Lets Waggle agents inspect design files and compare implementation against source designs.',
         }),
-        expect.objectContaining({ id: 'mobile-mcp', state: 'missing' }),
+        expect.objectContaining({ id: 'mobile-device', state: 'missing' }),
         expect.objectContaining({ id: 'frontend-implementer', state: 'missing' }),
         expect.objectContaining({ id: 'ui-screenshot-auditor', state: 'missing' }),
       ]),

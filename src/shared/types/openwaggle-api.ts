@@ -98,8 +98,13 @@ export interface OpenWaggleApi {
   /** The plan currently awaiting review in this session, if any. */
   getPendingPlanReview(sessionId: SessionId): Promise<PendingPlanReviewRequest | null>
   getPendingUserQuestion(sessionId: SessionId): Promise<PendingUserQuestionRequest | null>
-  /** Subscribe to live Pi-shaped runtime events from the main process */
-  onAgentEvent(callback: (payload: IpcEventPayload<'agent:event'>) => void): () => void
+  /**
+   * Subscribe to live Pi-shaped runtime events from the main process. One
+   * callback per coalesced batch (roughly per animation frame while streaming):
+   * applying a whole batch in a single state commit is dramatically cheaper
+   * than one commit per token, which is what streaming used to cost.
+   */
+  onAgentEventBatch(callback: (payload: IpcEventPayload<'agent:event-batch'>) => void): () => void
 
   getAgentPhase(sessionId: SessionId): Promise<AgentPhaseState | null>
   getBackgroundRun(sessionId: SessionId): Promise<BackgroundRunSnapshot | null>
@@ -198,10 +203,12 @@ export interface OpenWaggleApi {
   onFullscreenChanged(callback: (isFullscreen: boolean) => void): () => void
 
   // Git
-  getGitStatus(projectPath: string): Promise<GitStatusSummary>
+  /** Resolves to `null` when the folder is not a Git repository. */
+  getGitStatus(projectPath: string): Promise<GitStatusSummary | null>
   commitGit(projectPath: string, payload: GitCommitPayload): Promise<GitCommitResult>
   getGitDiff(projectPath: string): Promise<GitFileDiff[]>
-  listGitBranches(projectPath: string): Promise<GitBranchListResult>
+  /** Resolves to `null` when the folder is not a Git repository. */
+  listGitBranches(projectPath: string): Promise<GitBranchListResult | null>
   checkoutGitBranch(
     projectPath: string,
     payload: GitBranchCheckoutPayload,
@@ -313,6 +320,9 @@ export interface OpenWaggleApi {
   disconnectAuth(provider: OAuthProvider): Promise<void>
   getAuthAccountInfo(provider: OAuthProvider): Promise<OAuthAccountInfo>
   onOAuthStatus(callback: (status: IpcEventPayload<'auth:oauth-status'>) => void): () => void
+  onAppAuthRefreshRequired(
+    callback: (payload: IpcEventPayload<'app-auth:refresh-required'>) => void,
+  ): () => void
 
   // Waggle presets
   listWagglePresets(projectPath?: string | null): Promise<WagglePreset[]>

@@ -9,8 +9,9 @@
  * map written atomically on each change. Reads are best-effort and never throw — a
  * missing/corrupt file is treated as "no credentials configured".
  */
-import { mkdir } from 'node:fs/promises'
+
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { app } from 'electron'
 
@@ -30,9 +31,7 @@ let cachedPath: string | null = null
  * Reads from `app.getPath('userData')` lazily so importing this module never touches
  * the Electron app before it is ready.
  */
-export function resolveCredentialsFilePath(
-  overrideUserDataPath: string | null = null,
-): string {
+export function resolveCredentialsFilePath(overrideUserDataPath: string | null = null): string {
   if (overrideUserDataPath) {
     return join(overrideUserDataPath, CREDENTIALS_FILE_NAME)
   }

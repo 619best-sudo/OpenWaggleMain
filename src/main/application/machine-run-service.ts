@@ -4,24 +4,24 @@ import { getMessageText } from '@shared/types/agent'
 import type { SessionBranchId, SessionId, SupportedModelId } from '@shared/types/brand'
 import type { JsonValue } from '@shared/types/json'
 import {
-  machineExecutionStateSchema,
-  machinePlanSchema,
   type MachineExecutionState,
   type MachineExecutionTask,
   type MachinePlan,
   type MachinePlannerTask,
   type MachineTaskComplexity,
   type MachineTaskKind,
+  machineExecutionStateSchema,
+  machinePlanSchema,
 } from '@shared/types/machine'
-import { isRecord } from '@shared/utils/validation'
 import { formatErrorMessage } from '@shared/utils/node-error'
+import { isRecord } from '@shared/utils/validation'
 import * as Effect from 'effect/Effect'
 import { createLogger } from '../logger'
-import { enterMachineTaskRoutingContext } from './tool-model-route'
 import { MachinePlanFileStore } from '../ports/machine-plan-file-store'
 import { SessionRepository } from '../ports/session-repository'
-import { executeAgentRun, type AgentRunResult } from './agent-run-service'
 import type { AgentRunInput } from './agent-run/types'
+import { type AgentRunResult, executeAgentRun } from './agent-run-service'
+import { enterMachineTaskRoutingContext } from './tool-model-route'
 
 const MACHINE_INTERNAL_CUSTOM_TYPE = 'openwaggle.machine-internal-turn'
 const EMPTY_BRANCH_UI_STATE_JSON = '{}'
@@ -134,7 +134,7 @@ function plannerPrompt(goal: string) {
     '- Require clean, well-structured markup (semantic SVG with reusable <defs>/gradients; sensible viewBox; no dead nodes).',
     '- SVG artwork and illustrations must be genuinely DETAILED: layered shapes, gradients, shading/highlights, depth, and texture so they look realistic and rich — not flat single-path placeholders. The ONLY exception is icons and logos, which must stay clean, minimal, and simple.',
     '- For behavior tasks, specify the exact element, the motion (axis, direction, duration, easing, loop) and that it must be smooth and performant (prefer transforms/CSS animation).',
-    '- For any UI/visual task, require a visual verification step in the prompt: give the element created in this task a stable unique id (or data-testid), then use Playwright (or mobile-mcp for mobile UIs) to render the page and capture a screenshot scoped to ONLY that element by its id, review it, and fix visual issues before finishing.',
+    '- For any UI/visual task, require a visual verification step in the prompt: give the element created in this task a stable unique id (or data-testid), then use Playwright (or the built-in mobile automation for mobile UIs) to render the page and capture a screenshot scoped to ONLY that element by its id, review it, and fix visual issues before finishing.',
     '- Put the acceptance intent inside the prompt: state what "done and polished" looks like and any validation expectations.',
     'Quality bar — every implementation task prompt must demand production-grade craft:',
     '- Reuse the shared design tokens; never invent one-off colors, spacing, or fonts.',
@@ -200,7 +200,7 @@ function machineTaskExecutionPrompt(task: MachineExecutionTask, goal: string) {
     '- Apply the relevant review pipeline to what you change: syntax, logic, architecture, performance, security, style, and acceptance.',
     '- Run the relevant integration loop steps for the scope you touch: compile, lint, unit tests, integration tests, UI tests, performance checks, bug detection, repair, and re-validation when applicable.',
     '- When you create SVG artwork or illustrations, make them genuinely detailed: layered shapes, gradients, shading, highlights, depth, and texture for a realistic, rich result — never a flat single-path placeholder. Icons and logos are the only exception and must stay clean, minimal, and simple.',
-    '- For UI/visual work, verify the result visually before finishing: assign a stable, unique id (or data-testid) to the specific element or component you created in THIS task, then use Playwright (or mobile-mcp for a mobile UI) to render the page and capture a screenshot scoped to ONLY that element (locate it by its id and screenshot just that node, not the whole page). Review that screenshot, fix any visual problems, and re-capture until it looks correct.',
+    '- For UI/visual work, verify the result visually before finishing: assign a stable, unique id (or data-testid) to the specific element or component you created in THIS task, then use Playwright (or the built-in mobile automation for a mobile UI) to render the page and capture a screenshot scoped to ONLY that element (locate it by its id and screenshot just that node, not the whole page). Review that screenshot, fix any visual problems, and re-capture until it looks correct.',
     'Before finishing, run a Council of Experts review-and-fix pass on your work:',
     '- Convene an internal panel and critique the result from each relevant lens, then reconcile the critiques into a concrete prioritized fix list, apply the fixes, and re-review until the panel would sign off with no blocking issues. Keep the deliberation internal and concise.',
     '- UI/visual panel: Product/UX Lead (does it serve the goal with clear hierarchy?), Visual Designer (layout, spacing rhythm, alignment, typography, color harmony, and consistency with the shared design tokens), Motion/Interaction Designer (hover/focus/active states, transition/easing quality, smoothness, prefers-reduced-motion), Accessibility Expert (semantic structure, keyboard focus, WCAG AA contrast, labels/alt text), Frontend Engineer (clean structure, responsiveness, performance, no dead code), and QA/Visual Reviewer (compare the scoped screenshot against the intended result and flag misalignment, overflow, clipping, or wrong sizing).',
@@ -252,7 +252,12 @@ export function isInternalToolHandoffAssistantText(text: string) {
 
   try {
     const parsed = JSON.parse(payloadText)
-    return typeof parsed === 'object' && parsed !== null && 'type' in parsed && parsed.type === 'tool_handoff'
+    return (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      'type' in parsed &&
+      parsed.type === 'tool_handoff'
+    )
   } catch {
     return false
   }
@@ -266,10 +271,13 @@ export function getVisibleMachineTaskMessages(messages: readonly Message[]) {
 
     const text = getMessageText(message).trim()
     const hasRenderableNonTextPart = message.parts.some(
-      (part) => part.type === 'tool-call' || part.type === 'tool-result' || part.type === 'reasoning',
+      (part) =>
+        part.type === 'tool-call' || part.type === 'tool-result' || part.type === 'reasoning',
     )
 
-    return hasRenderableNonTextPart || (text.length > 0 && !isInternalToolHandoffAssistantText(text))
+    return (
+      hasRenderableNonTextPart || (text.length > 0 && !isInternalToolHandoffAssistantText(text))
+    )
   })
 }
 
@@ -362,7 +370,9 @@ export function parseMachinePlan(text: string): MachinePlan {
     const id = task.id.trim()
     const title = task.title.trim()
     const prompt = task.prompt.trim()
-    const dependsOn = [...new Set((task.dependsOn ?? []).map((value) => value.trim()).filter(Boolean))]
+    const dependsOn = [
+      ...new Set((task.dependsOn ?? []).map((value) => value.trim()).filter(Boolean)),
+    ]
 
     if (!id || !title || !prompt) {
       throw new Error(`Task ${String(index + 1)} is missing id, title, or prompt.`)
@@ -410,11 +420,7 @@ function planValidationError(message: string): MachineRunResult {
   }
 }
 
-function emitMachineLifecycleEvent(
-  input: MachineTransportInput,
-  name: string,
-  value?: JsonValue,
-) {
+function emitMachineLifecycleEvent(input: MachineTransportInput, name: string, value?: JsonValue) {
   input.onEvent({
     type: 'custom',
     name,
@@ -504,10 +510,7 @@ function markMachinePlanApproved(state: MachineExecutionState): MachineExecution
   }
 }
 
-function markTaskRunning(
-  state: MachineExecutionState,
-  taskId: string,
-): MachineExecutionState {
+function markTaskRunning(state: MachineExecutionState, taskId: string): MachineExecutionState {
   return {
     ...state,
     phase: 'running',
@@ -532,7 +535,9 @@ function markTaskCompleted(
     ...state,
     currentTaskId: undefined,
     tasks: state.tasks.map((task) =>
-      task.id === taskId ? { ...task, status: 'completed', messageIds: [...messageIds], lastError: undefined } : task,
+      task.id === taskId
+        ? { ...task, status: 'completed', messageIds: [...messageIds], lastError: undefined }
+        : task,
     ),
   }
 }
@@ -550,7 +555,9 @@ function markTaskFailed(
     finishedAt: Date.now(),
     lastError: message,
     tasks: state.tasks.map((task) =>
-      task.id === taskId ? { ...task, status: 'failed', messageIds: [...messageIds], lastError: message } : task,
+      task.id === taskId
+        ? { ...task, status: 'failed', messageIds: [...messageIds], lastError: message }
+        : task,
     ),
   }
 }
@@ -690,9 +697,9 @@ function runTask(
 
 export function executeMachineRun(input: ExecuteMachineRunInput) {
   return Effect.gen(function* () {
-    const branchContext: MutableMachineBranchContext = yield* resolveBranchContext(input.sessionId).pipe(
-      Effect.map((value) => ({ ...value })),
-    )
+    const branchContext: MutableMachineBranchContext = yield* resolveBranchContext(
+      input.sessionId,
+    ).pipe(Effect.map((value) => ({ ...value })))
 
     emitMachineLifecycleEvent(input, 'machine:run-start')
     emitMachineLifecycleEvent(input, 'machine:planning-start', {
@@ -768,9 +775,9 @@ export function executeMachineRun(input: ExecuteMachineRunInput) {
 
 export function executeApprovedMachinePlan(input: ExecuteApprovedMachinePlanInput) {
   return Effect.gen(function* () {
-    const branchContext: MutableMachineBranchContext = yield* resolveBranchContext(input.sessionId).pipe(
-      Effect.map((value) => ({ ...value })),
-    )
+    const branchContext: MutableMachineBranchContext = yield* resolveBranchContext(
+      input.sessionId,
+    ).pipe(Effect.map((value) => ({ ...value })))
     let machineState = readPersistedMachineState(branchContext.uiStateJson)
     if (!machineState || machineState.phase !== 'awaiting_approval') {
       return planValidationError('No machine plan is awaiting approval for this session.')
@@ -780,10 +787,14 @@ export function executeApprovedMachinePlan(input: ExecuteApprovedMachinePlanInpu
     emitMachineLifecycleEvent({ model: machineModel, onEvent: input.onEvent }, 'machine:run-start')
     machineState = markMachinePlanApproved(machineState)
     yield* persistMachineState(input.sessionId, branchContext, machineState)
-    emitMachineLifecycleEvent({ model: machineModel, onEvent: input.onEvent }, 'machine:plan-approved', {
-      goal: machineState.goal,
-      taskCount: machineState.tasks.length,
-    })
+    emitMachineLifecycleEvent(
+      { model: machineModel, onEvent: input.onEvent },
+      'machine:plan-approved',
+      {
+        goal: machineState.goal,
+        taskCount: machineState.tasks.length,
+      },
+    )
 
     let lastSuccessfulResult: MachineRunResult | null = null
 
@@ -793,22 +804,33 @@ export function executeApprovedMachinePlan(input: ExecuteApprovedMachinePlanInpu
         if (machineState.tasks.every((task) => task.status === 'completed')) {
           machineState = markPlanCompleted(machineState)
           yield* persistMachineState(input.sessionId, branchContext, machineState)
-          emitMachineLifecycleEvent({ model: machineModel, onEvent: input.onEvent }, 'machine:run-end', {
-            outcome: 'success',
-            completedTasks: machineState.tasks.length,
-            totalTasks: machineState.tasks.length,
-          })
-          return lastSuccessfulResult ?? planValidationError('Machine plan completed without task output.')
+          emitMachineLifecycleEvent(
+            { model: machineModel, onEvent: input.onEvent },
+            'machine:run-end',
+            {
+              outcome: 'success',
+              completedTasks: machineState.tasks.length,
+              totalTasks: machineState.tasks.length,
+            },
+          )
+          return (
+            lastSuccessfulResult ??
+            planValidationError('Machine plan completed without task output.')
+          )
         }
 
         const stalledMessage =
           'Machine plan stalled because no runnable task remained. Check task dependencies.'
         machineState = markPlanFailed(machineState, stalledMessage)
         yield* persistMachineState(input.sessionId, branchContext, machineState)
-        emitMachineLifecycleEvent({ model: machineModel, onEvent: input.onEvent }, 'machine:run-end', {
-          outcome: 'error',
-          code: 'machine-plan-stalled',
-        })
+        emitMachineLifecycleEvent(
+          { model: machineModel, onEvent: input.onEvent },
+          'machine:run-end',
+          {
+            outcome: 'error',
+            code: 'machine-plan-stalled',
+          },
+        )
         return planValidationError(stalledMessage)
       }
 
@@ -831,14 +853,22 @@ export function executeApprovedMachinePlan(input: ExecuteApprovedMachinePlanInpu
               : 'Machine task failed.'
         machineState = markTaskFailed(machineState, nextTask.id, failureMessage)
         yield* persistMachineState(input.sessionId, branchContext, machineState)
-        emitMachineLifecycleEvent({ model: machineModel, onEvent: input.onEvent }, 'machine:task-end', {
-          taskId: nextTask.id,
-          title: nextTask.title,
-          outcome: taskResult.outcome,
-        })
-        emitMachineLifecycleEvent({ model: machineModel, onEvent: input.onEvent }, 'machine:run-end', {
-          outcome: taskResult.outcome,
-        })
+        emitMachineLifecycleEvent(
+          { model: machineModel, onEvent: input.onEvent },
+          'machine:task-end',
+          {
+            taskId: nextTask.id,
+            title: nextTask.title,
+            outcome: taskResult.outcome,
+          },
+        )
+        emitMachineLifecycleEvent(
+          { model: machineModel, onEvent: input.onEvent },
+          'machine:run-end',
+          {
+            outcome: taskResult.outcome,
+          },
+        )
         return taskResult
       }
 
@@ -848,16 +878,24 @@ export function executeApprovedMachinePlan(input: ExecuteApprovedMachinePlanInpu
           'Machine task reported success without any visible execution output. The agent likely stopped at an internal tool handoff.'
         machineState = markTaskFailed(machineState, nextTask.id, failureMessage)
         yield* persistMachineState(input.sessionId, branchContext, machineState)
-        emitMachineLifecycleEvent({ model: machineModel, onEvent: input.onEvent }, 'machine:task-end', {
-          taskId: nextTask.id,
-          title: nextTask.title,
-          outcome: 'error',
-          code: 'machine-task-no-visible-output',
-        })
-        emitMachineLifecycleEvent({ model: machineModel, onEvent: input.onEvent }, 'machine:run-end', {
-          outcome: 'error',
-          code: 'machine-task-no-visible-output',
-        })
+        emitMachineLifecycleEvent(
+          { model: machineModel, onEvent: input.onEvent },
+          'machine:task-end',
+          {
+            taskId: nextTask.id,
+            title: nextTask.title,
+            outcome: 'error',
+            code: 'machine-task-no-visible-output',
+          },
+        )
+        emitMachineLifecycleEvent(
+          { model: machineModel, onEvent: input.onEvent },
+          'machine:run-end',
+          {
+            outcome: 'error',
+            code: 'machine-task-no-visible-output',
+          },
+        )
         return {
           outcome: 'error',
           message: failureMessage,
@@ -868,16 +906,21 @@ export function executeApprovedMachinePlan(input: ExecuteApprovedMachinePlanInpu
       machineState = markTaskCompleted(machineState, nextTask.id, taskMessageIds)
       yield* persistMachineState(input.sessionId, branchContext, machineState)
       lastSuccessfulResult = taskResult
-      emitMachineLifecycleEvent({ model: machineModel, onEvent: input.onEvent }, 'machine:task-end', {
-        taskId: nextTask.id,
-        title: nextTask.title,
-        outcome: 'success',
-        completedTasks: machineState.tasks.filter((task) => task.status === 'completed').length,
-        totalTasks: machineState.tasks.length,
-      })
+      emitMachineLifecycleEvent(
+        { model: machineModel, onEvent: input.onEvent },
+        'machine:task-end',
+        {
+          taskId: nextTask.id,
+          title: nextTask.title,
+          outcome: 'success',
+          completedTasks: machineState.tasks.filter((task) => task.status === 'completed').length,
+          totalTasks: machineState.tasks.length,
+        },
+      )
     }
 
-    const activeTaskId = machineState.currentTaskId ?? machineState.tasks.find((task) => task.status === 'running')?.id
+    const activeTaskId =
+      machineState.currentTaskId ?? machineState.tasks.find((task) => task.status === 'running')?.id
     if (activeTaskId) {
       machineState = markTaskFailed(machineState, activeTaskId, 'Machine run was cancelled.')
     } else {

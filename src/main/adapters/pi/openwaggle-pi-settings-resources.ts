@@ -1,16 +1,16 @@
 import { join } from 'node:path'
+import { PROJECT_CONFIG_DIR } from '@shared/constants/project-config'
 import type { JsonObject, JsonValue } from '@shared/types/json'
 
-const OPENWAGGLE_CONFIG_DIR = '.openwaggle'
 export const PI_CONFIG_DIR = '.pi'
 type ResourceKind = 'skills' | 'extensions' | 'prompts' | 'themes'
 type ResourceRootSegments = Readonly<Record<ResourceKind, readonly string[]>>
 
 const OPENWAGGLE_RESOURCE_ROOTS: ResourceRootSegments = {
-  skills: ['..', OPENWAGGLE_CONFIG_DIR, 'skills'],
-  extensions: ['..', OPENWAGGLE_CONFIG_DIR, 'extensions'],
-  prompts: ['..', OPENWAGGLE_CONFIG_DIR, 'prompts'],
-  themes: ['..', OPENWAGGLE_CONFIG_DIR, 'themes'],
+  skills: ['..', PROJECT_CONFIG_DIR, 'skills'],
+  extensions: ['..', PROJECT_CONFIG_DIR, 'extensions'],
+  prompts: ['..', PROJECT_CONFIG_DIR, 'prompts'],
+  themes: ['..', PROJECT_CONFIG_DIR, 'themes'],
 }
 const PI_RESOURCE_ROOTS: ResourceRootSegments = {
   skills: ['skills'],

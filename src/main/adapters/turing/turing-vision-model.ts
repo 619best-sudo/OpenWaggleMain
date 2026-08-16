@@ -3,8 +3,8 @@
  *
  * The harness tool resolves its model as `args.model ?? config.model ??
  * ctx.model.openRouterSlug ?? <harness default>`. With no `config.model` supplied
- * it therefore falls through to the RUN's own model — and OpenWaggle's default run
- * model (`poolside/laguna-xs-2.1`) is text-to-text. The attachments were being
+ * it therefore falls through to the RUN's own model — and OpenWaggle's driver
+ * (see `TURING_MODELS.driver`) is text-to-text. The attachments were being
  * inlined as base64 blocks and handed to a model that cannot read them, so every
  * analysis came back as prose about nothing.
  *
@@ -21,6 +21,7 @@
  */
 
 import { env } from '../../env'
+import { TURING_MODELS } from './turing-models.config'
 
 /**
  * Multimodal default. Gemini 2.5 Flash is served by OpenRouter as a regular chat
@@ -30,7 +31,7 @@ import { env } from '../../env'
  * `OPENWAGGLE_VISION_MODEL` for a stronger reader (e.g. a Claude or GPT vision
  * slug) without touching the run model.
  */
-export const DEFAULT_VISION_MODEL = 'google/gemini-2.5-flash'
+export const DEFAULT_VISION_MODEL = TURING_MODELS.vision
 
 /** The OpenRouter slug `media_analysis` should use for its vision pass. */
 export function resolveVisionModel(): string {

@@ -10,10 +10,11 @@
  * to openrouter.ai. Under `OPENWAGGLE_DIRECT_OPENROUTER` it probes OpenRouter
  * directly with the stored provider key, matching the direct run path.
  */
-import * as Effect from 'effect/Effect'
+
 import { Layer } from 'effect'
-import { ProviderProbeService } from '../../../ports/provider-probe-service'
+import * as Effect from 'effect/Effect'
 import { env } from '../../../env'
+import { ProviderProbeService } from '../../../ports/provider-probe-service'
 import { resolveTuringMachineBaseUrl } from '../../pi/pi-provider-catalog'
 import { isDirectOpenRouterEnabled, resolveBackendToken } from '../turing-llm-config'
 import { readStoredApiKey } from './turing-credentials'
@@ -37,7 +38,7 @@ function resolveProbeCredentials(providerId: string, apiKeyOverride?: string) {
   const stored =
     providerId === 'turing-machine'
       ? readStoredApiKey('openrouter')
-      : readStoredApiKey(providerId) ?? readStoredApiKey('openrouter')
+      : (readStoredApiKey(providerId) ?? readStoredApiKey('openrouter'))
   const apiKey =
     apiKeyOverride?.trim() ||
     stored ||
@@ -45,9 +46,7 @@ function resolveProbeCredentials(providerId: string, apiKeyOverride?: string) {
     env.OPENROUTER_API_KEY ||
     ''
   const baseUrl =
-    env.OPENWAGGLE_OPENROUTER_BASE_URL ||
-    env.OPENROUTER_BASE_URL ||
-    DEFAULT_OPENROUTER_BASE_URL
+    env.OPENWAGGLE_OPENROUTER_BASE_URL || env.OPENROUTER_BASE_URL || DEFAULT_OPENROUTER_BASE_URL
   return { apiKey, baseUrl, backend: false }
 }
 
@@ -104,7 +103,7 @@ async function callOpenRouterChat(input: {
  */
 function resolveModelSlug(providerId: string, modelId: string): string {
   if (providerId === 'turing-machine') {
-    return isDirectOpenRouterEnabled() ? 'poolside/laguna-xs-2.1' : 'turing-machine'
+    return isDirectOpenRouterEnabled() ? 'xiaomi/mimo-v2.5' : 'turing-machine'
   }
   return modelId
 }

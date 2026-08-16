@@ -1,5 +1,6 @@
 import type { Settings } from '@shared/types/settings'
 import {
+  SETTINGS_KEY_DEFAULT_MCP_SERVERS_SEEDED,
   SETTINGS_KEY_DEFAULT_MODEL,
   SETTINGS_KEY_ENABLED_MODELS,
   SETTINGS_KEY_FAVORITE_MODELS,
@@ -108,6 +109,12 @@ export function collectSettingsPatchWrites(partial: Partial<Settings>, next: Set
     partial.toolPermissionMode !== undefined,
     SETTINGS_KEY_TOOL_PERMISSION_MODE,
     next.toolPermissionMode,
+  )
+  appendChangedSetting(
+    writes,
+    partial.defaultMcpServersSeeded !== undefined,
+    SETTINGS_KEY_DEFAULT_MCP_SERVERS_SEEDED,
+    next.defaultMcpServersSeeded,
   )
 
   return writes

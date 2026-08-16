@@ -49,6 +49,28 @@ async function getMcpView(options: PiMcpConfigServiceOptions, projectPath?: stri
   }
 }
 
+/**
+ * Notify the host that the effective MCP config changed, then let it warm
+ * whatever runtime it owns. Deliberately NOT awaited by callers: the settings
+ * IPC returns the new view immediately and the warm-up proceeds in the
+ * background while the user is still looking at the MCP page.
+ */
+function notifyConfigChanged(
+  options: PiMcpConfigServiceOptions,
+  view: Awaited<ReturnType<typeof getMcpView>>,
+  projectPath?: string | null,
+) {
+  if (!options.onConfigChanged) return
+  try {
+    options.onConfigChanged(view, projectPath)
+  } catch (error) {
+    logger.warn('MCP config-changed hook threw', {
+      projectPath: projectPath ?? null,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
 async function warmMcpMetadataCacheIfReady(
   options: PiMcpConfigServiceOptions,
   view: Awaited<ReturnType<typeof getMcpView>>,
@@ -93,6 +115,7 @@ async function setAdapterEnabled(
   await writeGlobalPiSettings(options, nextSettings)
   const view = await getMcpView(options, projectPath)
   await warmMcpMetadataCacheIfReady(options, view, projectPath)
+  notifyConfigChanged(options, view, projectPath)
   return view
 }
 
@@ -123,6 +146,7 @@ async function setServerEnabled(
   await writeJsonFile(definition.path, config)
   const view = await getMcpView(options, input.projectPath)
   await warmMcpMetadataCacheIfReady(options, view, input.projectPath)
+  notifyConfigChanged(options, view, input.projectPath)
   return view
 }
 async function writeSourceConfig(
@@ -134,6 +158,7 @@ async function writeSourceConfig(
   await writeJsonFile(definition.path, nextConfig)
   const view = await getMcpView(options, input.projectPath)
   await warmMcpMetadataCacheIfReady(options, view, input.projectPath)
+  notifyConfigChanged(options, view, input.projectPath)
   return view
 }
 
@@ -193,11 +218,13 @@ export function createPiMcpConfigServiceForTests(options: {
   readonly agentDir: string
   readonly installAdapterPackage?: (source: string, projectPath?: string | null) => Promise<void>
   readonly warmMcpMetadataCache?: (configPath: string) => Promise<void>
+  readonly onConfigChanged?: PiMcpConfigServiceOptions['onConfigChanged']
 }): PiMcpConfigServiceForTests {
   return createPiMcpConfigService({
     homeDir: options.homeDir,
     agentDir: options.agentDir,
     installAdapterPackage: options.installAdapterPackage ?? (() => Promise.resolve()),
     warmMcpMetadataCache: options.warmMcpMetadataCache,
+    onConfigChanged: options.onConfigChanged,
   })
 }

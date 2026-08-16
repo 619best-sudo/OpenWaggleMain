@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest'
 import { PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE } from '@shared/types/phase'
-import type { SessionNodeRow } from '../types'
+import { describe, expect, it } from 'vitest'
 import { hydrateStructuralSessionMessage } from '../message-hydration'
+import type { SessionNodeRow } from '../types'
 
 function customPhaseTranscriptRow(): SessionNodeRow {
   return {
@@ -51,8 +51,7 @@ describe('message hydration', () => {
             {
               id: 'perform',
               label: 'Understood! Let me implement the requested changes',
-              summary:
-                'Updated the title after the restart path restored the phase transcript.',
+              summary: 'Updated the title after the restart path restored the phase transcript.',
             },
           ],
         },

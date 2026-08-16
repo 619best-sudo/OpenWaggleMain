@@ -235,10 +235,12 @@ export async function createPiRuntimeServices(
   const toolPermissionRequestExtensionFactory = createToolPermissionRequestExtension({
     toolNames: ['bash', 'read', 'write', 'edit', 'patch', 'multiedit', 'grep', 'find', 'ls'],
     getPermissionMode: async () => {
-      const settings = await runAppEffect(Effect.gen(function* () {
-        const service = yield* SettingsService
-        return yield* service.get()
-      }))
+      const settings = await runAppEffect(
+        Effect.gen(function* () {
+          const service = yield* SettingsService
+          return yield* service.get()
+        }),
+      )
       return settings.toolPermissionMode
     },
   })

@@ -125,9 +125,13 @@ describe('createOpenRouterImageBackend', () => {
     expect(calls[0]?.body.model).toBe('sourceful/riverflow-v2-fast')
     expect(calls[0]?.body.prompt).toBe('a red circle')
 
-    expect(asset.mimeType).toBe('image/png')
-    expect(asset.ext).toBe('png')
-    expect(Buffer.from(asset.bytes).toString('base64')).toBe(PNG_B64)
+    // The harness backend's return type is one-or-many; a single-image request
+    // yields the single form.
+    expect(Array.isArray(asset)).toBe(false)
+    const single = Array.isArray(asset) ? asset[0]! : asset
+    expect(single.mimeType).toBe('image/png')
+    expect(single.ext).toBe('png')
+    expect(Buffer.from(single.bytes).toString('base64')).toBe(PNG_B64)
     vi.unstubAllGlobals()
   })
 
@@ -178,13 +182,15 @@ describe('createOpenRouterImageBackend', () => {
 })
 
 describe('assetBackends', () => {
-  it('wires image only — other kinds fall through to the harness placeholder', () => {
-    // video/audio/3d are deliberately unimplemented; the harness placeholder
-    // handles them and labels itself as not-a-real-asset in the tool output.
+  it('wires every asset kind, so the harness placeholder is unreachable', () => {
+    // Previously only `image` was wired and the rest fell through to the
+    // harness placeholder — which writes a stand-in FILE. An agent could then
+    // report a generated video that was really a text placeholder. Every kind
+    // now routes to the backend's `/assets` endpoint; a kind the backend has no
+    // provider for returns 501 and surfaces as a real error instead.
     const backends = assetBackends(CONFIG)
-    expect(typeof backends.image).toBe('function')
-    expect(backends.video).toBeUndefined()
-    expect(backends.audio).toBeUndefined()
-    expect(backends['3d']).toBeUndefined()
+    for (const kind of ['image', 'video', 'audio', '3d'] as const) {
+      expect(typeof backends[kind], `${kind} should have a backend`).toBe('function')
+    }
   })
 })

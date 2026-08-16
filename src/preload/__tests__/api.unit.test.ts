@@ -28,8 +28,10 @@ describe('preload api surface contract', () => {
     'steerAgent',
     'resolveToolPermission',
     'getPendingToolPermission',
+    'getPendingPlanReview',
+    'resolvePlanReview',
     'resolveUserQuestion',
-    'onAgentEvent',
+    'onAgentEventBatch',
     'getAgentPhase',
     'getPendingUserQuestion',
     'getBackgroundRun',
@@ -139,6 +141,7 @@ describe('preload api surface contract', () => {
     'disconnectAuth',
     'getAuthAccountInfo',
     'onOAuthStatus',
+    'onAppAuthRefreshRequired',
     // Waggle presets
     'listWagglePresets',
     'saveWagglePreset',
@@ -197,7 +200,7 @@ describe('preload api surface contract', () => {
     })
 
     const EVENT_METHODS = [
-      'onAgentEvent',
+      'onAgentEventBatch',
       'onAgentPhase',
       'onRunCompleted',
       'onPrepareAttachmentFromTextProgress',
@@ -206,6 +209,7 @@ describe('preload api surface contract', () => {
       'onWaggleEvent',
       'onWaggleTurnEvent',
       'onOAuthStatus',
+      'onAppAuthRefreshRequired',
       'onSessionTitleUpdated',
       'onUpdateStatus',
     ] as const

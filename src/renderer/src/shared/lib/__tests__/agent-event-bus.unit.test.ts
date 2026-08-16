@@ -43,31 +43,30 @@ describe('agent-event-bus', () => {
     expect(onAgentEventBatchMock).toHaveBeenCalledTimes(1)
     expect(sourceHandlers).toHaveLength(1)
 
-    const payload = {
-      events: [
-        {
-          sessionId: SessionId('session-1'),
-          event: {
-            type: 'agent_start' as const,
-            runId: 'run-1',
-            timestamp: 1,
-          },
-        },
-        {
-          sessionId: SessionId('session-2'),
-          event: {
-            type: 'agent_start' as const,
-            runId: 'run-2',
-            timestamp: 2,
-          },
-        },
-      ],
-    }
+    // A batch is per-session on the wire (`agent:event-batch` carries one
+    // sessionId and the events coalesced for it), so scoping filters whole
+    // batches, and the bus re-attaches the sessionId to each event.
+    const runOne = { type: 'agent_start' as const, runId: 'run-1', timestamp: 1 }
+    const runOneDelta = { type: 'agent_start' as const, runId: 'run-1b', timestamp: 2 }
+    const runTwo = { type: 'agent_start' as const, runId: 'run-2', timestamp: 3 }
 
-    sourceHandlers[0](payload)
+    sourceHandlers[0]({ sessionId: SessionId('session-1'), events: [runOne, runOneDelta] })
+    sourceHandlers[0]({ sessionId: SessionId('session-2'), events: [runTwo] })
 
-    expect(allSessionsHandler).toHaveBeenCalledWith(payload.events)
-    expect(scopedHandler).toHaveBeenCalledWith([payload.events[0]])
+    expect(allSessionsHandler).toHaveBeenCalledTimes(2)
+    expect(allSessionsHandler).toHaveBeenNthCalledWith(1, [
+      { sessionId: SessionId('session-1'), event: runOne },
+      { sessionId: SessionId('session-1'), event: runOneDelta },
+    ])
+    expect(allSessionsHandler).toHaveBeenNthCalledWith(2, [
+      { sessionId: SessionId('session-2'), event: runTwo },
+    ])
+
+    expect(scopedHandler).toHaveBeenCalledTimes(1)
+    expect(scopedHandler).toHaveBeenCalledWith([
+      { sessionId: SessionId('session-1'), event: runOne },
+      { sessionId: SessionId('session-1'), event: runOneDelta },
+    ])
 
     unsubscribeScoped()
     expect(sourceUnsubscribe).not.toHaveBeenCalled()

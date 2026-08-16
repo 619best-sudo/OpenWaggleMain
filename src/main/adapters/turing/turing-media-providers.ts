@@ -16,15 +16,26 @@
  */
 
 import { readFile } from 'node:fs/promises'
-import type { AssetBackend, AssetBackends, AssetRequest, MediaAnalysisBackend } from 'turing-harness'
+import type {
+  AssetBackend,
+  AssetBackends,
+  AssetRequest,
+  MediaAnalysisBackend,
+} from 'turing-harness'
 import {
   createBackendImageBackend,
   createOpenRouterImageBackend as createHarnessOpenRouterImageBackend,
 } from 'turing-harness'
 import { env } from '../../env'
 import { createLogger } from '../../logger'
+import {
+  type AnalysisImage,
+  analyzeMediaViaTuring,
+  generateAssetViaTuring,
+  generateImageViaTuring,
+} from './media/turing-media-client'
 import { isDirectOpenRouterEnabled, type TuringLlmConfig } from './turing-llm-config'
-import { analyzeMediaViaTuring, generateImageViaTuring, type AnalysisImage } from './media/turing-media-client'
+import { TURING_MODELS } from './turing-models.config'
 
 const logger = createLogger('turing-media-providers')
 
@@ -39,7 +50,7 @@ export type AssetProvider = 'turing' | 'openrouter' | 'runware'
  * purpose-built image generation/editing model and is only reachable through
  * `/images`, which is why the request below is not a chat completion.
  */
-const DEFAULT_IMAGE_MODEL = 'sourceful/riverflow-v2-fast'
+const DEFAULT_IMAGE_MODEL = TURING_MODELS.imageGeneration
 
 /**
  * Which backend serves `assets_generator`.
@@ -88,10 +99,15 @@ export function createOpenRouterImageBackend(config: TuringLlmConfig): AssetBack
       model,
     })(req, ctx)
 
+    // The harness backend returns one asset or several (a model asked for N
+    // variants). Only the log cares about the difference — the result is passed
+    // through in whatever shape it arrived.
+    const generated = Array.isArray(asset) ? asset : [asset]
     logger.info('Generated image via OpenRouter', {
       model,
-      bytes: asset.bytes.byteLength,
-      mimeType: asset.mimeType,
+      count: generated.length,
+      bytes: generated.reduce((total, a) => total + a.bytes.byteLength, 0),
+      mimeType: generated[0]?.mimeType,
     })
     return asset
   }
@@ -143,19 +159,104 @@ export function assetBackendFor(
   kind: AssetRequest['kind'],
   config: TuringLlmConfig,
 ): AssetBackend | undefined {
-  // Only image generation is wired today. video/audio/3d intentionally return
-  // undefined so the harness placeholder handles them and says so out loud.
-  if (kind !== 'image') return undefined
-  const provider = resolveAssetProvider()
-  if (provider === 'runware') return createRunwareImageBackend()
-  if (provider === 'turing') return createTuringImageBackend(config)
-  return createOpenRouterImageBackend(config)
+  if (kind === 'image') {
+    // Images keep their direct provider options, since a user may deliberately
+    // point them at Runware or straight at OpenRouter.
+    const provider = resolveAssetProvider()
+    if (provider === 'runware') return createRunwareImageBackend()
+    if (provider === 'turing') return createTuringImageBackend(config)
+    return createOpenRouterImageBackend(config)
+  }
+  // Everything else goes through the backend's unified `/assets` route, which
+  // owns provider choice. The app deliberately holds no per-kind logic: adding
+  // or swapping a provider is a backend change, not a desktop release.
+  return createTuringAssetBackend(kind)
+}
+
+/**
+ * Asset backend that forwards a kind to `POST /turing-machine/assets`.
+ *
+ * A kind the backend has no provider for returns 501, which surfaces here as a
+ * thrown error. That is the point: the previous behaviour wrote a placeholder
+ * file, and an agent could report a generated video that was really a stand-in.
+ */
+function createTuringAssetBackend(kind: AssetRequest['kind']): AssetBackend {
+  return async (req, ctx) => {
+    const asset = await generateAssetViaTuring(
+      {
+        kind,
+        prompt: req.prompt,
+        ...(req.options ? { options: req.options } : {}),
+      },
+      ctx,
+      { timeoutMs: 600_000 },
+    )
+
+    const bytes = await assetBytes(asset)
+    const mimeType = asset.mimeType ?? DEFAULT_ASSET_MIME[kind]
+    return {
+      bytes,
+      mimeType,
+      ext: extensionForMime(mimeType, kind),
+      summary: `Generated ${kind} with ${asset.model}`,
+    }
+  }
+}
+
+/** Fallback MIME per kind, used only when the backend does not report one. */
+const DEFAULT_ASSET_MIME: Record<AssetRequest['kind'], string> = {
+  image: 'image/png',
+  video: 'video/mp4',
+  audio: 'audio/mpeg',
+  '3d': 'model/gltf-binary',
+}
+
+const ASSET_EXT_BY_MIME: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'audio/mpeg': 'mp3',
+  'audio/mp3': 'mp3',
+  'audio/wav': 'wav',
+  'audio/ogg': 'ogg',
+  'model/gltf-binary': 'glb',
+}
+
+function extensionForMime(mimeType: string, kind: AssetRequest['kind']): string {
+  const base = mimeType.split(';')[0]?.trim().toLowerCase() ?? ''
+  return ASSET_EXT_BY_MIME[base] ?? ASSET_EXT_BY_MIME[DEFAULT_ASSET_MIME[kind]] ?? 'bin'
+}
+
+/** Materialise the asset bytes, whether the backend returned base64 or a URL. */
+async function assetBytes(asset: {
+  readonly b64?: string
+  readonly url?: string
+  readonly kind: string
+}): Promise<Uint8Array> {
+  if (asset.b64) return new Uint8Array(Buffer.from(asset.b64, 'base64'))
+  if (asset.url) {
+    const response = await fetch(asset.url)
+    if (!response.ok) {
+      throw new Error(`Failed to download generated ${asset.kind}: HTTP ${response.status}`)
+    }
+    return new Uint8Array(await response.arrayBuffer())
+  }
+  throw new Error(`Backend returned no bytes or URL for the generated ${asset.kind}`)
 }
 
 /** The `AssetsGeneratorConfig.backends` value for a run. */
 export function assetBackends(config: TuringLlmConfig): AssetBackends {
-  const image = assetBackendFor('image', config)
-  return image ? { image } : {}
+  // Every kind the tool advertises now has a backend, so the harness placeholder
+  // path is no longer reachable from this app. A kind the BACKEND cannot serve
+  // fails loudly (501) instead of quietly writing a stand-in file.
+  return {
+    image: assetBackendFor('image', config),
+    video: assetBackendFor('video', config),
+    audio: assetBackendFor('audio', config),
+    '3d': assetBackendFor('3d', config),
+  }
 }
 
 /**

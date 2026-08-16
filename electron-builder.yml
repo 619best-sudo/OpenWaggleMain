@@ -1,17 +1,33 @@
-appId: com.openwaggle.app
-productName: OpenWaggle
+appId: com.turingmachine.app
+productName: Turing Machine
 directories:
   buildResources: build
 publish:
   provider: github
-  owner: OpenWaggle
-  repo: OpenWaggle
+  owner: 619best-sudo
+  repo: OpenWaggleMain
+# ALLOWLIST, not a denylist.
+#
+# This was previously negation-only ('!src/*', '!**/.vscode/*', ...), which
+# means electron-builder's default '**/*' applied and every path not explicitly
+# excluded was packaged. That shipped .env.local (real credentials), the
+# developer's .openwaggle-user-data-dev/ session database, .home/, and
+# .pnpm-store/ into app.asar — 4.33 GB, with secrets in it.
+#
+# An allowlist fails closed: a new scratch directory in the repo root is simply
+# not packaged, instead of silently becoming part of the release. Add entries
+# here deliberately; never reintroduce a bare negation-only list.
 files:
-  - '!**/.vscode/*'
-  - '!src/*'
-  - '!electron.vite.config.*'
-  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
-  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  # Only the three bundles the app actually runs. `out/**` would also ship
+  # out/src/** (declaration output for the entire source tree — 527 files
+  # describing every internal module), out/scripts/** (internal build tooling),
+  # out/e2e/**, and .tsbuildinfo. None of that is loaded at runtime.
+  - out/main/**
+  - out/preload/**
+  - out/renderer/**
+  - package.json
+  # node_modules is still resolved from the production dependency tree,
+  # so these size trims remain meaningful.
   # Exclude non-runtime files from node_modules to reduce asar size
   - '!node_modules/**/@types'
   - '!node_modules/**/*.d.ts'
@@ -34,6 +50,15 @@ files:
 extraResources:
   - from: build/icon.png
     to: icon.png
+  # Runtime env for the packaged app. Sits beside app.asar at a real filesystem
+  # path, which is the only place `getEnvFilePaths()` can actually read from in a
+  # packaged build (cwd is never the repo, and never inside the asar).
+  #
+  # CURATED — put only keys the shipped app needs in build/app.env. Never point
+  # this at .env.local: that file also holds keys that must not be distributed.
+  # Anything here is recoverable by unzipping the app.
+  - from: build/app.env
+    to: app.env
 asarUnpack:
   - node_modules/pi-mcp-adapter/**/*
 mac:

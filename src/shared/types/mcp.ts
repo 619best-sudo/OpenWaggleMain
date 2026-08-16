@@ -4,14 +4,14 @@ export const MCP_CONFIG_SOURCE_IDS = [
   'project-standard',
   'project-agents',
   'project-pi',
-  'project-openwaggle',
+  'project-turing-machine',
 ] as const
 
 export type McpConfigSourceId = (typeof MCP_CONFIG_SOURCE_IDS)[number]
 
 export type McpConfigSourceScope = 'global' | 'project'
 
-export type McpConfigSourceKind = 'standard' | 'pi' | 'agents' | 'openwaggle'
+export type McpConfigSourceKind = 'standard' | 'pi' | 'agents' | 'turing-machine'
 
 export type McpConfigPrimitive = string | number | boolean | null
 

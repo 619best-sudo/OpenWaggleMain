@@ -1,5 +1,6 @@
 {
-  "name": "openwaggle",
+  "name": "turing-machine",
+  "productName": "Turing Machine",
   "version": "0.3.0-alpha.38",
   "description": "Desktop coding agent with multi-model waggle mode",
   "main": "./out/main/index.js",
@@ -11,7 +12,7 @@
     "prepare:native:electron": "tsx scripts/rebuild-native-deps.ts electron",
     "dev": "pnpm prepare:native:electron && env -u ELECTRON_RUN_AS_NODE ELECTRON_ENABLE_LOGGING=1 OPENWAGGLE_USER_DATA_DIR=\"$PWD/.openwaggle-user-data-dev\" electron-vite dev",
     "dev:debug": "pnpm prepare:native:electron && env -u ELECTRON_RUN_AS_NODE ELECTRON_ENABLE_LOGGING=1 OPENWAGGLE_USER_DATA_DIR=\"$PWD/.openwaggle-user-data-debug\" electron-vite dev -- --remote-debugging-port=9222",
-    "build": "pnpm prepare:native:electron && electron-vite build",
+    "build": "tsx scripts/ensure-app-env.ts && pnpm prepare:native:electron && electron-vite build",
     "preview": "pnpm prepare:native:electron && electron-vite preview",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "pnpm build && electron-builder --dir",
@@ -79,7 +80,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/OpenWaggle/OpenWaggle.git"
+    "url": "https://github.com/619best-sudo/OpenWaggleMain.git"
   },
   "dependencies": {
     "@diegogbrisa/ts-match": "1.2.0",
@@ -104,7 +105,7 @@
     "remark-rehype": "^11.1.2",
     "shiki": "^4.0.2",
     "tesseract.js": "^6.0.1",
-    "turing-harness": "file:../turing-harness",
+    "turing-harness": "link:../turing-harness",
     "unified": "^11.0.5"
   },
   "devDependencies": {
@@ -160,6 +161,7 @@
     "react-voice-visualizer": "2.0.8",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
+    "sharp": "0.34.5",
     "tailwindcss": "^4.1.18",
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.21.0",

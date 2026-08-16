@@ -1,7 +1,9 @@
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, Menu, shell } from 'electron'
+import { setMcpToolCachePath } from './adapters/turing/turing-memory-prewarm'
 import { reconcileInterruptedAgentRuns } from './application/agent-run-service'
+import { seedDefaultMcpServers } from './application/seed-default-mcp-servers'
 import { env } from './env'
 import { persistAllActiveRuns } from './ipc/agent-handler'
 import { cleanupTerminals, registerAllIpcHandlers } from './ipc/handlers'
@@ -102,6 +104,13 @@ function registerIpcHandlersOnce() {
 async function bootstrapServicesAndWindow() {
   await initializeAppRuntime()
   await initializeSettingsStore()
+  // Durable location for the MCP tool-metadata cache, so a warm start is a file
+  // read instead of one process spawn per configured server.
+  setMcpToolCachePath(join(app.getPath('userData'), 'mcp-tool-cache.json'))
+  // Before the window exists, so the MCP page shows the defaults on first
+  // paint rather than popping them in. Self-guarded to run once ever, and it
+  // swallows its own failures — a bad MCP config must not block startup.
+  await runAppEffect(seedDefaultMcpServers())
   await runAppEffect(reconcileInterruptedAgentRuns())
 
   registerIpcHandlersOnce()
@@ -223,7 +232,7 @@ function registerAppLifecycle() {
   app
     .whenReady()
     .then(() => {
-      electronApp.setAppUserModelId('com.openwaggle.app')
+      electronApp.setAppUserModelId('com.turingmachine.app')
       if (process.platform === 'darwin') {
         app.dock?.setIcon(appIconPath)
       }
@@ -283,7 +292,7 @@ function startApp() {
 
   if (env.OPENWAGGLE_DISABLE_SINGLE_INSTANCE !== '1') {
     if (!app.requestSingleInstanceLock()) {
-      logger.warn('Another OpenWaggle instance is already running; quitting this instance')
+      logger.warn('Another Turing Machine instance is already running; quitting this instance')
       app.quit()
       return
     }

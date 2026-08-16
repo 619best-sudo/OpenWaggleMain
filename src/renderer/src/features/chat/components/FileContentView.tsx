@@ -7,7 +7,7 @@
  * <pre>, no per-line treatments). It takes shiki's tokens grouped by line and
  * colours each row itself. Renders flush inside a tool strip: only a top divider.
  */
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import {
   inferLanguageFromPath,
   type NumberedLine,
@@ -18,6 +18,7 @@ import {
   type HighlightedToken,
   useHighlightedLines,
 } from '@/features/chat/lib/use-highlighted-lines'
+import { useWindowedRows } from '@/features/chat/lib/use-windowed-rows'
 import { cn } from '@/shared/lib/cn'
 import { CodeLineTokens } from './CodeLineTokens'
 
@@ -25,6 +26,16 @@ import { CodeLineTokens } from './CodeLineTokens'
 const MIN_GUTTER_CHARS = 2
 /** Characters of line text mixed into React keys to keep them stable. */
 const KEY_TEXT_CHARS = 16
+/**
+ * Row height in px, applied as an explicit `lineHeight` below rather than left
+ * to the `leading-*` class. Windowing maps scroll offset to a row index, so this
+ * constant must BE the rendered height, not an estimate of it — setting it
+ * explicitly is what makes that true. Rows never wrap (`whitespace-pre` inside a
+ * `w-max` track), so every row is exactly this tall.
+ */
+const LINE_HEIGHT_PX = 20.625
+/** Gutter + code-cell horizontal padding (1.25rem + 0.75rem + 1rem), in rem. */
+const ROW_PADDING_REM = 3
 
 type FileContentViewVariant = 'default' | 'additions'
 
@@ -39,7 +50,7 @@ type FileContentViewVariant = 'default' | 'additions'
  * row itself — syntax highlighting AND per-line tints. A large-file guard keeps
  * the UI responsive.
  */
-export function FileContentView({
+function FileContentViewImpl({
   content,
   variant,
   concernSet,
@@ -56,10 +67,34 @@ export function FileContentView({
   // Memoize on `content` — splitting and re-joining a large file on every render
   // (including every parent re-render while a run streams) is wasted work.
   const lines = useMemo(() => splitNumberedFileLines(content), [content])
-  // Highlight the file body (line-number prefixes stripped) so tokens line up
-  // 1:1 with the rows rendered below.
-  const codeText = useMemo(() => lines.map((line) => line.text).join('\n'), [lines])
-  const highlighted = useHighlightedLines(codeText, inferLanguageFromPath(path ?? null))
+  // Windowing — see useWindowedRows for why this view cannot render every row.
+  const { scrollRef, onScroll, firstRow, lastRow, topSpacerPx, bottomSpacerPx } = useWindowedRows(
+    lines.length,
+    LINE_HEIGHT_PX,
+    maxHeight,
+  )
+
+  // Highlight ONLY the rendered window (line-number prefixes stripped, so tokens
+  // line up 1:1 with the rows). Tokenizing the whole file blocked the renderer
+  // for hundreds of milliseconds on expand — see useHighlightedLines.
+  const windowCodeText = useMemo(
+    () =>
+      lines
+        .slice(firstRow, lastRow)
+        .map((line) => line.text)
+        .join('\n'),
+    [lines, firstRow, lastRow],
+  )
+  const highlighted = useHighlightedLines(windowCodeText, inferLanguageFromPath(path ?? null))
+
+  // Horizontal extent must come from ALL lines, not just the rendered ones, or
+  // the `w-max` track would resize as you scroll vertically and the content
+  // would jitter sideways. The font is monospace, so the longest line's width is
+  // exactly its character count in `ch`.
+  const longestLineChars = useMemo(
+    () => lines.reduce((widest, line) => Math.max(widest, line.text.length), 0),
+    [lines],
+  )
 
   if (lines.length > READ_VIEW_MAX_LINES) {
     return (
@@ -83,15 +118,29 @@ export function FileContentView({
     String(lines[lines.length - 1]?.number ?? lines.length).length,
   )
 
+  const visibleLines = lines.slice(firstRow, lastRow)
+
   return (
     <div
+      ref={scrollRef}
+      onScroll={onScroll}
       // `diff-scroll` gives the thin scrollbars used elsewhere; scrolling is on
       // BOTH axes so long lines and long files are always reachable.
-      className="diff-scroll overflow-auto border-t border-code-view-border bg-code-view-bg font-mono text-[12.5px] leading-[1.65]"
-      style={{ maxHeight }}
+      className="diff-scroll overflow-auto border-t border-code-view-border bg-code-view-bg font-mono text-[12.5px]"
+      style={{ maxHeight, lineHeight: `${String(LINE_HEIGHT_PX)}px` }}
     >
-      <div className="min-w-full w-max">
-        {lines.map((line, index) => (
+      <div
+        className="min-w-full w-max"
+        // Pin the track to the widest line so horizontal scroll extent stays
+        // constant while rows are windowed in and out.
+        style={{
+          minWidth: `calc(${String(gutterWidth + longestLineChars)}ch + ${String(ROW_PADDING_REM)}rem)`,
+        }}
+      >
+        {/* Spacers stand in for the un-rendered rows, so the scrollbar reflects
+            the whole file and scroll position maps to the right line. */}
+        <div style={{ height: topSpacerPx }} aria-hidden />
+        {visibleLines.map((line, index) => (
           <FileViewLine
             key={`${String(line.number)}-${line.text.slice(0, KEY_TEXT_CHARS)}`}
             line={line}
@@ -101,10 +150,29 @@ export function FileContentView({
             tokens={highlighted?.[index]}
           />
         ))}
+        <div style={{ height: bottomSpacerPx }} aria-hidden />
       </div>
     </div>
   )
 }
+
+/**
+ * Memoized: a read result mounts one `<FileViewLine />` per line (thousands for
+ * a large file), and the active assistant message re-renders on every stream
+ * event — each token / tool start-end gives it a fresh object reference, which
+ * re-renders its bubble and every tool block beneath it. Without this memo the
+ * whole line tree is rebuilt on every event even though the file body is
+ * unchanged, which is the O(fileLines)-per-event cost that makes reading a large
+ * file choppy.
+ *
+ * Props are stable across those re-renders, so the shallow compare holds:
+ * `content` is a value-compared string, `concernSet` is memoized by the caller
+ * on a referentially-stable concern, and `variant`/`path`/`maxHeight` are
+ * constant for a given tool. When `concernSet` genuinely changes (a
+ * mark_concern_lines result arrives) the compare correctly misses and this
+ * re-renders to show the new highlights.
+ */
+export const FileContentView = memo(FileContentViewImpl)
 
 function FileViewLine({
   line,

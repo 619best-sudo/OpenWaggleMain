@@ -165,4 +165,19 @@ export const APP_MIGRATIONS: readonly AppMigration[] = [
       ...CURRENT_SESSION_SCHEMA_STATEMENTS,
     ],
   },
+  {
+    id: 12,
+    name: 'sessions-denormalized-message-count',
+    statements: [
+      `ALTER TABLE sessions ADD COLUMN message_count INTEGER NOT NULL DEFAULT 0`,
+      `
+      UPDATE sessions
+      SET message_count = (
+        SELECT COUNT(*)
+        FROM session_nodes sn
+        WHERE sn.session_id = sessions.id AND sn.pi_entry_type = 'message'
+      )
+      `,
+    ],
+  },
 ]

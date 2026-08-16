@@ -1,8 +1,8 @@
 import type { McpSettingsView } from '@shared/types/mcp'
 import type { ProjectMemoryStatus } from '@shared/types/project-memory'
 import * as Effect from 'effect/Effect'
-import * as Layer from 'effect/Layer'
 import type { Layer as LayerType } from 'effect/Layer'
+import * as Layer from 'effect/Layer'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const handlers = new Map<string, (...args: unknown[]) => unknown>()
@@ -21,7 +21,9 @@ vi.mock('electron', () => ({
 // SettingsService + McpConfigService contexts the handler requires. The layer
 // is set lazily in beforeEach (vi.hoisted runs before imports, so Layer can't
 // be referenced at hoist time).
-const { runtimeMock } = vi.hoisted(() => ({ runtimeMock: { currentLayer: null as LayerType<unknown> | null } }))
+const { runtimeMock } = vi.hoisted(() => ({
+  runtimeMock: { currentLayer: null as LayerType<unknown> | null },
+}))
 vi.mock('../../runtime', () => ({
   runAppEffectExit: (effect: Effect.Effect<unknown, unknown>) => {
     if (!runtimeMock.currentLayer) throw new Error('TestLayer not set before handler call')

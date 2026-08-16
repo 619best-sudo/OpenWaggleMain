@@ -159,7 +159,8 @@ function createPresetSections(presets: readonly WagglePreset[]): readonly Preset
     {
       id: 'panels',
       title: 'Council of Experts',
-      description: 'Choose a Council of Experts workflow to run, or create one for a repeatable workflow.',
+      description:
+        'Choose a Council of Experts workflow to run, or create one for a repeatable workflow.',
       presets: [
         ...sortPresetsByPreferredOrder(custom, []),
         ...sortPresetsByPreferredOrder(builtIn, []),
@@ -209,7 +210,9 @@ export function WagglePresetsPanel({
       <div className="space-y-12">
         {presets.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 px-4 py-12 text-center">
-            <p className="text-[14px] font-medium text-text-primary">No Council of Experts workflows yet</p>
+            <p className="text-[14px] font-medium text-text-primary">
+              No Council of Experts workflows yet
+            </p>
             <p className="mt-2 text-[13px] text-text-tertiary">
               Create a Council of Experts workflow to save a repeatable workflow.
             </p>

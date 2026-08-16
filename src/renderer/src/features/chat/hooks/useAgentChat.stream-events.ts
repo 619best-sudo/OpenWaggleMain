@@ -1,4 +1,6 @@
 import { matchBy } from '@diegogbrisa/ts-match'
+import type { SessionId } from '@shared/types/brand'
+import type { AgentTransportEvent } from '@shared/types/stream'
 import {
   clearLastAgentErrorInfo,
   setLastAgentErrorInfo,
@@ -126,43 +128,53 @@ function handleAgentStateEvent(
     .exhaustive()
 }
 
-function shouldHandleStreamPayload(payload: AgentEventPayload, context: AgentStreamEventContext) {
-  return (
-    payload.sessionId === context.subscribedSessionId &&
-    context.currentSessionIdRef.current === context.subscribedSessionId
-  )
-}
-
-export function handleAgentStreamPayload(
-  payload: AgentEventPayload,
+/**
+ * The batched entry point: main coalesces transport events for ~one animation
+ * frame, and the whole batch is folded through the reducer with a SINGLE state
+ * commit. One `setMessagesForSession` + one run-snapshot store update per batch
+ * instead of one per token delta — the per-token commit was the dominant
+ * renderer cost while streaming.
+ */
+export function handleAgentStreamPayloadBatch(
+  payload: { sessionId: SessionId; events: AgentTransportEvent[] },
   context: AgentStreamEventContext,
 ) {
-  if (!shouldHandleStreamPayload(payload, context)) {
+  if (payload.sessionId !== context.subscribedSessionId) {
+    return
+  }
+  if (context.currentSessionIdRef.current !== context.subscribedSessionId) {
+    return
+  }
+  if (payload.events.length === 0) {
     return
   }
 
-  if (
-    (payload.event.type === 'custom' && payload.event.name === 'team:auto-user-prompt') ||
-    (payload.event.type === 'message_start' && payload.event.role === 'user') ||
-    (payload.event.type === 'message_end' && payload.event.role === 'user')
-  ) {
-    logger.debug('Received Team live user-related stream event', {
-      sessionId: String(payload.sessionId),
-      eventType: payload.event.type,
-      event:
-        payload.event.type === 'custom'
-          ? payload.event
-          : {
-              type: payload.event.type,
-              messageId: payload.event.messageId,
-              role: payload.event.role,
-            },
-    })
+  for (const event of payload.events) {
+    if (
+      (event.type === 'custom' && event.name === 'team:auto-user-prompt') ||
+      (event.type === 'message_start' && event.role === 'user') ||
+      (event.type === 'message_end' && event.role === 'user')
+    ) {
+      logger.debug('Received Team live user-related stream event', {
+        sessionId: String(payload.sessionId),
+        eventType: event.type,
+        event:
+          event.type === 'custom'
+            ? event
+            : {
+                type: event.type,
+                messageId: event.messageId,
+                role: event.role,
+              },
+      })
+    }
+    handleAgentStateEvent(event, context)
   }
 
-  handleAgentStateEvent(payload.event, context)
-
   if (context.foregroundStreamActiveRef.current || context.backgroundStreamingRef.current) {
+    const isTeamPromptBatch = payload.events.some(
+      (event) => event.type === 'custom' && event.name === 'team:auto-user-prompt',
+    )
     signalStreamChange(context)
     updateMessagesForSession(
       context.messagesBySessionIdRef,
@@ -170,12 +182,12 @@ export function handleAgentStreamPayload(
       context.setRunRenderMessages,
       context.subscribedSessionId,
       (currentMessages) => {
-        const nextMessages = applyAgentTransportEvent(currentMessages, payload.event)
-        if (payload.event.type === 'custom' && payload.event.name === 'team:auto-user-prompt') {
-          const appendedMessage =
-            nextMessages.length > currentMessages.length
-              ? nextMessages[nextMessages.length - 1]
-              : undefined
+        let nextMessages = currentMessages
+        for (const event of payload.events) {
+          nextMessages = applyAgentTransportEvent(nextMessages, event)
+        }
+        if (isTeamPromptBatch && nextMessages.length > currentMessages.length) {
+          const appendedMessage = nextMessages[nextMessages.length - 1]
           logger.debug('Applied Team prompt stream event to live cache', {
             sessionId: String(context.subscribedSessionId),
             previousCount: currentMessages.length,
@@ -187,7 +199,7 @@ export function handleAgentStreamPayload(
         }
         return nextMessages
       },
-      { cacheRunSnapshot: true, reason: `stream:${payload.event.type}` },
+      { cacheRunSnapshot: true, reason: `stream:batch:${payload.events.length}` },
     )
   }
 }

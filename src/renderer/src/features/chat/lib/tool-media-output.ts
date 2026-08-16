@@ -96,6 +96,22 @@ export function mediaKindFromExtension(filePath: string): ToolMediaKind | null {
   return null
 }
 
+/**
+ * Derive a media kind from a MIME type. Tools that return assets by reference
+ * (e.g. `assets_generator`) carry a `mimeType` but no `{ type: 'image' }` block
+ * — they emit a generic `{ type: 'file', uri, mimeType }` — so the kind has to
+ * come from the MIME rather than the block type or the path extension.
+ */
+export function mediaKindFromMimeType(mimeType: string | undefined): ToolMediaKind | null {
+  if (!mimeType) return null
+  const mime = mimeType.toLowerCase()
+  if (mime.startsWith('image/')) return 'image'
+  if (mime.startsWith('video/')) return 'video'
+  if (mime.startsWith('audio/')) return 'audio'
+  if (mime === 'text/html' || mime === 'application/xhtml+xml') return 'html'
+  return null
+}
+
 /** Best-effort MIME from a file extension; used when a tool gives only a path. */
 export function mimeTypeForPath(filePath: string): string | undefined {
   const dot = filePath.lastIndexOf('.')
@@ -259,6 +275,27 @@ function pathOutput(
   } as ToolVideoOutput | ToolAudioOutput
 }
 
+/**
+ * Resolve a `{ type: 'file', uri/path, mimeType }` reference block (the shape
+ * `assets_generator` and other disk-writing tools return) into a previewable
+ * media item. The kind comes from the MIME when present, falling back to the
+ * path extension; the bytes are fetched through the `tool-media:resolve` IPC by
+ * `ToolMediaPreview` (which already handles `.html` files too).
+ */
+function mediaOutputFromFileBlock(block: unknown): ToolMediaOutput | null {
+  if (!isRecord(block)) return null
+  const rawPath = asString(block.uri) ?? asString(block.path) ?? asString(block.name)
+  if (!rawPath) return null
+  const mime = asString(block.mimeType) ?? asString(block.mediaType)
+  // Kind: prefer the MIME (the tool knows what it wrote), then the extension.
+  const kind = mediaKindFromMimeType(mime) ?? mediaKindFromExtension(rawPath)
+  if (!kind) return null
+  if (kind === 'html') {
+    return { kind: 'html', src: rawPath, needsResolution: true }
+  }
+  return pathOutput(kind, rawPath, mime)
+}
+
 function htmlFromFields(fields: BaseMediaFields & { readonly text?: unknown }): string | null {
   const direct = asString(fields.data) ?? asString(fields.value)
   if (direct?.trim()) return direct
@@ -281,6 +318,15 @@ export function mediaOutputFromBlock(block: unknown): ToolMediaOutput | null {
   const rawType = asString(block.type)
   if (!rawType) return null
   const type = rawType.toLowerCase()
+
+  // A generic `{ type: 'file', uri/path, mimeType }` block — how tools that
+  // write the asset to disk return it (`assets_generator`, and MCP tools that
+  // surface a generated file by reference). The kind is not in the block type,
+  // so derive it from the MIME (then the path extension) and resolve the bytes
+  // through the same IPC path other path-sourced media uses.
+  if (type === 'file') {
+    return mediaOutputFromFileBlock(block)
+  }
 
   if (type === 'image') {
     const out = mediaFromFields('image', block as BaseMediaFields)
@@ -362,6 +408,14 @@ export function getToolMediaOutput(content: unknown): ToolMediaOutput | null {
       }
     }
   }
+
+  // Fallback: a tool that returns the asset only as a reference on `details`
+  // (e.g. `{ details: { uri, mimeType } }` with no media block in `content`).
+  // `assets_generator` puts a `file` block in `content`, but other disk-writing
+  // tools may surface the path solely here.
+  const fromDetails = mediaOutputFromFileBlock(normalized.details)
+  if (fromDetails) return fromDetails
+
   return null
 }
 

@@ -53,6 +53,8 @@ export const LOG_RETENTION = {
 export const GIT_CACHE = {
   /** Git status cache TTL */
   STATUS_TTL_MS: TIME_UNIT.TWO_SECONDS_MS,
+  /** "Is this folder a git repository?" cache TTL — avoids re-spawning `git rev-parse` on every refresh */
+  REPOSITORY_CHECK_TTL_MS: TIME_UNIT.THIRTY_SECONDS_MS,
 } as const
 
 /** Auto-updater timing */

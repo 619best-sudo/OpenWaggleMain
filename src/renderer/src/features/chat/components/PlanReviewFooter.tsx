@@ -20,12 +20,18 @@ interface PlanReviewFooterProps {
   readonly onSubmit: (decision: Decision) => void
 }
 
-/** "2 steps with your additions" / "3 revisions left" — whichever is the news. */
+/**
+ * The two facts the decision depends on: how much of your own input rides along,
+ * and how many more rounds you get. They used to share one slot, so adding a
+ * note to a step silently hid the revision budget.
+ */
 function statusLabel(editedCount: number, revisionsRemaining: number) {
-  if (editedCount > 0) {
-    return `${editedCount} step${editedCount === 1 ? '' : 's'} with your additions — sent either way`
-  }
-  return `${revisionsRemaining} revision${revisionsRemaining === 1 ? '' : 's'} left`
+  const budget = `${revisionsRemaining} revision${revisionsRemaining === 1 ? '' : 's'} left`
+  if (editedCount === 0) return budget
+  // "sent either way" is the reassurance that matters at decision time: adding a
+  // mockup to a step does not force a re-planning round.
+  const edits = `${editedCount} step${editedCount === 1 ? '' : 's'} with your additions (sent either way)`
+  return `${edits} · ${budget}`
 }
 
 /**

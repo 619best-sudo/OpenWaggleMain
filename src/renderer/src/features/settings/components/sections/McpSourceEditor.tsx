@@ -11,29 +11,15 @@ import { Textarea } from '@/shared/ui/Textarea'
 
 const RAW_EDITOR_ROWS = 16
 
-const ADVANCED_SOURCE_LABELS: Record<McpConfigSourceId, { label: string; helper: string }> = {
+const ADVANCED_SOURCE_LABELS: Partial<
+  Record<McpConfigSourceId, { label: string; helper: string }>
+> = {
   'global-standard': {
     label: 'All Projects On This Computer',
     helper: 'Primary shared MCP settings used across all projects on this device.',
   },
-  'global-pi': {
-    label: 'Shared Backup Settings',
-    helper: 'An additional shared MCP config file used by the app in some setups.',
-  },
-  'project-standard': {
+  'project-turing-machine': {
     label: 'This Project Only',
-    helper: 'Primary MCP settings used only for the current project.',
-  },
-  'project-agents': {
-    label: 'Project Backup Settings A',
-    helper: 'An additional project MCP config file kept inside the project folder.',
-  },
-  'project-pi': {
-    label: 'Project Backup Settings B',
-    helper: 'Another project MCP config file that may exist in some setups.',
-  },
-  'project-openwaggle': {
-    label: 'Recommended Project Settings',
     helper: 'Recommended. This is usually the best project-specific MCP config to edit.',
   },
 }
@@ -81,11 +67,13 @@ export function McpSourceEditor({
                   <option value="" disabled>
                     Choose config to edit...
                   </option>
-                  {sources.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {ADVANCED_SOURCE_LABELS[s.id]?.label ?? s.label}
-                    </option>
-                  ))}
+                  {sources
+                    .filter((s) => s.id === 'project-turing-machine' || s.id === 'global-standard')
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {ADVANCED_SOURCE_LABELS[s.id]?.label ?? s.label}
+                      </option>
+                    ))}
                 </Select>
               </label>
               {selectedSourceDetails ? (

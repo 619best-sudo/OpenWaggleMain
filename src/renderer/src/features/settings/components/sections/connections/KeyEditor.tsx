@@ -30,24 +30,6 @@ export function KeyEditor({
   const hasStoredKey = providerInfo.auth.apiKeySource === 'api-key'
 
   async function handleSave() {
-    // #region debug-point A:key-editor-save
-    fetch('http://localhost:7777/event', {
-      method: 'POST',
-      body: JSON.stringify({
-        sessionId: 'openrouter-key-save',
-        runId: 'pre-fix',
-        hypothesisId: 'A',
-        location: 'KeyEditor.tsx:handleSave',
-        msg: '[DEBUG] Key editor save clicked',
-        data: {
-          provider: providerInfo.provider,
-          draftLength: draftValue.length,
-          hasStoredKey,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {})
-    // #endregion
     await onSave(draftValue)
     setValue('')
     onClose()

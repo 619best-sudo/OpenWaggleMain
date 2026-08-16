@@ -3,7 +3,7 @@
  *
  * Replaces Pi's `SettingsManager`-backed preferences. Reads/writes the two tree
  * preference keys (`treeFilterMode`, `branchSummarySkipPrompt`) from the same
- * project-local file the Pi manager used (`<project>/.openwaggle/settings.json`),
+ * project-local file the Pi manager used (`<project>/.turing-machine/settings.json`),
  * so existing user preferences survive the migration.
  *
  * Only these two keys are touched; the rest of the settings file (if any) is
@@ -11,11 +11,11 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { PROJECT_CONFIG_DIR } from '@shared/constants/project-config'
 import type { SessionTreeFilterMode } from '@shared/types/session'
 import { Effect, Layer } from 'effect'
 import { SessionTreePreferencesService } from '../../ports/session-tree-preferences-service'
 
-const OPENWAGGLE_CONFIG_DIR = '.openwaggle'
 const SETTINGS_FILE_NAME = 'settings.json'
 const TREE_FILTER_MODE_KEY = 'treeFilterMode'
 const BRANCH_SUMMARY_SKIP_PROMPT_KEY = 'branchSummarySkipPrompt'
@@ -24,7 +24,11 @@ const DEFAULT_PROJECT_PATH = process.cwd()
 const DEFAULT_TREE_FILTER_MODE: SessionTreeFilterMode = 'default'
 
 function resolveSettingsPath(projectPath?: string | null): string {
-  return join(projectPath?.trim() || DEFAULT_PROJECT_PATH, OPENWAGGLE_CONFIG_DIR, SETTINGS_FILE_NAME)
+  return join(
+    projectPath?.trim() || DEFAULT_PROJECT_PATH,
+    PROJECT_CONFIG_DIR,
+    SETTINGS_FILE_NAME,
+  )
 }
 
 function readSettingsObject(filePath: string): Record<string, unknown> {
@@ -67,33 +71,27 @@ function readBranchSummarySkipPrompt(projectPath?: string | null): boolean {
   return raw === true
 }
 
-function writeTreeFilterModeValue(
-  mode: SessionTreeFilterMode,
-  projectPath?: string | null,
-): void {
+function writeTreeFilterModeValue(mode: SessionTreeFilterMode, projectPath?: string | null): void {
   const filePath = resolveSettingsPath(projectPath)
   const settings = readSettingsObject(filePath)
   settings[TREE_FILTER_MODE_KEY] = mode
   writeSettingsObject(filePath, settings)
 }
 
-export const TuringSessionTreePreferencesLive = Layer.succeed(
-  SessionTreePreferencesService,
-  {
-    getTreeFilterMode: (projectPath) =>
-      Effect.try({
-        try: () => readTreeFilterMode(projectPath),
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-      }),
-    setTreeFilterMode: (mode, projectPath) =>
-      Effect.try({
-        try: () => writeTreeFilterModeValue(mode, projectPath),
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-      }),
-    getBranchSummarySkipPrompt: (projectPath) =>
-      Effect.try({
-        try: () => readBranchSummarySkipPrompt(projectPath),
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-      }),
-  },
-)
+export const TuringSessionTreePreferencesLive = Layer.succeed(SessionTreePreferencesService, {
+  getTreeFilterMode: (projectPath) =>
+    Effect.try({
+      try: () => readTreeFilterMode(projectPath),
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    }),
+  setTreeFilterMode: (mode, projectPath) =>
+    Effect.try({
+      try: () => writeTreeFilterModeValue(mode, projectPath),
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    }),
+  getBranchSummarySkipPrompt: (projectPath) =>
+    Effect.try({
+      try: () => readBranchSummarySkipPrompt(projectPath),
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    }),
+})

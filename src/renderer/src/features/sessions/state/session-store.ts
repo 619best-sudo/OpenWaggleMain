@@ -14,6 +14,36 @@ const logger = createRendererLogger('session-store')
 let latestTreeRequestId = 0
 let latestWorkspaceRequestId = 0
 
+/**
+ * Concurrent identical workspace loads, collapsed into one IPC round-trip.
+ *
+ * Selecting a session triggers a workspace refresh from both the chat store
+ * (via `refreshSessionsAndWorkspace`) and the chat route effect. Each one
+ * re-reads and re-hydrates the session's full node tree in the main process,
+ * which is the bulk of the delay when opening a long thread.
+ */
+const inFlightWorkspaceRequests = new Map<string, Promise<SessionWorkspace | null>>()
+
+function workspaceRequestKey(sessionId: SessionId, selection?: SessionWorkspaceSelection) {
+  return [
+    String(sessionId),
+    selection?.branchId ? String(selection.branchId) : '',
+    selection?.nodeId ? String(selection.nodeId) : '',
+  ].join('|')
+}
+
+function loadWorkspaceDeduped(sessionId: SessionId, selection?: SessionWorkspaceSelection) {
+  const key = workspaceRequestKey(sessionId, selection)
+  const existing = inFlightWorkspaceRequests.get(key)
+  if (existing) return existing
+
+  const request = api.getSessionWorkspace(sessionId, selection).finally(() => {
+    inFlightWorkspaceRequests.delete(key)
+  })
+  inFlightWorkspaceRequests.set(key, request)
+  return request
+}
+
 function handleStoreError(err: unknown, action: string, setError: (message: string) => void) {
   const message = err instanceof Error ? err.message : String(err)
   logger.error(`Failed to ${action}`, { message })
@@ -98,7 +128,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
 
     try {
-      const activeWorkspace = await api.getSessionWorkspace(sessionId, selection)
+      const activeWorkspace = await loadWorkspaceDeduped(sessionId, selection)
       if (requestId !== latestWorkspaceRequestId) {
         return
       }

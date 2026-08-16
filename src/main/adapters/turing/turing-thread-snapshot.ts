@@ -1,7 +1,5 @@
 import type { JsonValue } from '@shared/types/json'
 import { TURING_THREAD_SNAPSHOT_CUSTOM_TYPE } from '@shared/types/structural-nodes'
-import type { ProjectedSessionNodeInput } from '../../ports/session-repository'
-import { buildCustomSessionNode } from './turing-message-projection'
 import type {
   AgentEvent,
   AgentHost,
@@ -14,6 +12,8 @@ import type {
   ThreadFollowUpContext,
   ThreadRunSnapshot,
 } from 'turing-harness'
+import type { ProjectedSessionNodeInput } from '../../ports/session-repository'
+import { buildCustomSessionNode } from './turing-message-projection'
 
 export { TURING_THREAD_SNAPSHOT_CUSTOM_TYPE }
 
@@ -72,9 +72,7 @@ export function extractPersistedThreadSnapshot(
       if (isThreadRunSnapshot(data)) {
         return data
       }
-    } catch {
-      continue
-    }
+    } catch {}
   }
   return undefined
 }

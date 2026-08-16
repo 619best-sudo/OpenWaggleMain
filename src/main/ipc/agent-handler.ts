@@ -165,39 +165,6 @@ function registerAgentRunHandlers() {
         startStreamBuffer(sessionId, model, 'classic')
 
         function onEventWithUsageCapture(event: AgentTransportEvent) {
-          // #region debug-point B:main-transport-events
-          if (
-            event.type === 'phase_start' ||
-            event.type === 'phase_end' ||
-            event.type === 'agent_end' ||
-            (event.type === 'custom' &&
-              (event.name === 'openwaggle:user-question:request' ||
-                event.name === 'openwaggle:user-question:resolved'))
-          ) {
-            void fetch('http://127.0.0.1:7777/event', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                sessionId: 'phase-flow-missing',
-                runId: 'pre-fix',
-                hypothesisId: 'B',
-                location: 'agent-handler.ts:onEventWithUsageCapture',
-                msg: '[DEBUG] Main process forwarded transport event',
-                data: {
-                  sessionId: String(sessionId),
-                  model,
-                  eventType: event.type,
-                  phaseId:
-                    event.type === 'phase_start' || event.type === 'phase_end'
-                      ? event.phaseId
-                      : null,
-                  customName: event.type === 'custom' ? event.name : null,
-                },
-                ts: Date.now(),
-              }),
-            }).catch(() => {})
-          }
-          // #endregion
           emitTransportEvent(sessionId, event)
         }
 
@@ -213,27 +180,6 @@ function registerAgentRunHandlers() {
             broadcastToWindows('sessions:title-updated', { sessionId, title })
           },
         })
-
-        // #region debug-point B:main-run-result
-        void fetch('http://127.0.0.1:7777/event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'phase-flow-missing',
-            runId: 'pre-fix',
-            hypothesisId: 'B',
-            location: 'agent-handler.ts:agent-send-message',
-            msg: '[DEBUG] Main process completed executeAgentRun',
-            data: {
-              sessionId: String(sessionId),
-              model,
-              outcome: result.outcome,
-              transportEmitted: 'transportEmitted' in result ? result.transportEmitted : null,
-            },
-            ts: Date.now(),
-          }),
-        }).catch(() => {})
-        // #endregion
 
         // ─── Transport: respond based on outcome ─────────
         handleRunResult(sessionId, result)

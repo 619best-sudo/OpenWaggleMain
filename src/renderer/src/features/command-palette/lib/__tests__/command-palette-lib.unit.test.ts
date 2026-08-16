@@ -1,4 +1,3 @@
-import { WagglePresetId } from '@shared/types/brand'
 import type { McpServerSummary } from '@shared/types/mcp'
 import { describe, expect, it, vi } from 'vitest'
 import type { CommandPaletteItem } from '../../model'
@@ -7,7 +6,6 @@ import {
   createBaseCommands,
   createConfigureMcpItem,
   createMcpItems,
-  createPresetItems,
 } from '../command-palette-items'
 import { normalizeCommandQuery, truncateCommandDescription } from '../command-palette-text'
 
@@ -109,12 +107,9 @@ describe('createBaseCommands', () => {
     const commands = createBaseCommands({
       closeCommandPalette,
       configureMcp: vi.fn(),
-      configureWaggle: vi.fn(),
       insertCompactCommand: vi.fn(),
       toggleMcpServer: vi.fn(),
-      selectPreset: vi.fn(),
       selectSkill: vi.fn(),
-      startWaggle: vi.fn(),
     })
 
     expect(commands.map((command) => command.id)).not.toContain('code-review')
@@ -131,9 +126,9 @@ describe('mcp command palette matching', () => {
     {
       name: 'playwright',
       enabled: true,
-      sourceId: 'project-openwaggle',
+      sourceId: 'project-turing-machine',
       sourceLabel: 'Project',
-      sourcePath: '/tmp/project/.openwaggle/agent/mcp.json',
+      sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
       transport: 'stdio',
       directTools: 'enabled',
     },
@@ -179,79 +174,6 @@ describe('mcp command palette matching', () => {
       'database',
     ])
     expect(createConfigureMcpItem('mcp', vi.fn())).toHaveLength(1)
-  })
-})
-
-describe('panel command palette matching', () => {
-  it('only exposes the allowed panel presets', () => {
-    const items = createPresetItems(
-      [
-        {
-          id: WagglePresetId('debate'),
-          name: 'Debate',
-          description: 'Two experts challenge the task.',
-          isBuiltIn: true,
-          config: {
-            mode: 'sequential',
-            agents: [],
-            stop: { primary: 'consensus', maxTurnsSafety: 4 },
-          },
-          app: {
-            name: 'Debate',
-            instructions: '',
-            version: '1.0.0',
-            requiredMcps: [],
-            optionalMcps: [],
-            requiredSkills: [],
-            optionalSkills: [],
-          },
-        },
-        {
-          id: WagglePresetId('product-planning'),
-          name: 'Product Planning',
-          description: 'Plans the product work.',
-          isBuiltIn: true,
-          config: {
-            mode: 'sequential',
-            agents: [],
-            stop: { primary: 'consensus', maxTurnsSafety: 4 },
-          },
-          app: {
-            name: 'Product Planning',
-            instructions: '',
-            version: '1.0.0',
-            requiredMcps: [],
-            optionalMcps: [],
-            requiredSkills: [],
-            optionalSkills: [],
-          },
-        },
-        {
-          id: WagglePresetId('red-team'),
-          name: 'Red Team',
-          description: 'Finds weaknesses.',
-          isBuiltIn: true,
-          config: {
-            mode: 'sequential',
-            agents: [],
-            stop: { primary: 'consensus', maxTurnsSafety: 4 },
-          },
-          app: {
-            name: 'Red Team',
-            instructions: '',
-            version: '1.0.0',
-            requiredMcps: [],
-            optionalMcps: [],
-            requiredSkills: [],
-            optionalSkills: [],
-          },
-        },
-      ],
-      '',
-      vi.fn(),
-    )
-
-    expect(items.map((item) => item.label)).toEqual(['Debate', 'Red Team'])
   })
 })
 

@@ -4,6 +4,7 @@ import type { UIMessage } from '@shared/types/chat-ui'
 import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
+import { useEventCallback } from '@/shared/lib/use-event-callback'
 import { Button } from '@/shared/ui/Button'
 import { useUIStore } from '@/shell/ui-store'
 import { useChatScrollBehaviour } from '../hooks/useChatScrollBehaviour'
@@ -22,52 +23,63 @@ interface ChatTranscriptProps {
   readonly section: ChatTranscriptSectionState
 }
 
-interface TranscriptRowProps {
-  row: ChatRow
-  sessionId: SessionId | null
-  onOpenSettings: () => void
-  onRetryText: (content: string) => Promise<void>
-  onApproveMachinePlan: () => Promise<void>
-  onDiscardMachinePlan: () => Promise<void>
-  onDismissError: (errorId: string | null) => void
-  onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
-  onBranchFromMessage: (messageId: string) => void
-  onForkFromMessage: (messageId: string) => void
-  pendingUserQuestionRequest: ChatTranscriptSectionState['pendingUserQuestionRequest']
-  onResolveUserQuestion: ChatTranscriptSectionState['onResolveUserQuestion']
+/**
+ * Every handler the rows receive must keep a stable identity — `ChatRowRenderer`
+ * is memoized, and an inline arrow would re-render the whole transcript on each
+ * streamed token.
+ */
+interface TranscriptRowHandlers {
+  readonly onOpenSettings: () => void
+  readonly onRetry: (content: string) => void
+  readonly onApproveMachinePlan: () => Promise<void>
+  readonly onDiscardMachinePlan: () => Promise<void>
+  readonly onDismissError: (errorId: string | null) => void
+  readonly onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
+  readonly onBranchFromMessage: (messageId: string) => void
+  readonly onForkFromMessage: (messageId: string) => void
 }
 
-function TranscriptRow({
-  row,
-  sessionId,
-  onOpenSettings,
-  onRetryText,
-  onApproveMachinePlan,
-  onDiscardMachinePlan,
-  onDismissError,
-  onDismissInterruptedRun,
-  onBranchFromMessage,
-  onForkFromMessage,
-  pendingUserQuestionRequest,
-  onResolveUserQuestion,
-}: TranscriptRowProps) {
-  return (
-    <ChatRowRenderer
-      row={row}
-      sessionId={sessionId}
-      onOpenSettings={onOpenSettings}
-      onRetry={(content) => {
-        void onRetryText(content)
-      }}
-      onApproveMachinePlan={onApproveMachinePlan}
-      onDiscardMachinePlan={onDiscardMachinePlan}
-      onDismissError={onDismissError}
-      onDismissInterruptedRun={onDismissInterruptedRun}
-      onBranchFromMessage={onBranchFromMessage}
-      onForkFromMessage={onForkFromMessage}
-      pendingUserQuestionRequest={pendingUserQuestionRequest}
-      onResolveUserQuestion={onResolveUserQuestion}
-    />
+function useTranscriptRowHandlers(section: ChatTranscriptSectionState): TranscriptRowHandlers {
+  const onRetry = useEventCallback((content: string) => {
+    void section.onRetryText(content)
+  })
+  const onOpenSettings = useEventCallback(() => section.onOpenSettings())
+  const onApproveMachinePlan = useEventCallback(() => section.onApproveMachinePlan())
+  const onDiscardMachinePlan = useEventCallback(() => section.onDiscardMachinePlan())
+  const onDismissError = useEventCallback((errorId: string | null) =>
+    section.onDismissError(errorId),
+  )
+  const onDismissInterruptedRun = useEventCallback((runId: string, branchId: SessionBranchId) =>
+    section.onDismissInterruptedRun(runId, branchId),
+  )
+  const onBranchFromMessage = useEventCallback((messageId: string) =>
+    section.onBranchFromMessage(messageId),
+  )
+  const onForkFromMessage = useEventCallback((messageId: string) =>
+    section.onForkFromMessage(messageId),
+  )
+
+  return useMemo(
+    () => ({
+      onOpenSettings,
+      onRetry,
+      onApproveMachinePlan,
+      onDiscardMachinePlan,
+      onDismissError,
+      onDismissInterruptedRun,
+      onBranchFromMessage,
+      onForkFromMessage,
+    }),
+    [
+      onOpenSettings,
+      onRetry,
+      onApproveMachinePlan,
+      onDiscardMachinePlan,
+      onDismissError,
+      onDismissInterruptedRun,
+      onBranchFromMessage,
+      onForkFromMessage,
+    ],
   )
 }
 
@@ -91,14 +103,7 @@ function getChatRowKey(row: ChatRow) {
 interface RenderTranscriptRowsParams {
   rows: ChatRow[]
   activeSessionId: SessionId | null
-  onOpenSettings: () => void
-  onRetryText: (content: string) => Promise<void>
-  onApproveMachinePlan: () => Promise<void>
-  onDiscardMachinePlan: () => Promise<void>
-  onDismissError: (errorId: string | null) => void
-  onDismissInterruptedRun: (runId: string, branchId: SessionBranchId) => void
-  onBranchFromMessage: (messageId: string) => void
-  onForkFromMessage: (messageId: string) => void
+  handlers: TranscriptRowHandlers
   pendingUserQuestionRequest: ChatTranscriptSectionState['pendingUserQuestionRequest']
   onResolveUserQuestion: ChatTranscriptSectionState['onResolveUserQuestion']
   pendingPlanReviewRequest: ChatTranscriptSectionState['pendingPlanReviewRequest']
@@ -147,14 +152,7 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
   const {
     rows,
     activeSessionId,
-    onOpenSettings,
-    onRetryText,
-    onApproveMachinePlan,
-    onDiscardMachinePlan,
-    onDismissError,
-    onDismissInterruptedRun,
-    onBranchFromMessage,
-    onForkFromMessage,
+    handlers,
     pendingUserQuestionRequest,
     onResolveUserQuestion,
     pendingPlanReviewRequest,
@@ -176,17 +174,17 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
     return rowWrapper(
       getChatRowKey(row),
       index,
-      <TranscriptRow
+      <ChatRowRenderer
         row={row}
         sessionId={activeSessionId}
-        onOpenSettings={onOpenSettings}
-        onRetryText={onRetryText}
-        onApproveMachinePlan={onApproveMachinePlan}
-        onDiscardMachinePlan={onDiscardMachinePlan}
-        onDismissError={onDismissError}
-        onDismissInterruptedRun={onDismissInterruptedRun}
-        onBranchFromMessage={onBranchFromMessage}
-        onForkFromMessage={onForkFromMessage}
+        onOpenSettings={handlers.onOpenSettings}
+        onRetry={handlers.onRetry}
+        onApproveMachinePlan={handlers.onApproveMachinePlan}
+        onDiscardMachinePlan={handlers.onDiscardMachinePlan}
+        onDismissError={handlers.onDismissError}
+        onDismissInterruptedRun={handlers.onDismissInterruptedRun}
+        onBranchFromMessage={handlers.onBranchFromMessage}
+        onForkFromMessage={handlers.onForkFromMessage}
         pendingUserQuestionRequest={pendingUserQuestionRequest}
         onResolveUserQuestion={onResolveUserQuestion}
       />,
@@ -242,14 +240,16 @@ function TranscriptRows(params: RenderTranscriptRowsParams) {
           index++,
           <UserQuestionCard
             request={pendingUserQuestionRequest}
-            onSubmit={async (answer) => {
+            onSubmit={async (answer, attachments) => {
               await onResolveUserQuestion({
                 request: pendingUserQuestionRequest,
                 answer,
+                ...(attachments.length ? { attachments: [...attachments] } : {}),
               })
             }}
             busy={toolPermissionBusy}
             title={pendingUserQuestionRequest.kind === 'plan_review' ? 'Review Plan' : undefined}
+            projectPath={planReviewProjectPath}
             helperText={
               pendingUserQuestionRequest.kind === 'plan_review'
                 ? 'Reply "approve" to begin, describe changes to edit, or "reject" to stop.'
@@ -400,13 +400,6 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
     onOpenProject,
     onSelectProjectPath,
     onRetryText,
-    onOpenSettings,
-    onApproveMachinePlan,
-    onDiscardMachinePlan,
-    onDismissError,
-    onDismissInterruptedRun,
-    onBranchFromMessage,
-    onForkFromMessage,
     pendingUserQuestionRequest,
     onResolveUserQuestion,
     pendingPlanReviewRequest,
@@ -423,9 +416,12 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
     userDidSend,
     onUserDidSendConsumed,
   } = section
+  const rowHandlers = useTranscriptRowHandlers(section)
+  // Serializing the whole transcript is expensive and `section` is a fresh
+  // object on every render — only pay for it while the debug panel is open.
   const transcriptDebugPayload = useMemo(
-    () => JSON.stringify(buildTranscriptDebugPayload(section), null, 2),
-    [section],
+    () => (isDebugPanelOpen ? JSON.stringify(buildTranscriptDebugPayload(section), null, 2) : ''),
+    [isDebugPanelOpen, section],
   )
 
   const {
@@ -497,14 +493,7 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
           <TranscriptRows
             rows={rows}
             activeSessionId={activeSessionId}
-            onOpenSettings={onOpenSettings}
-            onRetryText={onRetryText}
-            onApproveMachinePlan={onApproveMachinePlan}
-            onDiscardMachinePlan={onDiscardMachinePlan}
-            onDismissError={onDismissError}
-            onDismissInterruptedRun={onDismissInterruptedRun}
-            onBranchFromMessage={onBranchFromMessage}
-            onForkFromMessage={onForkFromMessage}
+            handlers={rowHandlers}
             pendingUserQuestionRequest={pendingUserQuestionRequest}
             onResolveUserQuestion={onResolveUserQuestion}
             pendingPlanReviewRequest={pendingPlanReviewRequest}

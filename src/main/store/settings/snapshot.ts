@@ -1,5 +1,6 @@
 import { DEFAULT_SETTINGS, isThemeMode, type Settings } from '@shared/types/settings'
 import {
+  SETTINGS_KEY_DEFAULT_MCP_SERVERS_SEEDED,
   SETTINGS_KEY_DEFAULT_MODEL,
   SETTINGS_KEY_ENABLED_MODELS,
   SETTINGS_KEY_FAVORITE_MODELS,
@@ -14,6 +15,7 @@ import {
 } from './keys'
 import {
   isValidThinkingLevel,
+  resolveDefaultMcpServersSeeded,
   resolveEnabledModels,
   resolveFavoriteModels,
   resolveProjectPath,
@@ -83,6 +85,9 @@ export function buildSettingsSnapshot(storedSettings: Readonly<Record<string, un
       toolPermissionMode: resolveToolPermissionMode(
         getStoredValue(storedSettings, SETTINGS_KEY_TOOL_PERMISSION_MODE),
       ),
+      defaultMcpServersSeeded: resolveDefaultMcpServersSeeded(
+        getStoredValue(storedSettings, SETTINGS_KEY_DEFAULT_MCP_SERVERS_SEEDED),
+      ),
     } satisfies Settings,
   }
 }
@@ -129,6 +134,10 @@ export function buildNextSettingsSnapshot(current: Settings, partial: Partial<Se
     partial.toolPermissionMode !== undefined
       ? resolveToolPermissionMode(partial.toolPermissionMode)
       : current.toolPermissionMode
+  const defaultMcpServersSeeded =
+    partial.defaultMcpServersSeeded !== undefined
+      ? partial.defaultMcpServersSeeded
+      : current.defaultMcpServersSeeded
 
   return {
     ...current,
@@ -143,5 +152,6 @@ export function buildNextSettingsSnapshot(current: Settings, partial: Partial<Se
     projectDisplayNames,
     showCustomExecutionTeam,
     toolPermissionMode,
+    defaultMcpServersSeeded,
   } satisfies Settings
 }

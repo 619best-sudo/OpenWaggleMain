@@ -30,9 +30,16 @@ export interface IpcSendChannelMap {
  * Event channels — one-way, main → renderer
  */
 export interface IpcEventChannelMap {
-  /** Pi-shaped runtime events for the renderer's live transcript runtime */
-  'agent:event': {
-    payload: { sessionId: SessionId; event: AgentTransportEvent }
+  /**
+   * Pi-shaped runtime events for the renderer's live transcript runtime,
+   * coalesced: main buffers transport events for one animation frame and ships
+   * them together so the renderer performs a single state reduction per batch
+   * instead of one per token delta. Order within a batch (and across batches)
+   * is the emit order. This is the ONLY transport-event channel — there is no
+   * per-event variant to subscribe to.
+   */
+  'agent:event-batch': {
+    payload: { sessionId: SessionId; events: AgentTransportEvent[] }
   }
   'terminal:data': {
     payload: { terminalId: string; data: string }
@@ -48,6 +55,18 @@ export interface IpcEventChannelMap {
   }
   'auth:oauth-status': {
     payload: OAuthFlowStatus
+  }
+  /**
+   * Main asking the renderer to mint a new backend session token, because a run
+   * in flight was rejected as unauthorized.
+   *
+   * The refresh token lives only in the renderer's auth store, so main cannot
+   * renew on its own — it can only report that the token it was handed is dead.
+   * The renderer refreshes and pushes the replacement back down through
+   * `auth:set-api-key`, which is the slot the harness reads per request.
+   */
+  'app-auth:refresh-required': {
+    payload: { reason: 'run-unauthorized' }
   }
   'waggle:event': {
     payload: {

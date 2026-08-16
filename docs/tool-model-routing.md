@@ -7,14 +7,14 @@ This document explains how OpenWaggle routes tool execution to different models,
 Use different executor models for different tool categories while keeping the orchestrator on Turing Machine:
 
 - Orchestrator model: `turing-machine/turing-machine`
-- Default tool/script model: `poolside/laguna-xs-2.1`
+- Default tool/script model: `xiaomi/mimo-v2.5`
 - Read model: `bytedance-seed/seed-2.0-mini`
-- Code editing model: `tencent/hy3`
+- Code editing model: `xiaomi/mimo-v2.5` (same as the driver — the orchestrator authors edit payloads; per-call write escalation lives in `turing-models.config.ts`)
 
 The backend Turing Machine API already supports concrete model overrides. The important rule is:
 
 - If OpenWaggle sends `model: 'turing-machine'`, backend falls back to the default OpenRouter model.
-- If OpenWaggle sends a concrete model like `tencent/hy3`, backend forwards that exact model to OpenRouter.
+- If OpenWaggle sends a concrete model like `xiaomi/mimo-v2.5`, backend forwards that exact model to OpenRouter.
 
 ## Current OpenWaggle Flow
 
@@ -27,8 +27,8 @@ OpenWaggle decides the tool execution model in:
 Current routing:
 
 - `read` -> `bytedance-seed/seed-2.0-mini`
-- `edit`, `write`, `patch`, `multiedit` -> `tencent/hy3`
-- everything else, including `bash` and script-like tools -> `poolside/laguna-xs-2.1`
+- `edit`, `write`, `patch`, `multiedit` -> `xiaomi/mimo-v2.5`
+- everything else, including `bash` and script-like tools -> `xiaomi/mimo-v2.5`
 
 ### 2. Guarded tool requests surface the chosen model
 
@@ -64,7 +64,7 @@ This remains useful, but it was not enough by itself for the live path that actu
 
 ## Why Library Patches Were Needed
 
-The app-level routing was correct, but runtime debugging showed the final OpenRouter traffic still used Laguna for every tool call.
+The app-level routing was correct, but runtime debugging showed the final OpenRouter traffic still used the default model for every tool call.
 
 The root problem was that there are multiple handoff points:
 
@@ -136,7 +136,7 @@ What it adds:
 
 Why this matters:
 
-- this is the final guardrail that makes the actual backend-bound request use `read`/`edit`/`bash` models instead of collapsing back to Laguna
+- this is the final guardrail that makes the actual backend-bound request use `read`/`edit`/`bash` models instead of collapsing back to the default model
 
 ## Backend Side
 
@@ -159,7 +159,7 @@ That makes it possible to prove what was actually sent to OpenRouter, not just w
 
 ## Important Failure Mode
 
-If a future regression shows "everything still uses Laguna", do not stop at the permission/request layer. Check all of these in order:
+If a future regression shows "everything still uses the default model", do not stop at the permission/request layer. Check all of these in order:
 
 1. `tool-model-route.ts` chose the expected tool model
 2. `tool-permission-request-extension.ts` attached or queued that model
@@ -187,8 +187,8 @@ When changing this area, verify all of the following:
 
 1. Orchestrator remains `turing-machine/turing-machine`
 2. `read` goes to `bytedance-seed/seed-2.0-mini`
-3. code editing goes to `tencent/hy3`
-4. `bash` or script-style execution goes to `poolside/laguna-xs-2.1`
+3. code editing goes to `xiaomi/mimo-v2.5`
+4. `bash` or script-style execution goes to `xiaomi/mimo-v2.5`
 5. backend `requestBody.model` matches the intended tool model
 6. `package.json` still contains all three tracked patches under `patchedDependencies`
 

@@ -6,7 +6,7 @@ export function McpRouteSurface() {
     <WorkspacePanelSurface
       name="MCP"
       title="MCP"
-      description="MCP support is powered by a Pi extension package. Turing Machine manages the effective config hierarchy and Pi picks up changes on the next turn."
+      description="Connect external tools and services to Turing Machine using the Model Context Protocol."
       contentClassName="px-8 py-6"
       framed={false}
     >

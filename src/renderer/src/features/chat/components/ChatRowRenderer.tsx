@@ -1,11 +1,13 @@
 import { matchBy } from '@diegogbrisa/ts-match'
 import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import { isLightThemeMode } from '@shared/types/settings'
+import { memo } from 'react'
 import { usePreferencesStore } from '@/features/settings/state'
 import { TurnDivider } from '@/features/waggle/components'
 import { cn } from '@/shared/lib/cn'
 import loaderGif from '../../../../../assets/loader.gif'
 import lightLoaderGif from '../../../../../assets/loader-light.gif'
+import { areChatRowsEqual } from '../lib/chat-row-equality'
 import type { ChatRow } from '../lib/types-chat-row'
 import { BranchSummaryCard } from './BranchSummaryCard'
 import { ChatErrorDisplay } from './ChatErrorDisplay'
@@ -27,16 +29,16 @@ interface ChatRowRendererProps {
   onDiscardMachinePlan?: () => Promise<void>
   onBranchFromMessage?: (messageId: string) => void
   onForkFromMessage?: (messageId: string) => void
-  pendingUserQuestionRequest?: import('@shared/types/user-question').PendingUserQuestionRequest | null
-  onResolveUserQuestion?: (
-    resolution: {
-      request: import('@shared/types/user-question').PendingUserQuestionRequest
-      answer: string
-    },
-  ) => Promise<void>
+  pendingUserQuestionRequest?:
+    | import('@shared/types/user-question').PendingUserQuestionRequest
+    | null
+  onResolveUserQuestion?: (resolution: {
+    request: import('@shared/types/user-question').PendingUserQuestionRequest
+    answer: string
+  }) => Promise<void>
 }
 
-export function ChatRowRenderer({
+function ChatRowRendererImpl({
   row,
   sessionId,
   onDismissError,
@@ -184,3 +186,27 @@ export function ChatRowRenderer({
     ))
     .exhaustive()
 }
+
+/**
+ * Rows are rebuilt (as new objects) whenever the transcript recomputes, which
+ * during a run is on every streamed token. Without this memo the whole history
+ * — including markdown parsing and Shiki highlighting for every bubble — is
+ * re-rendered each time. Callers must pass stable callbacks; `ChatTranscript`
+ * does.
+ */
+export const ChatRowRenderer = memo(ChatRowRendererImpl, (previous, next) => {
+  return (
+    previous.sessionId === next.sessionId &&
+    previous.onOpenSettings === next.onOpenSettings &&
+    previous.onRetry === next.onRetry &&
+    previous.onDismissError === next.onDismissError &&
+    previous.onDismissInterruptedRun === next.onDismissInterruptedRun &&
+    previous.onApproveMachinePlan === next.onApproveMachinePlan &&
+    previous.onDiscardMachinePlan === next.onDiscardMachinePlan &&
+    previous.onBranchFromMessage === next.onBranchFromMessage &&
+    previous.onForkFromMessage === next.onForkFromMessage &&
+    previous.pendingUserQuestionRequest === next.pendingUserQuestionRequest &&
+    previous.onResolveUserQuestion === next.onResolveUserQuestion &&
+    areChatRowsEqual(previous.row, next.row)
+  )
+})

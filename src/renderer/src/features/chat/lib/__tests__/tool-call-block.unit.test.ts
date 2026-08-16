@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildFencedCodeMarkdown,
   buildTailPreview,
+  getConcernLinesFromResultCached,
   getResultError,
   getStringArg,
   getToolDiffData,
@@ -46,9 +47,15 @@ describe('tool call block view helpers', () => {
 
   it('infers syntax highlighting language from known path extensions', () => {
     expect(inferLanguageFromPath('src/app.ts')).toBe('typescript')
-    expect(inferLanguageFromPath('script.sh')).toBe('bash')
+    // Canonical shiki ids: `sh`/`bash` are aliases of the `shellscript` grammar.
+    expect(inferLanguageFromPath('script.sh')).toBe('shellscript')
     expect(inferLanguageFromPath('README')).toBeUndefined()
     expect(inferLanguageFromPath(null)).toBeUndefined()
+    // Languages outside the preloaded dozen resolve and load on demand.
+    expect(inferLanguageFromPath('lib/main.dart')).toBe('dart')
+    expect(inferLanguageFromPath('android/app/build.gradle')).toBe('groovy')
+    expect(inferLanguageFromPath('ios/Runner/AppDelegate.swift')).toBe('swift')
+    expect(inferLanguageFromPath('MainActivity.kt')).toBe('kotlin')
   })
 
   it('avoids highlighting excessively large or long outputs', () => {
@@ -97,5 +104,31 @@ describe('tool call block view helpers', () => {
     expect(buildTailPreview('one\ntwo\nthree\nfour\nfive\nsix\nseven')).toBe(
       'two\nthree\nfour\nfive\nsix\nseven',
     )
+  })
+
+  describe('getConcernLinesFromResultCached', () => {
+    // Same value, but a fresh object each time — what a re-running memo would
+    // hand the renderer on every stream event.
+    const concernPayload = () => ({ details: { path: 'src/app.ts', lines: [1, 2, 3] } })
+
+    it('returns the same LineConcern reference for the same result object identity', () => {
+      const payload = concernPayload()
+      expect(getConcernLinesFromResultCached(payload)).toBe(
+        getConcernLinesFromResultCached(payload),
+      )
+    })
+
+    it('returns a fresh reference for a value-equal but distinct result object', () => {
+      const first = getConcernLinesFromResultCached(concernPayload())
+      const second = getConcernLinesFromResultCached(concernPayload())
+      expect(second).toEqual(first)
+      expect(second).not.toBe(first)
+    })
+
+    it('caches null results too without re-deriving (non-concern payload)', () => {
+      const payload = { details: { path: 'src/app.ts' } } // no `lines` → null
+      expect(getConcernLinesFromResultCached(payload)).toBeNull()
+      expect(getConcernLinesFromResultCached(payload)).toBeNull()
+    })
   })
 })

@@ -133,6 +133,36 @@ describe('AssistantMessageBubble', () => {
     expect(screen.getByText('The final answer is 42.')).toBeInTheDocument()
   })
 
+  it('caps the reasoning body at five lines and scrolls past that', () => {
+    render(
+      <AssistantMessageBubble
+        message={createMessage('m1', [
+          { type: 'thinking', content: 'Let me read the memory first.' },
+          {
+            type: 'tool-call',
+            id: 'tool-1',
+            name: 'read',
+            arguments: JSON.stringify({ path: 'src/app.ts' }),
+            state: 'complete',
+          },
+        ])}
+        sessionId={defaultSessionId}
+      />,
+    )
+
+    // Five lines at the body's own line-height, so the cap tracks the type scale
+    // instead of a pixel number. Short reasoning still renders at its natural
+    // height — this only bounds the overlong case.
+    const body = screen.getByText('Let me read the memory first.').closest('.diff-scroll')
+    expect(body).not.toBeNull()
+    expect(body).toHaveStyle({ maxHeight: '7.5em' })
+    expect(body).toHaveClass('overflow-y-auto')
+    // A block that has not hit the cap must not contain overscroll: Chromium
+    // honours `overscroll-behavior: contain` even with nothing to scroll, which
+    // would make hovering a two-line thinking block swallow the wheel.
+    expect(body).not.toHaveClass('overscroll-contain')
+  })
+
   it('renders an inline media preview when a tool-call output carries an image block', () => {
     render(
       <AssistantMessageBubble
@@ -157,6 +187,92 @@ describe('AssistantMessageBubble', () => {
     const img = document.querySelector('img')
     expect(img).not.toBeNull()
     expect(img?.getAttribute('src')).toBe('data:image/png;base64,AAAA')
+  })
+
+  it('auto-expands a media tool block when the image arrives mid-stream (after mount)', () => {
+    // A screenshot/media tool mounts BEFORE its result streams in: the call is
+    // authored (toolcall_start) and starts executing with no `output`, so `media`
+    // is null at mount. The image only arrives on `tool_execution_end`. The
+    // block's default-expanded initializer runs once (at mount, when media is
+    // null), so without auto-expand-on-arrival the image stays hidden behind the
+    // collapsed header until the run completes and the session re-hydrates.
+    const { rerender } = render(
+      <AssistantMessageBubble
+        message={createMessage('m1', [
+          {
+            type: 'tool-call',
+            id: 'tool-shot',
+            name: 'browser_take_screenshot',
+            arguments: '{}',
+            state: 'executing',
+          },
+        ])}
+        sessionId={defaultSessionId}
+      />,
+    )
+
+    // Mounted executing, no result yet: expandable header only, no image.
+    expect(document.querySelector('img')).toBeNull()
+
+    // The image result streams in (tool_execution_end).
+    rerender(
+      <AssistantMessageBubble
+        message={createMessage('m1', [
+          {
+            type: 'tool-call',
+            id: 'tool-shot',
+            name: 'browser_take_screenshot',
+            arguments: '{}',
+            state: 'complete',
+            output: {
+              content: [{ type: 'image', data: 'AAAA', mimeType: 'image/png' }],
+            },
+          },
+        ])}
+        sessionId={defaultSessionId}
+      />,
+    )
+
+    // The block must auto-expand on the image's first appearance — the image is
+    // visible without the user having to click, and without waiting for the run
+    // to complete and re-hydrate.
+    const img = document.querySelector('img')
+    expect(img).not.toBeNull()
+    expect(img?.getAttribute('src')).toBe('data:image/png;base64,AAAA')
+  })
+
+  it('previews an assets_generator result (file-reference block) instead of only its text', () => {
+    // assets_generator returns the generated asset by reference, not inline:
+    //   { content: [{ type: 'file', uri: <path>, mimeType }], output: <text> }
+    // Previously this block type was unrecognized, so the tool showed only its
+    // text output ("Generated image → <path>") with no preview. It must now be
+    // recognized as media and render a preview frame + IMAGE action label.
+    render(
+      <AssistantMessageBubble
+        message={createMessage('m1', [
+          {
+            type: 'tool-call',
+            id: 'asset-1',
+            name: 'assets_generator',
+            arguments: '{"kind":"image","prompt":"hero"}',
+            state: 'complete',
+            output: {
+              output: 'Generated image → assets/hero.png (12345 bytes).',
+              details: { uri: 'assets/hero.png', mimeType: 'image/png', size: 12345 },
+              content: [{ type: 'file', uri: 'assets/hero.png', mimeType: 'image/png' }],
+            },
+          },
+        ])}
+        sessionId={defaultSessionId}
+      />,
+    )
+
+    // Recognized as an image → the IMAGE action label shows on the header, and
+    // the media preview frame renders (the path is IPC-resolved at display time;
+    // here it surfaces the loading skeleton while it resolves).
+    expect(screen.getByText('IMAGE')).toBeInTheDocument()
+    const skeleton = document.querySelector('.animate-pulse')
+    expect(skeleton).not.toBeNull()
   })
 
   it('keeps non-media tools header-only with no preview', () => {
@@ -230,6 +346,66 @@ describe('AssistantMessageBubble', () => {
     expect(screen.queryByText('PROJECT_MEMORY')).not.toBeInTheDocument()
   })
 
+  /**
+   * The agent is told to prefer the OBJECT form of `options`
+   * (`{label, description, recommended}`) — a bare label makes the user do the
+   * thinking the picker existed to prevent. This renderer filtered to
+   * `typeof === 'string'`, so every richly-described question replayed with an
+   * EMPTY options list: the live card showed the trade-offs and the transcript
+   * showed nothing, which reads as "the agent asked without offering anything".
+   */
+  it('renders object-form ask_user_question options, not just bare strings', () => {
+    render(
+      <AssistantMessageBubble
+        message={createMessage('m1', [
+          {
+            type: 'tool-call',
+            id: 'tool-ask',
+            name: 'ask_user_question',
+            arguments: JSON.stringify({
+              question: 'Which datastore?',
+              options: [
+                { label: 'Postgres', description: 'Migrations included', recommended: true },
+                { label: 'SQLite', description: 'Zero setup' },
+              ],
+            }),
+            // Still waiting on the user — the options only render before an
+            // answer lands.
+            state: 'complete',
+          },
+        ])}
+        sessionId={defaultSessionId}
+      />,
+    )
+
+    expect(screen.getAllByText('Postgres').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('SQLite')).toBeInTheDocument()
+    expect(screen.getByText(/Recommended/)).toBeInTheDocument()
+  })
+
+  it('renders a mixed options array without dropping either form', () => {
+    render(
+      <AssistantMessageBubble
+        message={createMessage('m1', [
+          {
+            type: 'tool-call',
+            id: 'tool-ask',
+            name: 'ask_user_question',
+            arguments: JSON.stringify({
+              question: 'Which targets?',
+              options: ['web', { label: 'ios', description: 'Needs a mac runner' }],
+            }),
+            state: 'complete',
+          },
+        ])}
+        sessionId={defaultSessionId}
+      />,
+    )
+
+    expect(screen.getAllByText('web').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('ios')).toBeInTheDocument()
+  })
+
   it('renders an expandable ask_user_question body with the question, options, and selected answer', () => {
     render(
       <AssistantMessageBubble
@@ -242,23 +418,35 @@ describe('AssistantMessageBubble', () => {
               question: 'Which framework should we use?',
               options: ['React', 'Vue', 'Svelte'],
             }),
-            // The user's answer comes back as the tool result text.
+            // The user's answer comes back as the tool result text, wrapped in
+            // the envelope the harness writes for the model.
             state: 'complete',
-            output: { content: [{ type: 'text', text: 'React' }] },
+            output: {
+              content: [
+                {
+                  type: 'text',
+                  text: [
+                    'User answered: React',
+                    '(clarification for: Which framework should we use?)',
+                    'Reason this was needed: The user did not name a framework.',
+                  ].join('\n'),
+                },
+              ],
+            },
           },
         ])}
         sessionId={defaultSessionId}
       />,
     )
 
-    // The question appears as the title (truncated) and in the body.
-    expect(screen.getAllByText('Which framework should we use?').length).toBeGreaterThanOrEqual(1)
-    // Options render, with the selected one highlighted.
-    expect(screen.getByText('Vue')).toBeInTheDocument()
-    expect(screen.getByText('Svelte')).toBeInTheDocument()
-    // "React" appears both as an option and as the submitted answer.
-    expect(screen.getAllByText('React').length).toBeGreaterThanOrEqual(1)
-    // The submitted answer is shown.
-    expect(screen.getByText('Your answer')).toBeInTheDocument()
+    // The question is the header, and is not restated in the body.
+    expect(screen.getAllByText('Which framework should we use?')).toHaveLength(1)
+    // Only the answer survives — the model-facing envelope is stripped.
+    expect(screen.getByText('React')).toBeInTheDocument()
+    expect(screen.queryByText(/clarification for/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Reason this was needed/)).not.toBeInTheDocument()
+    // Once answered, the unchosen options are noise and drop out.
+    expect(screen.queryByText('Vue')).not.toBeInTheDocument()
+    expect(screen.queryByText('Svelte')).not.toBeInTheDocument()
   })
 })

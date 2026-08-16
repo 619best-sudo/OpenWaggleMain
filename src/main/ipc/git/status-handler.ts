@@ -14,7 +14,7 @@ export function registerGitStatusHandlers() {
     Effect.gen(function* () {
       const projectPath = decodeUnknownOrThrow(projectPathSchema, rawPath)
       const cached = getCachedGitStatus(projectPath, GIT_CACHE.STATUS_TTL_MS)
-      if (cached) return cached
+      if (cached !== undefined) return cached
 
       const result = yield* Effect.promise(() => getGitStatus(projectPath))
       setCachedGitStatus(projectPath, result)

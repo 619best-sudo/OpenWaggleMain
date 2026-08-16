@@ -15,9 +15,9 @@ import { useChatSendWorkflow } from '../useChatSendWorkflow'
 import { useComposerSection } from '../useComposerSection'
 import { useSessionCopyWorkflow } from '../useSessionCopyWorkflow'
 
-type AgentEventPayload = IpcEventChannelMap['agent:event']['payload']
+type AgentEventBatchPayload = IpcEventChannelMap['agent:event-batch']['payload']
 type RunCompletedPayload = IpcEventChannelMap['agent:run-completed']['payload']
-type AgentEventHandler = (payload: AgentEventPayload) => void
+type AgentEventHandler = (payload: AgentEventBatchPayload) => void
 type RunCompletedHandler = (payload: RunCompletedPayload) => void
 
 const apiMock = vi.hoisted(() => {
@@ -37,7 +37,7 @@ const apiMock = vi.hoisted(() => {
     cancelWaggle: vi.fn(),
     cloneSessionToNew: vi.fn(),
     forkSessionToNew: vi.fn(),
-    onAgentEvent: vi.fn((handler: AgentEventHandler) => {
+    onAgentEventBatch: vi.fn((handler: AgentEventHandler) => {
       agentEventHandler = handler
       return agentEventUnsubscribe
     }),
@@ -61,13 +61,14 @@ vi.mock('@/shared/lib/ipc', () => ({
     compactSession: apiMock.compactSession,
     forkSessionToNew: apiMock.forkSessionToNew,
     listActiveRuns: apiMock.listActiveRuns,
-    onAgentEvent: apiMock.onAgentEvent,
+    onAgentEventBatch: apiMock.onAgentEventBatch,
     onRunCompleted: apiMock.onRunCompleted,
   },
 }))
 
 vi.mock('@/features/auth/state/app-auth-store', () => ({
-  refreshUsageSnapshotsForAuthenticatedUser: authStoreMock.refreshUsageSnapshotsForAuthenticatedUser,
+  refreshUsageSnapshotsForAuthenticatedUser:
+    authStoreMock.refreshUsageSnapshotsForAuthenticatedUser,
 }))
 
 const SESSION_ID = SessionId('session-1')
@@ -204,7 +205,7 @@ describe('chat orchestration hooks', () => {
     apiMock.cancelTeam.mockReset()
     apiMock.cloneSessionToNew.mockReset()
     apiMock.forkSessionToNew.mockReset()
-    apiMock.onAgentEvent.mockClear()
+    apiMock.onAgentEventBatch.mockClear()
     apiMock.onRunCompleted.mockClear()
     apiMock.agentEventUnsubscribe.mockClear()
     apiMock.runCompletedUnsubscribe.mockClear()
@@ -212,6 +213,7 @@ describe('chat orchestration hooks', () => {
     useBackgroundRunStore.setState({
       activeRunIds: new Set(),
       renderSnapshotsBySessionId: new Map(),
+      livePipelineSessions: new Set(),
     })
     useBranchSummaryStore.getState().clearPrompt()
     useChatStore.setState({
@@ -233,17 +235,26 @@ describe('chat orchestration hooks', () => {
     )
     useBackgroundRunStore.getState().setRunRenderMessages(SESSION_ID, [])
 
+    // A run ends ONLY on `agent:run-completed` — never on a transport `agent_end`.
+    // Machine mode runs a sequence of task runs, each emitting its own
+    // `agent_start`/`agent_end`; an intermediate `agent_end` must NOT tear down
+    // background-run tracking, or hydration treats the session as idle mid-run
+    // and discards streamed tool rows that have not been persisted yet.
     requireAgentEventHandler()({
       sessionId: SESSION_ID,
-      event: { type: 'agent_end', runId: 'run-1', reason: 'stop' },
+      events: [
+        { type: 'agent_start', runId: 'run-1' },
+        { type: 'agent_end', runId: 'run-1', reason: 'stop' },
+      ],
     })
-    expect(useBackgroundRunStore.getState().hasActiveRun(SESSION_ID)).toBe(false)
+    expect(useBackgroundRunStore.getState().hasActiveRun(SESSION_ID)).toBe(true)
 
     requireRunCompletedHandler()({ sessionId: SESSION_ID })
     await waitFor(() => expect(refreshSession).toHaveBeenCalledWith(SESSION_ID))
     await waitFor(() =>
       expect(authStoreMock.refreshUsageSnapshotsForAuthenticatedUser).toHaveBeenCalledOnce(),
     )
+    expect(useBackgroundRunStore.getState().hasActiveRun(SESSION_ID)).toBe(false)
     expect(useBackgroundRunStore.getState().getRunRenderSnapshot(SESSION_ID)).not.toBeNull()
 
     unmount()

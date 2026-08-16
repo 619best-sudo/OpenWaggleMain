@@ -1,8 +1,8 @@
+import { SessionId, SupportedModelId } from '@shared/types/brand'
+import * as Effect from 'effect/Effect'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AgentKernelRunResult } from '../../../ports/agent-kernel-service'
 import { AgentKernelService } from '../../../ports/agent-kernel-service'
-import * as Effect from 'effect/Effect'
-import { SessionId, SupportedModelId } from '@shared/types/brand'
-import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const runPiSessionMock = vi.fn<(input: unknown) => Promise<AgentKernelRunResult>>()
 const runPiWaggleMock = vi.fn<(input: unknown) => Promise<AgentKernelRunResult>>()

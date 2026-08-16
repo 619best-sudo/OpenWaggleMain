@@ -1,3 +1,13 @@
+/**
+ * FROZEN HISTORY, despite the name: these statements are spliced into
+ * migration 11, which has already shipped. Editing them changes what a fresh
+ * database gets at step 11 while an existing one keeps the old shape, and the
+ * two then disagree for every later migration. Column added after migration 11
+ * (e.g. `sessions.message_count`, added by 12) must NOT appear here — a fresh
+ * DB would already have it and 12's `ALTER TABLE ... ADD COLUMN` would fail
+ * with "duplicate column name", taking down boot. Add new columns as a new
+ * migration only.
+ */
 export const CURRENT_SESSION_SCHEMA_STATEMENTS = [
   `
   CREATE TABLE IF NOT EXISTS sessions (

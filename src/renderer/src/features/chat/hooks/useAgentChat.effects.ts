@@ -4,9 +4,10 @@ import type { IpcEventPayload } from '@shared/types/ipc'
 import type { SessionDetail } from '@shared/types/session'
 import { useEffect } from 'react'
 import { api } from '@/shared/lib/ipc'
+import { useBackgroundRunStore } from '@/features/chat/state/background-run-store'
 import { sessionToUIMessages } from '../lib/useAgentChat.utils'
 import { hydrateSessionMessages, resetMissingSessionHydration } from './useAgentChat.hydration'
-import { handleAgentStreamPayload } from './useAgentChat.stream-events'
+import { handleAgentStreamPayloadBatch } from './useAgentChat.stream-events'
 import type {
   AgentRunActions,
   AgentStreamEventContext,
@@ -150,8 +151,14 @@ export function useAgentEventEffects(params: UseAgentEventEffectsParams) {
     }
 
     const subscribedSessionId = sessionId
-    const unsubscribeStream = api.onAgentEvent((payload) => {
-      handleAgentStreamPayload(payload, { ...streamEventContext, subscribedSessionId })
+    // Claim reduction ownership: the background-run monitor must not re-reduce
+    // this session's events in parallel (the old double reduction was two store
+    // commits + two transcript copies per token). Released on unmount so a run
+    // that outlives the view falls back to the monitor.
+    useBackgroundRunStore.getState().markLivePipelineSession(subscribedSessionId)
+
+    const unsubscribeStream = api.onAgentEventBatch((payload) => {
+      handleAgentStreamPayloadBatch(payload, { ...streamEventContext, subscribedSessionId })
     })
     const unsubscribeCompleted = api.onRunCompleted((payload) => {
       handleRunCompletedPayload(payload, { ...runCompletionContext, subscribedSessionId })
@@ -160,6 +167,7 @@ export function useAgentEventEffects(params: UseAgentEventEffectsParams) {
     return () => {
       unsubscribeStream()
       unsubscribeCompleted()
+      useBackgroundRunStore.getState().unmarkLivePipelineSession(subscribedSessionId)
     }
   }, [sessionId, streamEventContext, runCompletionContext])
 

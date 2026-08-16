@@ -1,0 +1,11 @@
+- generic [active] [ref=e1] [box=0,0,1200,672]:
+  - generic [box=600,327,0,19]:
+    - img [box=600,342,0,0]:
+      - generic [ref=e4] [box=644,356,38,35]: Mercury
+      - generic [ref=e8] [box=504,260,36,37]: Venus
+      - generic [ref=e12] [box=466,379,34,42]: Earth
+      - generic [ref=e19] [box=553,486,28,25]: Mars
+      - generic [ref=e23] [box=685,510,51,45]: Jupiter
+      - generic [ref=e27] [box=781,508,48,49]: Saturn
+      - generic [ref=e33] [box=868,490,36,35]: Uranus
+      - generic [ref=e37] [box=930,473,40,35]: Neptune

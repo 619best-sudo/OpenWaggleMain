@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realistic Solar System Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+ 
+        body {
+            background: linear-gradient(135deg, #0a0a2a 0%, #1a1a3a 50%, #2a1a4a 100%);
+            overflow: hidden;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+ 
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            z-index: 100;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+ 
+        .header h1 {
+            font-size: 2.5rem;
+            letter-spacing: 3px;
+            background: linear-gradient(90deg, #ffd700, #ff8c00, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+ 
+        .header p {
+            font-size: 1rem;
+            color: #a0a0ff;
+            margin-top: 5px;
+        }
+ 
+        .solar-system-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+ 
+        .solar-system {
+            position: relative;
+            width: 1000px;
+            height: 1000px;
+            border-radius: 50%;
+            box-shadow: 0 0 100px rgba(255, 180, 0, 0.3);
+            overflow: visible;
+        }
+ 
+        .sun {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120px;
+            height: 120px;
+            margin-top: -60px;
+            margin-left: -60px;
+            z-index: 10;
+            animation: sunPulse 8s infinite ease-in-out;
+        }
+ 
+        @keyframes sunPulse {
+            0%, 100% {
+                filter: radial-gradient(circle, #ffeb3b 0%, #ffa726 70%, #ff5722 100%);
+                box-shadow: 0 0 30px #ffeb3b, 0 0 60px #ff9800, 0 0 90px #ff5722;
+            }
+            50% {
+                filter: radial-gradient(circle, #fff176 0%, #ffca28 70%, #ff9800 100%);
+                box-shadow: 0 0 40px #fff176, 0 0 70px #ffca28, 0 0 100px #ff9800;
+            }
+        }
+ 
+        .planet-orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: orbitSpin infinite linear;
+        }
+ 
+        /* Mercury */
+        .orbit-mercury {
+            width: 120px;
+            height: 120px;
+            animation-duration: 87s;
+        }
+ 
+        .planet-mercury {
+            position: absolute;
+            top: 50%;
+            left: calc(50% + 120px);
+            width: 16px;
+            height: 16px;
+            margin-top: -8px;
+            margin-left: -8px;
+            border-radius: 50% 45% 45% 50%;
+            background: #a9a9a9;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5), 0 0 10px rgba(150, 150, 150, 0.5);
+            animation: mercurySpin 87s infinite linear;
+            transform-origin: center;
+        }
+ 
+        /* Venus */
+        .orbit-venus {
+            width: 220px;
+            height: 220px;
+            animation-duration: 225s;
+        }
+ 
+        .planet-venus {
+            position: absolute;
+            top: 50%;
+            left: calc(50% + 220px);
+            width: 28px;
+            height: 28px;
+            margin-top: -14px;
+            margin-left: -14px;
+            border-radius: 50% 50% 45% 45%;
+            background: radial-gradient(circle at 30% 30%, #c2b280 0%, #8b7355 70%, #5d4e37 100%);
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6), 0 0 15px rgba(139, 115, 85, 0.4);
+            animation: venusSpin 225s infinite linear;
+            transform-origin: center;
+        }
+ 
+        /* Earth */
+        .orbit-earth {
+            width: 320px;
+            height: 300px;
+            animation-duration: 365s;
+        }
+ 
+        .planet-earth {
+            position: absolute;
+            top: 50%;
+            left: calc(50% + 320px);
+            width: 30px;
+            height: 30px;
+            margin-top: -15px;
+            margin-left: -15px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 40%, #2e8b57 0%, #3cb371 50%, #228b22 70%, #006400 100%);
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5), 0 0 15px rgba(65, 105, 225, 0.4);
+            animation: earthSpin 365s infinite linear;
+            transform-origin: center;
+            z-index: 5;
+        }
+ 
+        .earth-ocean {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 40%, rgba(25, 25, 112, 0.3) 70%, transparent 100%);
+            animation: earthOcean 24s infinite linear;
+            transform-origin: center;
+        }
+ 
+        .earth-cloud {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.7) 0%, rgba(200, 200, 200, 0.4) 50%, transparent 80%);
+            filter: blur(4px);
+            animation: earthCloud 24s infinite linear;
+            transform-origin: center;
+        }
+ 
+        /* Moon */
+        .orbit-moon {
+            width: 30px;
+            height: 30px;
+            animation-duration: 27s;
+            transform: translateX(-320px);
+        }
+ 
+        .planet-moon {
+            position: absolute;
+            top: 50%;
+            left: calc(50% + 30px);
+            width: 8px;
+            height: 8px;
+            margin-top: -4px;
+            margin-left: -4px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #d3d3d3 0%, #a9a9a9 70%, #696969 100%);
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+            animation: moonSpin 27s infinite linear;
+            transform-origin: center;
+            z-index: 6;
+        }
+ 
+        /* Mars */
+        .orbit-mars {
+            width: 420px;
+            height: 400px;
+            animation-duration: 687s;
+        }
+ 
+        .planet-mars {
+            position: absolute;
+            top: 50%;
+            left: calc(50% + 420px);
+            width: 22px;
+            height: 22px;
+            margin-top: -11px;
+            margin-left: -11px;
+            border-radius: 50% 50% 48% 48%;
+            background: radial-gradient(circle at 30% 40%, #cd853f 0%, #a0522d 50%, #8b4513 80%, #654321 100%);
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5), 0 0 12px rgba(139, 69, 19, 0.4);
+            animation: marsSpin 687s infinite linear;
+            transform-origin: center;
+        }
+ 
+        .planet-mars::before {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #8b0000;
+            border-radius: 50%;
+            top: 8px;
+            left: 14px;
+            animation: marsSpot 687s infinite linear;
+        }
+ 
+        /* Jupiter */
+        .orbit-jupiter {
+            width: 560px;
+            height: 560px;
+            animation-duration: 4332s;
+        }
+ 
+        .planet-jupiter {
+            position: absolute;
+            top: 50%;
+            left: calc(50% + 560px);
+            width: 80px;
+            height: 76px;
+            margin-top: -38px;
+            margin-left: -40px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #d2b48c 0%, #cd853f 30%, #deb887 70%, #d2b48c 100%);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6), 0 0 30px rgba(210, 180, 140, 0.4);
+            animation: jupiterSpin 4332s infinite linear;
+            transform-origin: center;
+            z-index: 3;
+        }
+ 
+        .planet-jupiter::before {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 76px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.3) 0%, transparent 30%),
+                        radial-gradient(circle at 55% 35%, rgba(0, 0, 0, 0.2) 0%, transparent 30%),
+                        radial-gradient(circle at 40% 60%, rgba(255, 200, 150, 0.3) 0%, transparent 30%),
+                        radial-gradient(circle at 75% 45%, rgba(180, 140, 100, 0.2) 0%, transparent 30%);
+            animation: jupiterBands 4332s infinite linear;
+        }
+ 
+        /* Saturn */
+        .orbit-saturn {
+            width: 700px;
+            height: 700px;
+            animation-duration: 10759s;
+        }
+ 
+        .planet-saturn {
+            position: absolute;
+            top: 50%;
+            left: calc(50% + 700px);
+            width: 92px;
+            height: 82px;
+            margin-top: -41px;
+            margin-left: -46px;
+            border-radius: 50% 50% 48% 48%;
+            background: radial-gradient(circle at 40% 50%, #f4e4cf 0%, #d2b48c 50%, #cd853f 80%, #d2b48c 100%);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 0 30px rgba(210, 180, 140, 0.4);
+            animation: saturnSpin 10759s infinite linear;
+            transform-origin: center;
+            z-index: 2;
+        }
+ 
+        .planet-saturn::before {
+            content: '';
+            position: absolute;
+            width: 110px;
+            height: 95px;
+            border-radius: 50% 50% 45% 45%;
+            border: 8px solid radial-gradient(circle at 50% 50%, #f4e4cf 0%, #d2b48c 100%);
+            border-top-color: rgba(244, 228, 207, 0);
+            border-bottom-color: rgba(210, 180, 140, 0);
+            animation: saturnRingTilt 10759s infinite linear;
+        }
+ 
+        .planet-saturn::after {
+            content: '';
+            position: absolute;
+            width: 110px;
+            height: 95px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.5) 0%, rgba(210, 180, 140, 0.3) 50%, transparent 80%),
+                        radial-gradient(circle at 75% 75%, rgba(240, 240, 240, 0.4) 0%, rgba(190, 180, 150, 0.3) 50%, transparent 80%);
+            transform: rotate(27deg);
+            animation: saturnRingParticles 10759s infinite linear;
+        }
+ 
+        /* Uranus */
+        .orbit-uranus {
+            width: 840px;
+            height: 840px;
+            animation-duration: 30687s;
+        }
+ 
+        .planet-uranus {
+            position: absolute;
+            top: 50%;
+            left: calc(50% + 840px);
+            width: 52px;
+            height: 52px;
+            margin-top: -26px;
+            margin-left: -26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #b0e0e6 0%, #87ceeb 50%, #5f9ea0 100%);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(135, 206, 235, 0.4);
+            animation: uranusSpin 30687s infinite linear;
+            transform-origin: center;
+            z-index: 4;
+        }
+ 
+        .planet-uranus::before {
+            content: '';
+            position: absolute;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg at 30% 40%, rgba(255, 255, 255, 0.4) 0deg, rgba(173, 216, 230, 0.3) 60deg, rgba(135, 206, 235, 0.3) 120deg);
+            animation: uranusClouds 30687s infinite linear;
+        }
+ 
+        /* Neptune */
+        .orbit-neptune {
+            width: 980px;
+            height: 980px;
+            animation-duration: 60190s;
+        }
+ 
+        .planet-neptune {
+            position: absolute;
+            top: 50%;
+            left: calc(50% + 980px);
+            width: 48px;
+            height: 48px;
+            margin-top: -24px;
+            margin-left: -24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4169e1 0%, #1e90ff 50%, #5f9ea0 100%);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(30, 144, 255, 0.4);
+            animation: neptuneSpin 60190s infinite linear;
+            transform-origin: center;
+            z-index: 3;
+        }
+ 
+        .planet-neptune::before {
+            content: '';
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 25% 35%, rgba(255, 255, 255, 0.3) 0%, rgba(135, 206, 235, 0.2) 40%, transparent 70%),
+                        conic-gradient(from 90deg at 40% 40%, rgba(173, 216, 230, 0.4) 0deg, rgba(65, 105, 225, 0.3) 90deg, rgba(135, 206, 235, 0.2) 180deg);
+            animation: neptuneClouds 60190s infinite linear;
+        }
+ 
+        /* Animation Keyframes */
+        @keyframes orbitSpin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+ 
+        @keyframes mercurySpin {
+            0% { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+        }
+ 
+        @keyframes venusSpin {
+            0% { transform: rotate(0deg) translateX(220px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(220px) rotate(-360deg); }
+        }
+ 
+        @keyframes earthSpin {
+            0% { transform: rotate(0deg) translateX(320px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(320px) rotate(-360deg); }
+        }
+ 
+        @keyframes earthOcean {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+ 
+        @keyframes earthCloud {
+            0% { transform: rotate(1.2deg); }
+            100% { transform: rotate(361.2deg); }
+        }
+ 
+        @keyframes moonSpin {
+            0% { transform: rotate(0deg) translateX(-30px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(-30px) rotate(-360deg); }
+        }
+ 
+        @keyframes marsSpin {
+            0% { transform: rotate(0deg) translateX(420px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(420px) rotate(-360deg); }
+        }
+ 
+        @keyframes marsSpot {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(2px, -1px); }
+        }
+ 
+        @keyframes jupiterSpin {
+            0% { transform: rotate(0deg) translateX(560px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(560px) rotate(-360deg); }
+        }
+ 
+        @keyframes jupiterBands {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+ 
+        @keyframes saturnSpin {
+            0% { transform: rotate(0deg) translateX(700px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(700px) rotate(-360deg); }
+        }
+ 
+        @keyframes saturnRingTilt {
+            0% { transform: rotate(27deg) scale(1, 0.85); }
+            100% { transform: rotate(267deg) scale(1, 0.85); }
+        }
+ 
+        @keyframes saturnRingParticles {
+            0% { transform: rotate(90deg); }
+            100% { transform: rotate(450deg); }
+        }
+ 
+        @keyframes uranusSpin {
+            0% { transform: rotate(0deg) translateX(840px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(840px) rotate(-360deg); }
+        }
+ 
+        @keyframes uranusClouds {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+ 
+        @keyframes neptuneSpin {
+            0% { transform: rotate(0deg) translateX(980px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(980px) rotate(-360deg); }
+        }
+ 
+        @keyframes neptuneClouds {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+ 
+        /* Parallax Effect */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+ 
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration, 3s) infinite ease-in-out;
+        }
+ 
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.5); }
+            50% { opacity: 0.8; transform: scale(1); }
+        }
+ 
+        .info-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+        }
+ 
+        .info-panel h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+ 
+        .planet-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+ 
+        .planet-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+ 
+        .planet-name {
+            color: #fff;
+            font-weight: bold;
+        }
+ 
+        .planet-distance {
+            color: #a0a0a0;
+            font-size: 0.85rem;
+        }
+ 
+        @media (max-width: 768px) {
+            .solar-system {
+                width: 500px;
+                height: 500px;
+            }
+ 
+            .orbit-mercury { width: 80px; height: 80px; }
+            .orbit-venus { width: 140px; height: 140px; }
+            .orbit-earth { width: 210px; height: 200px; }
+            .orbit-mars { width: 280px; height: 265px; }
+            .orbit-jupiter { width: 370px; height: 370px; }
+            .orbit-saturn { width: 470px; height: 470px; }
+            .orbit-uranus { width: 560px; height: 560px; }
+            .orbit-neptune { width: 650px; height: 650px; }
+ 
+            .planet-sun { width: 80px; height: 80px; }
+            .header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌌 Solar System</h1>
+        <p>Realistic SVG Animation</p>
+    </div>
+ 
+    <div class="stars" id="stars"></div>
+ 
+    <div class="solar-system-container">
+        <div class="solar-system">
+            <!-- Sun -->
+            <svg class="sun" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="sunGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                        <stop offset="0%" stopColor="#fff176" />
+                        <stop offset="30%" stopColor="#ffeb3b" />
+                        <stop offset="50%" stopColor="#ffd700" />
+                        <stop offset="70%" stopColor="#ffa726" />
+                        <stop offset="100%" stopColor="#ff5722" />
+                    </radialGradient>
+                    <filter id="sunGlow">
+                        <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                        <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+                <circle cx="50" cy="50" r="45" fill="url(#sunGradient)" />
+                <circle cx="50" cy="50" r="25" fill="rgba(255, 255, 255, 0.3)" />
+                <g filter="url(#sunGlow)">
+                    <circle cx="50" cy="50" r="45" fill="none" stroke="#fff176" stroke-width="3" />
+                    <circle cx="50" cy="50" r="50" fill="none" stroke="#ffeb3b" stroke-width="1" opacity="0.5" />
+                </g>
+                <path d="M 50 5 L 57 25 L 78 25 L 62 35 L 68 55 L 50 45 L 32 55 L 38 35 L 22 25 L 43 25 Z" fill="rgba(255, 255, 255, 0.4)" opacity="0.7" />
+            </svg>
+ 
+            <!-- Mercury Orbit and Planet -->
+            <div class="orbit-mercury orbit-mercury">
+                <svg class="planet-mercury" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="mercuryGradient" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stopColor="#d3d3d3" />
+                            <stop offset="50%" stopColor="#a9a9a9" />
+                            <stop offset="100%" stopColor="#808080" />
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="16" cy="16" rx="15" ry="14" fill="url(#mercuryGradient)" />
+                    <ellipse cx="16" cy="16" rx="12" ry="11" fill="rgba(0, 0, 0, 0.3)" />
+                </svg>
+            </div>
+ 
+            <!-- Venus Orbit and Planet -->
+            <div class="orbit-venus">
+                <svg class="planet-venus" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="venusGradient" cx="30%" cy="30%" r="70%">
+                            <stop offset="0%" stopColor="#f5deb3" />
+                            <stop offset="40%" stopColor="#d2b48c" />
+                            <stop offset="70%" stopColor="#b8860b" />
+                            <stop offset="100%" stopColor="#8b4513" />
+                        </radialGradient>
+                        <filter id="venusGlow">
+                            <feTurbulence type="turbulence" baseFrequency="0.01" numOctaves="2" result="turbulence" />
+                            <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="1" />
+                        </filter>
+                    </defs>
+                    <ellipse cx="20" cy="20" rx="19" ry="18" fill="url(#venusGradient)" filter="url(#venusGlow)" />
+                    <path d="M 20 5 Q 28 15 Q 20 25 Q 12 15 Z" fill="rgba(245, 222, 179, 0.4)" />
+                    <ellipse cx="18" cy="18" rx="10" ry="8" fill="rgba(139, 115, 85, 0.3)" />
+                </svg>
+            </div>
+ 
+            <!-- Earth Orbit and Planet -->
+            <div class="orbit-earth">
+                <svg class="planet-earth" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="earthGradient" cx="35%" cy="40%" r="65%">
+                            <stop offset="0%" stopColor="#3cb371" />
+                            <stop offset="40%" stopColor="#2e8b57" />
+                            <stop offset="70%" stopColor="#006400" />
+                            <stop offset="100%" stopColor="#004000" />
+                        </radialGradient>
+                        <linearGradient id="earthOcean" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="rgba(25, 25, 112, 0.5)" />
+                            <stop offset="50%" stopColor="rgba(25, 25, 112, 0.3)" />
+                            <stop offset="100%" stopColor="rgba(25, 25, 112, 0.5)" />
+                        </linearGradient>
+                        <radialGradient id="earthAtmosphere" cx="50%" cy="50%" r="55%">
+                            <stop offset="80%" stopColor="rgba(65, 105, 225, 0.3)" />
+                            <stop offset="100%" stopColor="rgba(65, 105, 225, 0)" />
+                        </radialGradient>
+                    </defs>
+                    <circle cx="25" cy="25" r="24" fill="url(#earthGradient)" />
+                    <circle cx="25" cy="25" r="14" fill="url(#earthOcean)" />
+                    <path d="M 25 25 C 35 25 35 35 25 35 C 15 35 15 25 25 25 Z" fill="rgba(0, 0, 128, 0.4)" />
+                    <circle cx="28" cy="22" r="2" fill="#ff6b6b" />
+                    <circle cx="38" cy="28" r="1.5" fill="#cccccc" opacity="0.8" />
+                    <circle cx="22" cy="32" r="1" fill="#ff6b6b" />
+                    <circle cx="35" cy="32" r="1.2" fill="#cccccc" opacity="0.6" />
+                    <circle cx="25" cy="38" r="0.8" fill="#ff6b6b" />
+                    <circle cx="25" cy="25" r="26" fill="url(#earthAtmosphere)" />
+                </svg>
+            </div>
+ 
+            <!-- Moon Orbit and Moon -->
+            <div class="orbit-moon" style="transform: translate(-50%, -50%);">
+                <svg class="planet-moon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="moonGradient" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stopColor="#f0f0f0" />
+                            <stop offset="50%" stopColor="#d3d3d3" />
+                            <stop offset="100%" stopColor="#a9a9a9" />
+                        </radialGradient>
+                    </defs>
+                    <circle cx="8" cy="8" r="7.5" fill="url(#moonGradient)" />
+                    <circle cx="8" cy="8" r="4" fill="rgba(0, 0, 0, 0.2)" />
+                    <path d="M 4 8 Q 8 5 12 8 Q 8 11 4 8 Z" fill="rgba(0, 0, 0, 0.3)" />
+                </svg>
+            </div>
+ 
+            <!-- Mars Orbit and Planet -->
+            <div class="orbit-mars">
+                <svg class="planet-mars" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="marsGradient" cx="30%" cy="40%" r="70%">
+                            <stop offset="0%" stopColor="#cd853f" />
+                            <stop offset="40%" stopColor="#a0522d" />
+                            <stop offset="70%" stopColor="#8b4513" />
+                            <stop offset="100%" stopColor="#654321" />
+                        </radialGradient>
+                        <filter id="marsDust">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" />
+                            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
+                        </filter>
+                    </defs>
+                    <ellipse cx="22" cy="22" rx="21" ry="19" fill="url(#marsGradient)" filter="url(#marsDust)" />
+                    <path d="M 22 15 Q 28 20 Q 22 28 Q 16 20 Z" fill="rgba(139, 0, 0, 0.4)" />
+                    <circle cx="22" cy="22" r="12" fill="rgba(139, 69, 19, 0.3)" />
+                </svg>
+            </div>
+ 
+            <!-- Jupiter Orbit and Planet -->
+            <div class="orbit-jupiter">
+                <svg class="planet-jupiter" viewBox="0 0 120 110" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="jupiterGradient" cx="30%" cy="40%" r="70%">
+                            <stop offset="0%" stopColor="#d2b48c" />
+                            <stop offset="30%" stopColor="#cd853f" />
+                            <stop offset="60%" stopColor="#deb887" />
+                            <stop offset="80%" stopColor="#d2b48c" />
+                            <stop offset="100%" stopColor="#d2b48c" />
+                        </radialGradient>
+                        <pattern id="jupiterBands" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="20" height="10" fill="rgba(210, 180, 140, 0.3)" />
+                            <rect x="0" y="10" width="20" height="10" fill="rgba(139, 115, 85, 0.4)" />
+                        </pattern>
+                    </defs>
+                    <circle cx="60" cy="55" r="55" fill="url(#jupiterGradient)" />
+                    <circle cx="60" cy="55" r="45" fill="url(#jupiterBands)" opacity="0.6" />
+                    <circle cx="60" cy="55" r="35" fill="rgba(139, 115, 85, 0.3)" />
+                    <path d="M 20 35 L 100 75" stroke="rgba(210, 180, 140, 0.4)" stroke-width="4" />
+                    <path d="M 100 35 L 20 75" stroke="rgba(139, 115, 85, 0.4)" stroke-width="4" />
+                </svg>
+            </div>
+ 
+            <!-- Saturn Orbit and Planet -->
+            <div class="orbit-saturn">
+                <svg class="planet-saturn" viewBox="0 0 140 130" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="saturnGradient" cx="40%" cy="50%" r="60%">
+                            <stop offset="0%" stopColor="#f4e4cf" />
+                            <stop offset="40%" stopColor="#d2b48c" />
+                            <stop offset="70%" stopColor="#cd853f" />
+                            <stop offset="100%" stopColor="#d2b48c" />
+                        </radialGradient>
+                        <linearGradient id="saturnRing" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="rgba(244, 228, 207, 0.7)" />
+                            <stop offset="30%" stopColor="rgba(210, 180, 140, 0.6)" />
+                            <stop offset="60%" stopColor="rgba(190, 150, 110, 0.5)" />
+                            <stop offset="100%" stopColor="rgba(244, 228, 207, 0.7)" />
+                        </linearGradient>
+                    </defs>
+                    <ellipse cx="70" cy="65" rx="63" ry="58" fill="url(#saturnGradient)" />
+                    <ellipse cx="70" cy="65" rx="55" ry="50" fill="rgba(139, 115, 85, 0.3)" />
+                    <ellipse cx="70" cy="65" rx="75" ry="65" fill="none" stroke="url(#saturnRing)" stroke-width="12" opacity="0.6" />
+                    <path d="M 45 65 Q 70 45  95 65 Q 70 85 45 65 Z" fill="rgba(244, 228, 207, 0.3)" />
+                    <path d="M 40 65 Q 70 35  100 65 Q 70 80 40 65 Z" fill="rgba(210, 180, 140, 0.2)" />
+                </svg>
+            </div>
+ 
+            <!-- Uranus Orbit and Planet -->
+            <div class="orbit-uranus">
+                <svg class="planet-uranus" viewBox="0 0 65 65" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="uranusGradient" cx="40%" cy="45%" r="60%">
+                            <stop offset="0%" stopColor="#b0e0e6" />
+                            <stop offset="40%" stopColor="#87ceeb" />
+                            <stop offset="70%" stopColor="#5f9ea0" />
+                            <stop offset="100%" stopColor="#4682b4" />
+                        </radialGradient>
+                        <pattern id="uranusClouds" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+                            <path d="M 15 15 Q 25 10 30 15 Q 25 20 15 15 Z" fill="rgba(173, 216, 230, 0.4)" />
+                            <path d="M 5 25 Q 15 20 20 25 Q 15 30 5 25 Z" fill="rgba(135, 206, 235, 0.3)" />
+                        </pattern>
+                    </defs>
+                    <circle cx="32.5" cy="32.5" r="31" fill="url(#uranusGradient)" />
+                    <circle cx="32.5" cy="32.5" r="25" fill="url(#uranusClouds)" opacity="0.5" />
+                    <ellipse cx="32.5" cy="32.5" rx="22" ry="20" fill="rgba(85, 150, 170, 0.3)" />
+                </svg>
+            </div>
+ 
+            <!-- Neptune Orbit and Planet -->
+            <div class="orbit-neptune">
+                <svg class="planet-neptune" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="neptuneGradient" cx="35%" cy="45%" r="65%">
+                            <stop offset="0%" stopColor="#4169e1" />
+                            <stop offset="40%" stopColor="#1e90ff" />
+                            <stop offset="70%" stopColor="#5f9ea0" />
+                            <stop offset="100%" stopColor="#3a4b7d" />
+                        </radialGradient>
+                        <pattern id="neptuneClouds" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse">
+                            <path d="M 12 12 Q 20 8 25 12 Q 20 16 12 15 Z" fill="rgba(173, 216, 230, 0.3)" />
+                            <path d="M 3 20 Q 12 16 18 20 Q 12 24 3 22 Z" fill="rgba(65, 105, 225, 0.2)" />
+                        </pattern>
+                    </defs>
+                    <circle cx="30" cy="30" r="29" fill="url(#neptuneGradient)" />
+                    <circle cx="30" cy="30" r="24" fill="url(#neptuneClouds)" opacity="0.4" />
+                    <ellipse cx="30" cy="30" rx="20" ry="18" fill="rgba(65, 105, 225, 0.3)" />
+                    <circle cx="30" cy="30" r="2" fill="#ffffff" opacity="0.5" />
+                </svg>
+            </div>
+        </div>
+    </div>
+ 
+    <div class="info-panel">
+        <h3>🪐 Planetary Information</h3>
+        <div class="planet-info">
+            <div class="planet-color" style="background: radial-gradient(circle, #ffeb3b 0%, #ffa726 70%, #ff5722 100%);"></div>
+            <div>
+                <div class="planet-name">Sun</div>
+                <div class="planet-distance">Central star</div>
+            </div>
+        </div>
+        <div class="planet-info">
+            <div class="planet-color" style="background: #a9a9a9;"></div>
+            <div>
+                <div class="planet-name">Mercury</div>
+                <div class="planet-distance">0.39 AU</div>
+            </div>
+        </div>
+        <div class="planet-info">
+            <div class="planet-color" style="background: radial-gradient(circle, #c2b280 0%, #8b7355 70%, #5d4e37 100%);"></div>
+            <div>
+                <div class="planet-name">Venus</div>
+                <div class="planet-distance">0.72 AU</div>
+            </div>
+        </div>
+        <div class="planet-info">
+            <div class="planet-color" style="background: radial-gradient(circle, #2e8b57 0%, #3cb371 50%, #228b22 70%, #006400 100%);"></div>
+            <div>
+                <div class="planet-name">Earth</div>
+                <div class="planet-distance">1.00 AU</div>
+            </div>
+        </div>
+        <div class="planet-info">
+            <div class="planet-color" style="background: radial-gradient(circle, #cd853f 0%, #a0522d 50%, #8b4513 80%, #654321 100%);"></div>
+            <div>
+                <div class="planet-name">Mars</div>
+                <div class="planet-distance">1.52 AU</div>
+            </div>
+        </div>
+        <div class="planet-info">
+            <div class="planet-color" style="background: radial-gradient(circle, #d2b48c 0%, #cd853f 30%, #deb887 70%, #d2b48c 100%);"></div>
+            <div>
+                <div class="planet-name">Jupiter</div>
+                <div class="planet-distance">5.20 AU</div>
+            </div>
+        </div>
+        <div class="planet-info">
+            <div class="planet-color" style="background: radial-gradient(circle, #f4e4cf 0%, #d2b48c 50%, #cd853f 80%, #d2b48c 100%);"></div>
+            <div>
+                <div class="planet-name">Saturn</div>
+                <div class="planet-distance">9.58 AU</div>
+            </div>
+        </div>
+        <div class="planet-info">
+            <div class="planet-color" style="background: linear-gradient(135deg, #b0e0e6 0%, #87ceeb 50%, #5f9ea0 100%);"></div>
+            <div>
+                <div class="planet-name">Uranus</div>
+                <div class="planet-distance">19.22 AU</div>
+            </div>
+        </div>
+        <div class="planet-info">
+            <div class="planet-color" style="background: linear-gradient(135deg, #4169e1 0%, #1e90ff 50%, #5f9ea0 100%);"></div>
+            <div>
+                <div class="planet-name">Neptune</div>
+                <div class="planet-distance">30.05 AU</div>
+            </div>
+        </div>
+    </div>
+ 
+    <script>
+        // Generate starfield
+        function generateStars() {
+            const starsContainer = document.getElementById('stars');
+            const starCount = 200;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                const size = Math.random() * 3 + 1;
+                const opacity = Math.random() * 0.8 + 0.2;
+                const duration = Math.random() * 5 + 3;
+                
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                
+                star.classList.add('star');
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.opacity = opacity;
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                star.style.setProperty('--duration', `${duration}s`);
+                star.style.animationDuration = `${duration}s`;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+ 
+        // Adjust animation speeds based on orbital periods
+        function adjustTimings() {
+            const planets = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+            
+            planets.forEach(planet => {
+                const orbit = document.querySelector(`.orbit-${planet}`);
+                if (orbit) {
+                    const style = orbit.style;
+                    style.animationPlayState = 'running';
+                }
+            });
+        }
+ 
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            generateStars();
+            adjustTimings();
+            
+            // Pause/resume animation on click
+            document.body.addEventListener('click', () => {
+                const solarSystem = document.querySelector('.solar-system');
+                if (solarSystem.style.animationPlayState === 'paused') {
+                    solarSystem.style.animationPlayState = 'running';
+                } else {
+                    solarSystem.style.animationPlayState = 'paused';
+                }
+            });
+        });
+ 
+        // Mouse parallax effect
+        let mouseX = 0;
+        let mouseY = 0;
+        
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) - 0.5;
+            mouseY = (e.clientY / window.innerHeight) - 0.5;
+            
+            document.querySelector('.solar-system').style.transform = 
+                `translate(-50%, -50%) rotateX(${mouseY * 10}deg) rotateY(${mouseX * 10}deg)`;
+        });
+ 
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            generateStars();
+        });
+ 
+        // Add hover effects to planets
+        document.querySelectorAll('.planet-earth').forEach(planet => {
+            planet.addEventListener('mouseenter', () => {
+                planet.style.filter = 'drop-shadow(0 0 20px rgba(65, 105, 225, 0.8))';
+            });
+            planet.addEventListener('mouseleave', () => {
+                planet.style.filter = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

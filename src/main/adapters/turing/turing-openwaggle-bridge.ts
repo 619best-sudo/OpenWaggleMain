@@ -1,17 +1,17 @@
-import { spawn } from 'node:child_process'
 import type { McpServerDefinition, McpSettingsView } from '@shared/types/mcp'
 import {
   defineSkill,
+  type McpRuntimePool,
   type McpServerOptions,
   type ProviderInput,
+  primeMcpServerCache,
   type Session,
-  type McpRuntimePool,
 } from 'turing-harness'
+import { createLogger } from '../../logger'
 import type {
   AgentKernelActiveSkill,
   AgentKernelStandardsContext,
 } from '../../ports/agent-kernel-service'
-import { createLogger } from '../../logger'
 import {
   buildRuntimeSignature,
   cacheRuntimeAttachment,
@@ -37,30 +37,15 @@ export interface BridgeResult {
 
 const logger = createLogger('turing-bridge')
 
-function primeMcpServerCache(
-  opts: Pick<McpServerOptions, 'command' | 'args' | 'id'>,
-): Promise<void> {
-  const base = opts.command.split('/').pop() ?? opts.command
-  if (base !== 'npx') return Promise.resolve()
-
-  const pkg = (opts.args ?? []).find((arg) => !arg.startsWith('-'))
-  if (!pkg) return Promise.resolve()
-
-  return new Promise((resolve) => {
-    try {
-      const child = spawn('npm', ['cache', 'add', pkg], { stdio: 'ignore' })
-      const finish = () => resolve()
-      child.once('error', finish)
-      child.once('close', finish)
-      logger.info('Priming npm cache for MCP server', {
-        mcpId: opts.id,
-        package: pkg,
-      })
-    } catch {
-      resolve()
-    }
-  })
-}
+/**
+ * Internal provider-id prefixes for the OpenWaggle-originated runtime providers.
+ * Session-scoped (never persisted). The construction sites below and the
+ * matching filter in {@link clearExistingOpenWaggleRuntime} MUST stay in sync —
+ * if you change one, change the other, or stale providers accumulate across runs.
+ */
+const MCP_PROVIDER_PREFIX = 'turing-machine:mcp:'
+const SKILL_PROVIDER_PREFIX = 'turing-machine:skill:'
+const SKILL_TOOL_NAME_PREFIX = 'turing_machine_skill_'
 
 function asStringArray(value: unknown): string[] | undefined {
   return Array.isArray(value) && value.every((item) => typeof item === 'string')
@@ -77,7 +62,7 @@ function asStringRecord(value: unknown): Record<string, string> | undefined {
 }
 
 function sanitizeSkillToolName(skillId: string) {
-  return `openwaggle_skill_${skillId
+  return `${SKILL_TOOL_NAME_PREFIX}${skillId
     .replace(/[^a-z0-9_]+/gi, '_')
     .replace(/^_+|_+$/g, '')
     .toLowerCase()}`
@@ -87,7 +72,7 @@ function describeSkill(skill: AgentKernelActiveSkill) {
   const description = skill.description.trim()
   return description.length > 0
     ? description
-    : `OpenWaggle skill "${skill.name}" instructions and guardrails.`
+    : `Turing Machine skill "${skill.name}" instructions and guardrails.`
 }
 
 function buildSkillOutput(skill: AgentKernelActiveSkill) {
@@ -111,7 +96,7 @@ function buildMcpServerOptions(
   }
 
   return {
-    id: `openwaggle:mcp:${name}`,
+    id: `${MCP_PROVIDER_PREFIX}${name}`,
     name,
     command: definition.command,
     ...(asStringArray(definition.args) ? { args: asStringArray(definition.args) } : {}),
@@ -160,7 +145,7 @@ async function clearExistingOpenWaggleRuntime(session: Session): Promise<void> {
     .map((provider) => provider.id)
     .filter(
       (providerId) =>
-        providerId.startsWith('openwaggle:mcp:') || providerId.startsWith('openwaggle:skill:'),
+        providerId.startsWith(MCP_PROVIDER_PREFIX) || providerId.startsWith(SKILL_PROVIDER_PREFIX),
     )
 
   await Promise.all(removableProviderIds.map((providerId) => session.removeProvider(providerId)))
@@ -287,7 +272,7 @@ export async function attachOpenWaggleRuntime(
       // kind:'skill' at runtime; `addSkill` expects the narrowed skill variant. The
       // library's return type is imprecise, so cast to the shape addSkill requires.
       defineSkill({
-        id: `openwaggle:skill:${skill.id}`,
+        id: `${SKILL_PROVIDER_PREFIX}${skill.id}`,
         source: 'external',
         name: skill.name,
         description: describeSkill(skill),
@@ -308,6 +293,11 @@ export async function attachOpenWaggleRuntime(
       }) as Omit<ProviderInput, 'kind'> & { kind?: 'skill' },
     )
     skillToolNames.push(toolName)
+    logger.info('Skill registered for run', {
+      skillId: skill.id,
+      skillName: skill.name,
+      toolName,
+    })
   }
 
   // Build connected tool names + failed names for the prompt.
@@ -319,7 +309,9 @@ export async function attachOpenWaggleRuntime(
     if (value.ok) {
       const provider = session.listCapabilities().find((p) => p.id === value.id)
       if (provider) {
-        connectedMcpToolNames[value.options.name ?? value.options.id] = provider.tools.map((t) => t.name)
+        connectedMcpToolNames[value.options.name ?? value.options.id] = provider.tools.map(
+          (t) => t.name,
+        )
       }
     } else {
       failedMcpNames.push(value.options.name ?? value.options.id)
@@ -377,7 +369,11 @@ export async function connectMcpBackground(
     readonly projectPath?: string
     readonly mcpPool?: McpRuntimePool
   },
-): Promise<{ ready: Promise<BridgeResult> }> {
+): Promise<{
+  readonly ready: Promise<BridgeResult>
+  /** Whatever has attached so far — use this instead of giving up on timeout. */
+  readonly snapshot: () => BridgeResult
+}> {
   const t0 = Date.now()
   const enabledMcpNames = (runtime.mcpSettings?.servers ?? [])
     .filter((summary) => summary.enabled)
@@ -392,7 +388,8 @@ export async function connectMcpBackground(
     logger.info('connectMcpBackground resolved server', {
       name: s.name,
       usePool: Boolean(mcpPool),
-      poolInstanceId: (mcpPool as unknown as { getInstanceId?: () => number })?.getInstanceId?.() ?? 'none',
+      poolInstanceId:
+        (mcpPool as unknown as { getInstanceId?: () => number })?.getInstanceId?.() ?? 'none',
       sig: mcpServerSignature(s).slice(0, 90),
     })
   }
@@ -401,8 +398,13 @@ export async function connectMcpBackground(
   const signature = buildRuntimeSignature(servers, enabledMcpNames, activeSkills)
   const cached = getCachedRuntimeAttachment(session, signature)
   if (cached) {
-    logger.info('Bridge background fast-path', { mode: 'fast-path', ms: Date.now() - t0, signature })
-    return { ready: Promise.resolve(cached) }
+    logger.info('Bridge background fast-path', {
+      mode: 'fast-path',
+      ms: Date.now() - t0,
+      signature,
+    })
+    // Cached attach: already complete, so the snapshot IS the result.
+    return { ready: Promise.resolve(cached), snapshot: () => cached }
   }
 
   // Clear existing OpenWaggle providers AWAITED (not fire-and-forget). The clear
@@ -425,7 +427,7 @@ export async function connectMcpBackground(
     const toolName = sanitizeSkillToolName(skill.id)
     session.addSkill(
       defineSkill({
-        id: `openwaggle:skill:${skill.id}`,
+        id: `${SKILL_PROVIDER_PREFIX}${skill.id}`,
         source: 'external',
         name: skill.name,
         description: describeSkill(skill),
@@ -443,21 +445,26 @@ export async function connectMcpBackground(
       }) as Omit<ProviderInput, 'kind'> & { kind?: 'skill' },
     )
     skillToolNames.push(toolName)
+    logger.info('Skill registered for run', {
+      skillId: skill.id,
+      skillName: skill.name,
+      toolName,
+    })
   }
 
   // Build the ready promise: prime cache then spawn MCPs in background.
   const ready = (async (): Promise<BridgeResult> => {
-    // Phase 1: prime npm cache — but ONLY for servers not already in the pool.
-    // A warm-pool server reuses an existing child process, so priming its npm
-    // cache again is pure latency (a subprocess spawn per server for nothing).
-    // On the cold path (first-ever connect) priming still runs in parallel.
-    const needsPriming = mcpPool ? servers.filter((options) => !mcpPool.has(options)) : servers
-    if (needsPriming.length > 0) {
-      await Promise.allSettled(needsPriming.map((options) => primeMcpServerCache(options)))
-    }
-
-    // Phase 2: spawn MCPs in parallel. Each connected server adds its tools
-    // to the registry IMMEDIATELY so the loop's dynamic resolver picks them up.
+    // No up-front priming barrier. `npm cache add` used to be awaited here for
+    // every not-yet-pooled server BEFORE any server was attached — so on a fresh
+    // launch nothing at all was registered until priming finished for all of
+    // them, and the run's bridge-wait window expired with zero MCP tools even
+    // though some were cache-backed and could have attached in milliseconds.
+    // Priming now lives in the pool's cold-spawn path, where it delays only the
+    // server that is actually spawning.
+    //
+    // Attach every server in parallel. Each one registers its tools the moment
+    // it resolves, so a fast (or cache-backed) server is usable immediately and
+    // `snapshot()` can report it while a slow sibling is still connecting.
     const settled = await Promise.allSettled(
       servers.map(async (options) => {
         try {
@@ -471,6 +478,11 @@ export async function connectMcpBackground(
           if (provider) {
             connectedMcpToolNames[options.name ?? options.id] = provider.tools.map((t) => t.name)
           }
+          // Record the success HERE, not after `allSettled`. A fast server must
+          // be visible to `snapshot()` while a slow sibling is still resolving —
+          // otherwise the run's bridge-wait deadline expires and the prompt
+          // reports zero MCP tools even though several are already attached.
+          connectedMcpIds.push(item.id)
           return { ok: true as const, id: item.id, options }
         } catch (error) {
           return {
@@ -491,7 +503,7 @@ export async function connectMcpBackground(
       }
       const value = result.value
       if (value.ok) {
-        connectedMcpIds.push(value.id)
+        // already recorded inside the per-server callback
       } else {
         failedMcpNames.push(value.options.name ?? value.options.id)
         issues.push({
@@ -526,7 +538,31 @@ export async function connectMcpBackground(
     return result
   })()
 
-  return { ready }
+  /**
+   * Whatever has attached SO FAR, as a usable BridgeResult.
+   *
+   * `ready` only settles when every server has, and one slow or broken server
+   * can take 15-30s (npm resolution for a bad spec, or a `github:` spec cloning).
+   * The run cannot wait that long, and returning `undefined` on timeout was
+   * all-or-nothing: the runtime prompt then had no CONNECTED MCP TOOLS section,
+   * so the model was never told about the servers that WERE up. It would then
+   * insist Playwright was unavailable while Playwright sat connected in the
+   * registry.
+   *
+   * Skills are always included: they register synchronously, so they are never
+   * the thing being waited on.
+   */
+  const snapshot = (): BridgeResult => ({
+    issues: [...issues],
+    enabledMcpNames,
+    attemptedMcpNames,
+    connectedMcpIds: [...connectedMcpIds],
+    skillToolNames,
+    connectedMcpToolNames: { ...connectedMcpToolNames },
+    failedMcpNames: [...failedMcpNames],
+  })
+
+  return { ready, snapshot }
 }
 
 export function buildOpenWaggleRuntimeDebugValue(
@@ -559,6 +595,61 @@ export function buildOpenWaggleRuntimeDebugValue(
   }
 }
 
+/**
+ * How the model should use the connected browser/device MCPs — which is NOT
+ * "prefer them over bash".
+ *
+ * That line used to read `Prefer these MCP tools over bash for browser
+ * automation, testing, screenshots, or device interaction`, and it cost us a
+ * run. Two things were wrong with it.
+ *
+ * It competed with the harness. turing-harness fronts every surface with
+ * `activity_inspect`, which drives the browser or the device AND routes the
+ * capture into `media_analysis` — and its verification gate credits visual
+ * evidence for exactly that pairing. A raw `*_take_screenshot` is a CAPTURE,
+ * not an EVALUATION; on its own the gate deliberately does not count it (see
+ * the harness's verification-gate tests, which pin that revert). So a model
+ * obeying "prefer the MCP tools" produced screenshots the run could not use,
+ * looped through its verify rounds, and reported the change unverified.
+ *
+ * And "over bash" was wrong for the step that matters most on mobile. Getting a
+ * native app onto a simulator is a shell job — `flutter run -d <id>` — and no
+ * MCP tool does it. In the run that prompted this, the model read that line,
+ * avoided the shell, reached for `flutter build apk` (which installs nothing),
+ * and gave up on the simulator entirely.
+ *
+ * Each block is gated on the connected servers actually offering that kind of
+ * tool, so a run with only, say, a filesystem MCP is not told about screens.
+ */
+function buildScreenRoutingGuidance(toolNames: readonly string[]): string[] {
+  const has = (predicate: (name: string) => boolean) => toolNames.some(predicate)
+  const canCapture = has((name) => name.includes('screenshot') || name.includes('snapshot'))
+  const canDriveDevice = has((name) => name.startsWith('mobile_'))
+  const out: string[] = []
+
+  if (canCapture) {
+    out.push(
+      'VERIFYING A SCREEN: call `activity_inspect`, not a raw screenshot tool. It drives whichever surface above is connected (a browser by `url`; a device/simulator by `target:"mobile"` + `bundleId`), captures it, and routes the capture into `media_analysis` — that pairing is what counts as visual evidence. Taking a raw `*_take_screenshot` yourself is a capture, not an evaluation: you must still pass it to `media_analysis` (lens:"qa", `expected` = what you built) or the change stays unverified.',
+      'Use the raw MCP tools for what `activity_inspect` does not do: taps, typing, gestures, element lists, console and network inspection.',
+    )
+  }
+  if (canDriveDevice) {
+    // Deliberately no example commands. This prompt is built before the run and
+    // knows nothing about the project; the harness's verify round reads the
+    // repo's own package scripts, Makefile targets and README/CLAUDE.md and
+    // quotes the real ones. Naming a generic `flutter run -d <id>` here would
+    // contradict that for any app with flavors or a non-default entrypoint —
+    // which is most of them.
+    out.push(
+      'GETTING THE APP ONTO A DEVICE IS A `bash` JOB — no MCP tool does it, and a simulator with no app on it just screenshots someone else\'s screen. Use the command THIS project declares for it (its package scripts, a Makefile target, the run section of its README / CLAUDE.md / AGENTS.md, or the CI workflow) — the one that BUILDS, INSTALLS AND LAUNCHES, not a build/assemble/archive task, which produces an artifact and installs nothing. Run it through `bash` with `background: true` and poll the log it returns; a cold first build takes minutes, so do not shorten `timeoutMs` and do not read a kill as a failure.',
+    )
+  }
+  out.push(
+    'Do not shell out to curl, `open`, or a hand-rolled headless script for browser or device automation — that is what the MCP tools above are for.',
+  )
+  return out
+}
+
 export function buildOpenWaggleRuntimePrompt(
   userText: string,
   runtime: {
@@ -583,13 +674,13 @@ export function buildOpenWaggleRuntimePrompt(
   const standards = runtime.standardsContext
 
   if (standards?.agentsInstruction?.trim()) {
-    sections.push(['OPENWAGGLE AGENT INSTRUCTIONS:', standards.agentsInstruction.trim()].join('\n'))
+    sections.push(['TURING MACHINE AGENT INSTRUCTIONS:', standards.agentsInstruction.trim()].join('\n'))
   }
 
   if (standards?.agentsScopedInstructions?.length) {
     sections.push(
       [
-        'OPENWAGGLE SCOPED INSTRUCTIONS:',
+        'TURING MACHINE SCOPED INSTRUCTIONS:',
         ...standards.agentsScopedInstructions.map(
           (scope) => `- ${scope.scopeRelativeDir} (${scope.filePath})\n${scope.content.trim()}`,
         ),
@@ -600,7 +691,7 @@ export function buildOpenWaggleRuntimePrompt(
   if (standards?.activeSkills?.length) {
     sections.push(
       [
-        'OPENWAGGLE ACTIVE SKILLS:',
+        'TURING MACHINE ACTIVE SKILLS:',
         ...standards.activeSkills.map((skill) => {
           const toolName = sanitizeSkillToolName(skill.id)
           return `- ${skill.name} (${skill.id}) — tool: ${toolName}${skill.description ? ` — ${skill.description}` : ''}`
@@ -612,7 +703,7 @@ export function buildOpenWaggleRuntimePrompt(
   if (standards?.warnings?.length) {
     sections.push(
       [
-        'OPENWAGGLE STANDARDS WARNINGS:',
+        'TURING MACHINE STANDARDS WARNINGS:',
         ...standards.warnings.map((warning) => `- ${warning}`),
       ].join('\n'),
     )
@@ -625,14 +716,14 @@ export function buildOpenWaggleRuntimePrompt(
     const connectedEntries = Object.entries(connected)
     if (connectedEntries.length > 0) {
       const lines = connectedEntries.map(
-        ([serverName, toolNames]) =>
-          `  - ${serverName}: ${toolNames.join(', ')}`,
+        ([serverName, toolNames]) => `  - ${serverName}: ${toolNames.join(', ')}`,
       )
+      const allToolNames = connectedEntries.flatMap(([, toolNames]) => toolNames)
       sections.push(
         [
           'CONNECTED MCP TOOLS (use these exact tool names for browser/device automation, testing, screenshots, etc.):',
           ...lines,
-          'Prefer these MCP tools over bash for browser automation, testing, screenshots, or device interaction.',
+          ...buildScreenRoutingGuidance(allToolNames),
         ].join('\n'),
       )
     }
@@ -655,7 +746,7 @@ export function buildOpenWaggleRuntimePrompt(
     if (runtime.bridge.issues?.length) {
       sections.push(
         [
-          'OPENWAGGLE MCP BRIDGE NOTES:',
+          'TURING MACHINE MCP BRIDGE NOTES:',
           ...runtime.bridge.issues.map((issue) => `- ${issue.message}`),
         ].join('\n'),
       )
@@ -664,7 +755,7 @@ export function buildOpenWaggleRuntimePrompt(
 
   sections.push(
     [
-      'OPENWAGGLE TRANSCRIPT MODE:',
+      'TURING MACHINE TRANSCRIPT MODE:',
       'Use compact transcript behavior.',
       'Do not emit conversational progress chatter such as "I will read", "Let me verify", "I found", or similar step-by-step narration before or after tool calls.',
       'Keep user-facing prose for phase summaries only. Let tool events carry tool activity.',
@@ -675,7 +766,7 @@ export function buildOpenWaggleRuntimePrompt(
   if (runtime.pendingUserQuestionResolution) {
     sections.push(
       [
-        'OPENWAGGLE PENDING USER QUESTION:',
+        'TURING MACHINE PENDING USER QUESTION:',
         `Phase: ${runtime.pendingUserQuestionResolution.request.phase}`,
         `Question: ${runtime.pendingUserQuestionResolution.request.question}`,
         ...(runtime.pendingUserQuestionResolution.request.reason
@@ -689,7 +780,7 @@ export function buildOpenWaggleRuntimePrompt(
 
   return sections.length > 0
     ? [
-        `Use the following OpenWaggle runtime context while working on the task.`,
+        `Use the following Turing Machine runtime context while working on the task.`,
         ...sections,
         'USER TASK:',
         userText,

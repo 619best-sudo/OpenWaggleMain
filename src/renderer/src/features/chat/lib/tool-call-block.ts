@@ -2,7 +2,7 @@ import { isMatching, match, P } from '@diegogbrisa/ts-match'
 import type { JsonObject } from '@shared/types/json'
 import { normalizeToolResultPayload } from '@shared/utils/tool-result-state'
 import { isRecord } from '@shared/utils/validation'
-import { resolveLanguage } from '@/shared/lib/shiki/highlighter'
+import { resolveLanguageFromExtension } from '@/shared/lib/shiki/highlighter'
 
 export const JSON_STRINGIFY_SPACES = 2
 export const LONG_ARGUMENT_PREVIEW_CHARS = 120
@@ -95,6 +95,36 @@ export function getConcernLinesFromResult(content: unknown): LineConcern | null 
     .with(P.string, (value) => value)
     .otherwise(() => undefined)
   return why ? { path, lines, why } : { path, lines }
+}
+
+/**
+ * Identity-memoized variant of {@link getConcernLinesFromResult}.
+ *
+ * `mark_concern_lines` results are re-derived while a message streams: the
+ * message's `parts` array gets a fresh reference on every event, so a
+ * `concernsByPath` memo keyed on `parts` recomputes each time, and
+ * {@link getConcernLinesFromResult} would allocate a brand-new `LineConcern` on
+ * every recompute. That changes the `concern` prop handed to `InlineToolBlock`
+ * and defeats its `memo` — so every read that carries a concern re-renders its
+ * `FileContentView` (O(lines)) on every single stream event.
+ *
+ * The underlying `part.output` reference is stable across events, so keying on
+ * it returns the SAME `LineConcern` until the result itself changes. Non-object
+ * inputs (strings, etc.) bypass the cache since `WeakMap` requires object keys.
+ */
+const concernResultCache = new WeakMap<object, LineConcern | null>()
+
+export function getConcernLinesFromResultCached(content: unknown): LineConcern | null {
+  if (content === null || typeof content !== 'object') {
+    return getConcernLinesFromResult(content)
+  }
+  const cached = concernResultCache.get(content as object)
+  if (cached !== undefined) {
+    return cached
+  }
+  const computed = getConcernLinesFromResult(content)
+  concernResultCache.set(content as object, computed)
+  return computed
 }
 
 /** The path the harness resolved for a successful read (details.path), if any. */
@@ -190,7 +220,7 @@ export function inferLanguageFromPath(path: string | null) {
     return undefined
   }
 
-  return resolveLanguage(extension.toLowerCase())
+  return resolveLanguageFromExtension(extension)
 }
 
 function exceedsLineLimit(text: string, maxLines: number) {

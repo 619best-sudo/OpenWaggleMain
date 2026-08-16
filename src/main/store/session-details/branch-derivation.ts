@@ -1,5 +1,5 @@
-import type { ProjectedSessionNodeInput } from '../../ports/session-repository'
 import { STRUCTURAL_SESSION_NODE_CUSTOM_TYPES } from '@shared/types/structural-nodes'
+import type { ProjectedSessionNodeInput } from '../../ports/session-repository'
 import { deriveBranchForHead } from './branch-head'
 import {
   buildChildCounts,
@@ -298,7 +298,7 @@ function normalizeDerivedBranches(input: {
   const activeNodeId =
     input.requestedActiveNodeId && nodeIds.has(input.requestedActiveNodeId)
       ? input.requestedActiveNodeId
-      : activeBranch?.headNodeId ?? null
+      : (activeBranch?.headNodeId ?? null)
   return { branches, activeBranchId, activeNodeId }
 }
 

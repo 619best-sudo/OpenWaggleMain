@@ -1,0 +1,37 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e4]:
+    - generic [ref=e6]: NEW|Epik raised $1M pre-seed, led by InfoEdge.
+    - generic [ref=e7]:
+      - generic [ref=e9]
+      - navigation [ref=e42]
+  - main [ref=e108]:
+    - generic [ref=e112]:
+      - generic [ref=e114]
+      - generic [ref=e143]
+    - generic [ref=e151]:
+      - generic [ref=e152]
+      - generic [ref=e1127]
+      - generic [ref=e2260]
+      - link "Epik delivery How an Epik Logo demo works in 60 minutes Know More" [ref=e3201] [cursor=pointer]:
+        - /url: /how-demo-works
+  - alert [ref=e3232]
+  - generic:
+    - generic:
+      - iframe
+  - generic [ref=e3234]:
+    - generic [ref=e3235]:
+      - img [ref=e3237]
+      - paragraph [ref=e3241]: The Trusted Choice for 10,000+ Families
+    - generic [ref=e3242]:
+      - img [ref=e3244]
+      - paragraph [ref=e3251]: Backed by India’s Top Investors
+    - generic [ref=e3252]:
+      - img [ref=e3254]
+      - paragraph [ref=e3259]: Rated 5.0 for Demo Experience
+  - contentinfo [ref=e3260]:
+    - generic [ref=e3261]:
+      - generic [ref=e3262]
+      - generic [ref=e3325]
+      - generic [ref=e3414]: © 2025 VIVAVILLA RETAIL PRIVATE LIMITED (Epik) | All Rights Reserved
+  - button "Chat on WhatsApp" [ref=e3416] [cursor=pointer]:
+    - img [ref=e3418]

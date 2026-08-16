@@ -47,23 +47,45 @@ function orderedSteps(planSet: PendingPlanReviewRequest['planSet']) {
   })
 }
 
+/**
+ * What the plan actually is, when there is exactly one of it.
+ *
+ * A plan set carries a title and a one-line summary that the card never showed —
+ * it went straight from "Review plan · Draft 1 · 6 steps" into numbered steps,
+ * so the reader had to infer the shape of the change from the steps themselves.
+ * With several plans the generic heading stays, because each step row already
+ * names its owning plan.
+ */
+function soloPlan(planSet: PendingPlanReviewRequest['planSet']) {
+  if (planSet.plans.length !== 1) return null
+  const plan = planSet.plans[0]
+  if (!plan) return null
+  const title = plan.title.trim()
+  const summary = plan.summary.trim()
+  return { ...(title ? { title } : {}), ...(summary ? { summary } : {}) }
+}
+
 /** Title, verdict badge, draft counter, and the note that drove a re-plan. */
 function PlanReviewHeading({
   decision,
   revision,
   stepCount,
   priorComments,
+  plan,
 }: {
   readonly decision: PlanReviewResolution['decision'] | null
   readonly revision: number
   readonly stepCount: number
   readonly priorComments?: string
+  readonly plan: { title?: string; summary?: string } | null
 }) {
   return (
     <>
       <div className="flex items-baseline justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="font-medium text-text-primary">{decision ? 'Plan' : 'Review plan'}</div>
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="truncate font-medium text-text-primary">
+            {plan?.title ?? (decision ? 'Plan' : 'Review plan')}
+          </div>
           {decision ? (
             <span
               className={cn(
@@ -75,14 +97,17 @@ function PlanReviewHeading({
             </span>
           ) : null}
         </div>
-        <div className="text-[12px] text-text-secondary">
+        <div className="shrink-0 text-[12px] text-text-secondary">
           Draft {revision}
           {stepCount > 0 ? ` · ${stepCount} step${stepCount === 1 ? '' : 's'}` : ''}
         </div>
       </div>
+      {plan?.summary ? (
+        <div className="mt-1 text-[13px] leading-[1.5] text-text-secondary">{plan.summary}</div>
+      ) : null}
       {priorComments ? (
-        <div className="mt-2 rounded-lg bg-bg-hover px-3 py-2 text-[13px] text-text-secondary">
-          <span className="font-medium text-text-primary">Your last note: </span>
+        <div className="mt-2 border-l-2 border-border/60 pl-2.5 text-[13px] leading-[1.5] text-text-secondary">
+          <span className="text-text-tertiary">Your last note </span>
           {priorComments}
         </div>
       ) : null}
@@ -94,9 +119,11 @@ function PlanReviewHeading({
 function SubmittedComments({ comments }: { readonly comments: string }) {
   if (!comments.trim()) return null
   return (
-    <div className="mt-3 rounded-lg bg-bg-hover px-3 py-2 text-[13px] text-text-secondary">
-      <span className="font-medium text-text-primary">What you asked for: </span>
-      {comments.trim()}
+    <div className="mt-3.5 border-t border-border/30 pt-3 text-[13px] leading-[1.5] text-text-secondary">
+      <span className="text-[12px] uppercase tracking-wide text-text-tertiary">
+        What you asked for
+      </span>
+      <div className="mt-1">{comments.trim()}</div>
     </div>
   )
 }
@@ -122,7 +149,11 @@ export function PlanReviewCard({
   const [submitting, setSubmitting] = useState<PlanReviewResolution['decision'] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reviewId, setReviewId] = useState(request.planReviewId)
-  const steps = usePlanStepDrafts({ projectPath, onError: setError })
+  const tasks = useMemo(() => orderedSteps(request.planSet), [request.planSet])
+  const stepTasks = useMemo(() => tasks.map((entry) => entry.task), [tasks])
+  // Declared after `stepTasks` so a reset during render seeds from the NEW
+  // draft's steps, carrying the user's existing notes and attachments forward.
+  const steps = usePlanStepDrafts({ tasks: stepTasks, projectPath, onError: setError })
 
   // A new draft arrives with its own ids; carrying stale per-step edits across
   // revisions would attach a file to whichever step happens to reuse an id.
@@ -137,8 +168,8 @@ export function PlanReviewCard({
     steps.reset()
   }
 
-  const tasks = useMemo(() => orderedSteps(request.planSet), [request.planSet])
   const multiPlan = request.planSet.plans.length > 1
+  const plan = useMemo(() => soloPlan(request.planSet), [request.planSet])
   // Once answered the card is a record, not a form: everything is inert, so a
   // stale card can never submit a second, unresolvable verdict for this draft.
   const resolved = decision !== null
@@ -180,9 +211,10 @@ export function PlanReviewCard({
           revision={request.revision}
           stepCount={tasks.length}
           priorComments={request.priorComments}
+          plan={plan}
         />
 
-        <ol className="mt-3 space-y-2">
+        <ol className="mt-3 space-y-3.5">
           {tasks.map(({ task, planTitle }) => (
             <PlanReviewStepRow
               key={task.id}

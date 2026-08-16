@@ -38,7 +38,9 @@ function isBillingReturnUrl(url: string) {
   }
 
   const isLocalReturnHost =
-    parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '0.0.0.0'
+    parsed.hostname === 'localhost' ||
+    parsed.hostname === '127.0.0.1' ||
+    parsed.hostname === '0.0.0.0'
   return isLocalReturnHost && parsed.pathname.startsWith('/settings/profile')
 }
 
@@ -55,7 +57,7 @@ function createBillingOverlayWindow() {
     parent: parentWindow ?? undefined,
     modal: parentWindow !== null,
     show: false,
-    title: 'OpenWaggle Billing',
+    title: 'Turing Machine Billing',
     autoHideMenuBar: true,
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#141619',

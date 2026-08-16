@@ -1,1 +1,1 @@
-export { useGitStore } from './git-store'
+export { forgetNonRepositoryPath, useGitStore } from './git-store'

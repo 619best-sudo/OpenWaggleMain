@@ -24,10 +24,20 @@ function jsonObjectOrEmpty(value: JsonValue | undefined): Readonly<JsonObject> {
   return isJsonObject(value) ? value : {}
 }
 
+/**
+ * The stream buffer is the main-process owner of these part objects — nothing
+ * else holds a reference between events — so appending to the TAIL part can
+ * mutate it in place. The previous copy-per-delta form re-concatenated the full
+ * accumulated text and copied the parts array on every token: quadratic in
+ * message length, on the main thread, per run. (V8's rope strings make the
+ * concatenation itself amortized-cheap; the array spread and the object
+ * identity churn were the real cost.)
+ */
 function appendTextPart(parts: readonly MessagePart[], delta: string): MessagePart[] {
   const lastPart = parts[parts.length - 1]
   if (lastPart?.type === 'text') {
-    return [...parts.slice(0, -1), { type: 'text', text: lastPart.text + delta }]
+    ;(lastPart as { text: string }).text += delta
+    return parts as MessagePart[]
   }
   return [...parts, { type: 'text', text: delta }]
 }
@@ -35,7 +45,8 @@ function appendTextPart(parts: readonly MessagePart[], delta: string): MessagePa
 function appendReasoningPart(parts: readonly MessagePart[], delta: string): MessagePart[] {
   const lastPart = parts[parts.length - 1]
   if (lastPart?.type === 'reasoning') {
-    return [...parts.slice(0, -1), { type: 'reasoning', text: lastPart.text + delta }]
+    ;(lastPart as { text: string }).text += delta
+    return parts as MessagePart[]
   }
   return [...parts, { type: 'reasoning', text: delta }]
 }

@@ -8,7 +8,7 @@
 import type { Element, ElementContent, Properties, Root, RootContent } from 'hast'
 import type { Highlighter } from 'shiki'
 import { createRendererLogger } from '@/shared/lib/logger'
-import { type PreloadedLanguage, resolveLanguage } from './highlighter'
+import { type HighlightLanguage, requestLanguage, resolveLanguage } from './highlighter'
 import type { ShikiCache } from './shiki-cache'
 import { WAGGLE_CODE_THEME_DARK, WAGGLE_CODE_THEME_LIGHT } from './waggle-code-theme'
 
@@ -102,6 +102,14 @@ function processPreElement(pre: Element, highlighter: Highlighter, cache: ShikiC
   const language = rawLang ? resolveLanguage(rawLang) : undefined
   if (!language) return
 
+  // `codeToHast` is synchronous, so a grammar that isn't registered yet can't be
+  // awaited here. Kick off the load and leave the block as plain text this pass;
+  // subscribers to `subscribeToLoadedLanguages` re-render it once it lands.
+  if (!highlighter.getLoadedLanguages().includes(language)) {
+    requestLanguage(language)
+    return
+  }
+
   const code = textContent(codeNode)
   if (!code) return
 
@@ -153,7 +161,7 @@ export function applyShikiToHast(tree: Root, options: RehypeShikiOptions): void 
 function highlightCode(
   highlighter: Highlighter,
   code: string,
-  language: PreloadedLanguage,
+  language: HighlightLanguage,
 ): Element | undefined {
   try {
     const root = highlighter.codeToHast(code, {

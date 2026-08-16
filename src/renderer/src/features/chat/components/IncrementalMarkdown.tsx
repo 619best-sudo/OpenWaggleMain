@@ -19,6 +19,8 @@ interface IncrementalMarkdownProps {
   text: string
   isStreaming: boolean
   highlighter: Highlighter | undefined
+  /** Bumped when an on-demand grammar loads; invalidates the parsed prefix. */
+  languageVersion: number
   cache: ShikiCache
   rehypePlugins: RehypePlugins
   /** Lightweight plugins for the streaming tail (e.g. sanitize-only, no Shiki). */
@@ -79,12 +81,14 @@ export function IncrementalMarkdown({
   text,
   isStreaming,
   highlighter,
+  languageVersion,
   cache,
   rehypePlugins,
   tailRehypePlugins,
 }: IncrementalMarkdownProps) {
   const { prefixHast, tail } = useIncrementalMarkdown(text, isStreaming, {
     highlighter,
+    languageVersion,
     cache,
   })
 

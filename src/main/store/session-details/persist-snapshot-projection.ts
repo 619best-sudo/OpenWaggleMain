@@ -259,9 +259,24 @@ function updateSnapshotSessionMetadata(input: SnapshotProjectionInput) {
         END,
         updated_at = ${input.now},
         last_active_node_id = ${input.activeNodeId},
-        last_active_branch_id = ${input.activeBranchId}
+        last_active_branch_id = ${input.activeBranchId},
+        message_count = ${countMessageNodes(input.nodes)}
     WHERE id = ${input.input.sessionId}
   `
+}
+
+/**
+ * The denormalized `sessions.message_count` — the sidebar list reads this
+ * directly instead of running a correlated COUNT over session_nodes for EVERY
+ * session on EVERY refresh (which scanned each session's whole node index on a
+ * DB that had grown to ~100MB).
+ */
+function countMessageNodes(nodes: readonly { readonly piEntryType: string }[]): number {
+  let count = 0
+  for (const node of nodes) {
+    if (node.piEntryType === 'message') count += 1
+  }
+  return count
 }
 
 export function replaceSnapshotProjection(input: SnapshotProjectionInput) {

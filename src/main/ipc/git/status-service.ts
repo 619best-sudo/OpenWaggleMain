@@ -16,8 +16,16 @@ interface GitStatusCommandResults {
   readonly upstreamResult: Awaited<ReturnType<typeof runGit>>
 }
 
+/**
+ * Returns `null` when the folder is not a Git repository. This is a normal
+ * outcome (users open plain folders), not an error — throwing here made every
+ * status refresh reject an IPC handler, which Electron logs to the main
+ * console on every window focus / route change / agent event.
+ */
 export async function getGitStatus(projectPath: string) {
-  await assertGitRepository(projectPath)
+  if (!(await isGitRepository(projectPath))) {
+    return null
+  }
   const results = await loadGitStatusCommandResults(projectPath)
   const branch = await resolveBranchName(projectPath, results.branchResult)
   const aheadBehind = parseAheadBehind(results.upstreamResult)
@@ -37,15 +45,11 @@ export async function getGitStatus(projectPath: string) {
 }
 
 export async function getGitDiff(projectPath: string) {
-  await assertGitRepository(projectPath)
+  if (!(await isGitRepository(projectPath))) {
+    return []
+  }
   const hasHead = await runGit(projectPath, ['rev-parse', '--verify', 'HEAD'])
   return hasHead.code === 0 ? getHeadDiff(projectPath) : getInitialCommitDiff(projectPath)
-}
-
-async function assertGitRepository(projectPath: string) {
-  if (!(await isGitRepository(projectPath))) {
-    throw new Error('Selected folder is not a Git repository.')
-  }
 }
 
 async function loadGitStatusCommandResults(projectPath: string): Promise<GitStatusCommandResults> {

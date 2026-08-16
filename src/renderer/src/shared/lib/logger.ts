@@ -39,8 +39,14 @@ export function createRendererLogger(namespace: string): Logger {
       consoleMethod(prefix)
     }
 
-    // Forward to the main-process log file so renderer-side pipeline steps
-    // (message cache, hydration, chat rows) are captured alongside main logs.
+    // Forward to the main-process log file so renderer-side problems are
+    // captured alongside main logs. Only warn/error cross the IPC boundary:
+    // forwarding debug/info meant every stream delta paid a structured-clone
+    // plus a JSON.stringify on the main side.
+    if (level !== 'warn' && level !== 'error') {
+      return
+    }
+
     try {
       ;(window as { api?: { forwardRendererLog?: (entry: unknown) => void } }).api
         ?.forwardRendererLog?.({ namespace, level, message, data })

@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { buildChatRows, createUserMessage, type UIMessage } from './useBuildChatRows.test-utils'
 
+// Phase cards are fully suppressed in the transcript: tool calls render inline via
+// AssistantMessageBubble's InlineToolBlock, and UserQuestionCard / PlanReviewActions
+// render in ChatPanel outside the transcript (see the comments in useBuildChatRows).
+// These tests therefore assert that a phase transcript contributes NO `phase` row
+// while the surrounding assistant/user bubbles still render.
 describe('buildChatRows phase transcript migration', () => {
-  it('renders persisted phase transcript messages as phase rows', () => {
+  it('does not emit phase rows for persisted phase transcript messages', () => {
     const phaseTranscriptMessage: UIMessage = {
       id: 'phase-transcript-message',
       role: 'assistant',
@@ -38,15 +43,8 @@ describe('buildChatRows phase transcript migration', () => {
       phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
     })
 
-    expect(rows.map((row) => row.type)).toEqual(['message', 'phase'])
-    expect(rows[1]).toMatchObject({
-      type: 'phase',
-      sourceMessageId: 'phase-transcript-message',
-      phase: {
-        id: 'perform',
-        summary: 'Updated the title and preserved the phase transcript after restart.',
-      },
-    })
+    expect(rows.map((row) => row.type)).toEqual(['message'])
+    expect(rows.map((row) => row.type)).not.toContain('phase')
   })
 
   it('renders legacy assistant tool transcript rows alongside the phase transcript (show-all-bubbles)', () => {
@@ -115,7 +113,7 @@ describe('buildChatRows phase transcript migration', () => {
       phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
     })
 
-    expect(rows.map((row) => row.type)).toEqual(['message', 'message', 'phase'])
+    expect(rows.map((row) => row.type)).toEqual(['message', 'message'])
     expect(
       rows.some((row) => row.type === 'message' && row.message.id === 'assistant-legacy'),
     ).toBe(true)
@@ -184,13 +182,13 @@ describe('buildChatRows phase transcript migration', () => {
       phase: { current: null, completed: [], totalElapsedMs: 0, completedAtMs: null },
     })
 
-    expect(rows.map((row) => row.type)).toEqual(['message', 'message', 'phase'])
+    expect(rows.map((row) => row.type)).toEqual(['message', 'message'])
     expect(
       rows.some((row) => row.type === 'message' && row.message.id === 'assistant-clarification'),
     ).toBe(true)
   })
 
-  it('renders a live clarification card while the run is paused for user input', () => {
+  it('leaves the live clarification card to ChatPanel instead of a transcript phase row', () => {
     const rows = buildChatRows({
       messages: [
         createUserMessage('user-1', 'change header name'),
@@ -241,19 +239,12 @@ describe('buildChatRows phase transcript migration', () => {
       },
     })
 
-    expect(rows.map((row) => row.type)).toContain('phase')
-    expect(rows).toContainEqual(
-      expect.objectContaining({
-        type: 'phase',
-        phase: expect.objectContaining({
-          id: 'prepare',
-          pendingUserQuestion: expect.objectContaining({
-            question:
-              'Which file should I update, what is the current header name, and what should it be changed to?',
-          }),
-        }),
-      }),
-    )
+    // The pending question renders as a standalone UserQuestionCard in ChatPanel,
+    // outside the transcript — buildChatRows must not also emit a phase card for it.
+    expect(rows.map((row) => row.type)).not.toContain('phase')
+    expect(
+      rows.some((row) => row.type === 'message' && row.message.id === 'assistant-clarification'),
+    ).toBe(true)
   })
 
   it('renders live phase rows from phase_end events alongside the raw assistant turn text (show-all-bubbles)', () => {
@@ -316,16 +307,11 @@ describe('buildChatRows phase transcript migration', () => {
       ],
     })
 
-    expect(rows.map((row) => row.type)).toEqual(['message', 'message', 'phase', 'phase-indicator'])
+    // `phase-indicator` is the live Working/Thinking spinner row (appendStatusRows) and
+    // is unrelated to the suppressed `phase` cards.
+    expect(rows.map((row) => row.type)).toEqual(['message', 'message', 'phase-indicator'])
     expect(
       rows.some((row) => row.type === 'message' && row.message.id === 'assistant-raw-plan'),
     ).toBe(true)
-    expect(rows[2]).toMatchObject({
-      type: 'phase',
-      phase: {
-        id: 'prepare',
-        summary: 'Scanned the project structure and identified the target HTML entry point.',
-      },
-    })
   })
 })

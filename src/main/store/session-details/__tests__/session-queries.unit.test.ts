@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest'
 import { PERSISTED_PHASE_TRANSCRIPT_CUSTOM_TYPE } from '@shared/types/phase'
 import {
   TURING_BRIDGE_STATUS_CUSTOM_TYPE,
   TURING_THREAD_SNAPSHOT_CUSTOM_TYPE,
 } from '@shared/types/structural-nodes'
-import type { SessionNodeRow, SessionRow } from '../types'
-import { buildSessionDetailNodeRows } from '../session-queries'
+import { describe, expect, it } from 'vitest'
 import { deriveBranchHints, deriveSessionBranchesForSnapshot } from '../branch-derivation'
+import { buildSessionDetailNodeRows } from '../session-queries'
+import type { SessionNodeRow, SessionRow } from '../types'
 
 function sessionRow(): SessionRow {
   return {
@@ -33,7 +33,10 @@ function userRow(): SessionNodeRow {
     kind: 'user_message',
     role: 'user',
     timestamp_ms: 1,
-    content_json: JSON.stringify({ parts: [{ type: 'text', text: 'change header name' }], model: null }),
+    content_json: JSON.stringify({
+      parts: [{ type: 'text', text: 'change header name' }],
+      model: null,
+    }),
     metadata_json: '{}',
     branch_hint_id: 'session-1:main',
     path_depth: 0,
@@ -61,7 +64,11 @@ function assistantRow(): SessionNodeRow {
   }
 }
 
-function phaseTranscriptRow(id: string, createdOrder: number, branchId = 'session-1:main'): SessionNodeRow {
+function phaseTranscriptRow(
+  id: string,
+  createdOrder: number,
+  branchId = 'session-1:main',
+): SessionNodeRow {
   return {
     id,
     session_id: 'session-1',
@@ -103,11 +110,7 @@ describe('buildSessionDetailNodeRows', () => {
       phaseTranscriptRow('phase-transcript-latest', 3),
     ])
 
-    expect(rows.map((row) => row.id)).toEqual([
-      'user-1',
-      'assistant-1',
-      'phase-transcript-latest',
-    ])
+    expect(rows.map((row) => row.id)).toEqual(['user-1', 'assistant-1', 'phase-transcript-latest'])
   })
 
   it('does not append a phase transcript row from another branch', () => {
@@ -135,7 +138,10 @@ describe('deriveSessionBranchesForSnapshot', () => {
           kind: 'user_message',
           role: 'user',
           timestampMs: 1,
-          contentJson: JSON.stringify({ parts: [{ type: 'text', text: 'change header name' }], model: null }),
+          contentJson: JSON.stringify({
+            parts: [{ type: 'text', text: 'change header name' }],
+            model: null,
+          }),
           metadataJson: '{}',
           pathDepth: 0,
           createdOrder: 0,
@@ -202,7 +208,10 @@ describe('deriveSessionBranchesForSnapshot', () => {
           kind: 'user_message',
           role: 'user',
           timestampMs: 1,
-          contentJson: JSON.stringify({ parts: [{ type: 'text', text: 'change header name' }], model: null }),
+          contentJson: JSON.stringify({
+            parts: [{ type: 'text', text: 'change header name' }],
+            model: null,
+          }),
           metadataJson: '{}',
           pathDepth: 0,
           createdOrder: 0,
@@ -290,7 +299,10 @@ describe('deriveSessionBranchesForSnapshot', () => {
           kind: 'user_message',
           role: 'user',
           timestampMs: 1,
-          contentJson: JSON.stringify({ parts: [{ type: 'text', text: 'change header name' }], model: null }),
+          contentJson: JSON.stringify({
+            parts: [{ type: 'text', text: 'change header name' }],
+            model: null,
+          }),
           metadataJson: '{}',
           pathDepth: 0,
           createdOrder: 0,
@@ -373,7 +385,10 @@ describe('deriveSessionBranchesForSnapshot', () => {
         kind: 'user_message',
         role: 'user',
         timestampMs: 1,
-        contentJson: JSON.stringify({ parts: [{ type: 'text', text: 'change header name' }], model: null }),
+        contentJson: JSON.stringify({
+          parts: [{ type: 'text', text: 'change header name' }],
+          model: null,
+        }),
         metadataJson: '{}',
         pathDepth: 0,
         createdOrder: 0,

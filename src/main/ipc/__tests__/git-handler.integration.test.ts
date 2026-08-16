@@ -12,11 +12,16 @@ describe('registerGitHandlers status', () => {
   let invalidateGitStatusCache: Awaited<
     ReturnType<typeof loadGitHandlers>
   >['invalidateGitStatusCache']
+  let invalidateGitRepositoryCache: Awaited<
+    ReturnType<typeof loadGitHandlers>
+  >['invalidateGitRepositoryCache']
 
   beforeEach(async () => {
     resetGitHandlerMocks()
-    ;({ invalidateGitStatusCache, registerGitHandlers } = await loadGitHandlers())
+    ;({ invalidateGitRepositoryCache, invalidateGitStatusCache, registerGitHandlers } =
+      await loadGitHandlers())
     invalidateGitStatusCache()
+    invalidateGitRepositoryCache()
   })
 
   it('returns parsed git status summary with correct ahead/behind', async () => {

@@ -1,0 +1,110 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]: SassAnim
+    - list [ref=e4]:
+      - listitem [ref=e5]:
+        - link "Home" [ref=e6] [cursor=pointer]:
+          - /url: "#home"
+      - listitem [ref=e7]:
+        - link "Features" [ref=e8] [cursor=pointer]:
+          - /url: "#features"
+      - listitem [ref=e9]:
+        - link "About" [ref=e10] [cursor=pointer]:
+          - /url: "#about"
+      - listitem [ref=e11]:
+        - link "Contact" [ref=e12] [cursor=pointer]:
+          - /url: "#contact"
+  - generic [ref=e14]:
+    - heading "Beautiful Animated Pages Built With Sass" [level=1] [ref=e15]
+    - paragraph [ref=e16]: Create stunning, responsive websites with powerful Sass features and smooth CSS animations. Modern design for the modern web.
+    - generic [ref=e17]:
+      - link "Get Started" [ref=e18] [cursor=pointer]:
+        - /url: "#"
+      - link "Learn More" [ref=e19] [cursor=pointer]:
+        - /url: "#"
+  - generic [ref=e20]:
+    - heading "Core Features" [level=2] [ref=e21]
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: 🎨
+        - heading "Beautiful Styling" [level=3] [ref=e25]
+        - paragraph [ref=e26]: Powerful Sass variables, nesting, and mixins to create consistent, maintainable stylesheets with minimal code.
+      - generic [ref=e27]:
+        - generic [ref=e28]: ✨
+        - heading "Smooth Animations" [level=3] [ref=e29]
+        - paragraph [ref=e30]: Fluid CSS animations and transitions that enhance user experience without sacrificing performance.
+      - generic [ref=e31]:
+        - generic [ref=e32]: 📱
+        - heading "Fully Responsive" [level=3] [ref=e33]
+        - paragraph [ref=e34]: Mobile-first design that looks perfect on every device size, from phones to desktop monitors.
+  - generic [ref=e36]:
+    - generic [ref=e37]:
+      - heading "Ready to get started?" [level=2] [ref=e38]
+      - paragraph [ref=e39]: Join thousands of developers building beautiful sites with SassAnim.
+    - generic [ref=e40]:
+      - link "Start Free Trial" [ref=e41] [cursor=pointer]:
+        - /url: "#"
+      - link "Talk to Sales" [ref=e42] [cursor=pointer]:
+        - /url: "#"
+  - contentinfo [ref=e43]:
+    - generic [ref=e44]:
+      - generic [ref=e45]:
+        - generic [ref=e46]: SassAnim
+        - paragraph [ref=e47]: Beautiful, responsive websites with modern Sass and smooth animations. Crafted for the modern web.
+        - generic [ref=e48]:
+          - link "X (Twitter)" [ref=e49] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e50]: 
+          - link "GitHub" [ref=e51] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e52]: 
+          - link "LinkedIn" [ref=e53] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e54]: 
+          - link "Discord" [ref=e55] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e56]: 
+      - generic [ref=e57]:
+        - heading "Product" [level=4] [ref=e58]
+        - generic [ref=e59]:
+          - link "Home" [ref=e60] [cursor=pointer]:
+            - /url: "#home"
+          - link "Features" [ref=e61] [cursor=pointer]:
+            - /url: "#features"
+          - link "Pricing" [ref=e62] [cursor=pointer]:
+            - /url: "#"
+          - link "Changelog" [ref=e63] [cursor=pointer]:
+            - /url: "#"
+      - generic [ref=e64]:
+        - heading "Resources" [level=4] [ref=e65]
+        - generic [ref=e66]:
+          - link "Documentation" [ref=e67] [cursor=pointer]:
+            - /url: "#"
+          - link "Tutorials" [ref=e68] [cursor=pointer]:
+            - /url: "#"
+          - link "Blog" [ref=e69] [cursor=pointer]:
+            - /url: "#"
+          - link "Support" [ref=e70] [cursor=pointer]:
+            - /url: "#"
+      - generic [ref=e71]:
+        - heading "Company" [level=4] [ref=e72]
+        - generic [ref=e73]:
+          - link "About" [ref=e74] [cursor=pointer]:
+            - /url: "#about"
+          - link "Contact" [ref=e75] [cursor=pointer]:
+            - /url: "#contact"
+          - link "Careers" [ref=e76] [cursor=pointer]:
+            - /url: "#"
+          - link "Press Kit" [ref=e77] [cursor=pointer]:
+            - /url: "#"
+    - generic [ref=e78]:
+      - text: © 2025 SassAnim. All rights reserved.
+      - generic [ref=e79]:
+        - link "Privacy Policy" [ref=e80] [cursor=pointer]:
+          - /url: "#"
+        - text: ·
+        - link "Terms of Service" [ref=e81] [cursor=pointer]:
+          - /url: "#"
+        - text: ·
+        - link "Cookies" [ref=e82] [cursor=pointer]:
+          - /url: "#"

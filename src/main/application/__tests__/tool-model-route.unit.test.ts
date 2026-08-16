@@ -24,7 +24,7 @@ describe('resolveToolRoute', () => {
     for (const toolName of ['edit', 'write', 'patch', 'multiedit']) {
       expect(resolveToolRoute(toolName)).toEqual({
         id: 'editing',
-        model: 'tencent/hy3',
+        model: 'xiaomi/mimo-v2.5',
         authorFinalArgs: true,
         reasonOverResult: false,
       })
@@ -41,7 +41,7 @@ describe('resolveToolRoute', () => {
     for (const toolName of ['bash', 'grep', 'ls', 'some_mcp_tool']) {
       expect(resolveToolRoute(toolName)).toEqual({
         id: 'default',
-        model: 'poolside/laguna-xs-2.1',
+        model: 'xiaomi/mimo-v2.5',
         authorFinalArgs: false,
         reasonOverResult: false,
       })
@@ -51,7 +51,7 @@ describe('resolveToolRoute', () => {
   it('normalizes tool names before matching', () => {
     expect(isReadTool('Read')).toBe(true)
     expect(resolveToolRoute('Read').id).toBe('read')
-    expect(resolveToolExecutionModel('WRITE')).toBe('tencent/hy3')
+    expect(resolveToolExecutionModel('WRITE')).toBe('xiaomi/mimo-v2.5')
   })
 
   it('keeps resolveToolExecutionModel in sync with the route model', () => {
@@ -62,7 +62,7 @@ describe('resolveToolRoute', () => {
 
   it('selects the READ model from the kind × complexity matrix when a task context is given', () => {
     const logicHigh = { kind: 'logic', complexity: 'high' } as const
-    expect(resolveToolRoute('read', logicHigh).model).toBe('poolside/laguna-xs-2.1')
+    expect(resolveToolRoute('read', logicHigh).model).toBe('xiaomi/mimo-v2.5')
 
     const uiMedium = { kind: 'ui', complexity: 'medium' } as const
     expect(resolveToolRoute('read', uiMedium).model).toBe('bytedance-seed/seed-2.0-mini')
@@ -73,7 +73,11 @@ describe('resolveToolRoute', () => {
 
   it('always routes mutations to the proven edit-author model, regardless of task context', () => {
     // Weaker task models produced malformed edit payloads; the mutation model is
-    // fixed so editing never breaks when the task model is switched.
+    // fixed so editing never breaks when the task model is switched. It is
+    // currently the driver itself (the orchestrator authors edit payloads — see
+    // the early-authoring-bridge note in tool-permission-request-extension), so
+    // this happens to equal the default model. The invariant under test is that
+    // mutations do NOT vary by task context, not that the id differs.
     for (const ctx of [
       { kind: 'ui', complexity: 'low' },
       { kind: 'logic', complexity: 'low' },
@@ -81,7 +85,7 @@ describe('resolveToolRoute', () => {
     ] as const) {
       for (const toolName of ['edit', 'write', 'multiedit', 'patch']) {
         const route = resolveToolRoute(toolName, ctx)
-        expect(route.model).toBe('tencent/hy3')
+        expect(route.model).toBe('xiaomi/mimo-v2.5')
         expect(route.authorFinalArgs).toBe(true)
       }
     }
@@ -89,7 +93,7 @@ describe('resolveToolRoute', () => {
 
   it('leaves non-read/mutation tools on the default model regardless of task context', () => {
     expect(resolveToolRoute('bash', { kind: 'ui', complexity: 'high' }).model).toBe(
-      'poolside/laguna-xs-2.1',
+      'xiaomi/mimo-v2.5',
     )
   })
 })
@@ -113,10 +117,10 @@ describe('machine-task routing context', () => {
 
     // logic/high reads route to the default (more capable) model per the matrix —
     // distinct from the flat read fallback, so this proves the context propagated.
-    expect(model).toBe('poolside/laguna-xs-2.1')
+    expect(model).toBe('xiaomi/mimo-v2.5')
     // Context is cleared after the run, so routing falls back to the flat defaults.
     expect(getActiveMachineTaskRoutingContext()).toBeNull()
-    expect(resolveToolRoute('write').model).toBe('tencent/hy3')
+    expect(resolveToolRoute('write').model).toBe('xiaomi/mimo-v2.5')
   })
 })
 

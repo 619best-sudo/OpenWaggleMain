@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
 import type { Message } from '@shared/types/agent'
 import { MessageId } from '@shared/types/brand'
+import { describe, expect, it } from 'vitest'
 import {
   buildCustomSessionNode,
   buildSessionSnapshotFromMessages,
@@ -64,7 +64,7 @@ describe('turing message projection', () => {
       customType: 'turing_bridge_status',
       data: {
         enabledMcpNames: ['playwright'],
-        activeSkillToolNames: ['openwaggle_skill_ui_critic'],
+        activeSkillToolNames: ['turing_machine_skill_ui_critic'],
       },
       timestampMs: 20,
     })
@@ -108,7 +108,7 @@ describe('turing message projection', () => {
       customType: 'turing_bridge_status',
       data: {
         enabledMcpNames: ['playwright'],
-        activeSkillToolNames: ['openwaggle_skill_ui_critic'],
+        activeSkillToolNames: ['turing_machine_skill_ui_critic'],
       },
     })
   })
@@ -124,7 +124,14 @@ describe('turingAppendedToProjectedMessages: handoff contract stripping', () => 
       model: 'm',
       api: 'openrouter',
       provider: 'x',
-      usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
+      usage: {
+        input: 0,
+        output: 0,
+        cacheRead: 0,
+        cacheWrite: 0,
+        totalTokens: 0,
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+      },
       stopReason: 'stop',
       timestamp: 0,
     } as TuringMessage
@@ -134,13 +141,23 @@ describe('turingAppendedToProjectedMessages: handoff contract stripping', () => 
     return {
       role: 'assistant',
       content: [
-        { type: 'text', text: 'SUMMARY:\nraw handoff\nUI SUMMARY:\nDoing the edit\nCATEGORY: frontend\nPLAN_JSON: []' },
+        {
+          type: 'text',
+          text: 'SUMMARY:\nraw handoff\nUI SUMMARY:\nDoing the edit\nCATEGORY: frontend\nPLAN_JSON: []',
+        },
         { type: 'toolCall', id: 'call-1', name: 'edit', arguments: { path: '/a' } },
       ],
       model: 'm',
       api: 'openrouter',
       provider: 'x',
-      usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
+      usage: {
+        input: 0,
+        output: 0,
+        cacheRead: 0,
+        cacheWrite: 0,
+        totalTokens: 0,
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+      },
       stopReason: 'tool_use',
       timestamp: 0,
     } as unknown as TuringMessage
@@ -148,7 +165,9 @@ describe('turingAppendedToProjectedMessages: handoff contract stripping', () => 
 
   it('keeps only the UI SUMMARY prose from a phase-final handoff text block', () => {
     const [projected] = turingAppendedToProjectedMessages([
-      assistantText('SUMMARY:\nprepared a shortlist\nUI SUMMARY:\nFound the files that matter.\nCATEGORY: frontend\nTOOL CHAIN:\nnone'),
+      assistantText(
+        'SUMMARY:\nprepared a shortlist\nUI SUMMARY:\nFound the files that matter.\nCATEGORY: frontend\nTOOL CHAIN:\nnone',
+      ),
     ])
     const textParts = projected!.parts.filter((part) => part.type === 'text')
     expect(textParts).toHaveLength(1)
@@ -190,16 +209,28 @@ describe('buildTuringRunNewMessagesFromProjected: single-projection dedup', () =
       {
         role: 'assistant',
         content: [{ type: 'text', text: 'hello there' }],
-        model: 'm', api: 'openrouter', provider: 'x',
-        usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
-        stopReason: 'stop', timestamp: 0,
+        model: 'm',
+        api: 'openrouter',
+        provider: 'x',
+        usage: {
+          input: 0,
+          output: 0,
+          cacheRead: 0,
+          cacheWrite: 0,
+          totalTokens: 0,
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+        },
+        stopReason: 'stop',
+        timestamp: 0,
       } as unknown as Parameters<typeof turingAppendedToProjectedMessages>[0][number],
     ])
     const projectedAssistantId = projected[0]!.id
 
     // Build newMessages from the SAME projection (no re-projection).
     const newMessages = buildTuringRunNewMessagesFromProjected(
-      { text: 'do the thing', attachments: [] } as Parameters<typeof buildTuringRunNewMessagesFromProjected>[0],
+      { text: 'do the thing', attachments: [] } as Parameters<
+        typeof buildTuringRunNewMessagesFromProjected
+      >[0],
       projected,
     )
 
@@ -217,16 +248,29 @@ describe('turingAppendedToProjectedMessages: streamed-id reuse (dedup vs live st
     return {
       role: 'assistant',
       content: [{ type: 'toolCall', id, name, arguments: {} }],
-      model: 'm', api: 'openrouter', provider: 'x',
-      usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
-      stopReason: 'tool_use', timestamp: 0,
+      model: 'm',
+      api: 'openrouter',
+      provider: 'x',
+      usage: {
+        input: 0,
+        output: 0,
+        cacheRead: 0,
+        cacheWrite: 0,
+        totalTokens: 0,
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+      },
+      stopReason: 'tool_use',
+      timestamp: 0,
     } as unknown as TuringMessage
   }
   function toolResult(toolCallId: string): TuringMessage {
     return {
       role: 'toolResult',
       content: [{ type: 'text', text: 'ok' }],
-      toolCallId, toolName: 'read', isError: false, timestamp: 0,
+      toolCallId,
+      toolName: 'read',
+      isError: false,
+      timestamp: 0,
     } as unknown as TuringMessage
   }
 

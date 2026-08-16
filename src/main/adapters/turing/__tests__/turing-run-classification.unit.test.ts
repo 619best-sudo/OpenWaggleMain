@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import type { HarnessAgentState } from 'turing-harness'
+import { describe, expect, it } from 'vitest'
 import {
   isGracefulPhaseFailure,
   isGracefulVerificationFailure,
@@ -46,7 +46,9 @@ describe('turing-run-classification', () => {
     })
 
     expect(isGracefulVerificationFailure(state)).toBe(true)
-    expect(resolveTerminalError({ terminalError: 'VERDICT: FAIL', agentState: state })).toBeUndefined()
+    expect(
+      resolveTerminalError({ terminalError: 'VERDICT: FAIL', agentState: state }),
+    ).toBeUndefined()
     expect(
       resolveAgentEndReason({
         aborted: false,
@@ -114,7 +116,9 @@ describe('turing-run-classification', () => {
     })
 
     expect(isGracefulPhaseFailure(state)).toBe(true)
-    expect(resolveTerminalError({ terminalError: 'browser screenshot failed', agentState: state })).toBeUndefined()
+    expect(
+      resolveTerminalError({ terminalError: 'browser screenshot failed', agentState: state }),
+    ).toBeUndefined()
     expect(
       resolveAgentEndReason({
         aborted: false,

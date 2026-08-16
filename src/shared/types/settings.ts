@@ -34,6 +34,14 @@ export interface Settings {
   readonly projectDisplayNames: Readonly<Record<string, string>>
   readonly showCustomExecutionTeam: boolean
   readonly toolPermissionMode: ToolPermissionMode
+  /**
+   * Whether the first-run default MCP servers (Playwright) have
+   * already been written to the global MCP config. Set once, by the main
+   * process, so a user who later removes or disables either one doesn't get it
+   * silently re-added on the next launch. Deliberately absent from the settings
+   * IPC schema — the renderer must not be able to flip it.
+   */
+  readonly defaultMcpServersSeeded: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -48,4 +56,5 @@ export const DEFAULT_SETTINGS: Settings = {
   projectDisplayNames: {},
   showCustomExecutionTeam: true,
   toolPermissionMode: 'ask',
+  defaultMcpServersSeeded: false,
 }

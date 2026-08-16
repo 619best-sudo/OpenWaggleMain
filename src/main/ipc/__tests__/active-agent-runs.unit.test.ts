@@ -3,11 +3,11 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   beginToolPermissionRequest,
   beginUserQuestionRequest,
+  cancelAllSessionRuns,
   getPendingToolPermission,
   getPendingUserQuestion,
   resolvePendingToolPermission,
   resolvePendingUserQuestion,
-  cancelAllSessionRuns,
 } from '../active-agent-runs'
 
 describe('active-agent-runs pending request resolution', () => {

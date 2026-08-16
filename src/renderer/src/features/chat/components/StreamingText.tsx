@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import rehypeSanitize from 'rehype-sanitize'
 import type { Highlighter } from 'shiki'
 import { cn } from '@/shared/lib/cn'
 import { type RehypePlugins, safeMarkdownSanitizeSchema } from '@/shared/lib/markdown-safety'
-import { getHighlighter } from '@/shared/lib/shiki/highlighter'
+import {
+  getHighlighter,
+  getLoadedLanguageVersion,
+  subscribeToLoadedLanguages,
+} from '@/shared/lib/shiki/highlighter'
 import { createRehypeShikiPlugin } from '@/shared/lib/shiki/rehype-shiki-plugin'
 import { ShikiCache } from '@/shared/lib/shiki/shiki-cache'
 import { IncrementalMarkdown } from './IncrementalMarkdown'
@@ -25,7 +29,10 @@ const NO_HIGHLIGHTER_PLUGINS: RehypePlugins = [
   createRehypeShikiPlugin({ highlighter: undefined, cache: shikiCache }),
   SANITIZE_PLUGIN_TUPLE,
 ]
-const HIGHLIGHTER_PLUGIN_CACHE = new WeakMap<Highlighter, RehypePlugins>()
+const HIGHLIGHTER_PLUGIN_CACHE = new WeakMap<
+  Highlighter,
+  { version: number; plugins: RehypePlugins }
+>()
 
 /**
  * Module-level resolved highlighter.
@@ -60,30 +67,59 @@ function useShikiHighlighter() {
   return hl
 }
 
-function getRehypePlugins(highlighter: Highlighter | undefined) {
+/**
+ * Hook that re-renders whenever an on-demand grammar finishes loading, so code
+ * blocks that rendered as plain text while their language was still in flight
+ * (dart, kotlin, swift, …) get highlighted on the next pass.
+ */
+function useLoadedLanguageVersion() {
+  const [version, setVersion] = useState(getLoadedLanguageVersion)
+
+  useEffect(() => subscribeToLoadedLanguages(() => setVersion(getLoadedLanguageVersion())), [])
+
+  return version
+}
+
+/**
+ * Plugin arrays are cached per highlighter AND per language version: a new array
+ * identity on language load is what propagates the change through the memoized
+ * markdown tree.
+ */
+function getRehypePlugins(highlighter: Highlighter | undefined, languageVersion: number) {
   if (!highlighter) {
     return NO_HIGHLIGHTER_PLUGINS
   }
 
-  const cachedPlugins = HIGHLIGHTER_PLUGIN_CACHE.get(highlighter)
-  if (cachedPlugins) {
-    return cachedPlugins
+  const cached = HIGHLIGHTER_PLUGIN_CACHE.get(highlighter)
+  if (cached && cached.version === languageVersion) {
+    return cached.plugins
   }
 
   const plugins: RehypePlugins = [
     createRehypeShikiPlugin({ highlighter, cache: shikiCache }),
     SANITIZE_PLUGIN_TUPLE,
   ]
-  HIGHLIGHTER_PLUGIN_CACHE.set(highlighter, plugins)
+  HIGHLIGHTER_PLUGIN_CACHE.set(highlighter, { version: languageVersion, plugins })
   return plugins
 }
 
-export function StreamingText({ text, isStreaming = false, className }: StreamingTextProps) {
+/**
+ * Memoized on purpose: props are all primitives, so every COMPLETED text part
+ * bails out while the active message streams — only the growing tail
+ * re-renders. Without this, each stream tick re-rendered (and re-ran
+ * `useIncrementalMarkdown` over) every finished part of the message.
+ */
+export const StreamingText = memo(function StreamingText({
+  text,
+  isStreaming = false,
+  className,
+}: StreamingTextProps) {
   const highlighter = useShikiHighlighter()
+  const languageVersion = useLoadedLanguageVersion()
 
   if (!text) return null
 
-  const rehypePlugins = getRehypePlugins(highlighter)
+  const rehypePlugins = getRehypePlugins(highlighter, languageVersion)
 
   return (
     <div className={cn('prose min-w-0 max-w-full break-words [overflow-wrap:anywhere]', className)}>
@@ -91,10 +127,11 @@ export function StreamingText({ text, isStreaming = false, className }: Streamin
         text={text}
         isStreaming={isStreaming}
         highlighter={highlighter}
+        languageVersion={languageVersion}
         cache={shikiCache}
         rehypePlugins={rehypePlugins}
         tailRehypePlugins={isStreaming ? TAIL_STREAMING_PLUGINS : undefined}
       />
     </div>
   )
-}
+})

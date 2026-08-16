@@ -1,5 +1,5 @@
 import type { SessionId } from '@shared/types/brand'
-import type { SessionDetail, SessionSummary } from '@shared/types/session'
+import type { SessionDetail } from '@shared/types/session'
 import { useComposerStore } from '@/features/composer/state'
 import { useSessionStore } from '@/features/sessions/state'
 import { api } from '@/shared/lib/ipc'
@@ -22,36 +22,50 @@ function setError(set: ChatSet) {
   return (error: string) => set({ error })
 }
 
+/**
+ * Loads the session list from summaries only.
+ *
+ * This used to call `listSessionDetails()`, which hydrates every node of every
+ * session — the whole message history of the entire app — just to render a
+ * sidebar list of titles. Full details are fetched lazily per session by
+ * `refreshSession`, which is all any consumer of `sessionById` actually needs.
+ */
 async function loadSessions(set: ChatSet, get: ChatGet) {
   try {
-    const all = await api.listSessionDetails()
-    const sessionById = new Map<SessionId, SessionDetail>()
-    const sessions: SessionSummary[] = []
+    const all = await api.listSessions()
+    const sessions = all.filter(
+      (summary) => summary.title !== 'New session' || (summary.messageCount ?? 0) > 0,
+    )
 
-    for (const session of all) {
-      sessionById.set(session.id, session)
-      const summary = toSummary(session)
-      if (summary.title !== 'New session' || (summary.messageCount ?? 0) > 0) {
-        sessions.push(summary)
-      }
-    }
-
+    const knownSessionIds = new Set(all.map((summary) => summary.id))
     const activeSessionId = get().activeSessionId
-    const activeSession = activeSessionId ? (sessionById.get(activeSessionId) ?? null) : null
-    const missingSessionIds = new Set(get().missingSessionIds)
-    for (const session of all) {
-      missingSessionIds.delete(session.id)
+    const activeSessionExists = activeSessionId !== null && knownSessionIds.has(activeSessionId)
+
+    // Drop cached details for sessions that no longer exist so the cache can't
+    // grow unbounded or resurrect a deleted session.
+    const sessionById = new Map<SessionId, SessionDetail>()
+    for (const [id, detail] of get().sessionById) {
+      if (knownSessionIds.has(id)) sessionById.set(id, detail)
     }
-    if (activeSessionId && !activeSession) {
+
+    const missingSessionIds = new Set(get().missingSessionIds)
+    for (const id of knownSessionIds) {
+      missingSessionIds.delete(id)
+    }
+    if (activeSessionId && !activeSessionExists) {
       missingSessionIds.add(activeSessionId)
     }
+
+    const activeSession = activeSessionExists
+      ? (sessionById.get(activeSessionId) ?? get().activeSession)
+      : null
 
     set({
       sessions,
       sessionById,
       missingSessionIds,
-      draftSession: activeSession ? null : get().draftSession,
-      activeSessionId: activeSession ? activeSessionId : null,
+      draftSession: activeSessionExists ? null : get().draftSession,
+      activeSessionId: activeSessionExists ? activeSessionId : null,
       activeSession,
       error: null,
     })
@@ -98,7 +112,28 @@ function setActiveSession(id: SessionId | null, set: ChatSet, get: ChatGet) {
   }
 }
 
-async function refreshSession(id: SessionId, set: ChatSet, get: ChatGet) {
+/**
+ * In-flight `getSessionDetail` calls, keyed by session.
+ *
+ * Opening a session fires this from several places at once (the route effect,
+ * `setActiveSession`, and the post-run refresh). Each call re-reads and
+ * re-hydrates every node of the session in the main process, so collapsing
+ * concurrent duplicates removes most of the latency of clicking a long thread.
+ */
+const inFlightSessionDetailRefreshes = new Map<SessionId, Promise<void>>()
+
+function refreshSession(id: SessionId, set: ChatSet, get: ChatGet) {
+  const existing = inFlightSessionDetailRefreshes.get(id)
+  if (existing) return existing
+
+  const request = runSessionRefresh(id, set, get).finally(() => {
+    inFlightSessionDetailRefreshes.delete(id)
+  })
+  inFlightSessionDetailRefreshes.set(id, request)
+  return request
+}
+
+async function runSessionRefresh(id: SessionId, set: ChatSet, get: ChatGet) {
   try {
     const session = await api.getSessionDetail(id)
     const wasActiveSession = isSameSessionId(get().activeSessionId, id)

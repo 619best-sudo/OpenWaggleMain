@@ -38,6 +38,18 @@ export interface FetchInspirationInput {
   readonly kind?: 'web-ui' | 'mobile-ui' | 'poster'
   /** Requested section kinds; one blueprint is returned per requested section. */
   readonly sections?: string[]
+  /**
+   * Visual language (neumorphism, glassmorphism, brutalist, flat…). Ranked as
+   * its own weighted axis server-side, above keyword overlap.
+   */
+  readonly style?: string
+  /**
+   * Product area (ecommerce, health, saas, fintech…). NOT `category` — on this
+   * API `category` is the section kind, and has been since the first migration.
+   */
+  readonly domain?: string
+  /** `page` for a whole screen (one coherent design); `section` for parts. */
+  readonly scope?: 'page' | 'section' 
   /** Full base incl. `/turing-machine` (default: resolveTuringMachineBaseUrl()). */
   readonly baseUrl?: string
   /** Bearer access token (user JWT). No token ⇒ null without a request. */
@@ -68,13 +80,7 @@ function normalizeKeywords(value: readonly string[]): string[] {
 }
 
 const INSPIRATION_KINDS = new Set(['web-ui', 'mobile-ui', 'poster'])
-const INSPIRATION_CATEGORIES = new Set([
-  'navigation',
-  'hero',
-  'section',
-  'footer',
-  'background',
-])
+const INSPIRATION_CATEGORIES = new Set(['navigation', 'hero', 'section', 'footer', 'background'])
 
 /**
  * Minimal runtime check for the blueprint's required fields. The backend owns
@@ -99,6 +105,11 @@ function looksLikeInspirationRow(value: unknown): value is { json?: unknown } {
   return typeof value === 'object' && value !== null
 }
 
+/** How many usable rows a search payload carried. */
+function countRows(payload: unknown): number {
+  return Array.isArray(payload) ? payload.filter(looksLikeInspirationRow).length : 0
+}
+
 /**
  * Look up stored section blueprints by keyword overlap. Never throws — returns
  * `null` for any no-match / failure case so the tool can treat "nothing found"
@@ -108,7 +119,11 @@ export async function fetchInspirationByKeywords(
   input: FetchInspirationInput,
 ): Promise<FetchInspirationResult | null> {
   const keywords = normalizeKeywords(input.keywords)
-  if (keywords.length === 0) return null
+  const style = input.style?.trim().toLowerCase() || undefined
+  const domain = input.domain?.trim().toLowerCase() || undefined
+  // An axes-only query is a complete request ("any glassmorphic health hero"),
+  // so only bail when there is nothing at all to match on.
+  if (keywords.length === 0 && !style && !domain) return null
 
   const token = input.token?.trim()
   if (!token) return null
@@ -125,29 +140,63 @@ export async function fetchInspirationByKeywords(
     input.signal?.addEventListener('abort', () => controller.abort(), { once: true })
   }
 
-  let response: Response
+  /** One POST. Returns the parsed rows, or null on any failure. */
+  const post = async (body: Record<string, unknown>): Promise<unknown> => {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      })
+      if (!res.ok) return null
+      return await res.json().catch(() => null)
+    } catch {
+      // Network error / abort / backend down — treat as "nothing found".
+      return null
+    }
+  }
+
+  let payload: unknown
   try {
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ keywords, kind: input.kind, sections: input.sections }),
-      signal: controller.signal,
+    payload = await post({
+      keywords,
+      kind: input.kind,
+      sections: input.sections,
+      style,
+      domain,
+      scope: input.scope,
     })
-  } catch {
-    // Network error / abort / backend down — treat as "nothing found".
-    clearTimeout(timeoutId)
-    return null
+
+    // WIDEN ONCE rather than come back empty-handed.
+    //
+    // The narrow query asks for a style+domain+section match, which a modest
+    // store often cannot satisfy exactly — and "no match" costs the caller the
+    // whole point of the lookup: it then invents a layout from nothing. The
+    // server already ranks partial matches, so dropping the narrowing terms
+    // surfaces the CLOSEST stored design instead of none. Structure is what the
+    // consumer borrows, and a same-domain hero from a different style is still a
+    // far better starting point than an imagined one.
+    //
+    // Only one extra round trip, and only when the first came back empty.
+    if (countRows(payload) === 0 && (style || domain || keywords.length > 0)) {
+      payload = await post({
+        // Keep the section request (asking for a hero and getting a footer is
+        // not a useful relaxation) and keep `kind` (a poster is not a website).
+        keywords: [...keywords, ...(style ? [style] : []), ...(domain ? [domain] : [])],
+        kind: input.kind,
+        sections: input.sections,
+        scope: input.scope,
+      })
+    }
   } finally {
     clearTimeout(timeoutId)
   }
 
-  if (!response.ok) return null
-
-  const payload = (await response.json().catch(() => null)) as unknown
   if (!Array.isArray(payload)) return null
   // The backend returns one row per requested section (possibly from different
   // designs). Each row is the stored entity: { id, keywords, category, json, ... }.

@@ -7,6 +7,7 @@ import {
   type SchemaType,
   safeDecodeUnknown,
 } from '@shared/schema'
+import { PROJECT_CONFIG_DIR } from '@shared/constants/project-config'
 import { projectSettingsFileSchema } from '@shared/schemas/validation'
 import type { JsonObject } from '@shared/types/json'
 import type { ThinkingLevel } from '@shared/types/settings'
@@ -14,7 +15,6 @@ import { isEnoent } from '@shared/utils/node-error'
 import { createLogger } from '../logger'
 
 const JSON_INDENT_SPACES = 2
-const OPENWAGGLE_CONFIG_DIR = '.openwaggle'
 const PROJECT_SETTINGS_FILE_NAME = 'settings.json'
 const EMPTY_SETTINGS_JSON = '{}\n'
 
@@ -34,7 +34,7 @@ const EMPTY_CONFIG: ProjectConfig = {}
 type ParsedProjectSettingsFile = SchemaType<typeof projectSettingsFileSchema>
 
 function getConfigDirectoryPath(projectPath: string) {
-  return join(projectPath, OPENWAGGLE_CONFIG_DIR)
+  return join(projectPath, PROJECT_CONFIG_DIR)
 }
 
 export function getProjectSettingsPath(projectPath: string): string {
@@ -88,7 +88,7 @@ export async function loadProjectConfig(projectPath: string): Promise<ProjectCon
 
   const settings = await readValidatedProjectSettings(settingsPath, {
     strict: false,
-    logLabel: '.openwaggle/settings.json',
+    logLabel: '.turing-machine/settings.json',
   })
 
   return parseProjectConfig(settings)
@@ -122,7 +122,7 @@ async function updateProjectSettingsFile(
   const current =
     (await readValidatedProjectSettings(configPath, {
       strict: true,
-      logLabel: '.openwaggle/settings.json',
+      logLabel: '.turing-machine/settings.json',
     })) ?? decodeUnknownOrThrow(projectSettingsFileSchema, {})
   const next = decodeUnknownOrThrow(projectSettingsFileSchema, updater(current))
 

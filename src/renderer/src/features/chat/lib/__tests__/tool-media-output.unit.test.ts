@@ -4,6 +4,7 @@ import {
   hasToolMedia,
   isMediaFileRef,
   mediaKindFromExtension,
+  mediaKindFromMimeType,
   mimeTypeForPath,
   parseDataUrl,
 } from '../tool-media-output'
@@ -39,6 +40,15 @@ describe('tool-media-output extraction', () => {
       expect(mimeTypeForPath('x.webp')).toBe('image/webp')
       expect(mimeTypeForPath('x.WEBM')).toBe('video/webm')
       expect(mimeTypeForPath('noext')).toBeUndefined()
+    })
+    it('classifies media kinds from mime types', () => {
+      expect(mediaKindFromMimeType('image/png')).toBe('image')
+      expect(mediaKindFromMimeType('IMAGE/SVG+XML')).toBe('image')
+      expect(mediaKindFromMimeType('video/mp4')).toBe('video')
+      expect(mediaKindFromMimeType('audio/wav')).toBe('audio')
+      expect(mediaKindFromMimeType('text/html')).toBe('html')
+      expect(mediaKindFromMimeType('application/json')).toBeNull()
+      expect(mediaKindFromMimeType(undefined)).toBeNull()
     })
   })
 
@@ -122,6 +132,62 @@ describe('tool-media-output extraction', () => {
 
     it('returns null for text-only content', () => {
       expect(getToolMediaOutput({ content: [{ type: 'text', text: 'no media here' }] })).toBeNull()
+    })
+
+    it('extracts an assets_generator file-reference block (uri + mimeType)', () => {
+      // assets_generator returns the generated asset by reference, not inline:
+      //   { content: [{ type: 'file', uri: <path>, mimeType }], output: <text> }
+      // The kind is not in the block type, so it must come from the MIME (or the
+      // path extension). Without this, the block is unrecognized and the tool
+      // shows only its text output ("Generated image → <path>") with no preview.
+      const out = getToolMediaOutput({
+        content: [{ type: 'file', uri: 'assets/hero.png', mimeType: 'image/png' }],
+      })
+      expect(out).toEqual({
+        kind: 'image',
+        src: 'assets/hero.png',
+        needsResolution: true,
+      })
+    })
+
+    it('derives video kind from the mimeType of a file-reference block', () => {
+      const out = getToolMediaOutput({
+        content: [{ type: 'file', uri: 'assets/loop.mp4', mimeType: 'video/mp4' }],
+      })
+      expect(out).toEqual({
+        kind: 'video',
+        src: 'assets/loop.mp4',
+        needsResolution: true,
+        mimeType: 'video/mp4',
+      })
+    })
+
+    it('falls back to the path extension when a file block has no mimeType', () => {
+      const out = getToolMediaOutput({
+        content: [{ type: 'file', uri: 'assets/icon.svg' }],
+      })
+      expect(out).toMatchObject({ kind: 'image', src: 'assets/icon.svg', needsResolution: true })
+    })
+
+    it('falls back to a details.{uri,mimeType} reference when content has no media block', () => {
+      // Some disk-writing tools surface the asset path only on `details`.
+      const out = getToolMediaOutput({
+        content: [{ type: 'text', text: 'Generated image → assets/hero.png' }],
+        details: { uri: 'assets/hero.png', mimeType: 'image/png', size: 12345 },
+      })
+      expect(out).toEqual({
+        kind: 'image',
+        src: 'assets/hero.png',
+        needsResolution: true,
+      })
+    })
+
+    it('ignores a file block whose mimeType is not a previewable media kind', () => {
+      // A JSON manifest "asset" is not previewable — leave it as the text output.
+      const out = getToolMediaOutput({
+        content: [{ type: 'file', uri: 'assets/scene.json', mimeType: 'application/json' }],
+      })
+      expect(out).toBeNull()
     })
   })
 

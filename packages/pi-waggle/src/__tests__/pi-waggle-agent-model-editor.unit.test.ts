@@ -46,7 +46,7 @@ describe('pi-waggle agent model editor', () => {
     const harness = createHarness({
       branchEntries: [activeModeStateEntry(inheritedConfigJson())],
       selectResponses: [
-        'Edit Architect — openai/gpt-5.5 · Plans the implementation',
+        'Edit agent 1 — Architect — openai/gpt-5.5 · Plans the implementation',
         'Change model — openai/gpt-5.5',
         'Pin concrete model…',
         'Back',

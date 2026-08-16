@@ -863,7 +863,7 @@ Your job is to verify that the mobile change is real, runnable, and aligned with
 Verification responsibilities:
 1. Read the planner, builder, and animation expert handoff before verifying.
 2. Run the smallest relevant install, dev, build, or typecheck command needed to prove the mobile change is wired correctly when practical.
-3. Use mobile-mcp, mobile-device, or the most relevant installed mobile runtime MCP to open the changed screen or flow, inspect the runtime behavior, and capture evidence for visible breakage or device-flow issues.
+3. Use the built-in mobile automation (mobile look / tap, or activity_inspect) to open the changed screen or flow, inspect the runtime behavior, and capture evidence for visible breakage or device-flow issues.
 4. Treat a mobile verification pass as requiring actual simulator, emulator, or device runtime execution when the surface is verifiable through the installed mobile runtime tooling.
 5. Check layout integrity and UI quality directly in the simulator, emulator, or device: spacing, margins, alignment, overflow, safe-area fit, typography fit, interaction states, and whether the screen feels visually coherent instead of broken or unfinished.
 6. Check that images, videos, icons, fonts, and other visible media actually load without broken links, empty frames, or obvious missing-asset placeholders unless those placeholders were an explicit accepted fallback.
@@ -918,7 +918,7 @@ End every turn with:
       stop: { primary: 'consensus', maxTurnsSafety: 9 },
     },
     app: {
-      requiredMcps: ['mobile-mcp'],
+      requiredMcps: [],
       requiredSkills: [],
       optionalMcps: [
         'mobile-device',
@@ -1077,7 +1077,7 @@ Planning responsibilities:
 2. Identify the smallest believable failing surface and the surrounding flows that may have been disturbed.
 3. Choose the right tools for the next step:
    - use Playwright for website or web-app pages, components, console errors, screenshots, and layout measurements
-   - use mobile-mcp or mobile-device for mobile screens, flows, and runtime evidence
+   - use the built-in mobile automation for mobile screens, flows, and runtime evidence
    - use Postman MCP for backend or API behavior
    - use SQL MCP for stored-data, query, or persistence verification
    - use targeted code instrumentation and temporary logs when reverse engineering logic or timing behavior
@@ -1215,7 +1215,7 @@ Your job is to verify whether the attempted fix actually solved the problem and 
 Verification responsibilities:
 1. Re-run the original failing path with the right tools:
    - Playwright for web UI and component-level evidence
-   - mobile-mcp or mobile-device for mobile verification
+   - the built-in mobile automation for mobile verification
    - Postman MCP for backend or API validation
    - SQL MCP for stored-data or persistence validation
 2. Check whether the specific issue is fixed, partially fixed, or still failing.
@@ -1257,7 +1257,7 @@ End every turn with:
     app: {
       requiredMcps: [],
       requiredSkills: [],
-      optionalMcps: ['playwright', 'mobile-mcp', 'mobile-device', 'postman', 'database'],
+      optionalMcps: ['playwright', 'mobile-device', 'postman', 'database'],
       optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor', 'backend-auditor'],
     },
     isBuiltIn: true,
@@ -1362,7 +1362,7 @@ Your job is to design a structured, executable QA plan for the built product bef
 Design responsibilities:
 1. Choose the right verification path for each surface:
    - use Playwright for website or web-app behavior
-   - use mobile-mcp for native mobile screens or device flows
+   - use the built-in mobile automation for native mobile screens or device flows
    - use Postman MCP for API request, collection, and contract checks
    - use database MCP when data state, schema assumptions, or query results need verification
 2. Define test coverage across happy path, important edge cases, failure states, and risky state transitions when practical.
@@ -1411,7 +1411,7 @@ Execution responsibilities:
 1. Execute the designer's cases in priority order whenever practical.
 2. Use the specified tools for each case:
    - Playwright for website or web-app behavior
-   - mobile-mcp for native mobile screens or device flows
+   - the built-in mobile automation for native mobile screens or device flows
    - Postman MCP for API request, collection, and contract checks
    - database MCP when data state, schema assumptions, or query results need verification
 3. Mark every case explicitly as pass, fail, blocked, or untested.
@@ -1459,7 +1459,7 @@ Issue format for every confirmed bug:
       stop: { primary: 'consensus', maxTurnsSafety: 8 },
     },
     app: {
-      requiredMcps: ['playwright', 'mobile-mcp', 'postman', 'database'],
+      requiredMcps: ['playwright', 'postman', 'database'],
       requiredSkills: ['ui-screenshot-auditor', 'backend-auditor'],
     },
     isBuiltIn: true,
@@ -1487,7 +1487,7 @@ Planning responsibilities:
 3. Design the complete set of test cases needed for this QA cycle, including happy path, edge cases, failure states, invalid input, permissions, regressions, and data-validation checks when relevant.
 4. Choose the right tool for each case:
    - Playwright for website or web-app behavior
-   - mobile-mcp for native mobile screens or device flows
+   - the built-in mobile automation for native mobile screens or device flows
    - Postman MCP for API calls and contract verification
    - SQL MCP for query results, stored data checks, and data-integrity verification
 5. Order the test cases so the executor can run them efficiently and know what evidence to capture.
@@ -1524,7 +1524,7 @@ Your job is to execute all planned test cases as faithfully as practical and gat
 
 Execution responsibilities:
 1. Execute the QA Planner's ordered test cases in priority order.
-2. Use Playwright for browser cases, mobile-mcp for mobile cases, Postman MCP for API cases, and SQL MCP for stored-data or query-validation cases.
+2. Use Playwright for browser cases, the built-in mobile automation for mobile cases, Postman MCP for API cases, and SQL MCP for stored-data or query-validation cases.
 3. Record every case as pass, fail, blocked, or untested.
 4. Capture the strongest available evidence for every failed, blocked, or high-risk case: screenshots, runtime notes, API outputs, response mismatches, SQL results, and repro details.
 5. Call out cross-surface failures where one broken layer explains another symptom.
@@ -1593,7 +1593,7 @@ End every turn with:
     app: {
       requiredMcps: [],
       requiredSkills: [],
-      optionalMcps: ['playwright', 'mobile-mcp', 'postman', 'database'],
+      optionalMcps: ['playwright', 'postman', 'database'],
       optionalSkills: ['ui-screenshot-auditor', 'backend-auditor'],
     },
     isBuiltIn: true,
@@ -1708,7 +1708,7 @@ Your job is to gather concrete performance evidence across the product's web, mo
 
 Investigation responsibilities:
 1. Use Chrome DevTools MCP for web performance traces, browser runtime issues, network waterfalls, rendering cost, and page-level bottlenecks.
-2. Use mobile-mcp for mobile screen responsiveness, startup pain, navigation stalls, sluggish lists, and runtime interaction issues.
+2. Use the built-in mobile automation for mobile screen responsiveness, startup pain, navigation stalls, sluggish lists, and runtime interaction issues.
 3. Use Postman MCP for API timing, repeated requests, slow endpoints, error-time behavior, and obvious contract inefficiency.
 4. Use SQL MCP for slow queries, heavy scans, index gaps, repeated database work, and wasteful data access patterns.
 5. Separate findings by surface so the reporting agent can explain where time is being spent and why.
@@ -1800,7 +1800,7 @@ End every turn with:
       stop: { primary: 'consensus', maxTurnsSafety: 8 },
     },
     app: {
-      requiredMcps: ['chrome-devtools', 'mobile-mcp', 'postman', 'sql'],
+      requiredMcps: ['chrome-devtools', 'postman', 'sql'],
       requiredSkills: ['performance-auditor'],
     },
     isBuiltIn: true,
@@ -2911,7 +2911,7 @@ End every turn with:
       stop: { primary: 'consensus', maxTurnsSafety: 6 },
     },
     app: {
-      requiredMcps: ['mobile-mcp'],
+      requiredMcps: [],
       requiredSkills: ['frontend-implementer'],
       optionalMcps: [
         'mobile-device',
@@ -3143,7 +3143,7 @@ End every turn with:
     app: {
       requiredMcps: [],
       requiredSkills: ['ui-screenshot-auditor', 'backend-auditor'],
-      optionalMcps: ['playwright', 'mobile-mcp', 'mobile-device', 'postman', 'database'],
+      optionalMcps: ['playwright', 'mobile-device', 'postman', 'database'],
       optionalSkills: ['frontend-implementer'],
     },
     isBuiltIn: true,
@@ -3329,7 +3329,7 @@ End every turn with:
           model: createWaggleModelBinding('$inherit'),
           roleDescription: `You are the lead reviewer on a council of experts, covering every quality lens in a single pass.
 
-For UI, gather visual evidence first: use Playwright (or mobile-mcp for a mobile UI) to render the page and screenshot the specific element/component under review and the full surface, then judge from what you actually see — never from the markup alone.
+For UI, gather visual evidence first: use Playwright (or the built-in mobile automation for a mobile UI) to render the page and screenshot the specific element/component under review and the full surface, then judge from what you actually see — never from the markup alone.
 
 Review across all of these lenses:
 1. Product/UX: does it clearly serve the goal, with an obvious primary action and sound information hierarchy?

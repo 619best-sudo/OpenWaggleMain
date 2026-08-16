@@ -25,6 +25,7 @@ vi.mock('../turing/providers/turing-credentials', () => ({
 }))
 
 import { resolveTuringLlmConfig, toolModelCandidatesFor } from '../turing/turing-llm-config'
+import { TURING_MODELS } from '../turing/turing-models.config'
 
 // `resolveTuringMachineBaseUrl` reads process.env directly, not the env module.
 const BACKEND_BASE_URL = 'http://localhost:8787/turing-machine'
@@ -42,14 +43,26 @@ afterEach(() => {
 describe('resolveTuringLlmConfig — backend routing (default)', () => {
   // The whole point of the migration: no model ref may reach OpenRouter directly,
   // and no OpenRouter key may be used, unless the escape hatch is explicitly on.
-  it('sends the turing-machine alias to the backend as the sentinel model', () => {
+  it('resolves the turing-machine alias to a concrete slug, not the sentinel', () => {
     const config = resolveTuringLlmConfig('turing-machine/turing-machine')
 
     // The harness appends /chat/completions, so this must be the backend mount.
     expect(config.baseUrl).toBe(BACKEND_BASE_URL)
     expect(config.apiKey).toBe('stored-tm-jwt')
-    // The sentinel hands upstream model choice to the backend.
-    expect(config.modelSlug).toBe('turing-machine')
+    // The backend proxy is a transparent passthrough now — it no longer resolves
+    // a `turing-machine` sentinel from its own env or a candidate pool, so the
+    // model has to be a real OpenRouter slug before it leaves this process.
+    // Sending the sentinel would reach OpenRouter verbatim and 404.
+    expect(config.modelSlug).not.toBe('turing-machine')
+    expect(config.modelSlug).toMatch(/^[^/]+\/[^/]+$/)
+  })
+
+  it('honours a concrete model named under the turing-machine provider', () => {
+    const config = resolveTuringLlmConfig('turing-machine/deepseek/deepseek-r1-0528')
+
+    // `turing-machine/<slug>` names a specific model; only the bare
+    // `turing-machine/turing-machine` alias means "product picks".
+    expect(config.modelSlug).toBe('deepseek/deepseek-r1-0528')
   })
 
   it('routes explicit provider slugs through the backend too, unchanged', () => {
@@ -83,12 +96,15 @@ describe('resolveTuringLlmConfig — direct OpenRouter escape hatch', () => {
     mockEnv.OPENWAGGLE_DIRECT_OPENROUTER = 'true'
   })
 
-  it('maps the turing-machine alias to direct OpenRouter Laguna', () => {
+  it('maps the turing-machine alias to the configured driver', () => {
     const config = resolveTuringLlmConfig('turing-machine/turing-machine')
 
     expect(config.baseUrl).toBe('https://openrouter.ai/api/v1')
     expect(config.apiKey).toBe('stored-openrouter-key')
-    expect(config.modelSlug).toBe('poolside/laguna-xs-2.1')
+    // Read from the config rather than hardcoded: the driver slug lives in
+    // `turing-models.config.ts` and this test is about the ALIAS mapping, not
+    // about which model the product currently drives with.
+    expect(config.modelSlug).toBe(TURING_MODELS.driver)
   })
 
   it('keeps explicit OpenRouter models on direct OpenRouter routing', () => {

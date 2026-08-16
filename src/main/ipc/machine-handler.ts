@@ -9,8 +9,8 @@ import {
   discardMachinePlan,
   executeApprovedMachinePlan,
   executeMachineRun,
-  readPersistedMachinePlanModel,
   type MachineRunResult,
+  readPersistedMachinePlanModel,
 } from '../application/machine-run-service'
 import { SessionRepository } from '../ports/session-repository'
 import { broadcastToWindows } from '../utils/broadcast'
@@ -86,7 +86,8 @@ function handleSendMachineMessage(
     yield* Effect.ensuring(
       runRegisteredMachineMessage(sessionId, runId, validatedPayload, model, abortController),
       Effect.sync(() => {
-        if (activeMachineRuns.deleteIfCurrent(sessionId, abortController)) finishMachineRun(sessionId)
+        if (activeMachineRuns.deleteIfCurrent(sessionId, abortController))
+          finishMachineRun(sessionId)
       }),
     )
   })
@@ -121,7 +122,8 @@ function handleApproveMachinePlan(sessionId: SessionId) {
     yield* Effect.ensuring(
       runApprovedMachinePlan(sessionId, runId, machinePlanModel, abortController),
       Effect.sync(() => {
-        if (activeMachineRuns.deleteIfCurrent(sessionId, abortController)) finishMachineRun(sessionId)
+        if (activeMachineRuns.deleteIfCurrent(sessionId, abortController))
+          finishMachineRun(sessionId)
       }),
     )
   })

@@ -3,7 +3,12 @@ import { useEffect, useRef, useState } from 'react'
 import type { Highlighter, ThemedToken } from 'shiki'
 import { cn } from '@/shared/lib/cn'
 import { createRendererLogger } from '@/shared/lib/logger'
-import { DEFAULT_THEME, getHighlighter, resolveLanguage } from '@/shared/lib/shiki/highlighter'
+import {
+  DEFAULT_THEME,
+  ensureLanguage,
+  getHighlighter,
+  resolveLanguage,
+} from '@/shared/lib/shiki/highlighter'
 import type { WaggleCodeThemeName } from '@/shared/lib/shiki/waggle-code-theme'
 
 type TextareaVariant = 'default' | 'mono'
@@ -118,7 +123,13 @@ export function Textarea({
   useEffect(() => {
     if (!highlightLanguage) return
     let active = true
-    getHighlighter()
+    // Drop the previous grammar's highlighter while the new language loads —
+    // tokenizing with a language the highlighter hasn't registered throws.
+    setHighlighter(null)
+    // Gate on `ensureLanguage` so the synchronous `codeToTokensBase` call below
+    // only ever runs once this language's grammar is registered.
+    ensureLanguage(highlightLanguage)
+      .then(async (ready) => (ready ? await getHighlighter() : null))
       .then((loadedHighlighter) => {
         if (active) {
           setHighlighter(loadedHighlighter)

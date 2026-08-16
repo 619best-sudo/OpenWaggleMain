@@ -40,8 +40,6 @@ export interface ComposerSectionParams {
   readonly handleStartWaggle: (config: WaggleConfig) => void
   readonly handleStartTeam: (teammate: TeammateDefinition) => void
   readonly handleSetMachineModeEnabled: (enabled: boolean) => void
-  readonly handleApproveMachinePlan: () => Promise<void>
-  readonly handleDiscardMachinePlan: () => Promise<void>
   readonly handleStopCollaboration: () => void
   readonly handleClearTeamMode: () => void
   readonly handleSkipBranchSummary: () => void
@@ -81,8 +79,6 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     handleStartWaggle,
     handleStartTeam,
     handleSetMachineModeEnabled,
-    handleApproveMachinePlan,
-    handleDiscardMachinePlan,
     handleStopCollaboration,
     handleClearTeamMode,
     handleSkipBranchSummary,
@@ -146,8 +142,6 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     onStartWaggle: handleStartWaggle,
     onStartTeam: handleStartTeam,
     onSetMachineModeEnabled: handleSetMachineModeEnabled,
-    onApproveMachinePlan: handleApproveMachinePlan,
-    onDiscardMachinePlan: handleDiscardMachinePlan,
     onClearTeamMode: handleClearTeamMode,
     onSendWithWaggle: handleSendWithWaggle,
     onSteer: handleSteer,

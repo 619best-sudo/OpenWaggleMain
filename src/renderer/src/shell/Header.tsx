@@ -4,6 +4,7 @@ import { useChat } from '@/features/chat/hooks'
 import { useDiffRouteNavigation } from '@/features/diff-panel/hooks'
 import { CommitDialog } from '@/features/git/components'
 import { useGit } from '@/features/git/hooks'
+import { forgetNonRepositoryPath } from '@/features/git/state'
 import { useProject } from '@/features/sessions/hooks'
 import { cn } from '@/shared/lib/cn'
 import { useUIStore } from '@/shell/ui-store'
@@ -38,6 +39,9 @@ export function Header() {
   const showSeparator = showDiffButton
 
   function handleRefreshGit() {
+    // An explicit refresh should re-probe a folder we previously wrote off as
+    // "not a repo" — the user may have just run `git init`.
+    forgetNonRepositoryPath(projectPath)
     void refreshGitStatus(projectPath)
     void refreshGitBranches(projectPath)
     bumpDiffRefreshKey()

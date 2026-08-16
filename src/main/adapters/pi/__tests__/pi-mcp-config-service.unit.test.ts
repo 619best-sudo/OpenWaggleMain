@@ -50,7 +50,7 @@ describe('Pi MCP config service', () => {
           shared: { command: 'pi-project-shared' },
         },
       })
-      await writeJson(path.join(project, '.openwaggle', 'agent', 'mcp.json'), {
+      await writeJson(path.join(project, '.turing-machine', 'agent', 'mcp.json'), {
         settings: { toolPrefix: 'short' },
         mcpServers: {
           openwaggle: { command: 'openwaggle' },
@@ -65,7 +65,7 @@ describe('Pi MCP config service', () => {
         'project-standard',
         'project-agents',
         'project-pi',
-        'project-openwaggle',
+        'project-turing-machine',
       ])
       expect(view.effective.settings.toolPrefix).toBe('short')
       expect(view.effective.mcpServers.shared?.command).toBe('openwaggle-shared')
@@ -156,7 +156,7 @@ describe('Pi MCP config service', () => {
 
       const view = await service.writeSourceConfig({
         projectPath: project,
-        sourceId: 'project-openwaggle',
+        sourceId: 'project-turing-machine',
         rawJson: JSON.stringify(
           {
             mcpServers: {
@@ -170,7 +170,7 @@ describe('Pi MCP config service', () => {
 
       expect(view.adapter.enabled).toBe(true)
       expect(warmedConfigs).toHaveLength(1)
-      expect(await readMcpConfig(path.join(project, '.openwaggle', 'agent', 'mcp.json'))).toEqual({
+      expect(await readMcpConfig(path.join(project, '.turing-machine', 'agent', 'mcp.json'))).toEqual({
         mcpServers: {
           browserUse: { url: 'http://localhost:8000/sse' },
         },
@@ -207,7 +207,7 @@ describe('Pi MCP config service', () => {
           installs.push(source)
         },
       })
-      await writeJson(path.join(project, '.openwaggle', 'agent', 'mcp.json'), {
+      await writeJson(path.join(project, '.turing-machine', 'agent', 'mcp.json'), {
         mcpServers: {
           projectServer: { command: 'project-server' },
         },
@@ -223,7 +223,7 @@ describe('Pi MCP config service', () => {
 
       expect(installs).toEqual([MCP_ADAPTER_PACKAGE_SOURCE])
       expect(context.configPath).toMatch(
-        new RegExp(`^${escapeRegExp(path.join(agentDir, 'openwaggle-mcp'))}`),
+        new RegExp(`^${escapeRegExp(path.join(agentDir, 'turing-machine-mcp'))}`),
       )
       expect(context.configPath.endsWith(path.join('mcp.json'))).toBe(true)
       expect(context.adapterCwd).toBe(path.join(path.dirname(context.configPath), 'adapter-cwd'))
@@ -292,7 +292,7 @@ describe('Pi MCP config service', () => {
   it('preserves explicit direct-tools settings from MCP config sources', () =>
     withFixture(async ({ home, agentDir, project }) => {
       const service = createPiMcpConfigServiceForTests({ homeDir: home, agentDir })
-      await writeJson(path.join(project, '.openwaggle', 'agent', 'mcp.json'), {
+      await writeJson(path.join(project, '.turing-machine', 'agent', 'mcp.json'), {
         settings: {
           directTools: false,
         },
@@ -319,7 +319,7 @@ describe('Pi MCP config service', () => {
   it('preserves explicit proxy-tool settings from MCP config sources', () =>
     withFixture(async ({ home, agentDir, project }) => {
       const service = createPiMcpConfigServiceForTests({ homeDir: home, agentDir })
-      await writeJson(path.join(project, '.openwaggle', 'agent', 'mcp.json'), {
+      await writeJson(path.join(project, '.turing-machine', 'agent', 'mcp.json'), {
         settings: {
           disableProxyTool: false,
         },
@@ -455,7 +455,7 @@ describe('Pi MCP config service', () => {
       await expect(
         service.writeSourceConfig({
           projectPath: project,
-          sourceId: 'project-openwaggle',
+          sourceId: 'project-turing-machine',
           rawJson: JSON.stringify(
             {
               mcpServers: {
@@ -485,6 +485,71 @@ describe('Pi MCP config service', () => {
       await expect(service.prepareEffectiveConfig(project)).rejects.toThrow(
         /Fix invalid MCP config before starting MCP/,
       )
+    }))
+
+  it('notifies the host of the new effective config after every mutation', () =>
+    withFixture(async ({ home, agentDir, project }) => {
+      // The turing adapter hangs its MCP pool warm-up off this hook, so it has
+      // to fire for each mutation path and carry the POST-change view.
+      const changes: Array<{ servers: string[]; projectPath?: string | null }> = []
+      const service = createPiMcpConfigServiceForTests({
+        homeDir: home,
+        agentDir,
+        onConfigChanged: (view, projectPath) => {
+          changes.push({
+            servers: view.servers.filter((s) => s.enabled).map((s) => s.name),
+            projectPath,
+          })
+        },
+      })
+
+      await service.writeSourceConfig({
+        projectPath: project,
+        sourceId: 'project-turing-machine',
+        rawJson: JSON.stringify({
+          mcpServers: { playwright: { command: 'npx', args: ['-y', 'playwright'] } },
+        }),
+      })
+      expect(changes).toHaveLength(1)
+      expect(changes[0]?.servers).toEqual(['playwright'])
+      expect(changes[0]?.projectPath).toBe(project)
+
+      await service.setServerEnabled({
+        projectPath: project,
+        sourceId: 'project-turing-machine',
+        serverName: 'playwright',
+        enabled: false,
+      })
+      expect(changes).toHaveLength(2)
+      // The disabled server must be absent from the view the warm-up reconciles
+      // against — that's what drives the pool eviction.
+      expect(changes[1]?.servers).toEqual([])
+
+      await service.setAdapterEnabled(true, project)
+      expect(changes).toHaveLength(3)
+    }))
+
+  it('does not fail a config mutation when the config-changed hook throws', () =>
+    withFixture(async ({ home, agentDir, project }) => {
+      const service = createPiMcpConfigServiceForTests({
+        homeDir: home,
+        agentDir,
+        onConfigChanged: () => {
+          throw new Error('warm-up exploded')
+        },
+      })
+
+      const view = await service.writeSourceConfig({
+        projectPath: project,
+        sourceId: 'project-turing-machine',
+        rawJson: JSON.stringify({ mcpServers: { demo: { command: 'demo' } } }),
+      })
+
+      // A broken warm-up is a background concern; the user's save still lands.
+      expect(view.servers.map((s) => s.name)).toEqual(['demo'])
+      expect((await service.getView(project)).effective.mcpServers.demo).toEqual({
+        command: 'demo',
+      })
     }))
 
   it('surfaces invalid Pi agent settings without treating the adapter as disabled silently', () =>

@@ -220,7 +220,7 @@ describe('WaggleSection', () => {
         id: WagglePresetId('mobile-build'),
         name: 'Mobile Build',
         isBuiltIn: true,
-        app: { requiredMcps: ['mobile-mcp'], requiredSkills: ['frontend-implementer'] },
+        app: { requiredMcps: ['mobile-device'], requiredSkills: ['frontend-implementer'] },
       }),
       createPreset({
         id: WagglePresetId('release-readiness'),
@@ -288,7 +288,7 @@ describe('WaggleSection', () => {
         id: WagglePresetId('mobile-build'),
         name: 'Mobile Build',
         isBuiltIn: true,
-        app: { requiredMcps: ['mobile-mcp'], requiredSkills: ['frontend-implementer'] },
+        app: { requiredMcps: ['mobile-device'], requiredSkills: ['frontend-implementer'] },
       }),
       createPreset({
         id: WagglePresetId('qa-repair-loop'),
@@ -414,7 +414,7 @@ describe('WaggleSection', () => {
       id: WagglePresetId('mobile-build'),
       name: 'Mobile Build',
       isBuiltIn: true,
-      app: { requiredMcps: ['mobile-mcp'], requiredSkills: ['frontend-implementer'] },
+      app: { requiredMcps: ['mobile-device'], requiredSkills: ['frontend-implementer'] },
     })
     listWagglePresetsMock.mockResolvedValueOnce([preset])
     getWaggleAppInstallStatusMock.mockResolvedValueOnce({
@@ -615,7 +615,7 @@ describe('WaggleSection', () => {
       name: 'Mobile Engineer',
       isBuiltIn: true,
       app: {
-        requiredMcps: ['mobile-mcp'],
+        requiredMcps: ['mobile-device'],
         requiredSkills: [],
         optionalMcps: ['mobile-device', 'figma', 'animejs'],
         optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor'],
@@ -665,7 +665,7 @@ describe('WaggleSection', () => {
       app: {
         requiredMcps: [],
         requiredSkills: [],
-        optionalMcps: ['playwright', 'mobile-mcp', 'postman', 'database'],
+        optionalMcps: ['playwright', 'postman', 'database'],
         optionalSkills: ['ui-screenshot-auditor', 'backend-auditor'],
       },
     })
@@ -711,7 +711,7 @@ describe('WaggleSection', () => {
       app: {
         requiredMcps: [],
         requiredSkills: [],
-        optionalMcps: ['playwright', 'mobile-mcp', 'mobile-device', 'postman', 'database'],
+        optionalMcps: ['playwright', 'mobile-device', 'postman', 'database'],
         optionalSkills: ['frontend-implementer', 'ui-screenshot-auditor', 'backend-auditor'],
       },
     })
@@ -803,7 +803,7 @@ describe('WaggleSection', () => {
       app: {
         requiredMcps: [],
         requiredSkills: ['ui-screenshot-auditor', 'backend-auditor'],
-        optionalMcps: ['playwright', 'mobile-mcp', 'mobile-device', 'postman', 'database'],
+        optionalMcps: ['playwright', 'mobile-device', 'postman', 'database'],
         optionalSkills: ['frontend-implementer'],
       },
     })
@@ -1143,7 +1143,9 @@ describe('WaggleSection', () => {
     })
     expect(await screen.findByText('Council of Experts')).toBeInTheDocument()
     expect(screen.getByText('Launch Review Panel')).toBeInTheDocument()
-    expect(screen.queryByRole('dialog', { name: /create council of experts/i })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('dialog', { name: /create council of experts/i }),
+    ).not.toBeInTheDocument()
     expect(listWagglePresetsMock).toHaveBeenCalledTimes(2)
   })
 

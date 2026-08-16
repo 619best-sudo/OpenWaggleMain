@@ -12,6 +12,7 @@ const { authStoreMock } = vi.hoisted(() => ({
 }))
 
 vi.mock('@/features/auth/state/app-auth-store', () => authStoreMock)
+
 import {
   apiMock,
   createDeferred,

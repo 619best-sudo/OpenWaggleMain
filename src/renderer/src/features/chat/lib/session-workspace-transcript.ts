@@ -6,7 +6,7 @@ import type { SessionWorkspace } from '@shared/types/session'
 import { buildToolResultLookup, messagePartToUIParts } from '@/features/chat/lib/useAgentChat.utils'
 import { createRendererLogger } from '@/shared/lib/logger'
 import {
-  getUIMessageText,
+  getUIMessageTextCached,
   isInternalMachinePlannerPromptText,
   isInternalTeamOrchestrationPromptText,
   isInternalToolHandoffAssistantText,
@@ -148,15 +148,17 @@ function appendLiveTailWhenViewingHeadOrDraftSource(
   }
 
   const tail = liveTailOutsideWorkspacePath(workspaceMessages, messages, lastWorkspaceMessageIndex)
-  logger.debug('Resolved transcript live tail against workspace path', {
-    workspaceMessageCount: workspaceMessages.length,
-    rawMessageCount: messages.length,
-    lastWorkspaceMessageId: workspaceMessages[workspaceMessages.length - 1]?.id ?? null,
-    appendedTail: tail.map((message) => ({
-      id: message.id,
-      role: message.role,
-    })),
-  })
+  if (logger.isDebugEnabled?.() === true) {
+    logger.debug('Resolved transcript live tail against workspace path', {
+      workspaceMessageCount: workspaceMessages.length,
+      rawMessageCount: messages.length,
+      lastWorkspaceMessageId: workspaceMessages[workspaceMessages.length - 1]?.id ?? null,
+      appendedTail: tail.map((message) => ({
+        id: message.id,
+        role: message.role,
+      })),
+    })
+  }
   return tail.length > 0 ? [...workspaceMessages, ...tail] : workspaceMessages
 }
 
@@ -199,31 +201,62 @@ function matchesPersistedMachinePlan(text: string, machinePlan: MachineExecution
   )
 }
 
+/**
+ * Cached "keep this message in the transcript?" decision, keyed by message
+ * identity (+ the `machinePlan` reference it was computed against).
+ *
+ * The filter runs on every stream event, and for each message it extracts the
+ * message text and — in machine mode — runs `matchesPersistedMachinePlan`
+ * (JSON.parse + decode + stringify). Repeating all of that across the whole
+ * transcript every token is the O(messages) cost that makes long sessions heavy.
+ * The messages array is prefix-stable while streaming, so every unchanged
+ * message hits the cache and only the active message re-evaluates. `machinePlan`
+ * is part of the key so a plan change invalidates correctly.
+ */
+interface FilterDecision {
+  readonly machinePlan: MachineExecutionState | null
+  readonly keep: boolean
+}
+const filterDecisionCache = new WeakMap<UIMessage, FilterDecision>()
+
+function computeMessageKeep(message: UIMessage, machinePlan: MachineExecutionState | null) {
+  const text = getUIMessageTextCached(message)
+
+  if (message.role === 'user') {
+    return !isInternalTeamOrchestrationPromptText(text) && !isInternalMachinePlannerPromptText(text)
+  }
+
+  if (message.role === 'assistant') {
+    if (matchesPersistedMachinePlan(text, machinePlan)) {
+      return false
+    }
+    if (machinePlan && isInternalToolHandoffAssistantText(text)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+function keepMessageInTranscript(message: UIMessage, machinePlan: MachineExecutionState | null) {
+  const cached = filterDecisionCache.get(message)
+  if (cached !== undefined && cached.machinePlan === machinePlan) {
+    return cached.keep
+  }
+  const keep = computeMessageKeep(message, machinePlan)
+  filterDecisionCache.set(message, { machinePlan, keep })
+  return keep
+}
+
 function filterHiddenInternalMachineAndTeamMessages(
   messages: UIMessage[],
   machinePlan: MachineExecutionState | null,
 ) {
-  const filteredMessages = messages.filter((message) => {
-    const text = getUIMessageText(message)
+  const filteredMessages = messages.filter((message) =>
+    keepMessageInTranscript(message, machinePlan),
+  )
 
-    if (message.role === 'user') {
-      return (
-        !isInternalTeamOrchestrationPromptText(text) && !isInternalMachinePlannerPromptText(text)
-      )
-    }
-
-    if (message.role === 'assistant' && matchesPersistedMachinePlan(text, machinePlan)) {
-      return false
-    }
-
-    if (message.role === 'assistant' && machinePlan && isInternalToolHandoffAssistantText(text)) {
-      return false
-    }
-
-    return true
-  })
-
-  if (filteredMessages.length !== messages.length) {
+  if (filteredMessages.length !== messages.length && logger.isDebugEnabled?.() === true) {
     logger.debug('Filtered hidden orchestration prompts from transcript', {
       removedMessages: messages
         .filter(
@@ -256,7 +289,8 @@ function toMessageTimestamp(message: UIMessage) {
 function hasHiddenInternalMachinePlannerPrompt(messages: UIMessage[]) {
   return messages.some(
     (message) =>
-      message.role === 'user' && isInternalMachinePlannerPromptText(getUIMessageText(message)),
+      message.role === 'user' &&
+      isInternalMachinePlannerPromptText(getUIMessageTextCached(message)),
   )
 }
 
@@ -280,7 +314,7 @@ function reorderMachineOriginalRequestBeforeAssistantMessages(
           (message, index) =>
             index > firstAssistantIndex &&
             message.role === 'user' &&
-            normalizeMachineRequestText(getUIMessageText(message)) === machineOriginalRequest,
+            normalizeMachineRequestText(getUIMessageTextCached(message)) === machineOriginalRequest,
         )
       : hadHiddenMachinePlannerPrompt
         ? messages.findIndex((message, index) => {
@@ -350,44 +384,17 @@ export function resolveTranscriptMessages({
     machinePlan,
     hadHiddenMachinePlannerPrompt,
   )
-  logger.debug('Resolved transcript messages', {
-    sessionId: String(activeSessionId),
-    rawMessageCount: messages.length,
-    workspaceMessageCount: workspaceMessages.length,
-    lastWorkspaceMessageId: workspaceMessages[workspaceMessages.length - 1]?.id ?? null,
-    transcriptMessages: transcriptMessages.map((message) => ({
-      id: message.id,
-      role: message.role,
-    })),
-  })
-  // #region debug-point D:workspace-transcript
-  void fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sessionId: 'phase-flow-missing',
-      runId: 'pre-fix',
-      hypothesisId: 'D',
-      location: 'session-workspace-transcript.ts:resolveTranscriptMessages',
-      msg: '[DEBUG] Resolved transcript messages for active workspace',
-      data: {
-        sessionId: activeSessionId ? String(activeSessionId) : null,
-        rawMessageCount: messages.length,
-        workspaceMessageCount: workspaceMessages.length,
-        transcriptMessageCount: transcriptMessages.length,
-        workspacePhaseTranscriptIds: workspaceMessages
-          .filter((message) => message.metadata?.phaseTranscript)
-          .map((message) => message.id),
-        transcriptPhaseTranscriptIds: transcriptMessages
-          .filter((message) => message.metadata?.phaseTranscript)
-          .map((message) => message.id),
-        activeWorkspaceNodeId: activeWorkspace?.activeNodeId
-          ? String(activeWorkspace.activeNodeId)
-          : null,
-      },
-      ts: Date.now(),
-    }),
-  }).catch(() => {})
-  // #endregion
+  if (logger.isDebugEnabled?.() === true) {
+    logger.debug('Resolved transcript messages', {
+      sessionId: String(activeSessionId),
+      rawMessageCount: messages.length,
+      workspaceMessageCount: workspaceMessages.length,
+      lastWorkspaceMessageId: workspaceMessages[workspaceMessages.length - 1]?.id ?? null,
+      transcriptMessages: transcriptMessages.map((message) => ({
+        id: message.id,
+        role: message.role,
+      })),
+    })
+  }
   return transcriptMessages
 }

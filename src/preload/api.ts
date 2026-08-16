@@ -67,7 +67,7 @@ export const api: OpenWaggleApi = {
   resolvePlanReview: invoke('agent:resolve-plan-review'),
   getPendingPlanReview: invoke('agent:get-pending-plan-review'),
   getPendingUserQuestion: invoke('agent:get-pending-user-question'),
-  onAgentEvent: on('agent:event'),
+  onAgentEventBatch: on('agent:event-batch'),
 
   getAgentPhase: invoke('agent:get-phase'),
   getBackgroundRun: invoke('agent:get-background-run'),
@@ -195,6 +195,7 @@ export const api: OpenWaggleApi = {
   disconnectAuth: invoke('auth:disconnect'),
   getAuthAccountInfo: invoke('auth:get-account-info'),
   onOAuthStatus: on('auth:oauth-status'),
+  onAppAuthRefreshRequired: on('app-auth:refresh-required'),
 
   // Waggle presets
   listWagglePresets: invoke('waggle-presets:list'),

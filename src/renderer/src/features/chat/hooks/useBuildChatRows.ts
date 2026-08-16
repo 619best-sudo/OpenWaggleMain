@@ -420,14 +420,27 @@ function appendInterruptedRunRow(rows: ChatRow[], params: BuildChatRowsParams) {
   })
 }
 
+// Identity-memoized: row building re-runs on every stream event, and in machine
+// mode `messageText` is called for each user message to match the machine
+// request. Keying on message identity means only the active message re-extracts
+// (the messages array is prefix-stable while streaming). Different derivation
+// from `getUIMessageText` (single-`\n` join + trim), so it has its own cache.
+const messageTextCache = new WeakMap<UIMessage, string>()
+
 function messageText(message: UIMessage) {
-  return message.parts
+  const cached = messageTextCache.get(message)
+  if (cached !== undefined) {
+    return cached
+  }
+  const text = message.parts
     .filter(
       (part): part is Extract<UIMessage['parts'][number], { type: 'text' }> => part.type === 'text',
     )
     .map((part) => part.content)
     .join('\n')
     .trim()
+  messageTextCache.set(message, text)
+  return text
 }
 
 function createSyntheticUserMessage(id: string, text: string): UIMessage {
@@ -608,29 +621,30 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
   }
   const groupedRows = groupWaggleTurnRows(rows)
   // ORDER DEBUG: the final rendered row order — this is exactly what the user
-  // sees. Each entry shows the row type and, for message rows, the underlying
-  // message id + role + a short text preview so it can be correlated with the
-  // cache log and the projection log above.
-  rendererLogger.info('built chat rows', {
-    messageCount: params.messages.length,
-    isLoading: params.isLoading,
-    hasPhaseTranscriptMessages,
-    completedPhaseCount: params.phase.completed.length,
-    pendingUserQuestionPhase: params.pendingUserQuestionRequest?.phase ?? null,
-    rows: groupedRows.map((row) => {
-      if (row.type === 'message') {
-        return {
-          type: row.type,
-          id: row.message.id,
-          role: row.message.role,
-          text: messageText(row.message).replace(/\s+/g, ' ').slice(0, 50) || null,
+  // sees. Assembling it walks every row's text, so it stays behind the debug
+  // level: row building runs on every transcript re-render.
+  if (rendererLogger.isDebugEnabled?.() === true) {
+    rendererLogger.debug('built chat rows', {
+      messageCount: params.messages.length,
+      isLoading: params.isLoading,
+      hasPhaseTranscriptMessages,
+      completedPhaseCount: params.phase.completed.length,
+      pendingUserQuestionPhase: params.pendingUserQuestionRequest?.phase ?? null,
+      rows: groupedRows.map((row) => {
+        if (row.type === 'message') {
+          return {
+            type: row.type,
+            id: row.message.id,
+            role: row.message.role,
+            text: messageText(row.message).replace(/\s+/g, ' ').slice(0, 50) || null,
+          }
         }
-      }
-      if (row.type === 'phase') {
-        return { type: row.type, phaseId: row.phase.id, status: row.phase.status }
-      }
-      return { type: row.type, id: 'id' in row ? row.id : null }
-    }),
-  })
+        if (row.type === 'phase') {
+          return { type: row.type, phaseId: row.phase.id, status: row.phase.status }
+        }
+        return { type: row.type, id: 'id' in row ? row.id : null }
+      }),
+    })
+  }
   return groupedRows
 }

@@ -261,5 +261,4 @@ describe('shell-handler', () => {
       )
     })
   })
-
 })

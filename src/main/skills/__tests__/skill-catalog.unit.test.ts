@@ -23,7 +23,7 @@ async function writeSkill(
   content: string,
   withScripts = false,
 ) {
-  const skillDir = path.join(projectPath, '.openwaggle', 'skills', folder)
+  const skillDir = path.join(projectPath, '.turing-machine', 'skills', folder)
   await fs.mkdir(skillDir, { recursive: true })
   await fs.writeFile(path.join(skillDir, 'SKILL.md'), content, 'utf8')
   if (withScripts) {
@@ -151,7 +151,7 @@ Step 2`,
 
   it('rejects symlinked SKILL.md that points outside the project', async () => {
     const projectPath = await makeTempProject()
-    const skillDir = path.join(projectPath, '.openwaggle', 'skills', 'escaped-skill')
+    const skillDir = path.join(projectPath, '.turing-machine', 'skills', 'escaped-skill')
     const outsideDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openwaggle-skill-outside-'))
     tempDirs.push(outsideDir)
     const outsideFile = path.join(outsideDir, 'outside.md')

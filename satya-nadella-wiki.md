@@ -1,0 +1,2846 @@
+- generic [active] [ref=e1]:
+  - link "Jump to content" [ref=e2] [cursor=pointer]:
+    - /url: "#bodyContent"
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - navigation "Site" [ref=e6]:
+        - generic "Main menu" [ref=e7]:
+          - button "Main menu" [ref=e8] [cursor=pointer]
+          - generic [ref=e11]: Main menu
+      - link "Wikipedia The Free Encyclopedia" [ref=e12] [cursor=pointer]:
+        - /url: /wiki/Main_Page
+        - generic [ref=e13]:
+          - img "Wikipedia" [ref=e14]
+          - img "The Free Encyclopedia" [ref=e15]
+    - generic [ref=e16]:
+      - search [ref=e17]:
+        - generic [ref=e20]:
+          - searchbox "Search Wikipedia" [ref=e23]
+          - button "Search" [ref=e25]
+      - navigation "Personal tools" [ref=e26]:
+        - list [ref=e30]:
+          - listitem [ref=e31]:
+            - link "Donate" [ref=e32] [cursor=pointer]:
+              - /url: https://donate.wikimedia.org/?wmf_source=donate&wmf_medium=sidebar&wmf_campaign=en.wikipedia.org&uselang=en
+          - listitem [ref=e33]:
+            - link "Create account" [ref=e34] [cursor=pointer]:
+              - /url: /w/index.php?title=Special:CreateAccount&returnto=Satya+Nadella
+          - listitem [ref=e35]:
+            - link "Log in" [ref=e36] [cursor=pointer]:
+              - /url: /w/index.php?title=Special:UserLogin&returnto=Satya+Nadella
+  - generic [ref=e38]:
+    - generic [ref=e1781]:
+      - link "Hide" [ref=e1783] [cursor=pointer]:
+        - /url: "#"
+        - img "Hide" [ref=e1784]
+      - generic [ref=e1786]:
+        - link "WLE Austria Logo (no text).svg" [ref=e1788] [cursor=pointer]:
+          - /url: https://commons.wikimedia.org/wiki/Commons:Wiki_Loves_Earth_2026_in_India
+          - img "WLE Austria Logo (no text).svg" [ref=e1789]
+        - link "Wiki Loves Earth photo contest:" [ref=e1791] [cursor=pointer]:
+          - /url: https://commons.wikimedia.org/wiki/Commons:Wiki_Loves_Earth_2026_in_India
+        - link "Upload photos of natural heritage sites in India to help Wikipedia and win fantastic prizes!" [ref=e1793] [cursor=pointer]:
+          - /url: https://commons.wikimedia.org/wiki/Commons:Wiki_Loves_Earth_2026_in_India
+    - navigation "Contents" [ref=e42]:
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - heading "Contents" [level=2] [ref=e46]
+          - button "hide" [ref=e47] [cursor=pointer]
+        - list [ref=e48]:
+          - listitem [ref=e49]:
+            - link "(Top)" [ref=e50] [cursor=pointer]:
+              - /url: "#"
+              - generic [ref=e51]: (Top)
+          - listitem [ref=e52]:
+            - link "Early life" [ref=e53] [cursor=pointer]:
+              - /url: "#Early_life"
+              - generic [ref=e54]: Early life
+            - list
+          - listitem [ref=e55]:
+            - link "Career" [ref=e56] [cursor=pointer]:
+              - /url: "#Career"
+              - generic [ref=e57]: Career
+            - button "Toggle Career subsection" [expanded] [ref=e58]:
+              - generic [ref=e60]: Toggle Career subsection
+            - list [ref=e61]:
+              - listitem [ref=e62]:
+                - link "Sun Microsystems" [ref=e63] [cursor=pointer]:
+                  - /url: "#Sun_Microsystems"
+                  - generic [ref=e64]: Sun Microsystems
+                - list
+              - listitem [ref=e65]:
+                - link "Microsoft" [ref=e66] [cursor=pointer]:
+                  - /url: "#Microsoft"
+                  - generic [ref=e67]: Microsoft
+                - list [ref=e68]:
+                  - listitem [ref=e69]:
+                    - link "1992–2014" [ref=e70] [cursor=pointer]:
+                      - /url: "#1992–2014"
+                      - generic [ref=e71]: 1992–2014
+                    - list
+                  - listitem [ref=e72]:
+                    - link "Chief executive officer (2014–present)" [ref=e73] [cursor=pointer]:
+                      - /url: "#Chief_executive_officer_(2014–present)"
+                      - generic [ref=e74]: Chief executive officer (2014–present)
+                    - list
+                  - listitem [ref=e75]:
+                    - link "Sports" [ref=e76] [cursor=pointer]:
+                      - /url: "#Sports"
+                      - generic [ref=e77]: Sports
+                    - list
+              - listitem [ref=e78]:
+                - link "Boards and committees" [ref=e79] [cursor=pointer]:
+                  - /url: "#Boards_and_committees"
+                  - generic [ref=e80]: Boards and committees
+                - list
+          - listitem [ref=e81]:
+            - link "Awards and recognition" [ref=e82] [cursor=pointer]:
+              - /url: "#Awards_and_recognition"
+              - generic [ref=e83]: Awards and recognition
+            - list
+          - listitem [ref=e84]:
+            - link "Personal life" [ref=e85] [cursor=pointer]:
+              - /url: "#Personal_life"
+              - generic [ref=e86]: Personal life
+            - list
+          - listitem [ref=e87]:
+            - link "Publications" [ref=e88] [cursor=pointer]:
+              - /url: "#Publications"
+              - generic [ref=e89]: Publications
+            - list
+          - listitem [ref=e90]:
+            - link "Notes" [ref=e91] [cursor=pointer]:
+              - /url: "#Notes"
+              - generic [ref=e92]: Notes
+            - list
+          - listitem [ref=e93]:
+            - link "References" [ref=e94] [cursor=pointer]:
+              - /url: "#References"
+              - generic [ref=e95]: References
+            - list
+          - listitem [ref=e96]:
+            - link "External links" [ref=e97] [cursor=pointer]:
+              - /url: "#External_links"
+              - generic [ref=e98]: External links
+            - list
+    - main [ref=e100]:
+      - generic [ref=e101]:
+        - heading "Satya Nadella" [level=1] [ref=e102]:
+          - generic [ref=e103]: Satya Nadella
+        - generic [ref=e104]:
+          - button "Go to an article in another language. Available in 54 languages" [ref=e105] [cursor=pointer]
+          - generic [ref=e108]: 54 languages
+      - generic [ref=e110]:
+        - navigation "Namespaces" [ref=e112]:
+          - generic [ref=e113]:
+            - generic:
+              - list:
+                - listitem [ref=e114]:
+                  - link "Article" [ref=e115] [cursor=pointer]:
+                    - /url: /wiki/Satya_Nadella
+                    - generic [ref=e116]: Article
+                - listitem [ref=e117]:
+                  - link "Talk" [ref=e118] [cursor=pointer]:
+                    - /url: /wiki/Talk:Satya_Nadella
+                    - generic [ref=e119]: Talk
+        - generic [ref=e120]:
+          - navigation "Views" [ref=e121]:
+            - generic [ref=e122]:
+              - generic:
+                - list:
+                  - listitem [ref=e123]:
+                    - link "Read" [ref=e124] [cursor=pointer]:
+                      - /url: /wiki/Satya_Nadella
+                      - generic [ref=e125]: Read
+                  - listitem [ref=e126]:
+                    - link "View source" [ref=e127] [cursor=pointer]:
+                      - /url: /w/index.php?title=Satya_Nadella&action=edit
+                      - generic [ref=e128]: View source
+                  - listitem [ref=e129]:
+                    - link "View history" [ref=e130] [cursor=pointer]:
+                      - /url: /w/index.php?title=Satya_Nadella&action=history
+                      - generic [ref=e131]: View history
+          - navigation "Page tools" [ref=e132]:
+            - generic [ref=e133]:
+              - button "Tools" [ref=e134] [cursor=pointer]
+              - generic [ref=e136] [cursor=pointer]: Tools
+      - navigation "Appearance" [ref=e139]:
+        - generic [ref=e141]:
+          - generic [ref=e142]:
+            - generic [ref=e143]: Appearance
+            - button "hide" [ref=e144] [cursor=pointer]
+          - generic [ref=e1794]:
+            - generic [ref=e1795]: Text
+            - list [ref=e1797]:
+              - listitem [ref=e1798]:
+                - generic [ref=e1800]:
+                  - generic [ref=e1801]:
+                    - radio "Small" [ref=e1802]
+                    - generic [ref=e1805]: Small
+                  - generic [ref=e1806]:
+                    - radio "Standard" [checked] [ref=e1807]
+                    - generic [ref=e1810]: Standard
+                  - generic [ref=e1811]:
+                    - radio "Large" [ref=e1812]
+                    - generic [ref=e1815]: Large
+          - generic [ref=e1816]:
+            - generic [ref=e1817]: Width
+            - list [ref=e1819]:
+              - listitem [ref=e1820]:
+                - generic [ref=e1822]:
+                  - generic [ref=e1823]:
+                    - radio "Standard" [checked] [ref=e1824]
+                    - generic [ref=e1827]: Standard
+                  - generic [ref=e1828]:
+                    - radio "Wide" [ref=e1829]
+                    - generic [ref=e1832]: Wide
+          - generic [ref=e1833]:
+            - generic [ref=e1834]: Color
+            - list [ref=e1836]:
+              - listitem [ref=e1837]:
+                - generic [ref=e1839]:
+                  - generic [ref=e1840]:
+                    - radio "Automatic" [ref=e1841]
+                    - generic [ref=e1844]: Automatic
+                  - generic [ref=e1845]:
+                    - radio "Light" [checked] [ref=e1846]
+                    - generic [ref=e1849]: Light
+                  - generic [ref=e1850]:
+                    - radio "Dark" [ref=e1851]
+                    - generic [ref=e1854]: Dark
+      - generic "Satya Nadella" [ref=e145]:
+        - generic [ref=e146]:
+          - link "Page semi-protected" [ref=e151] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:Protection_policy#semi
+            - img "Page semi-protected" [ref=e152]
+          - generic [ref=e153]: From Wikipedia, the free encyclopedia
+        - generic [ref=e155]:
+          - table [ref=e156]:
+            - rowgroup [ref=e157]:
+              - row "Satya Nadella" [ref=e158]:
+                - columnheader "Satya Nadella" [ref=e159]:
+                  - generic [ref=e160]: Satya Nadella
+              - row "Nadella in 2017" [ref=e161]:
+                - cell "Nadella in 2017" [ref=e162]:
+                  - link [ref=e164] [cursor=pointer]:
+                    - /url: /wiki/File:MS-Exec-Nadella-Satya-2017-08-31-22_(cropped).jpg
+                    - img [ref=e165]
+                  - generic [ref=e166]: Nadella in 2017
+              - row "Born Satya Narayana Nadella 19 August 1967 (age 58) Hyderabad, Telangana, India" [ref=e167]:
+                - rowheader "Born" [ref=e168]
+                - cell "Satya Narayana Nadella 19 August 1967 (age 58) Hyderabad, Telangana, India" [ref=e169]:
+                  - text: Satya Narayana Nadella
+                  - text: 19 August 1967 (age 58)
+                  - generic [ref=e170]:
+                    - link "Hyderabad" [ref=e171] [cursor=pointer]:
+                      - /url: /wiki/Hyderabad
+                    - text: ","
+                    - link "Telangana" [ref=e172] [cursor=pointer]:
+                      - /url: /wiki/Telangana
+                    - text: ", India"
+              - row "Citizenship American[1]" [ref=e173]:
+                - rowheader "Citizenship" [ref=e174]
+                - cell "American[1]" [ref=e175]:
+                  - text: American
+                  - superscript [ref=e176]:
+                    - link "[1]" [ref=e177] [cursor=pointer]:
+                      - /url: "#cite_note-1"
+              - row "Alma mater Manipal Institute of Technology University of Wisconsin, Milwaukee University of Chicago" [ref=e178]:
+                - rowheader "Alma mater" [ref=e179]
+                - cell "Manipal Institute of Technology University of Wisconsin, Milwaukee University of Chicago" [ref=e180]:
+                  - list [ref=e182]:
+                    - listitem [ref=e183]:
+                      - link "Manipal Institute of Technology" [ref=e184] [cursor=pointer]:
+                        - /url: /wiki/Manipal_Institute_of_Technology
+                    - listitem [ref=e185]:
+                      - link "University of Wisconsin, Milwaukee" [ref=e186] [cursor=pointer]:
+                        - /url: /wiki/University_of_Wisconsin,_Milwaukee
+                    - listitem [ref=e187]:
+                      - link "University of Chicago" [ref=e188] [cursor=pointer]:
+                        - /url: /wiki/University_of_Chicago
+              - row "Occupation Business executive" [ref=e189]:
+                - rowheader "Occupation" [ref=e190]
+                - cell "Business executive" [ref=e191]
+              - row "Years active 1992–present" [ref=e192]:
+                - rowheader "Years active" [ref=e193]
+                - cell "1992–present" [ref=e194]
+              - row "Title CEO of Microsoft (since 2014) Chairman of Microsoft (since 2021)" [ref=e195]:
+                - rowheader "Title" [ref=e196]
+                - cell "CEO of Microsoft (since 2014) Chairman of Microsoft (since 2021)" [ref=e197]:
+                  - list [ref=e199]:
+                    - listitem [ref=e200]:
+                      - text: CEO of
+                      - link "Microsoft" [ref=e201] [cursor=pointer]:
+                        - /url: /wiki/Microsoft
+                      - text: (since 2014)
+                    - listitem [ref=e202]: Chairman of Microsoft (since 2021)
+              - row "Spouse Anupama Nadella (m. 1992)" [ref=e203]:
+                - rowheader "Spouse" [ref=e204]
+                - cell "Anupama Nadella (m. 1992)" [ref=e205]:
+                  - generic [ref=e206]:
+                    - generic [ref=e207]: Anupama Nadella
+                    - text: (m. 1992)
+              - row "Children 3" [ref=e208]:
+                - rowheader "Children" [ref=e209]
+                - cell "3" [ref=e210]
+              - row "Awards Pravasi Bharatiya Samman (2015) Padma Bhushan (2022)" [ref=e211]:
+                - rowheader "Awards" [ref=e212]
+                - cell "Pravasi Bharatiya Samman (2015) Padma Bhushan (2022)" [ref=e213]:
+                  - link "Pravasi Bharatiya Samman" [ref=e214] [cursor=pointer]:
+                    - /url: /wiki/Pravasi_Bharatiya_Samman
+                  - text: (2015)
+                  - link "Padma Bhushan" [ref=e215] [cursor=pointer]:
+                    - /url: /wiki/Padma_Bhushan
+                  - text: (2022)
+              - row "Signature" [ref=e216]:
+                - columnheader "Signature" [ref=e217]
+              - row [ref=e218]:
+                - cell [ref=e219]:
+                  - link [ref=e221] [cursor=pointer]:
+                    - /url: /wiki/File:Satya-nadella-Signature-SD12_(transparent).png
+                    - img [ref=e222]
+          - paragraph [ref=e223]:
+            - text: Satya Narayana Nadella
+            - superscript [ref=e224]:
+              - link "[a]" [ref=e225] [cursor=pointer]:
+                - /url: "#cite_note-2"
+            - text: (born 19 August 1967) is an
+            - link "Indian-American" [ref=e226] [cursor=pointer]:
+              - /url: /wiki/Indian_Americans
+            - text: business executive. He is the chairman and
+            - link "chief executive officer" [ref=e227] [cursor=pointer]:
+              - /url: /wiki/Chief_executive_officer
+            - text: (CEO) of
+            - link "Microsoft" [ref=e228] [cursor=pointer]:
+              - /url: /wiki/Microsoft
+            - text: ", succeeding"
+            - link "Steve Ballmer" [ref=e229] [cursor=pointer]:
+              - /url: /wiki/Steve_Ballmer
+            - text: in 2014 as CEO and
+            - link "John W. Thompson" [ref=e230] [cursor=pointer]:
+              - /url: /wiki/John_W._Thompson
+            - text: in 2021 as chairman.
+            - superscript [ref=e231]:
+              - link "[b]" [ref=e232] [cursor=pointer]:
+                - /url: "#cite_note-6"
+            - superscript [ref=e233]:
+              - link "[5]" [ref=e234] [cursor=pointer]:
+                - /url: "#cite_note-autogenerated22-7"
+            - superscript [ref=e235]:
+              - link "[6]" [ref=e236] [cursor=pointer]:
+                - /url: "#cite_note-autogenerated12-8"
+            - superscript [ref=e237]:
+              - link "[7]" [ref=e238] [cursor=pointer]:
+                - /url: "#cite_note-9"
+            - superscript [ref=e239]:
+              - link "[8]" [ref=e240] [cursor=pointer]:
+                - /url: "#cite_note-10"
+            - text: Before becoming CEO, he was the executive vice president of Microsoft's cloud and enterprise group, responsible for building and running the company's computing platforms.
+            - superscript [ref=e241]:
+              - link "[9]" [ref=e242] [cursor=pointer]:
+                - /url: "#cite_note-11"
+          - heading "Early life" [level=2] [ref=e244]
+          - paragraph [ref=e245]:
+            - text: Satya Narayana Nadella was born on 19 August 1967 in a
+            - link "Telugu" [ref=e246] [cursor=pointer]:
+              - /url: /wiki/Telugu_people
+            - link "Hindu" [ref=e247] [cursor=pointer]:
+              - /url: /wiki/Hindus
+            - text: family in
+            - link "Hyderabad" [ref=e248] [cursor=pointer]:
+              - /url: /wiki/Hyderabad
+            - text: .
+            - superscript [ref=e249]:
+              - link "[10]" [ref=e250] [cursor=pointer]:
+                - /url: "#cite_note-12"
+            - superscript [ref=e251]:
+              - link "[11]" [ref=e252] [cursor=pointer]:
+                - /url: "#cite_note-13"
+            - superscript [ref=e253]:
+              - link "[12]" [ref=e254] [cursor=pointer]:
+                - /url: "#cite_note-dnaindia-14"
+            - superscript [ref=e255]:
+              - link "[13]" [ref=e256] [cursor=pointer]:
+                - /url: "#cite_note-15"
+            - text: His father, Bukkapuram Nadella Yugandhar, was an
+            - link "Indian Administrative Service" [ref=e257] [cursor=pointer]:
+              - /url: /wiki/Indian_Administrative_Service
+            - text: officer of the 1962 batch.
+            - superscript [ref=e258]:
+              - link "[14]" [ref=e259] [cursor=pointer]:
+                - /url: "#cite_note-16"
+            - superscript [ref=e260]:
+              - link "[15]" [ref=e261] [cursor=pointer]:
+                - /url: "#cite_note-17"
+            - superscript [ref=e262]:
+              - link "[12]" [ref=e263] [cursor=pointer]:
+                - /url: "#cite_note-dnaindia-14"
+            - text: His mother Prabhavati was a
+            - link "Sanskrit" [ref=e264] [cursor=pointer]:
+              - /url: /wiki/Sanskrit
+            - text: lecturer.
+            - superscript [ref=e265]:
+              - link "[16]" [ref=e266] [cursor=pointer]:
+                - /url: "#cite_note-18"
+            - text: Yugandhar hailed from Bukkapuram in
+            - link "Anantapur district" [ref=e267] [cursor=pointer]:
+              - /url: /wiki/Anantapur_district
+            - text: of
+            - link "Andhra Pradesh" [ref=e268] [cursor=pointer]:
+              - /url: /wiki/Andhra_Pradesh
+            - text: ;
+            - superscript [ref=e269]:
+              - link "[17]" [ref=e270] [cursor=pointer]:
+                - /url: "#cite_note-:0-19"
+            - superscript [ref=e271]:
+              - link "[18]" [ref=e272] [cursor=pointer]:
+                - /url: "#cite_note-20"
+            - text: his own father had migrated to Bukkapuram from Nadella village in
+            - link "Guntur" [ref=e273] [cursor=pointer]:
+              - /url: /wiki/Guntur
+            - text: district (present-day
+            - link "Palnadu district" [ref=e274] [cursor=pointer]:
+              - /url: /wiki/Palnadu_district
+            - text: ) of Andhra Pradesh.
+            - superscript [ref=e275]:
+              - link "[19]" [ref=e276] [cursor=pointer]:
+                - /url: "#cite_note-21"
+            - superscript [ref=e277]:
+              - link "[20]" [ref=e278] [cursor=pointer]:
+                - /url: "#cite_note-22"
+          - paragraph [ref=e279]:
+            - text: Nadella attended the
+            - link "Hyderabad Public School, Begumpet" [ref=e280] [cursor=pointer]:
+              - /url: /wiki/The_Hyderabad_Public_School,_Begumpet
+            - superscript [ref=e281]:
+              - link "[21]" [ref=e282] [cursor=pointer]:
+                - /url: "#cite_note-23"
+            - text: before receiving a
+            - link "bachelor's degree" [ref=e283] [cursor=pointer]:
+              - /url: /wiki/Bachelor%27s_degree
+            - text: in
+            - link "electrical engineering" [ref=e284] [cursor=pointer]:
+              - /url: /wiki/Electrical_engineering
+            - text: from the
+            - link "Manipal Institute of Technology" [ref=e285] [cursor=pointer]:
+              - /url: /wiki/Manipal_Institute_of_Technology
+            - text: in
+            - link "Karnataka" [ref=e286] [cursor=pointer]:
+              - /url: /wiki/Karnataka
+            - text: in 1988.
+            - superscript [ref=e287]:
+              - link "[22]" [ref=e288] [cursor=pointer]:
+                - /url: "#cite_note-24"
+            - superscript [ref=e289]:
+              - link "[23]" [ref=e290] [cursor=pointer]:
+                - /url: "#cite_note-25"
+            - text: He then traveled to the United States to study for an
+            - link "MS" [ref=e291] [cursor=pointer]:
+              - /url: /wiki/Master_of_Science
+            - text: in
+            - link "computer science" [ref=e292] [cursor=pointer]:
+              - /url: /wiki/Computer_science
+            - text: at the
+            - link "University of Wisconsin–Milwaukee" [ref=e293] [cursor=pointer]:
+              - /url: /wiki/University_of_Wisconsin%E2%80%93Milwaukee
+            - text: ","
+            - superscript [ref=e294]:
+              - link "[24]" [ref=e295] [cursor=pointer]:
+                - /url: "#cite_note-26"
+            - text: receiving his degree in 1990.
+            - superscript [ref=e296]:
+              - link "[25]" [ref=e297] [cursor=pointer]:
+                - /url: "#cite_note-27"
+            - text: He received an
+            - link "MBA" [ref=e298] [cursor=pointer]:
+              - /url: /wiki/Master_of_Business_Administration
+            - text: from the
+            - link "University of Chicago Booth School of Business" [ref=e299] [cursor=pointer]:
+              - /url: /wiki/University_of_Chicago_Booth_School_of_Business
+            - text: in 1997.
+            - superscript [ref=e300]:
+              - link "[26]" [ref=e301] [cursor=pointer]:
+                - /url: "#cite_note-28"
+            - superscript [ref=e302]:
+              - link "[27]" [ref=e303] [cursor=pointer]:
+                - /url: "#cite_note-Time-29"
+          - heading "Career" [level=2] [ref=e305]
+          - heading "Sun Microsystems" [level=3] [ref=e307]
+          - paragraph [ref=e308]:
+            - text: Nadella worked at
+            - link "Sun Microsystems" [ref=e309] [cursor=pointer]:
+              - /url: /wiki/Sun_Microsystems
+            - text: as a member of its technology staff before joining Microsoft in 1992.
+            - superscript [ref=e310]:
+              - link "[28]" [ref=e311] [cursor=pointer]:
+                - /url: "#cite_note-30"
+          - heading "Microsoft" [level=3] [ref=e313]
+          - heading "1992–2014" [level=4] [ref=e315]: 1992–2014
+          - figure "Nadella on his first day as CEO of Microsoft, with former CEOs Bill Gates (left) and Steve Ballmer (right)" [ref=e316]:
+            - link [ref=e317] [cursor=pointer]:
+              - /url: /wiki/File:Satya_Nadella,_CEO_of_Microsoft,_with_former_CEOs_Bill_Gates,_and_Steve_Ballmer.jpg
+              - img [ref=e318]
+            - generic [ref=e319]:
+              - text: Nadella on his first day as CEO of Microsoft, with former CEOs
+              - link "Bill Gates" [ref=e320] [cursor=pointer]:
+                - /url: /wiki/Bill_Gates
+              - text: (left) and
+              - link "Steve Ballmer" [ref=e321] [cursor=pointer]:
+                - /url: /wiki/Steve_Ballmer
+              - text: (right)
+          - paragraph [ref=e322]:
+            - text: At Microsoft, Nadella has led major projects that included the company's move to
+            - link "cloud computing" [ref=e323] [cursor=pointer]:
+              - /url: /wiki/Cloud_computing
+            - text: and the development of one of the largest cloud infrastructures in the world.
+            - superscript [ref=e324]:
+              - link "[29]" [ref=e325] [cursor=pointer]:
+                - /url: "#cite_note-31"
+          - paragraph [ref=e326]:
+            - text: Nadella worked as the senior vice-president of research and development (R&D) for the Online Services Division and vice-president of the Microsoft Business Division.
+            - superscript [ref=e327]:
+              - link "[30]" [ref=e328] [cursor=pointer]:
+                - /url: "#cite_note-32"
+            - text: Later, he was made the president of Microsoft's $19 billion Server and Tools Business and led a transformation of the company's business and technology culture from
+            - link "client services" [ref=e329] [cursor=pointer]:
+              - /url: /wiki/Client_(computing)
+            - text: to
+            - link "cloud infrastructure" [ref=e330] [cursor=pointer]:
+              - /url: /wiki/Cloud_computing
+            - text: and
+            - link "services" [ref=e331] [cursor=pointer]:
+              - /url: /wiki/Cloud_services
+            - text: . He has been credited for helping bring
+            - link "Microsoft's database" [ref=e332] [cursor=pointer]:
+              - /url: /wiki/Microsoft_SQL_Server
+            - text: ","
+            - link "Windows Server" [ref=e333] [cursor=pointer]:
+              - /url: /wiki/Windows_Server
+            - text: and
+            - link "developer tools" [ref=e334] [cursor=pointer]:
+              - /url: /wiki/Visual_Studio
+            - text: to its
+            - link "Azure" [ref=e335] [cursor=pointer]:
+              - /url: /wiki/Microsoft_Azure
+            - text: cloud.
+            - superscript [ref=e336]:
+              - link "[27]" [ref=e337] [cursor=pointer]:
+                - /url: "#cite_note-Time-29"
+            - text: The revenue from Cloud Services grew to $20.3 billion in June 2013 from $16.6 billion when he took over in 2011.
+            - superscript [ref=e338]:
+              - link "[31]" [ref=e339] [cursor=pointer]:
+                - /url: "#cite_note-33"
+            - text: He received $84.5 million in 2016 pay.
+            - superscript [ref=e340]:
+              - link "[32]" [ref=e341] [cursor=pointer]:
+                - /url: "#cite_note-34"
+            - superscript [ref=e342]:
+              - link "[33]" [ref=e343] [cursor=pointer]:
+                - /url: "#cite_note-35"
+          - paragraph [ref=e344]:
+            - text: In 2013, Nadella's base salary was reportedly $669,167. Including stock bonuses, the total compensation stood at around $7.6 million.
+            - superscript [ref=e345]:
+              - link "[34]" [ref=e346] [cursor=pointer]:
+                - /url: "#cite_note-36"
+          - paragraph [ref=e347]:
+            - text: "Previous positions held by Nadella include:"
+            - superscript [ref=e348]:
+              - link "[35]" [ref=e349] [cursor=pointer]:
+                - /url: "#cite_note-37"
+          - list [ref=e350]:
+            - listitem [ref=e351]: President of the Server & Tools Division (9 February 2011 – February 2014)
+            - listitem [ref=e352]:
+              - text: Senior Vice-president of Research and Development for the Online Services Division (March 2007 – February 2011)
+              - superscript [ref=e353]:
+                - link "[36]" [ref=e354] [cursor=pointer]:
+                  - /url: "#cite_note-38"
+            - listitem [ref=e355]: Vice-president of the Business Division
+            - listitem [ref=e356]: Corporate Vice-president of Business Solutions and Search & Advertising Platform Group
+            - listitem [ref=e357]:
+              - text: Executive Vice-president of Cloud and Enterprise group
+              - superscript [ref=e358]:
+                - link "[37]" [ref=e359] [cursor=pointer]:
+                  - /url: "#cite_note-Official_Bio-39"
+          - heading "Chief executive officer (2014–present)" [level=4] [ref=e361]: Chief executive officer (2014–present)
+          - paragraph [ref=e362]:
+            - text: On 4 February 2014, Nadella was announced as the new CEO of Microsoft,
+            - superscript [ref=e363]:
+              - link "[38]" [ref=e364] [cursor=pointer]:
+                - /url: "#cite_note-autogenerated2-40"
+            - superscript [ref=e365]:
+              - link "[39]" [ref=e366] [cursor=pointer]:
+                - /url: "#cite_note-41"
+            - text: the third CEO in the company's history, following
+            - link "Bill Gates" [ref=e367] [cursor=pointer]:
+              - /url: /wiki/Bill_Gates
+            - text: and
+            - link "Steve Ballmer" [ref=e368] [cursor=pointer]:
+              - /url: /wiki/Steve_Ballmer
+            - text: .
+            - superscript [ref=e369]:
+              - link "[40]" [ref=e370] [cursor=pointer]:
+                - /url: "#cite_note-42"
+          - paragraph [ref=e371]:
+            - text: In October 2014, Nadella attended an event on Women in Computing and courted controversy after he made a statement that women should not ask for a raise and should trust the system.
+            - superscript [ref=e372]:
+              - link "[41]" [ref=e373] [cursor=pointer]:
+                - /url: "#cite_note-43"
+            - text: Nadella was criticised for the statement and he later apologized on Twitter.
+            - superscript [ref=e374]:
+              - link "[42]" [ref=e375] [cursor=pointer]:
+                - /url: "#cite_note-44"
+            - text: He then sent an email to Microsoft employees admitting he was "Completely wrong."
+            - superscript [ref=e376]:
+              - link "[43]" [ref=e377] [cursor=pointer]:
+                - /url: "#cite_note-45"
+          - figure "Nadella leads a live discussion on Microsoft's cloud strategy in 2014 in San Francisco." [ref=e378]:
+            - link [ref=e379] [cursor=pointer]:
+              - /url: /wiki/File:Microsoft_Linux.jpg
+              - img [ref=e380]
+            - generic [ref=e381]: Nadella leads a live discussion on Microsoft's cloud strategy in 2014 in San Francisco.
+          - paragraph [ref=e382]:
+            - text: Nadella's tenure at Microsoft has emphasized working with companies and technologies with which Microsoft also competes, including
+            - link "Apple Inc." [ref=e383] [cursor=pointer]:
+              - /url: /wiki/Apple_Inc.
+            - text: ","
+            - superscript [ref=e384]:
+              - link "[44]" [ref=e385] [cursor=pointer]:
+                - /url: "#cite_note-46"
+            - link "Salesforce" [ref=e386] [cursor=pointer]:
+              - /url: /wiki/Salesforce
+            - text: ","
+            - superscript [ref=e387]:
+              - link "[45]" [ref=e388] [cursor=pointer]:
+                - /url: "#cite_note-Wired-47"
+            - link "IBM" [ref=e389] [cursor=pointer]:
+              - /url: /wiki/IBM
+            - text: ","
+            - superscript [ref=e390]:
+              - link "[46]" [ref=e391] [cursor=pointer]:
+                - /url: "#cite_note-48"
+            - text: and
+            - link "Dropbox" [ref=e392] [cursor=pointer]:
+              - /url: /wiki/Dropbox
+            - text: .
+            - superscript [ref=e393]:
+              - link "[47]" [ref=e394] [cursor=pointer]:
+                - /url: "#cite_note-49"
+            - text: In contrast to previous Microsoft campaigns against the
+            - link "Linux" [ref=e395] [cursor=pointer]:
+              - /url: /wiki/Linux
+            - text: operating system, Nadella proclaimed that "Microsoft ❤️ Linux",
+            - superscript [ref=e396]:
+              - link "[48]" [ref=e397] [cursor=pointer]:
+                - /url: "#cite_note-50"
+            - text: and Microsoft joined the
+            - link "Linux Foundation" [ref=e398] [cursor=pointer]:
+              - /url: /wiki/Linux_Foundation
+            - text: as a Platinum member in 2016.
+            - superscript [ref=e399]:
+              - link "[49]" [ref=e400] [cursor=pointer]:
+                - /url: "#cite_note-51"
+          - paragraph [ref=e401]:
+            - text: Under Nadella, Microsoft revised its mission statement to "empower every person and every organization on the planet to achieve more".
+            - superscript [ref=e402]:
+              - link "[50]" [ref=e403] [cursor=pointer]:
+                - /url: "#cite_note-52"
+            - text: He orchestrated a cultural shift at Microsoft by emphasizing empathy, collaboration, and 'growth mindset'.
+            - superscript [ref=e404]:
+              - link "[51]" [ref=e405] [cursor=pointer]:
+                - /url: "#cite_note-53"
+            - superscript [ref=e406]:
+              - link "[52]" [ref=e407] [cursor=pointer]:
+                - /url: "#cite_note-54"
+            - text: He has transformed Microsoft's
+            - link "corporate culture" [ref=e408] [cursor=pointer]:
+              - /url: /wiki/Organizational_culture
+            - text: into one that emphasizes continual learning and growth.
+            - superscript [ref=e409]:
+              - link "[53]" [ref=e410] [cursor=pointer]:
+                - /url: "#cite_note-55"
+          - paragraph [ref=e411]:
+            - text: In 2014, Nadella's first acquisition with Microsoft was of
+            - link "Mojang" [ref=e412] [cursor=pointer]:
+              - /url: /wiki/Mojang_Studios
+            - text: ", a Swedish game company best known for the computer game"
+            - link "Minecraft" [ref=e414] [cursor=pointer]:
+              - /url: /wiki/Minecraft
+            - text: ", for $2.5 billion. He followed that by purchasing"
+            - link "Xamarin" [ref=e415] [cursor=pointer]:
+              - /url: /wiki/Xamarin
+            - text: for an undisclosed amount.
+            - superscript [ref=e416]:
+              - link "[54]" [ref=e417] [cursor=pointer]:
+                - /url: "#cite_note-56"
+            - text: He oversaw the purchase of professional network
+            - link "LinkedIn" [ref=e418] [cursor=pointer]:
+              - /url: /wiki/LinkedIn
+            - superscript [ref=e419]:
+              - link "[55]" [ref=e420] [cursor=pointer]:
+                - /url: "#cite_note-57"
+            - text: in 2016 for $26.2 billion.
+            - superscript [ref=e421]:
+              - link "[56]" [ref=e422] [cursor=pointer]:
+                - /url: "#cite_note-58"
+            - text: On 26 October 2018,
+            - link "Microsoft" [ref=e423] [cursor=pointer]:
+              - /url: /wiki/Microsoft
+            - text: acquired
+            - link "GitHub" [ref=e424] [cursor=pointer]:
+              - /url: /wiki/GitHub
+            - text: for US$7.5 billion.
+            - superscript [ref=e425]:
+              - link "[57]" [ref=e426] [cursor=pointer]:
+                - /url: "#cite_note-59"
+          - paragraph [ref=e427]:
+            - text: As of November 2023, Microsoft stock had increased nearly tenfold since Nadella became CEO in 2014, with a 27% annual growth rate, ending a 14-year period of near zero growth.
+            - superscript [ref=e428]:
+              - link "[58]" [ref=e429] [cursor=pointer]:
+                - /url: "#cite_note-60"
+            - superscript [ref=e430]:
+              - link "[59]" [ref=e431] [cursor=pointer]:
+                - /url: "#cite_note-61"
+          - paragraph [ref=e432]:
+            - text: In 2024, Nadella's compensation from Microsoft totaled $79.1 million, an increase of 63% over his 2023 compensation of $48.5 million.
+            - superscript [ref=e433]:
+              - link "[60]" [ref=e434] [cursor=pointer]:
+                - /url: "#cite_note-62"
+          - paragraph [ref=e435]:
+            - text: In January 2026, Nadella demanded that people stop calling
+            - link "artificial intelligence" [ref=e436] [cursor=pointer]:
+              - /url: /wiki/Artificial_intelligence
+            - link "\"slop\"" [ref=e437] [cursor=pointer]:
+              - /url: /wiki/AI_slop
+            - text: and instead accept AI as the "new equilibrium" of human nature.
+            - superscript [ref=e438]:
+              - link "[61]" [ref=e439] [cursor=pointer]:
+                - /url: "#cite_note-microslop-63"
+            - text: The public reaction instead made people double down on the backlash, and the term "Microslop" became popular on social media, leading to it being labeled as a
+            - link "Streisand effect" [ref=e440] [cursor=pointer]:
+              - /url: /wiki/Streisand_effect
+            - text: .
+            - superscript [ref=e441]:
+              - link "[62]" [ref=e442] [cursor=pointer]:
+                - /url: "#cite_note-microslop2-64"
+            - superscript [ref=e443]:
+              - link "[63]" [ref=e444] [cursor=pointer]:
+                - /url: "#cite_note-microslop3-65"
+          - heading "Sports" [level=4] [ref=e446]
+          - paragraph [ref=e447]:
+            - text: Nadella, Soma Somasegar, Samir Bodas, Ashok Krishnamurthi,
+            - link "Sanjay Parthasarathy" [ref=e448] [cursor=pointer]:
+              - /url: /wiki/Sanjay_Parthasarathy
+            - text: ", and the"
+            - link "GMR Group" [ref=e449] [cursor=pointer]:
+              - /url: /wiki/GMR_Group
+            - text: purchased the
+            - link "Seattle Orcas" [ref=e450] [cursor=pointer]:
+              - /url: /wiki/Seattle_Orcas
+            - text: cricket team which is a part of
+            - link "2023 Major League Cricket season" [ref=e451] [cursor=pointer]:
+              - /url: /wiki/2023_Major_League_Cricket_season
+            - text: .
+            - superscript [ref=e452]:
+              - link "[64]" [ref=e453] [cursor=pointer]:
+                - /url: "#cite_note-66"
+          - heading "Boards and committees" [level=3] [ref=e455]
+          - list [ref=e456]:
+            - listitem [ref=e457]:
+              - text: Board of Directors,
+              - link "Starbucks" [ref=e458] [cursor=pointer]:
+                - /url: /wiki/Starbucks
+              - text: (2017–2024)
+              - superscript [ref=e459]:
+                - link "[65]" [ref=e460] [cursor=pointer]:
+                  - /url: "#cite_note-67"
+            - listitem [ref=e461]:
+              - text: Board of Trustees,
+              - link "Fred Hutchinson Cancer Center" [ref=e462] [cursor=pointer]:
+                - /url: /wiki/Fred_Hutchinson_Cancer_Center
+              - superscript [ref=e463]:
+                - link "[66]" [ref=e464] [cursor=pointer]:
+                  - /url: "#cite_note-68"
+            - listitem [ref=e465]:
+              - text: Board of Trustees,
+              - link "University of Chicago" [ref=e466] [cursor=pointer]:
+                - /url: /wiki/University_of_Chicago
+              - superscript [ref=e467]:
+                - link "[67]" [ref=e468] [cursor=pointer]:
+                  - /url: "#cite_note-69"
+            - listitem [ref=e469]:
+              - text: Chairman,
+              - link "The Business Council" [ref=e470] [cursor=pointer]:
+                - /url: /wiki/The_Business_Council
+              - text: (2021 to 2022)
+              - superscript [ref=e471]:
+                - link "[68]" [ref=e472] [cursor=pointer]:
+                  - /url: "#cite_note-70"
+          - heading "Awards and recognition" [level=2] [ref=e474]
+          - paragraph [ref=e475]:
+            - text: In 2018 and 2024, Nadella was a
+            - link "Time 100" [ref=e476] [cursor=pointer]:
+              - /url: /wiki/Time_100
+            - text: honoree.
+            - superscript [ref=e477]:
+              - link "[69]" [ref=e478] [cursor=pointer]:
+                - /url: "#cite_note-71"
+            - superscript [ref=e479]:
+              - link "[70]" [ref=e480] [cursor=pointer]:
+                - /url: "#cite_note-72"
+            - superscript [ref=e481]:
+              - link "[71]" [ref=e482] [cursor=pointer]:
+                - /url: "#cite_note-73"
+            - text: In 2019, he was named
+            - link "Financial Times" [ref=e484] [cursor=pointer]:
+              - /url: /wiki/Financial_Times
+            - text: Person of the Year and
+            - link "Fortune" [ref=e486] [cursor=pointer]:
+              - /url: /wiki/Fortune_(magazine)
+            - text: Magazine Businessperson of the Year.
+            - superscript [ref=e487]:
+              - link "[72]" [ref=e488] [cursor=pointer]:
+                - /url: "#cite_note-74"
+            - superscript [ref=e489]:
+              - link "[73]" [ref=e490] [cursor=pointer]:
+                - /url: "#cite_note-75"
+            - text: In 2014, Nadella was awarded the
+            - link "CNN-News18 Indian of the Year" [ref=e491] [cursor=pointer]:
+              - /url: /wiki/CNN-News18_Indian_of_the_Year
+            - text: and in 2020, was recognized as Global Indian Business Icon at
+            - link "CNBC-TV18" [ref=e492] [cursor=pointer]:
+              - /url: /wiki/CNBC_TV18
+            - text: "'s India Business Leader Awards."
+            - superscript [ref=e493]:
+              - link "[74]" [ref=e494] [cursor=pointer]:
+                - /url: "#cite_note-76"
+            - text: In 2015, the
+            - link "Government of India" [ref=e495] [cursor=pointer]:
+              - /url: /wiki/Government_of_India
+            - text: awarded Nadella the
+            - link "Pravasi Bharatiya Samman" [ref=e496] [cursor=pointer]:
+              - /url: /wiki/Pravasi_Bharatiya_Samman
+            - text: (awarded to
+            - link "Overseas Indians" [ref=e497] [cursor=pointer]:
+              - /url: /wiki/Overseas_Indians
+            - text: ) and in 2022 the
+            - link "Padma Bhushan" [ref=e498] [cursor=pointer]:
+              - /url: /wiki/Padma_Bhushan
+            - text: ", the third highest civilian award in India."
+            - superscript [ref=e499]:
+              - link "[75]" [ref=e500] [cursor=pointer]:
+                - /url: "#cite_note-77"
+          - paragraph [ref=e501]:
+            - text: Nadella was awarded an honorary
+            - link "PhD" [ref=e502] [cursor=pointer]:
+              - /url: /wiki/Doctor_of_Philosophy
+            - text: from the
+            - link "Georgia Institute of Technology" [ref=e503] [cursor=pointer]:
+              - /url: /wiki/Georgia_Tech
+            - text: in January 2024.
+            - superscript [ref=e504]:
+              - link "[76]" [ref=e505] [cursor=pointer]:
+                - /url: "#cite_note-78"
+          - heading "Personal life" [level=2] [ref=e507]
+          - paragraph [ref=e508]:
+            - text: In 1992, Nadella married Anupama Priyadarshini, the daughter of his father's
+            - link "Indian Administrative Service" [ref=e509] [cursor=pointer]:
+              - /url: /wiki/Indian_Administrative_Service
+            - text: (IAS)
+            - link "batchmate" [ref=e510] [cursor=pointer]:
+              - /url: https://en.wiktionary.org/wiki/en:batchmate
+            - text: .
+            - superscript [ref=e511]:
+              - link "[77]" [ref=e512] [cursor=pointer]:
+                - /url: "#cite_note-79"
+            - superscript [ref=e513]:
+              - link "[78]" [ref=e514] [cursor=pointer]:
+                - /url: "#cite_note-80"
+            - text: Both Nadella and Anupama are the only children from their parents.
+            - superscript [ref=e515]:
+              - link "[79]" [ref=e516] [cursor=pointer]:
+                - /url: "#cite_note-81"
+            - text: She was his junior at
+            - link "Manipal" [ref=e517] [cursor=pointer]:
+              - /url: /wiki/Manipal_Academy_of_Higher_Education
+            - text: pursuing a
+            - link "B.Arch" [ref=e518] [cursor=pointer]:
+              - /url: /wiki/Bachelor_of_Architecture
+            - text: in the Faculty of Architecture.
+            - superscript [ref=e519]:
+              - link "[80]" [ref=e520] [cursor=pointer]:
+                - /url: "#cite_note-82"
+            - text: The couple have three children, a son (deceased) and two daughters, and live in
+            - link "Clyde Hill" [ref=e521] [cursor=pointer]:
+              - /url: /wiki/Clyde_Hill,_Washington
+            - superscript [ref=e522]:
+              - link "[81]" [ref=e523] [cursor=pointer]:
+                - /url: "#cite_note-83"
+            - text: and
+            - link "Bellevue, Washington" [ref=e524] [cursor=pointer]:
+              - /url: /wiki/Bellevue,_Washington
+            - text: .
+            - superscript [ref=e525]:
+              - link "[82]" [ref=e526] [cursor=pointer]:
+                - /url: "#cite_note-POLITICO_04FEB14-84"
+            - text: His son Zain was a legally blind
+            - link "quadriplegic" [ref=e527] [cursor=pointer]:
+              - /url: /wiki/Tetraplegia
+            - text: with
+            - link "cerebral palsy" [ref=e528] [cursor=pointer]:
+              - /url: /wiki/Cerebral_palsy
+            - text: .
+            - superscript [ref=e529]:
+              - link "[83]" [ref=e530] [cursor=pointer]:
+                - /url: "#cite_note-85"
+            - text: Zain died in February 2022, at the age of 26.
+            - superscript [ref=e531]:
+              - link "[84]" [ref=e532] [cursor=pointer]:
+                - /url: "#cite_note-86"
+            - text: According to Nadella, being the father of a child with special needs was a turning point in his life.
+            - superscript [ref=e533]:
+              - link "[85]" [ref=e534] [cursor=pointer]:
+                - /url: "#cite_note-87"
+          - paragraph [ref=e535]:
+            - text: Nadella is an avid reader of
+            - link "American" [ref=e536] [cursor=pointer]:
+              - /url: /wiki/American_poetry
+            - text: and
+            - link "Indian poetry" [ref=e537] [cursor=pointer]:
+              - /url: /wiki/Indian_poetry
+            - text: and enjoys
+            - link "cricket" [ref=e538] [cursor=pointer]:
+              - /url: /wiki/Cricket
+            - text: ", having played on his school team."
+            - superscript [ref=e539]:
+              - link "[86]" [ref=e540] [cursor=pointer]:
+                - /url: "#cite_note-88"
+            - text: He credits cricket for improving his leadership skills.
+            - superscript [ref=e541]:
+              - link "[87]" [ref=e542] [cursor=pointer]:
+                - /url: "#cite_note-89"
+          - paragraph [ref=e543]:
+            - text: Nadella and his wife Anupama are part of the ownership group of
+            - link "Seattle Sounders FC" [ref=e544] [cursor=pointer]:
+              - /url: /wiki/Seattle_Sounders_FC
+            - text: ", a"
+            - link "Major League Soccer" [ref=e545] [cursor=pointer]:
+              - /url: /wiki/Major_League_Soccer
+            - text: club.
+            - superscript [ref=e546]:
+              - link "[88]" [ref=e547] [cursor=pointer]:
+                - /url: "#cite_note-90"
+          - paragraph [ref=e548]:
+            - text: In 2017, Nadella published a book titled
+            - generic [ref=e549]:
+              - link "Hit Refresh" [ref=e550] [cursor=pointer]:
+                - /url: /wiki/Hit_Refresh
+              - text: ","
+            - text: exploring his life and career at Microsoft.
+            - superscript [ref=e551]:
+              - link "[89]" [ref=e552] [cursor=pointer]:
+                - /url: "#cite_note-91"
+            - text: He announced that the profits from the book would go to Microsoft Philanthropies and through that to
+            - link "nonprofit organizations" [ref=e553] [cursor=pointer]:
+              - /url: /wiki/Nonprofit_organization
+            - text: .
+            - superscript [ref=e554]:
+              - link "[90]" [ref=e555] [cursor=pointer]:
+                - /url: "#cite_note-92"
+          - heading "Publications" [level=2] [ref=e557]
+          - list [ref=e558]:
+            - listitem [ref=e559]:
+              - 'link "Hit Refresh: The Quest to Rediscover Microsoft''s Soul and Imagine a Better Future for Everyone" [ref=e561] [cursor=pointer]':
+                - /url: /wiki/Hit_Refresh:_The_Quest_to_Rediscover_Microsoft%27s_Soul_and_Imagine_a_Better_Future_for_Everyone
+              - text: (2017).
+              - superscript [ref=e562]:
+                - link "[91]" [ref=e563] [cursor=pointer]:
+                  - /url: "#cite_note-93"
+              - superscript [ref=e564]:
+                - link "[92]" [ref=e565] [cursor=pointer]:
+                  - /url: "#cite_note-94"
+              - link "ISBN" [ref=e566] [cursor=pointer]:
+                - /url: /wiki/ISBN_(identifier)
+              - link "978-0-06-265250-8" [ref=e567] [cursor=pointer]:
+                - /url: /wiki/Special:BookSources/978-0-06-265250-8
+              - text: (audiobook
+              - link "ISBN" [ref=e568] [cursor=pointer]:
+                - /url: /wiki/ISBN_(identifier)
+              - link "978-0-06-269480-5" [ref=e569] [cursor=pointer]:
+                - /url: /wiki/Special:BookSources/978-0-06-269480-5
+              - text: )
+          - heading "Notes" [level=2] [ref=e571]
+          - list [ref=e574]:
+            - listitem [ref=e575]:
+              - link "Jump up" [ref=e1855] [cursor=pointer]:
+                - /url: "#cite_ref-2"
+                - text: ^
+              - generic [ref=e579]:
+                - text: "English pronunciation:"
+                - link /nəˈdɛlə/ [ref=e581] [cursor=pointer]:
+                  - /url: /wiki/Help:IPA/English
+                - text: "; Telugu pronunciation:"
+                - link "[sɐt̪jɐ naːraːjɐɳɐ naːd̪eɭːɐ]" [ref=e583] [cursor=pointer]:
+                  - /url: /wiki/Help:IPA/Telugu
+                - text: .
+            - listitem [ref=e584]:
+              - link "Jump up" [ref=e1856] [cursor=pointer]:
+                - /url: "#cite_ref-6"
+                - text: ^
+              - generic [ref=e588]:
+                - text: "Indian-American:"
+                - superscript [ref=e589]:
+                  - link "[2]" [ref=e590] [cursor=pointer]:
+                    - /url: "#cite_note-3"
+                - superscript [ref=e591]:
+                  - link "[3]" [ref=e592] [cursor=pointer]:
+                    - /url: "#cite_note-4"
+                - superscript [ref=e593]:
+                  - link "[4]" [ref=e594] [cursor=pointer]:
+                    - /url: "#cite_note-5"
+          - heading "References" [level=2] [ref=e596]
+          - list [ref=e599]:
+            - listitem [ref=e600]:
+              - link "Jump up" [ref=e1857] [cursor=pointer]:
+                - /url: "#cite_ref-1"
+                - text: ^
+              - generic [ref=e604]:
+                - generic [ref=e605]:
+                  - text: Weinberger, Matt (25 September 2017).
+                  - link "\"Microsoft CEO Satya Nadella Once Gave Up His Green Card For Love\"" [ref=e606] [cursor=pointer]:
+                    - /url: https://www.businessinsider.com/microsoft-ceo-satya-nadella-green-card-2017-9
+                  - text: . Business Insider.
+                  - link "Archived" [ref=e607] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200711205630/https://www.businessinsider.com/microsoft-ceo-satya-nadella-green-card-2017-9
+                  - text: from the original on 11 July 2020
+                  - generic [ref=e608]: . Retrieved 10 July 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Business+Insider&rft.atitle=Microsoft+CEO+Satya+Nadella+Once+Gave+Up+His+Green+Card+For+Love&rft.date=2017-09-25&rft.aulast=Weinberger&rft.aufirst=Matt&rft_id=https%3A%2F%2Fwww.businessinsider.com%2Fmicrosoft-ceo-satya-nadella-green-card-2017-9&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e609]:
+              - link "Jump up" [ref=e1858] [cursor=pointer]:
+                - /url: "#cite_ref-3"
+                - text: ^
+              - generic [ref=e613]:
+                - text: Sherman Hollar,
+                - link "Satya Nadella" [ref=e614] [cursor=pointer]:
+                  - /url: https://www.britannica.com/EBchecked/topic/1986278
+                - text: at the
+                - link "Encyclopædia Britannica" [ref=e616] [cursor=pointer]:
+                  - /url: /wiki/Encyclop%C3%A6dia_Britannica
+                - text: . "Satya Nadella (born August 19, 1967, Hyderabad, India) is an Indian-born business executive who was CEO of the computer software company Microsoft from 2014."
+            - listitem [ref=e617]:
+              - link "Jump up" [ref=e1859] [cursor=pointer]:
+                - /url: "#cite_ref-4"
+                - text: ^
+              - generic [ref=e621]:
+                - generic [ref=e622]:
+                  - link "\"Satya Nadella\"" [ref=e623] [cursor=pointer]:
+                    - /url: https://brockhaus.de/ecs/enzy/article/nadella-satya
+                  - text: .
+                  - link "Brockhaus Encyclopedia" [ref=e625] [cursor=pointer]:
+                    - /url: /wiki/Brockhaus_Encyclopedia
+                  - generic [ref=e626]: . Retrieved 5 November 2025
+                  - text: . [Nadella, Satya, American computer scientist and manager of Indian origin, * Hyderabad 1967.]
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Brockhaus+Encyclopedia&rft.atitle=Satya+Nadella&rft_id=https%3A%2F%2Fbrockhaus.de%2Fecs%2Fenzy%2Farticle%2Fnadella-satya&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e627]:
+              - link "Jump up" [ref=e1860] [cursor=pointer]:
+                - /url: "#cite_ref-5"
+                - text: ^
+              - generic [ref=e631]:
+                - generic [ref=e632]:
+                  - link "\"Satya Nadella\"" [ref=e633] [cursor=pointer]:
+                    - /url: https://www.ne.se/uppslagsverk/encyklopedi/l%C3%A5ng/satya-nadella
+                  - text: .
+                  - link "Nationalencyklopedin" [ref=e635] [cursor=pointer]:
+                    - /url: /wiki/Nationalencyklopedin
+                  - generic [ref=e636]: . Retrieved 5 November 2025
+                  - text: . [Nadella, Satya, born 1967 in India, American business executive, since 2014 CEO of Microsoft Corporation. Satya Nadella, who grew up in Hyderabad, India, holds master's degrees in both computer science and business administration from American universities. Before joining the Microsoft Group in 1992, he worked for Sun Microsystems Inc.]
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Nationalencyklopedin&rft.atitle=Satya+Nadella&rft_id=https%3A%2F%2Fwww.ne.se%2Fuppslagsverk%2Fencyklopedi%2Fl%25C3%25A5ng%2Fsatya-nadella&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e637]:
+              - link "Jump up" [ref=e1861] [cursor=pointer]:
+                - /url: "#cite_ref-autogenerated22_7-0"
+                - text: ^
+              - generic [ref=e641]:
+                - generic [ref=e642]:
+                  - text: Ovide, Shira (5 February 2014).
+                  - link "\"Microsoft Board Names Satya Nadella as CEO\"" [ref=e643] [cursor=pointer]:
+                    - /url: https://online.wsj.com/news/articles/SB10001424052702304851104579362603637152172
+                  - text: . The Wall Street Journal.
+                  - link "Archived" [ref=e644] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20141019013422/http://online.wsj.com/news/articles/SB10001424052702304851104579362603637152172
+                  - text: from the original on 19 October 2014.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Wall+Street+Journal&rft.atitle=Microsoft+Board+Names+Satya+Nadella+as+CEO&rft.date=2014-02-05&rft.aulast=Ovide&rft.aufirst=Shira&rft_id=https%3A%2F%2Fonline.wsj.com%2Fnews%2Farticles%2FSB10001424052702304851104579362603637152172&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e645]:
+              - link "Jump up" [ref=e1862] [cursor=pointer]:
+                - /url: "#cite_ref-autogenerated12_8-0"
+                - text: ^
+              - generic [ref=e649]:
+                - generic [ref=e650]:
+                  - link "\"Microsoft Board names Satya Nadella as CEO\"" [ref=e651] [cursor=pointer]:
+                    - /url: http://www.microsoft.com/en-us/news/press/2014/feb14/02-04newspr.aspx
+                  - text: . Microsoft.com. 4 February 2014.
+                  - link "Archived" [ref=e652] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20140426032128/http://www.microsoft.com/en-us/news/press/2014/feb14/02-04newspr.aspx
+                  - text: from the original on 26 April 2014.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Microsoft+Board+names+Satya+Nadella+as+CEO&rft.pub=Microsoft.com&rft.date=2014-02-04&rft_id=http%3A%2F%2Fwww.microsoft.com%2Fen-us%2Fnews%2Fpress%2F2014%2Ffeb14%2F02-04newspr.aspx&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e653]:
+              - link "Jump up" [ref=e1863] [cursor=pointer]:
+                - /url: "#cite_ref-9"
+                - text: ^
+              - generic [ref=e657]:
+                - generic [ref=e658]:
+                  - link "\"Microsoft board of directors announces role changes and quarterly dividend\"" [ref=e659] [cursor=pointer]:
+                    - /url: https://news.microsoft.com/2021/06/16/microsoft-board-of-directors-announces-role-changes-and-quarterly-dividend/
+                  - text: . Microsoft. 16 June 2021.
+                  - link "Archived" [ref=e660] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20210616230014/https://news.microsoft.com/2021/06/16/microsoft-board-of-directors-announces-role-changes-and-quarterly-dividend/
+                  - text: from the original on 16 June 2021
+                  - generic [ref=e661]: . Retrieved 16 June 2021
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Microsoft&rft.atitle=Microsoft+board+of+directors+announces+role+changes+and+quarterly+dividend&rft.date=2021-06-16&rft_id=https%3A%2F%2Fnews.microsoft.com%2F2021%2F06%2F16%2Fmicrosoft-board-of-directors-announces-role-changes-and-quarterly-dividend%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e662]:
+              - link "Jump up" [ref=e1864] [cursor=pointer]:
+                - /url: "#cite_ref-10"
+                - text: ^
+              - generic [ref=e666]:
+                - generic [ref=e667]:
+                  - link "\"Microsoft CEO Satya Nadella named chairman of the board\"" [ref=e668] [cursor=pointer]:
+                    - /url: https://www.cnbc.com/amp/2021/06/16/microsoft-ceo-satya-nadella-will-also-become-chairman-of-the-board.html
+                  - text: . CNBC. 16 June 2021.
+                  - link "Archived" [ref=e669] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20210617061449/https://www.cnbc.com/amp/2021/06/16/microsoft-ceo-satya-nadella-will-also-become-chairman-of-the-board.html
+                  - text: from the original on 17 June 2021
+                  - generic [ref=e670]: . Retrieved 16 June 2021
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=CNBC&rft.atitle=Microsoft+CEO+Satya+Nadella+named+chairman+of+the+board&rft.date=2021-06-16&rft_id=https%3A%2F%2Fwww.cnbc.com%2Famp%2F2021%2F06%2F16%2Fmicrosoft-ceo-satya-nadella-will-also-become-chairman-of-the-board.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e671]:
+              - link "Jump up" [ref=e1865] [cursor=pointer]:
+                - /url: "#cite_ref-11"
+                - text: ^
+              - generic [ref=e675]:
+                - generic [ref=e676]:
+                  - text: Bhanver, Jagmohan S. (10 November 2014).
+                  - 'link "Nadella: The Changing Face of Microsoft" [ref=e677] [cursor=pointer]':
+                    - /url: https://books.google.com/books?id=woCFAwAAQBAJ
+                  - text: . Hachette India.
+                  - link "ISBN" [ref=e678] [cursor=pointer]:
+                    - /url: /wiki/ISBN_(identifier)
+                  - link "978-93-5009-891-2" [ref=e679] [cursor=pointer]:
+                    - /url: /wiki/Special:BookSources/978-93-5009-891-2
+                  - text: .
+                  - link "Archived" [ref=e680] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20230407161352/https://books.google.com/books?id=woCFAwAAQBAJ
+                  - text: from the original on 7 April 2023
+                  - generic [ref=e681]: . Retrieved 19 March 2023
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=book&rft.btitle=Nadella%3A+The+Changing+Face+of+Microsoft&rft.pub=Hachette+India&rft.date=2014-11-10&rft.isbn=978-93-5009-891-2&rft.aulast=Bhanver&rft.aufirst=Jagmohan+S.&rft_id=https%3A%2F%2Fbooks.google.com%2Fbooks%3Fid%3DwoCFAwAAQBAJ&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e682]:
+              - link "Jump up" [ref=e1866] [cursor=pointer]:
+                - /url: "#cite_ref-12"
+                - text: ^
+              - generic [ref=e686]:
+                - generic [ref=e687]:
+                  - text: Bhanver, Jagmohan S. (10 November 2014).
+                  - 'link "Nadella: The Changing Face of Microsoft" [ref=e688] [cursor=pointer]':
+                    - /url: https://books.google.com/books?id=-BNnAwAAQBAJ&q=Telugu+family+nadella+nadella&pg=PT7
+                  - text: . Hachette India.
+                  - link "ISBN" [ref=e689] [cursor=pointer]:
+                    - /url: /wiki/ISBN_(identifier)
+                  - link "978-93-5009-891-2" [ref=e690] [cursor=pointer]:
+                    - /url: /wiki/Special:BookSources/978-93-5009-891-2
+                  - text: .
+                  - link "Archived" [ref=e691] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20230621005058/https://books.google.com/books?id=-BNnAwAAQBAJ&q=Telugu+family+nadella+nadella&pg=PT7
+                  - text: from the original on 21 June 2023
+                  - generic [ref=e692]: . Retrieved 28 May 2023
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=book&rft.btitle=Nadella%3A+The+Changing+Face+of+Microsoft&rft.pub=Hachette+India&rft.date=2014-11-10&rft.isbn=978-93-5009-891-2&rft.aulast=Bhanver&rft.aufirst=Jagmohan+S.&rft_id=https%3A%2F%2Fbooks.google.com%2Fbooks%3Fid%3D-BNnAwAAQBAJ%26q%3DTelugu%2Bfamily%2Bnadella%2Bnadella%26pg%3DPT7&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e693]:
+              - link "Jump up" [ref=e1867] [cursor=pointer]:
+                - /url: "#cite_ref-13"
+                - text: ^
+              - generic [ref=e697]:
+                - generic [ref=e698]:
+                  - text: Suryanarayana, Pisupati Sadasiva (29 February 2016).
+                  - 'link "Smart Diplomacy: Exploring China-india Synergy" [ref=e699] [cursor=pointer]':
+                    - /url: https://books.google.com/books?id=zwXyCwAAQBAJ&dq=satya+nadella+Telugu&pg=PA34
+                  - text: .
+                  - link "World Scientific" [ref=e700] [cursor=pointer]:
+                    - /url: /wiki/World_Scientific
+                  - text: . p. 34.
+                  - link "ISBN" [ref=e701] [cursor=pointer]:
+                    - /url: /wiki/ISBN_(identifier)
+                  - link "978-1-938134-70-8" [ref=e702] [cursor=pointer]:
+                    - /url: /wiki/Special:BookSources/978-1-938134-70-8
+                  - text: .
+                  - link "Archived" [ref=e703] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20230621005100/https://books.google.com/books?id=zwXyCwAAQBAJ&dq=satya+nadella+Telugu&pg=PA34
+                  - text: from the original on 21 June 2023
+                  - generic [ref=e704]: . Retrieved 28 May 2023
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=book&rft.btitle=Smart+Diplomacy%3A+Exploring+China-india+Synergy&rft.pages=34&rft.pub=World+Scientific&rft.date=2016-02-29&rft.isbn=978-1-938134-70-8&rft.aulast=Suryanarayana&rft.aufirst=Pisupati+Sadasiva&rft_id=https%3A%2F%2Fbooks.google.com%2Fbooks%3Fid%3DzwXyCwAAQBAJ%26dq%3Dsatya%2Bnadella%2BTelugu%26pg%3DPA34&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e705]:
+              - generic [ref=e706]:
+                - text: ^
+                - 'link "Jump up to: a" [ref=e1868] [cursor=pointer]':
+                  - /url: "#cite_ref-dnaindia_14-0"
+                  - generic [ref=e1869]: "Jump up to:"
+                  - superscript [ref=e708]:
+                    - generic [ref=e709]: a
+                - link "b" [ref=e710] [cursor=pointer]:
+                  - /url: "#cite_ref-dnaindia_14-1"
+                  - superscript [ref=e711]:
+                    - generic [ref=e712]: b
+              - generic [ref=e713]:
+                - generic [ref=e714]:
+                  - link "\"'Studious, hardworking boy has achieved his goal,' says Satya Nadella's dad\"" [ref=e715] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20180405180955/https://www.dnaindia.com/business/report-studious-hardworking-boy-has-achieved-his-goal-says-satya-nadella-s-dad-1959411
+                    - text: "\""
+                    - text: "'Studious, hardworking boy has achieved his goal,' says Satya Nadella's dad\""
+                  - text: .
+                  - link "DNA India" [ref=e718] [cursor=pointer]:
+                    - /url: /wiki/Daily_News_and_Analysis
+                  - text: . 5 February 2014. Archived from
+                  - link "the original" [ref=e719] [cursor=pointer]:
+                    - /url: https://www.dnaindia.com/business/report-studious-hardworking-boy-has-achieved-his-goal-says-satya-nadella-s-dad-1959411
+                  - text: on 5 April 2018
+                  - generic [ref=e720]: . Retrieved 16 February 2014
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=DNA+India&rft.atitle=%27Studious%2C+hardworking+boy+has+achieved+his+goal%2C%27+says+Satya+Nadella%27s+dad&rft.date=2014-02-05&rft_id=https%3A%2F%2Fwww.dnaindia.com%2Fbusiness%2Freport-studious-hardworking-boy-has-achieved-his-goal-says-satya-nadella-s-dad-1959411&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e721]:
+              - link "Jump up" [ref=e1870] [cursor=pointer]:
+                - /url: "#cite_ref-15"
+                - text: ^
+              - generic [ref=e725]:
+                - generic [ref=e726]:
+                  - text: Patel, Aakar (15 February 2014).
+                  - link "\"When diversity is seen as discrimination\"" [ref=e727] [cursor=pointer]:
+                    - /url: https://www.livemint.com/Leisure/9HDVwSeDKkGw5dw3E916uM/When-diversity-is-seen-as-discrimination.html
+                  - text: . mint.
+                  - link "Archived" [ref=e728] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200215070529/https://www.livemint.com/Leisure/9HDVwSeDKkGw5dw3E916uM/When-diversity-is-seen-as-discrimination.html
+                  - text: from the original on 15 February 2020
+                  - generic [ref=e729]: . Retrieved 19 August 2023
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=mint&rft.atitle=When+diversity+is+seen+as+discrimination&rft.date=2014-02-15&rft.aulast=Patel&rft.aufirst=Aakar&rft_id=https%3A%2F%2Fwww.livemint.com%2FLeisure%2F9HDVwSeDKkGw5dw3E916uM%2FWhen-diversity-is-seen-as-discrimination.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e730]:
+              - link "Jump up" [ref=e1871] [cursor=pointer]:
+                - /url: "#cite_ref-16"
+                - text: ^
+              - generic [ref=e734]:
+                - generic [ref=e735]:
+                  - link "The Civil List of Indian Administrative Service, Volume 10" [ref=e736] [cursor=pointer]:
+                    - /url: https://books.google.com/books?id=peodAAAAIAAJ&q=bukkapuram+nadella+yugandhar
+                  - text: . Ministry of Home Affairs, India. 1965. p. 331.
+                  - link "Archived" [ref=e737] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20231120233044/https://books.google.com/books?id=peodAAAAIAAJ&q=bukkapuram+nadella+yugandhar
+                  - text: from the original on 20 November 2023
+                  - generic [ref=e738]: . Retrieved 16 September 2020
+                  - text: . Yugandhar, Bukkapuram Nadella 1962 Andhra Pradesh
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=book&rft.btitle=The+Civil+List+of+Indian+Administrative+Service%2C+Volume+10&rft.pages=331&rft.pub=Ministry+of+Home+Affairs%2C+India&rft.date=1965&rft_id=https%3A%2F%2Fbooks.google.com%2Fbooks%3Fid%3DpeodAAAAIAAJ%26q%3Dbukkapuram%2Bnadella%2Byugandhar&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e739]:
+              - link "Jump up" [ref=e1872] [cursor=pointer]:
+                - /url: "#cite_ref-17"
+                - text: ^
+              - generic [ref=e743]:
+                - generic [ref=e744]:
+                  - link "\"Satya Nadella's father BN Yugandhar passes away at the age of 82\"" [ref=e745] [cursor=pointer]:
+                    - /url: https://www.indiatoday.in/india/story/satya-nadela-microsoft-ceo-father-bn-yugandhar-dies-hyderabad-1598978-2019-09-13
+                  - text: . India Today.
+                  - link "Archived" [ref=e746] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20220121122520/https://www.indiatoday.in/india/story/satya-nadela-microsoft-ceo-father-bn-yugandhar-dies-hyderabad-1598978-2019-09-13
+                  - text: from the original on 21 January 2022
+                  - generic [ref=e747]: . Retrieved 14 September 2019
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.atitle=Satya+Nadella%27s+father+BN+Yugandhar+passes+away+at+the+age+of+82&rft_id=https%3A%2F%2Fwww.indiatoday.in%2Findia%2Fstory%2Fsatya-nadela-microsoft-ceo-father-bn-yugandhar-dies-hyderabad-1598978-2019-09-13&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e748]:
+              - link "Jump up" [ref=e1873] [cursor=pointer]:
+                - /url: "#cite_ref-18"
+                - text: ^
+              - generic [ref=e752]:
+                - generic [ref=e753]:
+                  - link "\"Remembering ex-bureaucrat BN Yugandhar\"" [ref=e754] [cursor=pointer]:
+                    - /url: https://www.thehindubusinessline.com/news/remembering-ex-bureaucrat-bn-yugandhar/article29430142.ece
+                  - text: . The Hindu Business Line.
+                  - link "Archived" [ref=e755] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20220121122521/https://www.thehindubusinessline.com/news/remembering-ex-bureaucrat-bn-yugandhar/article29430142.ece
+                  - text: from the original on 21 January 2022
+                  - generic [ref=e756]: . Retrieved 16 September 2019
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.atitle=Remembering+ex-bureaucrat+BN+Yugandhar&rft_id=https%3A%2F%2Fwww.thehindubusinessline.com%2Fnews%2Fremembering-ex-bureaucrat-bn-yugandhar%2Farticle29430142.ece&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e757]:
+              - link "Jump up" [ref=e1874] [cursor=pointer]:
+                - /url: "#cite_ref-:0_19-0"
+                - text: ^
+              - generic [ref=e761]:
+                - generic [ref=e762]:
+                  - link "\"When diversity is seen as discrimination\"" [ref=e763] [cursor=pointer]:
+                    - /url: https://www.livemint.com/Leisure/9HDVwSeDKkGw5dw3E916uM/When-diversity-is-seen-as-discrimination.html
+                  - text: . Livemint.
+                  - link "Archived" [ref=e764] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20140301133156/http://www.livemint.com/Leisure/9HDVwSeDKkGw5dw3E916uM/When-diversity-is-seen-as-discrimination.html
+                  - text: from the original on 1 March 2014
+                  - generic [ref=e765]: . Retrieved 15 February 2014
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.atitle=When+diversity+is+seen+as+discrimination&rft_id=https%3A%2F%2Fwww.livemint.com%2FLeisure%2F9HDVwSeDKkGw5dw3E916uM%2FWhen-diversity-is-seen-as-discrimination.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e766]:
+              - link "Jump up" [ref=e1875] [cursor=pointer]:
+                - /url: "#cite_ref-20"
+                - text: ^
+              - generic [ref=e770]:
+                - generic [ref=e771]:
+                  - link "\"Microsoft CEO Satya Nadella okays innovation centre in native district\"" [ref=e772] [cursor=pointer]:
+                    - /url: https://www.deccanchronicle.com/technology/in-other-news/040821/microsoft-ceo-satya-nadella-okays-innovation-centre-in-native-district.html
+                  - text: .
+                  - link "Deccan Chronicle" [ref=e774] [cursor=pointer]:
+                    - /url: /wiki/Deccan_Chronicle
+                  - text: . 5 August 2021.
+                  - link "Archived" [ref=e775] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20230227110236/https://www.deccanchronicle.com/technology/in-other-news/040821/microsoft-ceo-satya-nadella-okays-innovation-centre-in-native-district.html
+                  - text: from the original on 27 February 2023
+                  - generic [ref=e776]: . Retrieved 27 February 2023
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Deccan+Chronicle&rft.atitle=Microsoft+CEO+Satya+Nadella+okays+innovation+centre+in+native+district&rft.date=2021-08-05&rft_id=https%3A%2F%2Fwww.deccanchronicle.com%2Ftechnology%2Fin-other-news%2F040821%2Fmicrosoft-ceo-satya-nadella-okays-innovation-centre-in-native-district.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e777]:
+              - link "Jump up" [ref=e1876] [cursor=pointer]:
+                - /url: "#cite_ref-21"
+                - text: ^
+              - generic [ref=e781]:
+                - generic [ref=e782]:
+                  - text: Benjamin, Ravi P. (19 June 2021).
+                  - link "\"Bukkapuram, Sathya Nadella's village, yet to cheer his elevation\"" [ref=e783] [cursor=pointer]:
+                    - /url: https://www.thehansindia.com/telangana/bukkapuram-sathya-nadellas-village-yet-to-cheer-his-elevation-691478
+                  - text: .
+                  - link "The Hans India" [ref=e785] [cursor=pointer]:
+                    - /url: /wiki/The_Hans_India
+                  - text: .
+                  - link "Archived" [ref=e786] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20230227110235/https://www.thehansindia.com/telangana/bukkapuram-sathya-nadellas-village-yet-to-cheer-his-elevation-691478
+                  - text: from the original on 27 February 2023
+                  - generic [ref=e787]: . Retrieved 27 February 2023
+                  - text: . Yugandhar's father migrated from Nadella village in Guntur to Bukkapuram in Yellanur mandal in the district and Yugandhar did his primary school education in the local panchayat school but whereas Sathya had his schooling in Hyderabad Public School.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Hans+India&rft.atitle=Bukkapuram%2C+Sathya+Nadella%27s+village%2C+yet+to+cheer+his+elevation&rft.date=2021-06-19&rft.aulast=Benjamin&rft.aufirst=Ravi+P.&rft_id=https%3A%2F%2Fwww.thehansindia.com%2Ftelangana%2Fbukkapuram-sathya-nadellas-village-yet-to-cheer-his-elevation-691478&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e788]:
+              - link "Jump up" [ref=e1877] [cursor=pointer]:
+                - /url: "#cite_ref-22"
+                - text: ^
+              - generic [ref=e792]:
+                - generic [ref=e793]:
+                  - text: Sur, Aihik (14 September 2019).
+                  - link "\"Microsoft CEO Satya Nadela's father, former PMO official Nadella Yugandhar passes away\"" [ref=e794] [cursor=pointer]:
+                    - /url: https://www.newindianexpress.com/states/andhra-pradesh/2019/sep/14/microsoft-ceo-satya-nadelas-father-former-pmo-official-nadella-yugandhar-passes-away-2033295.html
+                  - text: .
+                  - link "The New Indian Express" [ref=e796] [cursor=pointer]:
+                    - /url: /wiki/The_New_Indian_Express
+                  - text: .
+                  - link "Archived" [ref=e797] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20230227110236/https://www.newindianexpress.com/states/andhra-pradesh/2019/sep/14/microsoft-ceo-satya-nadelas-father-former-pmo-official-nadella-yugandhar-passes-away-2033295.html
+                  - text: from the original on 27 February 2023
+                  - generic [ref=e798]: . Retrieved 27 February 2023
+                  - text: . Yugandhar's family hails from Nadella village in Guntur district of Andhra Pradesh who migrated to Bukkapuram village in Anantapur district around four decades ago. Since then they have retained both Bukkapuram and Nadella in their surname.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+New+Indian+Express&rft.atitle=Microsoft+CEO+Satya+Nadela%27s+father%2C+former+PMO+official+Nadella+Yugandhar+passes+away&rft.date=2019-09-14&rft.aulast=Sur&rft.aufirst=Aihik&rft_id=https%3A%2F%2Fwww.newindianexpress.com%2Fstates%2Fandhra-pradesh%2F2019%2Fsep%2F14%2Fmicrosoft-ceo-satya-nadelas-father-former-pmo-official-nadella-yugandhar-passes-away-2033295.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e799]:
+              - link "Jump up" [ref=e1878] [cursor=pointer]:
+                - /url: "#cite_ref-23"
+                - text: ^
+              - generic [ref=e803]:
+                - generic [ref=e804]:
+                  - text: Hess, Abigail (5 April 2018).
+                  - link "\"How one high school produced the CEOs of Microsoft, Adobe and Mastercard\"" [ref=e805] [cursor=pointer]:
+                    - /url: https://www.cnbc.com/2018/04/05/one-high-school-produced-the-ceos-of-microsoft-adobe-and-mastercard.html
+                  - text: . CNBC.
+                  - link "Archived" [ref=e806] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20220109142839/https://www.cnbc.com/2018/04/05/one-high-school-produced-the-ceos-of-microsoft-adobe-and-mastercard.html
+                  - text: from the original on 9 January 2022
+                  - generic [ref=e807]: . Retrieved 31 May 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=CNBC&rft.atitle=How+one+high+school+produced+the+CEOs+of+Microsoft%2C+Adobe+and+Mastercard&rft.date=2018-04-05&rft.aulast=Hess&rft.aufirst=Abigail&rft_id=https%3A%2F%2Fwww.cnbc.com%2F2018%2F04%2F05%2Fone-high-school-produced-the-ceos-of-microsoft-adobe-and-mastercard.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e808]:
+              - link "Jump up" [ref=e1879] [cursor=pointer]:
+                - /url: "#cite_ref-24"
+                - text: ^
+              - generic [ref=e812]:
+                - generic [ref=e813]:
+                  - link "\"MIT thrilled over Nadella being in race to head Microsoft\"" [ref=e814] [cursor=pointer]:
+                    - /url: http://www.dnaindia.com/bangalore/1880581/report-mit-thrilled-over-nadella-being-in-race-to-head-microsoft
+                  - text: . DNA India.
+                  - link "Archived" [ref=e815] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20130829050118/http://www.dnaindia.com/bangalore/1880581/report-mit-thrilled-over-nadella-being-in-race-to-head-microsoft
+                  - text: from the original on 29 August 2013.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=DNA+India&rft.atitle=MIT+thrilled+over+Nadella+being+in+race+to+head+Microsoft&rft_id=http%3A%2F%2Fwww.dnaindia.com%2Fbangalore%2F1880581%2Freport-mit-thrilled-over-nadella-being-in-race-to-head-microsoft&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e816]:
+              - link "Jump up" [ref=e1880] [cursor=pointer]:
+                - /url: "#cite_ref-25"
+                - text: ^
+              - generic [ref=e820]:
+                - generic [ref=e821]:
+                  - text: Timmons, Heather (6 February 2014).
+                  - link "\"India's MIT costs less than $6,000 a year—and look where it got Satya Nadella\"" [ref=e822] [cursor=pointer]:
+                    - /url: https://qz.com/174431/indias-mit-costs-37000-a-year-less-than-the-uss-and-look-where-it-got-satya-nadella/
+                  - text: . Quartz.
+                  - link "Archived" [ref=e823] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200806212153/https://qz.com/174431/indias-mit-costs-37000-a-year-less-than-the-uss-and-look-where-it-got-satya-nadella/
+                  - text: from the original on 6 August 2020
+                  - generic [ref=e824]: . Retrieved 31 May 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Quartz&rft.atitle=India%27s+MIT+costs+less+than+%246%2C000+a+year%E2%80%94and+look+where+it+got+Satya+Nadella&rft.date=2014-02-06&rft.aulast=Timmons&rft.aufirst=Heather&rft_id=https%3A%2F%2Fqz.com%2F174431%2Findias-mit-costs-37000-a-year-less-than-the-uss-and-look-where-it-got-satya-nadella%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e825]:
+              - link "Jump up" [ref=e1881] [cursor=pointer]:
+                - /url: "#cite_ref-26"
+                - text: ^
+              - generic [ref=e829]:
+                - generic [ref=e830]:
+                  - link "\"I went to the United States right when Sachin Tendulkar started to play for India so I look at it and say, wow, I missed the entire Sachin era of Indian cricket\"" [ref=e831] [cursor=pointer]:
+                    - /url: http://www.espncricinfo.com/story/_/id/20977179/cricket-not-shy-away-technological-change-throwing-new-challenges
+                  - text: . Espncricinfo.com. 10 October 2017.
+                  - link "Archived" [ref=e832] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20171011050101/http://www.espncricinfo.com/story/_/id/20977179/cricket-not-shy-away-technological-change-throwing-new-challenges
+                  - text: from the original on 11 October 2017.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Espncricinfo.com&rft.atitle=I+went+to+the+United+States+right+when+Sachin+Tendulkar+started+to+play+for+India+so+I+look+at+it+and+say%2C+wow%2C+I+missed+the+entire+Sachin+era+of+Indian+cricket&rft.date=2017-10-10&rft_id=http%3A%2F%2Fwww.espncricinfo.com%2Fstory%2F_%2Fid%2F20977179%2Fcricket-not-shy-away-technological-change-throwing-new-challenges&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e833]:
+              - link "Jump up" [ref=e1882] [cursor=pointer]:
+                - /url: "#cite_ref-27"
+                - text: ^
+              - generic [ref=e837]:
+                - generic [ref=e838]:
+                  - link "\"Next Microsoft CEO could be UWM graduate\"" [ref=e839] [cursor=pointer]:
+                    - /url: https://www.bizjournals.com/milwaukee/news/2014/01/30/new-microsoft-ceo-could-be-uwm-grad.html
+                  - text: . www.bizjournals.com.
+                  - link "Archived" [ref=e840] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20201022102233/https://www.bizjournals.com/milwaukee/news/2014/01/30/new-microsoft-ceo-could-be-uwm-grad.html
+                  - text: from the original on 22 October 2020
+                  - generic [ref=e841]: . Retrieved 31 May 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=www.bizjournals.com&rft.atitle=Next+Microsoft+CEO+could+be+UWM+graduate&rft_id=https%3A%2F%2Fwww.bizjournals.com%2Fmilwaukee%2Fnews%2F2014%2F01%2F30%2Fnew-microsoft-ceo-could-be-uwm-grad.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e842]:
+              - link "Jump up" [ref=e1883] [cursor=pointer]:
+                - /url: "#cite_ref-28"
+                - text: ^
+              - generic [ref=e846]:
+                - generic [ref=e847]:
+                  - text: Hollar, Sherman (1 December 2020).
+                  - link "\"Satya Nadella - Biography & Facts\"" [ref=e848] [cursor=pointer]:
+                    - /url: https://www.britannica.com/biography/Satya-Nadella
+                  - text: . Encyclopedia Britannica.
+                  - link "Archived" [ref=e849] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20220202113043/https://www.britannica.com/biography/Satya-Nadella
+                  - text: from the original on 2 February 2022
+                  - generic [ref=e850]: . Retrieved 9 September 2021
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Encyclopedia+Britannica&rft.atitle=Satya+Nadella+-+Biography+%26+Facts&rft.date=2020-12-01&rft.aulast=Hollar&rft.aufirst=Sherman&rft_id=https%3A%2F%2Fwww.britannica.com%2Fbiography%2FSatya-Nadella&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e851]:
+              - generic [ref=e852]:
+                - text: ^
+                - 'link "Jump up to: a" [ref=e1884] [cursor=pointer]':
+                  - /url: "#cite_ref-Time_29-0"
+                  - generic [ref=e1885]: "Jump up to:"
+                  - superscript [ref=e854]:
+                    - generic [ref=e855]: a
+                - link "b" [ref=e856] [cursor=pointer]:
+                  - /url: "#cite_ref-Time_29-1"
+                  - superscript [ref=e857]:
+                    - generic [ref=e858]: b
+              - generic [ref=e859]:
+                - generic [ref=e860]:
+                  - text: McCracken, Harry (15 December 2010).
+                  - 'link "\"Microsoft''s New CEO Satya Nadella: 10 Things to Know\"" [ref=e861] [cursor=pointer]':
+                    - /url: https://web.archive.org/web/20140204183506/http://techland.time.com/2014/02/04/satya-nadella/
+                  - text: . Time. Archived from
+                  - link "the original" [ref=e862] [cursor=pointer]:
+                    - /url: http://techland.time.com/2014/02/04/satya-nadella/
+                  - text: on 4 February 2014.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Time&rft.atitle=Microsoft%27s+New+CEO+Satya+Nadella%3A+10+Things+to+Know&rft.date=2010-12-15&rft.aulast=McCracken&rft.aufirst=Harry&rft_id=http%3A%2F%2Ftechland.time.com%2F2014%2F02%2F04%2Fsatya-nadella%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e863]:
+              - link "Jump up" [ref=e1886] [cursor=pointer]:
+                - /url: "#cite_ref-30"
+                - text: ^
+              - generic [ref=e867]:
+                - generic [ref=e868]:
+                  - link "\"The rise of Satya Nadella, the CEO who totally turned Microsoft around in 5 years and made it more valuable than Apple\"" [ref=e869] [cursor=pointer]:
+                    - /url: https://www.businessinsider.com/the-rise-of-microsoft-ceo-satya-nadella-2016-1#but-they-didnt-have-a-real-computer-science-program-so-he-traveled-to-the-us-to-attend-university-of-wisconsin-milwaukee-where-he-graduated-in-1990-1
+                  - text: . businessinsider.com. 4 February 2019.
+                  - link "Archived" [ref=e870] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20190213183759/https://www.businessinsider.com/the-rise-of-microsoft-ceo-satya-nadella-2016-1#but-they-didnt-have-a-real-computer-science-program-so-he-traveled-to-the-us-to-attend-university-of-wisconsin-milwaukee-where-he-graduated-in-1990-1
+                  - text: from the original on 13 February 2019
+                  - generic [ref=e871]: . Retrieved 13 February 2019
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=businessinsider.com&rft.atitle=The+rise+of+Satya+Nadella%2C+the+CEO+who+totally+turned+Microsoft+around+in+5+years+and+made+it+more+valuable+than+Apple&rft.date=2019-02-04&rft_id=https%3A%2F%2Fwww.businessinsider.com%2Fthe-rise-of-microsoft-ceo-satya-nadella-2016-1%23but-they-didnt-have-a-real-computer-science-program-so-he-traveled-to-the-us-to-attend-university-of-wisconsin-milwaukee-where-he-graduated-in-1990-1&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e872]:
+              - link "Jump up" [ref=e1887] [cursor=pointer]:
+                - /url: "#cite_ref-31"
+                - text: ^
+              - generic [ref=e876]:
+                - generic [ref=e877]:
+                  - text: Satya, Nadella (4 February 2014).
+                  - link "\"Satya Nadella CEO\"" [ref=e878] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20140207055143/http://www.hindustantimes.com/business-news/microsoft-names-india-born-satya-nadella-as-next-ceo/article1-1180362.aspx
+                  - text: . Hindustan Times. Archived from
+                  - link "the original" [ref=e879] [cursor=pointer]:
+                    - /url: http://www.hindustantimes.com/business-news/microsoft-names-india-born-satya-nadella-as-next-ceo/article1-1180362.aspx
+                  - text: on 7 February 2014
+                  - generic [ref=e880]: . Retrieved 7 February 2014
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Hindustan+Times&rft.atitle=Satya+Nadella+CEO&rft.date=2014-02-04&rft.aulast=Satya&rft.aufirst=Nadella&rft_id=http%3A%2F%2Fwww.hindustantimes.com%2Fbusiness-news%2Fmicrosoft-names-india-born-satya-nadella-as-next-ceo%2Farticle1-1180362.aspx&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e881]:
+              - link "Jump up" [ref=e1888] [cursor=pointer]:
+                - /url: "#cite_ref-32"
+                - text: ^
+              - generic [ref=e885]:
+                - generic [ref=e886]:
+                  - link "\"Satya Nadella - Stories\"" [ref=e887] [cursor=pointer]:
+                    - /url: https://news.microsoft.com/exec/satya-nadella/
+                  - text: . Microsoft
+                  - generic [ref=e888]: . Retrieved 1 May 2024
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Microsoft&rft.atitle=Satya+Nadella+-+Stories&rft_id=https%3A%2F%2Fnews.microsoft.com%2Fexec%2Fsatya-nadella%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e889]:
+              - link "Jump up" [ref=e1889] [cursor=pointer]:
+                - /url: "#cite_ref-33"
+                - text: ^
+              - generic [ref=e893]:
+                - generic [ref=e894]:
+                  - link "\"Indo-American Satya Nadella in race to be Microsoft's new CEO\"" [ref=e895] [cursor=pointer]:
+                    - /url: http://news.biharprabha.com/2014/01/indo-american-satya-nadella-in-race-to-be-microsofts-new-ceo/
+                  - text: . Biharprabha News. Indo-Asian News Service.
+                  - link "Archived" [ref=e896] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20140201122847/http://news.biharprabha.com/2014/01/indo-american-satya-nadella-in-race-to-be-microsofts-new-ceo/
+                  - text: from the original on 1 February 2014
+                  - generic [ref=e897]: . Retrieved 30 January 2014
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.atitle=Indo-American+Satya+Nadella+in+race+to+be+Microsoft%27s+new+CEO&rft_id=http%3A%2F%2Fnews.biharprabha.com%2F2014%2F01%2Findo-american-satya-nadella-in-race-to-be-microsofts-new-ceo%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e898]:
+              - link "Jump up" [ref=e1890] [cursor=pointer]:
+                - /url: "#cite_ref-34"
+                - text: ^
+              - generic [ref=e902]:
+                - generic [ref=e903]:
+                  - link "\"Microsoft CEO Nadella Received $84.5 Million in 2016 Pay\"" [ref=e904] [cursor=pointer]:
+                    - /url: https://www.bloomberg.com/news/articles/2016-10-03/microsoft-ceo-nadella-received-84-million-in-2016-pay
+                  - text: . Bloomberg.com. 3 October 2016
+                  - generic [ref=e905]: . Retrieved 5 November 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Bloomberg.com&rft.atitle=Microsoft+CEO+Nadella+Received+%2484.5+Million+in+2016+Pay&rft.date=2016-10-03&rft_id=https%3A%2F%2Fwww.bloomberg.com%2Fnews%2Farticles%2F2016-10-03%2Fmicrosoft-ceo-nadella-received-84-million-in-2016-pay&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+                - superscript [ref=e906]:
+                  - generic [ref=e907]:
+                    - text: "["
+                    - link "permanent dead link" [ref=e909] [cursor=pointer]:
+                      - /url: /wiki/Wikipedia:Link_rot
+                    - text: "]"
+            - listitem [ref=e910]:
+              - link "Jump up" [ref=e1891] [cursor=pointer]:
+                - /url: "#cite_ref-35"
+                - text: ^
+              - generic [ref=e914]:
+                - generic [ref=e915]:
+                  - link "\"The New York Times Top 200 Highest-Paid CEOs\"" [ref=e916] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20210411051314/https://www.equilar.com/reports/18-2-200-highest-paid-CEO-rankings-2015.html
+                  - text: . equilar.com. Archived from
+                  - link "the original" [ref=e917] [cursor=pointer]:
+                    - /url: https://www.equilar.com/reports/18-2-200-highest-paid-CEO-rankings-2015.html
+                  - text: on 11 April 2021
+                  - generic [ref=e918]: . Retrieved 18 August 2019
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=The+New+York+Times+Top+200+Highest-Paid+CEOs&rft.pub=equilar.com&rft_id=https%3A%2F%2Fwww.equilar.com%2Freports%2F18-2-200-highest-paid-CEO-rankings-2015.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e919]:
+              - link "Jump up" [ref=e1892] [cursor=pointer]:
+                - /url: "#cite_ref-36"
+                - text: ^
+              - generic [ref=e923]:
+                - generic [ref=e924]:
+                  - text: Kyle Nazario (27 January 2014).
+                  - 'link "\"Satya Nadella biography: Everything you need to know about Microsoft''s new CEO\"" [ref=e925] [cursor=pointer]':
+                    - /url: http://www.itpro.co.uk/staffing/21532/satya-nadella-biography-everything-you-need-to-know-about-microsofts-new-ceo
+                  - text: . IT PRO.
+                  - link "Archived" [ref=e926] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20231120233145/https://www.itpro.com/staffing/21532/satya-nadella-biography-the-salary-and-career-history-of-microsofts-new-ceo
+                  - text: from the original on 20 November 2023
+                  - generic [ref=e927]: . Retrieved 4 February 2014
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Satya+Nadella+biography%3A+Everything+you+need+to+know+about+Microsoft%27s+new+CEO&rft.pub=IT+PRO&rft.date=2014-01-27&rft.au=Kyle+Nazario&rft_id=http%3A%2F%2Fwww.itpro.co.uk%2Fstaffing%2F21532%2Fsatya-nadella-biography-everything-you-need-to-know-about-microsofts-new-ceo&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e928]:
+              - link "Jump up" [ref=e1893] [cursor=pointer]:
+                - /url: "#cite_ref-37"
+                - text: ^
+              - generic [ref=e932]:
+                - generic [ref=e933]:
+                  - 'link "\"Satya Nadella: Executive Profile & Biography\"" [ref=e934] [cursor=pointer]':
+                    - /url: https://web.archive.org/web/20140301054203/http://investing.businessweek.com/research/stocks/people/person.asp?personId=1540690&ticker=MSFT
+                  - text: . Bloomberg BusinessWeek. Archived from
+                  - link "the original" [ref=e935] [cursor=pointer]:
+                    - /url: http://investing.businessweek.com/research/stocks/people/person.asp?personId=1540690&ticker=MSFT
+                  - text: on 1 March 2014.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Bloomberg+BusinessWeek&rft.atitle=Satya+Nadella%3A+Executive+Profile+%26+Biography&rft_id=http%3A%2F%2Finvesting.businessweek.com%2Fresearch%2Fstocks%2Fpeople%2Fperson.asp%3FpersonId%3D1540690%26ticker%3DMSFT&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e936]:
+              - link "Jump up" [ref=e1894] [cursor=pointer]:
+                - /url: "#cite_ref-38"
+                - text: ^
+              - generic [ref=e940]:
+                - generic [ref=e941]:
+                  - link "\"Equilar Atlas\"" [ref=e942] [cursor=pointer]:
+                    - /url: http://people.equilar.com/bio/satya-nadella-microsoft/salary/711505
+                  - text: .
+                  - link "Archived" [ref=e943] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20140228021502/http://people.equilar.com/bio/satya-nadella-microsoft/salary/711505
+                  - text: from the original on 28 February 2014
+                  - generic [ref=e944]: . Retrieved 4 February 2014
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Equilar+Atlas&rft_id=http%3A%2F%2Fpeople.equilar.com%2Fbio%2Fsatya-nadella-microsoft%2Fsalary%2F711505&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e945]:
+              - link "Jump up" [ref=e1895] [cursor=pointer]:
+                - /url: "#cite_ref-Official_Bio_39-0"
+                - text: ^
+              - generic [ref=e949]:
+                - generic [ref=e950]:
+                  - link "Satya Nadella, President, Server & Tools Business" [ref=e951] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20140209010050/http://www.microsoft.com/en-us/news/exec/nadella/
+                  - text: ", archived from"
+                  - link "the original" [ref=e952] [cursor=pointer]:
+                    - /url: http://www.microsoft.com/en-us/news/exec/nadella
+                  - text: on 9 February 2014
+                  - generic [ref=e953]: ", retrieved 26 June 2017"
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=book&rft.btitle=Satya+Nadella%2C+President%2C+Server+%26+Tools+Business&rft_id=http%3A%2F%2Fwww.microsoft.com%2Fen-us%2Fnews%2Fexec%2Fnadella&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e954]:
+              - link "Jump up" [ref=e1896] [cursor=pointer]:
+                - /url: "#cite_ref-autogenerated2_40-0"
+                - text: ^
+              - generic [ref=e958]:
+                - generic [ref=e959]:
+                  - text: Ovide, Shira (5 February 2014).
+                  - link "\"Microsoft Board Names Satya Nadella as CEO\"" [ref=e960] [cursor=pointer]:
+                    - /url: https://online.wsj.com/news/articles/SB10001424052702304851104579362603637152172
+                  - text: . The Wall Street Journal.
+                  - link "Archived" [ref=e961] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20141019013422/http://online.wsj.com/news/articles/SB10001424052702304851104579362603637152172
+                  - text: from the original on 19 October 2014.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Wall+Street+Journal&rft.atitle=Microsoft+Board+Names+Satya+Nadella+as+CEO&rft.date=2014-02-05&rft.aulast=Ovide&rft.aufirst=Shira&rft_id=https%3A%2F%2Fonline.wsj.com%2Fnews%2Farticles%2FSB10001424052702304851104579362603637152172&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e962]:
+              - link "Jump up" [ref=e1897] [cursor=pointer]:
+                - /url: "#cite_ref-41"
+                - text: ^
+              - generic [ref=e966]:
+                - generic [ref=e967]:
+                  - text: Ohlheiser, Abby (4 February 2014).
+                  - 'link "\"Microsoft Has Found Its New CEO: Satya Nadella\"" [ref=e968] [cursor=pointer]':
+                    - /url: https://www.theatlantic.com/technology/archive/2014/02/microsoft-has-new-ceo-satya-nadella/357699/
+                  - text: . The Atlantic.
+                  - link "Archived" [ref=e969] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200706213207/https://www.theatlantic.com/technology/archive/2014/02/microsoft-has-new-ceo-satya-nadella/357699/
+                  - text: from the original on 6 July 2020
+                  - generic [ref=e970]: . Retrieved 31 May 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Atlantic&rft.atitle=Microsoft+Has+Found+Its+New+CEO%3A+Satya+Nadella&rft.date=2014-02-04&rft.aulast=Ohlheiser&rft.aufirst=Abby&rft_id=https%3A%2F%2Fwww.theatlantic.com%2Ftechnology%2Farchive%2F2014%2F02%2Fmicrosoft-has-new-ceo-satya-nadella%2F357699%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e971]:
+              - link "Jump up" [ref=e1898] [cursor=pointer]:
+                - /url: "#cite_ref-42"
+                - text: ^
+              - generic [ref=e975]:
+                - generic [ref=e976]:
+                  - link "\"Microsoft names Satya Nadella new CEO\"" [ref=e977] [cursor=pointer]:
+                    - /url: https://www.cnet.com/news/microsoft-names-satya-nadella-new-ceo/
+                  - text: . CNET. 4 February 2014.
+                  - link "Archived" [ref=e978] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20140206090704/http://news.cnet.com/8301-10805_3-57614575-75/microsoft-names-satya-nadella-new-ceo/
+                  - text: from the original on 6 February 2014
+                  - generic [ref=e979]: . Retrieved 11 June 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=CNET&rft.atitle=Microsoft+names+Satya+Nadella+new+CEO&rft.date=2014-02-04&rft_id=https%3A%2F%2Fwww.cnet.com%2Fnews%2Fmicrosoft-names-satya-nadella-new-ceo%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e980]:
+              - link "Jump up" [ref=e1899] [cursor=pointer]:
+                - /url: "#cite_ref-43"
+                - text: ^
+              - generic [ref=e984]:
+                - generic [ref=e985]:
+                  - text: Staff; agencies (10 October 2014).
+                  - 'link "\"Microsoft CEO Satya Nadella: women, don''t ask for a raise\"" [ref=e986] [cursor=pointer]':
+                    - /url: https://www.theguardian.com/technology/2014/oct/10/microsoft-ceo-satya-nadella-women-dont-ask-for-a-raise
+                  - text: . Theguardian.com.
+                  - link "Archived" [ref=e987] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170917030601/https://www.theguardian.com/technology/2014/oct/10/microsoft-ceo-satya-nadella-women-dont-ask-for-a-raise
+                  - text: from the original on 17 September 2017
+                  - generic [ref=e988]: . Retrieved 5 November 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Theguardian.com&rft.atitle=Microsoft+CEO+Satya+Nadella%3A+women%2C+don%27t+ask+for+a+raise&rft.date=2014-10-10&rft.au=Staff&rft.au=agencies&rft_id=https%3A%2F%2Fwww.theguardian.com%2Ftechnology%2F2014%2Foct%2F10%2Fmicrosoft-ceo-satya-nadella-women-dont-ask-for-a-raise&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e989]:
+              - link "Jump up" [ref=e1900] [cursor=pointer]:
+                - /url: "#cite_ref-44"
+                - text: ^
+              - generic [ref=e993]:
+                - generic [ref=e994]:
+                  - text: Satya Nadella [@satyanadella] (9 October 2014).
+                  - 'link "\"Was inarticulate re how women should ask for raise. Our industry must close gender pay gap so a raise is not needed because of a bias #GHC14\"" [ref=e995] [cursor=pointer]':
+                    - /url: https://twitter.com/satyanadella/status/520311425726566400
+                  - text: (
+                  - link "Tweet" [ref=e996] [cursor=pointer]:
+                    - /url: /wiki/Tweet_(social_media)
+                  - text: ) – via
+                  - link "Twitter" [ref=e997] [cursor=pointer]:
+                    - /url: /wiki/Twitter
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Was+inarticulate+re+how+women+should+ask+for+raise.+Our+industry+must+close+gender+pay+gap+so+a+raise+is+not+needed+because+of+a+bias+%23GHC14&rft.date=2014-10-09&rft.au=Satya+Nadella&rft_id=https%3A%2F%2Ftwitter.com%2Fsatyanadella%2Fstatus%2F520311425726566400&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e998]:
+              - link "Jump up" [ref=e1901] [cursor=pointer]:
+                - /url: "#cite_ref-45"
+                - text: ^
+              - generic [ref=e1002]:
+                - generic [ref=e1003]:
+                  - link "Swisher, Kara" [ref=e1004] [cursor=pointer]:
+                    - /url: /wiki/Kara_Swisher
+                  - text: (9 October 2014).
+                  - 'link "\"Microsoft CEO Satya Nadella on Women Pay Gaffe: \"I Answered That Question Completely Wrong.\"\"" [ref=e1005] [cursor=pointer]':
+                    - /url: https://www.vox.com/2014/10/9/11631778/microsoft-ceo-satya-nadella-on-women-gaffe-i-answered-that-question
+                    - text: "\"Microsoft CEO Satya Nadella on Women Pay Gaffe: \"I Answered That Question Completely Wrong.\""
+                    - text: "\""
+                  - text: . Vox.
+                  - link "Archived" [ref=e1007] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200806232503/https://www.vox.com/2014/10/9/11631778/microsoft-ceo-satya-nadella-on-women-gaffe-i-answered-that-question
+                  - text: from the original on 6 August 2020
+                  - generic [ref=e1008]: . Retrieved 31 May 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Vox&rft.atitle=Microsoft+CEO+Satya+Nadella+on+Women+Pay+Gaffe%3A+%22I+Answered+That+Question+Completely+Wrong.%22&rft.date=2014-10-09&rft.aulast=Swisher&rft.aufirst=Kara&rft_id=https%3A%2F%2Fwww.vox.com%2F2014%2F10%2F9%2F11631778%2Fmicrosoft-ceo-satya-nadella-on-women-gaffe-i-answered-that-question&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1009]:
+              - link "Jump up" [ref=e1902] [cursor=pointer]:
+                - /url: "#cite_ref-46"
+                - text: ^
+              - generic [ref=e1013]:
+                - generic [ref=e1014]:
+                  - text: O'Brien, Chris (27 March 2014).
+                  - link "\"Microsoft CEO Satya Nadella publicly debuts himself, Office for iPad\"" [ref=e1015] [cursor=pointer]:
+                    - /url: https://www.latimes.com/business/technology/la-fi-tn-microsoft-ceo-satya-nadella-debuts-himself-office-for-ipad-20140327-story.html
+                  - text: .
+                  - link "Los Angeles Times" [ref=e1017] [cursor=pointer]:
+                    - /url: /wiki/Los_Angeles_Times
+                  - text: .
+                  - link "Archived" [ref=e1018] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20160519193810/http://articles.latimes.com/2014/mar/27/business/la-fi-tn-microsoft-ceo-satya-nadella-debuts-himself-office-for-ipad-20140327
+                  - text: from the original on 19 May 2016
+                  - generic [ref=e1019]: . Retrieved 28 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Los+Angeles+Times&rft.atitle=Microsoft+CEO+Satya+Nadella+publicly+debuts+himself%2C+Office+for+iPad&rft.date=2014-03-27&rft.aulast=O%27Brien&rft.aufirst=Chris&rft_id=https%3A%2F%2Fwww.latimes.com%2Fbusiness%2Ftechnology%2Fla-fi-tn-microsoft-ceo-satya-nadella-debuts-himself-office-for-ipad-20140327-story.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1020]:
+              - link "Jump up" [ref=e1903] [cursor=pointer]:
+                - /url: "#cite_ref-Wired_47-0"
+                - text: ^
+              - generic [ref=e1024]:
+                - generic [ref=e1025]:
+                  - text: Hempel, Jesse (February 2015).
+                  - link "\"Satya Nadella's Got a Plan to Make You Care About Microsoft. The First Step? Holograms\"" [ref=e1026] [cursor=pointer]:
+                    - /url: https://www.wired.com/2015/01/microsoft-nadella/
+                  - text: .
+                  - link "Wired" [ref=e1028] [cursor=pointer]:
+                    - /url: /wiki/Wired_(magazine)
+                  - text: .
+                  - link "Archived" [ref=e1029] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170925232351/https://www.wired.com/2015/01/microsoft-nadella/
+                  - text: from the original on 25 September 2017
+                  - generic [ref=e1030]: . Retrieved 28 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Wired&rft.atitle=Satya+Nadella%27s+Got+a+Plan+to+Make+You+Care+About+Microsoft.+The+First+Step%3F+Holograms&rft.date=2015-02&rft.aulast=Hempel&rft.aufirst=Jesse&rft_id=https%3A%2F%2Fwww.wired.com%2F2015%2F01%2Fmicrosoft-nadella%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1031]:
+              - link "Jump up" [ref=e1904] [cursor=pointer]:
+                - /url: "#cite_ref-48"
+                - text: ^
+              - generic [ref=e1035]:
+                - generic [ref=e1036]:
+                  - text: Clarke, Gavin (22 October 2014).
+                  - link "\"Big Azure? Microsoft and IBM ink deal on business cloud\"" [ref=e1037] [cursor=pointer]:
+                    - /url: https://www.theregister.co.uk/2014/10/22/ibm_microsoft_cloud_partnership/
+                  - text: .
+                  - link "The Register" [ref=e1039] [cursor=pointer]:
+                    - /url: /wiki/The_Register
+                  - text: .
+                  - link "Archived" [ref=e1040] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170929044811/https://www.theregister.co.uk/2014/10/22/ibm_microsoft_cloud_partnership/
+                  - text: from the original on 29 September 2017
+                  - generic [ref=e1041]: . Retrieved 28 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=The+Register&rft.atitle=Big+Azure%3F+Microsoft+and+IBM+ink+deal+on+business+cloud&rft.date=2014-10-22&rft.aulast=Clarke&rft.aufirst=Gavin&rft_id=https%3A%2F%2Fwww.theregister.co.uk%2F2014%2F10%2F22%2Fibm_microsoft_cloud_partnership%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1042]:
+              - link "Jump up" [ref=e1905] [cursor=pointer]:
+                - /url: "#cite_ref-49"
+                - text: ^
+              - generic [ref=e1046]:
+                - generic [ref=e1047]:
+                  - text: Bort, Julie (4 November 2014).
+                  - link "\"Microsoft Partners With Dropbox\"" [ref=e1048] [cursor=pointer]:
+                    - /url: http://www.businessinsider.com/microsoft-partners-with-dropbox-2014-11
+                  - text: .
+                  - link "Business Insider" [ref=e1050] [cursor=pointer]:
+                    - /url: /wiki/Business_Insider
+                  - text: .
+                  - link "Archived" [ref=e1051] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170929045026/http://www.businessinsider.com/microsoft-partners-with-dropbox-2014-11
+                  - text: from the original on 29 September 2017
+                  - generic [ref=e1052]: . Retrieved 28 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Business+Insider&rft.atitle=Microsoft+Partners+With+Dropbox&rft.date=2014-11-04&rft.aulast=Bort&rft.aufirst=Julie&rft_id=http%3A%2F%2Fwww.businessinsider.com%2Fmicrosoft-partners-with-dropbox-2014-11&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1053]:
+              - link "Jump up" [ref=e1906] [cursor=pointer]:
+                - /url: "#cite_ref-50"
+                - text: ^
+              - generic [ref=e1057]:
+                - generic [ref=e1058]:
+                  - text: Jackson, Joab (20 October 2014).
+                  - link "\"Microsoft (hearts) Linux, for Azure's sake\"" [ref=e1059] [cursor=pointer]:
+                    - /url: https://www.pcworld.com/article/2836412/microsoft-hearts-linux-for-azures-sake.html
+                  - text: .
+                  - link "PC World" [ref=e1061] [cursor=pointer]:
+                    - /url: /wiki/PC_World
+                  - text: .
+                  - link "Archived" [ref=e1062] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20161022070542/http://www.pcworld.com/article/2836412/microsoft-hearts-linux-for-azures-sake.html
+                  - text: from the original on 22 October 2016
+                  - generic [ref=e1063]: . Retrieved 28 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=PC+World&rft.atitle=Microsoft+%28hearts%29+Linux%2C+for+Azure%27s+sake&rft.date=2014-10-20&rft.aulast=Jackson&rft.aufirst=Joab&rft_id=https%3A%2F%2Fwww.pcworld.com%2Farticle%2F2836412%2Fmicrosoft-hearts-linux-for-azures-sake.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1064]:
+              - link "Jump up" [ref=e1907] [cursor=pointer]:
+                - /url: "#cite_ref-51"
+                - text: ^
+              - generic [ref=e1068]:
+                - generic [ref=e1069]:
+                  - link "\"Microsoft just got its Linux Foundation platinum card, becomes top level member\"" [ref=e1070] [cursor=pointer]:
+                    - /url: https://www.theregister.com/2016/11/16/microsoft_joins_linux_foundation_as_platinum_member/
+                  - text: . www.theregister.com.
+                  - link "Archived" [ref=e1071] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200806224118/https://www.theregister.com/2016/11/16/microsoft_joins_linux_foundation_as_platinum_member/
+                  - text: from the original on 6 August 2020
+                  - generic [ref=e1072]: . Retrieved 31 May 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=www.theregister.com&rft.atitle=Microsoft+just+got+its+Linux+Foundation+platinum+card%2C+becomes+top+level+member&rft_id=https%3A%2F%2Fwww.theregister.com%2F2016%2F11%2F16%2Fmicrosoft_joins_linux_foundation_as_platinum_member%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1073]:
+              - link "Jump up" [ref=e1908] [cursor=pointer]:
+                - /url: "#cite_ref-52"
+                - text: ^
+              - generic [ref=e1077]:
+                - generic [ref=e1078]:
+                  - text: Statt, Nick (25 June 2015).
+                  - link "\"Microsoft CEO Nadella wants to help the world 'to achieve more'\"" [ref=e1079] [cursor=pointer]:
+                    - /url: https://www.cnet.com/news/microsoft-ceo-satya-nadella-outlines-new-mission-statement/
+                    - text: "\"Microsoft CEO Nadella wants to help the world 'to achieve more'"
+                    - text: "\""
+                  - text: .
+                  - link "CNET" [ref=e1082] [cursor=pointer]:
+                    - /url: /wiki/CNET
+                  - text: .
+                  - link "Archived" [ref=e1083] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170929045122/https://www.cnet.com/news/microsoft-ceo-satya-nadella-outlines-new-mission-statement/
+                  - text: from the original on 29 September 2017
+                  - generic [ref=e1084]: . Retrieved 28 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=CNET&rft.atitle=Microsoft+CEO+Nadella+wants+to+help+the+world+%27to+achieve+more%27&rft.date=2015-06-25&rft.aulast=Statt&rft.aufirst=Nick&rft_id=https%3A%2F%2Fwww.cnet.com%2Fnews%2Fmicrosoft-ceo-satya-nadella-outlines-new-mission-statement%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1085]:
+              - link "Jump up" [ref=e1909] [cursor=pointer]:
+                - /url: "#cite_ref-53"
+                - text: ^
+              - generic [ref=e1089]:
+                - generic [ref=e1090]:
+                  - text: by Newsroom (18 June 2018).
+                  - 'link "\"Satya Nadella: when empathy is good for business\"" [ref=e1091] [cursor=pointer]':
+                    - /url: https://www.morningfuture.com/en/article/2018/06/18/microsoft-satya-nadella-empathy-business-management/337/
+                  - text: . www.morningfuture.com.
+                  - link "Archived" [ref=e1092] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200614173318/https://www.morningfuture.com/en/article/2018/06/18/microsoft-satya-nadella-empathy-business-management/337/
+                  - text: from the original on 14 June 2020
+                  - generic [ref=e1093]: . Retrieved 14 June 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=www.morningfuture.com&rft.atitle=Satya+Nadella%3A+when+empathy+is+good+for+business&rft.date=2018-06-18&rft.au=by+Newsroom&rft_id=https%3A%2F%2Fwww.morningfuture.com%2Fen%2Farticle%2F2018%2F06%2F18%2Fmicrosoft-satya-nadella-empathy-business-management%2F337%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+                - generic [ref=e1094]:
+                  - code [ref=e1095]:
+                    - text: "{{"
+                    - link "cite web" [ref=e1096] [cursor=pointer]:
+                      - /url: /wiki/Template:Cite_web
+                    - text: "}}"
+                  - text: ":"
+                - generic [ref=e1097]:
+                  - code [ref=e1098]: "|author="
+                  - text: has generic name (
+                  - link "help" [ref=e1099] [cursor=pointer]:
+                    - /url: /wiki/Help:CS1_errors#generic_name
+                  - text: )
+            - listitem [ref=e1100]:
+              - link "Jump up" [ref=e1910] [cursor=pointer]:
+                - /url: "#cite_ref-54"
+                - text: ^
+              - generic [ref=e1104]:
+                - generic [ref=e1105]:
+                  - 'link "\"Transforming culture at Microsoft: Satya Nadella sets a new tone\"" [ref=e1106] [cursor=pointer]':
+                    - /url: https://www.intheblack.com/articles/2018/06/01/satya-nadella-transforming-culture-microsoft
+                  - text: . www.intheblack.com.
+                  - link "Archived" [ref=e1107] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200614200355/https://www.intheblack.com/articles/2018/06/01/satya-nadella-transforming-culture-microsoft
+                  - text: from the original on 14 June 2020
+                  - generic [ref=e1108]: . Retrieved 14 June 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=www.intheblack.com&rft.atitle=Transforming+culture+at+Microsoft%3A+Satya+Nadella+sets+a+new+tone&rft_id=https%3A%2F%2Fwww.intheblack.com%2Farticles%2F2018%2F06%2F01%2Fsatya-nadella-transforming-culture-microsoft&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1109]:
+              - link "Jump up" [ref=e1911] [cursor=pointer]:
+                - /url: "#cite_ref-55"
+                - text: ^
+              - generic [ref=e1113]:
+                - generic [ref=e1114]:
+                  - text: della Cava, Marco (20 February 2017).
+                  - link "\"Microsoft's Satya Nadella is counting on culture shock to drive growth\"" [ref=e1115] [cursor=pointer]:
+                    - /url: https://www.usatoday.com/story/tech/news/2017/02/20/microsofts-satya-nadella-counting-culture-shock-drive-growth/98011388/
+                  - text: .
+                  - link "USA Today" [ref=e1117] [cursor=pointer]:
+                    - /url: /wiki/USA_Today
+                  - text: .
+                  - link "Archived" [ref=e1118] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170929045249/https://www.usatoday.com/story/tech/news/2017/02/20/microsofts-satya-nadella-counting-culture-shock-drive-growth/98011388/
+                  - text: from the original on 29 September 2017
+                  - generic [ref=e1119]: . Retrieved 28 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=USA+Today&rft.atitle=Microsoft%27s+Satya+Nadella+is+counting+on+culture+shock+to+drive+growth&rft.date=2017-02-20&rft.aulast=della+Cava&rft.aufirst=Marco&rft_id=https%3A%2F%2Fwww.usatoday.com%2Fstory%2Ftech%2Fnews%2F2017%2F02%2F20%2Fmicrosofts-satya-nadella-counting-culture-shock-drive-growth%2F98011388%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1120]:
+              - link "Jump up" [ref=e1912] [cursor=pointer]:
+                - /url: "#cite_ref-56"
+                - text: ^
+              - generic [ref=e1124]:
+                - generic [ref=e1125]:
+                  - text: Weinberger, Matt (24 February 2016).
+                  - link "\"Microsoft acquires Xamarin\"" [ref=e1126] [cursor=pointer]:
+                    - /url: http://www.businessinsider.com/microsoft-acquires-xamarin-2016-2
+                  - text: .
+                  - link "Business Insider" [ref=e1128] [cursor=pointer]:
+                    - /url: /wiki/Business_Insider
+                  - text: .
+                  - link "Archived" [ref=e1129] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170704105700/http://www.businessinsider.com/microsoft-acquires-xamarin-2016-2
+                  - text: from the original on 4 July 2017
+                  - generic [ref=e1130]: . Retrieved 20 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Business+Insider&rft.atitle=Microsoft+acquires+Xamarin&rft.date=2016-02-24&rft.aulast=Weinberger&rft.aufirst=Matt&rft_id=http%3A%2F%2Fwww.businessinsider.com%2Fmicrosoft-acquires-xamarin-2016-2&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1131]:
+              - link "Jump up" [ref=e1913] [cursor=pointer]:
+                - /url: "#cite_ref-57"
+                - text: ^
+              - generic [ref=e1135]:
+                - generic [ref=e1136]:
+                  - text: Wingfield, Nick (13 June 2016).
+                  - link "\"Microsoft Buys LinkedIn for $26.2 Billion, Reasserting Its Muscle\"" [ref=e1137] [cursor=pointer]:
+                    - /url: https://www.nytimes.com/2016/06/14/business/dealbook/microsoft-to-buy-linkedin-for-26-2-billion.html
+                  - text: .
+                  - link "The New York Times" [ref=e1139] [cursor=pointer]:
+                    - /url: /wiki/The_New_York_Times
+                  - text: .
+                  - link "Archived" [ref=e1140] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170914192636/https://www.nytimes.com/2016/06/14/business/dealbook/microsoft-to-buy-linkedin-for-26-2-billion.html
+                  - text: from the original on 14 September 2017
+                  - generic [ref=e1141]: . Retrieved 20 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=The+New+York+Times&rft.atitle=Microsoft+Buys+LinkedIn+for+%2426.2+Billion%2C+Reasserting+Its+Muscle&rft.date=2016-06-13&rft.aulast=Wingfield&rft.aufirst=Nick&rft_id=https%3A%2F%2Fwww.nytimes.com%2F2016%2F06%2F14%2Fbusiness%2Fdealbook%2Fmicrosoft-to-buy-linkedin-for-26-2-billion.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1142]:
+              - link "Jump up" [ref=e1914] [cursor=pointer]:
+                - /url: "#cite_ref-58"
+                - text: ^
+              - generic [ref=e1146]:
+                - generic [ref=e1147]:
+                  - link "\"Satya Nadella\"" [ref=e1148] [cursor=pointer]:
+                    - /url: https://www.forbes.com/profile/satya-nadella/
+                  - text: . Forbes.
+                  - link "Archived" [ref=e1149] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20191230010942/https://www.forbes.com/profile/satya-nadella/
+                  - text: from the original on 30 December 2019
+                  - generic [ref=e1150]: . Retrieved 26 May 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Forbes&rft.atitle=Satya+Nadella&rft_id=https%3A%2F%2Fwww.forbes.com%2Fprofile%2Fsatya-nadella%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1151]:
+              - link "Jump up" [ref=e1915] [cursor=pointer]:
+                - /url: "#cite_ref-59"
+                - text: ^
+              - generic [ref=e1155]:
+                - generic [ref=e1156]:
+                  - link "\"Microsoft to acquire GitHub for $7.5 billion\"" [ref=e1157] [cursor=pointer]:
+                    - /url: https://news.microsoft.com/2018/06/04/microsoft-to-acquire-github-for-7-5-billion/
+                  - text: . Microsoft News Center. 4 June 2018.
+                  - link "Archived" [ref=e1158] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20180604142244/https://news.microsoft.com/2018/06/04/microsoft-to-acquire-github-for-7-5-billion/
+                  - text: from the original on 4 June 2018
+                  - generic [ref=e1159]: . Retrieved 1 June 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Microsoft+News+Center&rft.atitle=Microsoft+to+acquire+GitHub+for+%247.5+billion&rft.date=2018-06-04&rft_id=https%3A%2F%2Fnews.microsoft.com%2F2018%2F06%2F04%2Fmicrosoft-to-acquire-github-for-7-5-billion%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1160]:
+              - link "Jump up" [ref=e1916] [cursor=pointer]:
+                - /url: "#cite_ref-60"
+                - text: ^
+              - generic [ref=e1164]:
+                - generic [ref=e1165]:
+                  - text: La Monica, Paul R. (1 December 2015).
+                  - link "\"Is Satya Nadella a better Microsoft CEO than Bill Gates?\"" [ref=e1166] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170809043924/http://money.cnn.com/2015/12/01/investing/microsoft-stock-satya-nadella-cloud/
+                  - text: .
+                  - link "CNN" [ref=e1168] [cursor=pointer]:
+                    - /url: /wiki/CNN
+                  - text: . Archived from
+                  - link "the original" [ref=e1169] [cursor=pointer]:
+                    - /url: https://money.cnn.com/2015/12/01/investing/microsoft-stock-satya-nadella-cloud/
+                  - text: on 9 August 2017
+                  - generic [ref=e1170]: . Retrieved 28 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=CNN&rft.atitle=Is+Satya+Nadella+a+better+Microsoft+CEO+than+Bill+Gates%3F&rft.date=2015-12-01&rft.aulast=La+Monica&rft.aufirst=Paul+R.&rft_id=https%3A%2F%2Fmoney.cnn.com%2F2015%2F12%2F01%2Finvesting%2Fmicrosoft-stock-satya-nadella-cloud%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1171]:
+              - link "Jump up" [ref=e1917] [cursor=pointer]:
+                - /url: "#cite_ref-61"
+                - text: ^
+              - generic [ref=e1175]:
+                - generic [ref=e1176]:
+                  - text: Fiegerman, Seth (21 October 2016).
+                  - link "\"Microsoft stock hits a new all-time high. Here's why\"" [ref=e1177] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170929045400/http://money.cnn.com/2016/10/21/technology/microsoft-all-time-high/index.html
+                  - text: .
+                  - link "CNN" [ref=e1179] [cursor=pointer]:
+                    - /url: /wiki/CNN
+                  - text: . Archived from
+                  - link "the original" [ref=e1180] [cursor=pointer]:
+                    - /url: https://money.cnn.com/2016/10/21/technology/microsoft-all-time-high/index.html
+                  - text: on 29 September 2017
+                  - generic [ref=e1181]: . Retrieved 28 September 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=CNN&rft.atitle=Microsoft+stock+hits+a+new+all-time+high.+Here%27s+why&rft.date=2016-10-21&rft.aulast=Fiegerman&rft.aufirst=Seth&rft_id=https%3A%2F%2Fmoney.cnn.com%2F2016%2F10%2F21%2Ftechnology%2Fmicrosoft-all-time-high%2Findex.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1182]:
+              - link "Jump up" [ref=e1918] [cursor=pointer]:
+                - /url: "#cite_ref-62"
+                - text: ^
+              - generic [ref=e1186]:
+                - generic [ref=e1187]:
+                  - text: Bose, Sourasis (24 October 2024).
+                  - link "\"Microsoft CEO Nadella's 2024 pay rose 63% to $79 mln on stock awards\"" [ref=e1188] [cursor=pointer]:
+                    - /url: https://www.reuters.com/technology/microsoft-ceo-nadellas-2024-pay-rose-63-79-mln-stock-awards-2024-10-24/
+                  - text: .
+                  - link "Reuters" [ref=e1190] [cursor=pointer]:
+                    - /url: /wiki/Reuters
+                  - generic [ref=e1191]: . Retrieved 26 October 2024
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Reuters&rft.atitle=Microsoft+CEO+Nadella%27s+2024+pay+rose+63%25+to+%2479+mln+on+stock+awards&rft.date=2024-10-24&rft.aulast=Bose&rft.aufirst=Sourasis&rft_id=https%3A%2F%2Fwww.reuters.com%2Ftechnology%2Fmicrosoft-ceo-nadellas-2024-pay-rose-63-79-mln-stock-awards-2024-10-24%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1192]:
+              - link "Jump up" [ref=e1919] [cursor=pointer]:
+                - /url: "#cite_ref-microslop_63-0"
+                - text: ^
+              - generic [ref=e1196]:
+                - generic [ref=e1197]:
+                  - text: Wilkins, Joe (4 January 2026).
+                  - link "\"Microsoft CEO Begs Users to Stop Calling It \"Slop\"\"" [ref=e1198] [cursor=pointer]:
+                    - /url: https://futurism.com/artificial-intelligence/microsoft-satya-nadella-ai-slop
+                    - text: "\"Microsoft CEO Begs Users to Stop Calling It \"Slop\""
+                    - text: "\""
+                  - text: . Futurism.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Futurism&rft.atitle=Microsoft+CEO+Begs+Users+to+Stop+Calling+It+%E2%80%9CSlop%E2%80%9D&rft.date=2026-01-04&rft.aulast=Wilkins&rft.aufirst=Joe&rft_id=https%3A%2F%2Ffuturism.com%2Fartificial-intelligence%2Fmicrosoft-satya-nadella-ai-slop&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1200]:
+              - link "Jump up" [ref=e1920] [cursor=pointer]:
+                - /url: "#cite_ref-microslop2_64-0"
+                - text: ^
+              - generic [ref=e1204]:
+                - generic [ref=e1205]:
+                  - text: Landymore, Frank (7 January 2026).
+                  - 'link "\"\"Microslop\": Infuriating Video Sums Up How Microsoft Is Ruining Windows With AI\"" [ref=e1206] [cursor=pointer]':
+                    - /url: https://futurism.com/artificial-intelligence/video-microsoft-ruining-windows-ai
+                    - text: "\""
+                    - text: "\"Microslop\": Infuriating Video Sums Up How Microsoft Is Ruining Windows With AI\""
+                  - text: .
+                  - link "Futurism" [ref=e1209] [cursor=pointer]:
+                    - /url: /wiki/Futurism_(website)
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Futurism&rft.atitle=%E2%80%9CMicroslop%E2%80%9D%3A+Infuriating+Video+Sums+Up+How+Microsoft+Is+Ruining+Windows+With+AI&rft.date=2026-01-07&rft.aulast=Landymore&rft.aufirst=Frank&rft_id=https%3A%2F%2Ffuturism.com%2Fartificial-intelligence%2Fvideo-microsoft-ruining-windows-ai&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1210]:
+              - link "Jump up" [ref=e1921] [cursor=pointer]:
+                - /url: "#cite_ref-microslop3_65-0"
+                - text: ^
+              - generic [ref=e1214]:
+                - generic [ref=e1215]:
+                  - text: Corden, Jez (3 January 2026).
+                  - link "\"\"Microslop\" trends in backlash to Microsoft's AI obsession\"" [ref=e1216] [cursor=pointer]:
+                    - /url: https://www.yahoo.com/news/articles/microslop-trends-backlash-microsofts-ai-160628586.html
+                    - text: "\""
+                    - text: "\"Microslop\" trends in backlash to Microsoft's AI obsession\""
+                  - text: .
+                  - link "Yahoo News" [ref=e1219] [cursor=pointer]:
+                    - /url: /wiki/Yahoo_News
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Yahoo+News&rft.atitle=%22Microslop%22+trends+in+backlash+to+Microsoft%27s+AI+obsession&rft.date=2026-01-03&rft.aulast=Corden&rft.aufirst=Jez&rft_id=https%3A%2F%2Fwww.yahoo.com%2Fnews%2Farticles%2Fmicroslop-trends-backlash-microsofts-ai-160628586.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1220]:
+              - link "Jump up" [ref=e1922] [cursor=pointer]:
+                - /url: "#cite_ref-66"
+                - text: ^
+              - generic [ref=e1224]:
+                - generic [ref=e1225]:
+                  - link "\"Delhi Capitals join hands with Satya Nadella to own a Major League Cricket Team\"" [ref=e1226] [cursor=pointer]:
+                    - /url: https://www.thehindu.com/sport/cricket/delhi-capitals-joins-hands-with-satya-nadella-to-own-major-league-cricket-team-in-us/article66630496.ece/
+                  - text: . The Hindu. 17 March 2023.
+                  - link "Archived" [ref=e1227] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20230720064517/https://www.thehindu.com/sport/cricket/delhi-capitals-joins-hands-with-satya-nadella-to-own-major-league-cricket-team-in-us/article66630496.ece/amp/
+                  - text: from the original on 20 July 2023
+                  - generic [ref=e1228]: . Retrieved 20 July 2023
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=The+Hindu&rft.atitle=Delhi+Capitals+join+hands+with+Satya+Nadella+to+own+a+Major+League+Cricket+Team&rft.date=2023-03-17&rft_id=https%3A%2F%2Fwww.thehindu.com%2Fsport%2Fcricket%2Fdelhi-capitals-joins-hands-with-satya-nadella-to-own-major-league-cricket-team-in-us%2Farticle66630496.ece%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1229]:
+              - link "Jump up" [ref=e1923] [cursor=pointer]:
+                - /url: "#cite_ref-67"
+                - text: ^
+              - generic [ref=e1233]:
+                - generic [ref=e1234]:
+                  - text: Glickman, Ben (31 May 2024).
+                  - link "\"Microsoft CEO Satya Nadella Resigns From Starbucks Board\"" [ref=e1235] [cursor=pointer]:
+                    - /url: https://www.wsj.com/business/c-suite/microsoft-ceo-satya-nadella-resigns-from-starbucks-board-406b1947
+                  - text: .
+                  - link "The Wall Street Journal" [ref=e1237] [cursor=pointer]:
+                    - /url: /wiki/The_Wall_Street_Journal
+                  - generic [ref=e1238]: . Retrieved 1 June 2024
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=The+Wall+Street+Journal&rft.atitle=Microsoft+CEO+Satya+Nadella+Resigns+From+Starbucks+Board&rft.date=2024-05-31&rft.aulast=Glickman&rft.aufirst=Ben&rft_id=https%3A%2F%2Fwww.wsj.com%2Fbusiness%2Fc-suite%2Fmicrosoft-ceo-satya-nadella-resigns-from-starbucks-board-406b1947&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1239]:
+              - link "Jump up" [ref=e1924] [cursor=pointer]:
+                - /url: "#cite_ref-68"
+                - text: ^
+              - generic [ref=e1243]:
+                - generic [ref=e1244]:
+                  - link "\"Board of Trustees\"" [ref=e1245] [cursor=pointer]:
+                    - /url: https://www.fredhutch.org/en/about/about-the-hutch/leadership.html
+                  - text: . Leadership.
+                  - link "Fred Hutchinson Cancer Research Center" [ref=e1246] [cursor=pointer]:
+                    - /url: /wiki/Fred_Hutchinson_Cancer_Research_Center
+                  - text: .
+                  - link "Archived" [ref=e1247] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200701151943/https://www.fredhutch.org/en/about/about-the-hutch/leadership.html
+                  - text: from the original on 1 July 2020
+                  - generic [ref=e1248]: . Retrieved 2 July 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Leadership&rft.atitle=Board+of+Trustees&rft_id=https%3A%2F%2Fwww.fredhutch.org%2Fen%2Fabout%2Fabout-the-hutch%2Fleadership.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1249]:
+              - link "Jump up" [ref=e1925] [cursor=pointer]:
+                - /url: "#cite_ref-69"
+                - text: ^
+              - generic [ref=e1253]:
+                - generic [ref=e1254]:
+                  - link "\"Microsoft CEO elected to University of Chicago Board of Trustees\"" [ref=e1255] [cursor=pointer]:
+                    - /url: https://news.uchicago.edu/story/microsoft-ceo-elected-university-chicago-board-trustees
+                  - text: .
+                  - link "University of Chicago" [ref=e1256] [cursor=pointer]:
+                    - /url: /wiki/University_of_Chicago
+                  - text: news. October 2018.
+                  - link "Archived" [ref=e1257] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200702214126/https://news.uchicago.edu/story/microsoft-ceo-elected-university-chicago-board-trustees
+                  - text: from the original on 2 July 2020
+                  - generic [ref=e1258]: . Retrieved 2 July 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Microsoft+CEO+elected+to+University+of+Chicago+Board+of+Trustees&rft.pub=University+of+Chicago+news&rft.date=2018-10&rft_id=https%3A%2F%2Fnews.uchicago.edu%2Fstory%2Fmicrosoft-ceo-elected-university-chicago-board-trustees&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1259]:
+              - link "Jump up" [ref=e1926] [cursor=pointer]:
+                - /url: "#cite_ref-70"
+                - text: ^
+              - generic [ref=e1263]:
+                - generic [ref=e1264]:
+                  - text: Gangitano, Alex (8 October 2020).
+                  - link "\"Microsoft CEO Satya Nadella to lead global CEO group\"" [ref=e1265] [cursor=pointer]:
+                    - /url: https://thehill.com/business-a-lobbying/business-a-lobbying/520219-microsoft-ceo-satya-nadella-to-lead-global-ceo-group/
+                  - text: . The Hill
+                  - generic [ref=e1266]: . Retrieved 24 June 2024
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Hill&rft.atitle=Microsoft+CEO+Satya+Nadella+to+lead+global+CEO+group&rft.date=2020-10-08&rft.aulast=Gangitano&rft.aufirst=Alex&rft_id=https%3A%2F%2Fthehill.com%2Fbusiness-a-lobbying%2Fbusiness-a-lobbying%2F520219-microsoft-ceo-satya-nadella-to-lead-global-ceo-group%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1267]:
+              - link "Jump up" [ref=e1927] [cursor=pointer]:
+                - /url: "#cite_ref-71"
+                - text: ^
+              - generic [ref=e1271]:
+                - generic [ref=e1272]:
+                  - text: Isaacson, Walter (19 April 2018).
+                  - link "\"Satya Nadella\"" [ref=e1273] [cursor=pointer]:
+                    - /url: https://time.com/collection/most-influential-people-2018/5217556/satya-nadella/
+                  - text: .
+                  - link "Time" [ref=e1274] [cursor=pointer]:
+                    - /url: /wiki/Time_(magazine)
+                  - text: .
+                  - link "Archived" [ref=e1275] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200704150048/https://time.com/collection/most-influential-people-2018/5217556/satya-nadella/
+                  - text: from the original on 4 July 2020
+                  - generic [ref=e1276]: . Retrieved 2 July 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.atitle=Satya+Nadella&rft.date=2018-04-19&rft.aulast=Isaacson&rft.aufirst=Walter&rft_id=https%3A%2F%2Ftime.com%2Fcollection%2Fmost-influential-people-2018%2F5217556%2Fsatya-nadella%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1277]:
+              - link "Jump up" [ref=e1928] [cursor=pointer]:
+                - /url: "#cite_ref-72"
+                - text: ^
+              - generic [ref=e1281]:
+                - generic [ref=e1282]:
+                  - link "Hobson, Mellody" [ref=e1283] [cursor=pointer]:
+                    - /url: /wiki/Mellody_Hobson
+                  - text: (17 April 2024).
+                  - 'link "\"Time 100: Satya Nadella\"" [ref=e1284] [cursor=pointer]':
+                    - /url: https://time.com/6964908/satya-nadella-2024/
+                  - text: . Time.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Time&rft.atitle=Time+100%3A+Satya+Nadella&rft.date=2024-04-17&rft.aulast=Hobson&rft.aufirst=Mellody&rft_id=https%3A%2F%2Ftime.com%2F6964908%2Fsatya-nadella-2024%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1285]:
+              - link "Jump up" [ref=e1929] [cursor=pointer]:
+                - /url: "#cite_ref-73"
+                - text: ^
+              - generic [ref=e1289]:
+                - generic [ref=e1290]:
+                  - text: Perrigo, Billy (5 September 2024).
+                  - 'link "\"TIME100 AI 2024: Satya Nadella\"" [ref=e1291] [cursor=pointer]':
+                    - /url: https://time.com/7012746/satya-nadella-3/
+                  - text: . TIME
+                  - generic [ref=e1292]: . Retrieved 19 September 2024
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=TIME&rft.atitle=TIME100+AI+2024%3A+Satya+Nadella&rft.date=2024-09-05&rft.aulast=Perrigo&rft.aufirst=Billy&rft_id=https%3A%2F%2Ftime.com%2F7012746%2Fsatya-nadella-3%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1293]:
+              - link "Jump up" [ref=e1930] [cursor=pointer]:
+                - /url: "#cite_ref-74"
+                - text: ^
+              - generic [ref=e1297]:
+                - generic [ref=e1298]:
+                  - text: Waters, Richard (19 December 2019).
+                  - 'link "\"FT Person of the Year: Satya Nadella\"" [ref=e1299] [cursor=pointer]':
+                    - /url: https://www.ft.com/content/0e8c3002-20c7-11ea-92da-f0c92e957a96
+                  - text: .
+                  - link "Financial Times" [ref=e1301] [cursor=pointer]:
+                    - /url: /wiki/Financial_Times
+                  - text: .
+                  - link "Archived" [ref=e1302] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200705001637/https://www.ft.com/content/0e8c3002-20c7-11ea-92da-f0c92e957a96
+                  - text: from the original on 5 July 2020
+                  - generic [ref=e1303]: . Retrieved 6 July 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=Financial+Times&rft.atitle=FT+Person+of+the+Year%3A+Satya+Nadella&rft.date=2019-12-19&rft.aulast=Waters&rft.aufirst=Richard&rft_id=https%3A%2F%2Fwww.ft.com%2Fcontent%2F0e8c3002-20c7-11ea-92da-f0c92e957a96&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1304]:
+              - link "Jump up" [ref=e1931] [cursor=pointer]:
+                - /url: "#cite_ref-75"
+                - text: ^
+              - generic [ref=e1308]:
+                - generic [ref=e1309]:
+                  - text: Lashinsky, Adam (19 November 2019).
+                  - link "\"Businessperson of the Year 2019\"" [ref=e1310] [cursor=pointer]:
+                    - /url: http://fortune.com/businessperson-of-the-year/2019/satya-nadella/
+                  - text: .
+                  - link "Fortune" [ref=e1311] [cursor=pointer]:
+                    - /url: /wiki/Fortune_(magazine)
+                  - text: .
+                  - link "Archived" [ref=e1312] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200704022846/https://fortune.com/businessperson-of-the-year/2019/satya-nadella/
+                  - text: from the original on 4 July 2020
+                  - generic [ref=e1313]: . Retrieved 2 July 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.atitle=Businessperson+of+the+Year+2019&rft.date=2019-11-19&rft.aulast=Lashinsky&rft.aufirst=Adam&rft_id=http%3A%2F%2Ffortune.com%2Fbusinessperson-of-the-year%2F2019%2Fsatya-nadella%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1314]:
+              - link "Jump up" [ref=e1932] [cursor=pointer]:
+                - /url: "#cite_ref-76"
+                - text: ^
+              - generic [ref=e1318]:
+                - generic [ref=e1319]:
+                  - 'link "\"IBLA 2020: Microsoft CEO Satya Nadella Wins Global Indian Business Icon\"" [ref=e1320] [cursor=pointer]':
+                    - /url: https://www.news18.com/news/tech/ibla-2020-microsoft-ceo-satya-nadella-wins-global-indian-business-icon-2520079.html
+                  - text: .
+                  - link "News18" [ref=e1321] [cursor=pointer]:
+                    - /url: /wiki/News18
+                  - text: . 29 February 2020.
+                  - link "Archived" [ref=e1322] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20200703065905/https://www.news18.com/news/tech/ibla-2020-microsoft-ceo-satya-nadella-wins-global-indian-business-icon-2520079.html
+                  - text: from the original on 3 July 2020
+                  - generic [ref=e1323]: . Retrieved 2 July 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.atitle=IBLA+2020%3A+Microsoft+CEO+Satya+Nadella+Wins+Global+Indian+Business+Icon&rft.date=2020-02-29&rft_id=https%3A%2F%2Fwww.news18.com%2Fnews%2Ftech%2Fibla-2020-microsoft-ceo-satya-nadella-wins-global-indian-business-icon-2520079.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1324]:
+              - link "Jump up" [ref=e1933] [cursor=pointer]:
+                - /url: "#cite_ref-77"
+                - text: ^
+              - generic [ref=e1328]:
+                - generic [ref=e1329]:
+                  - 'link "\"Padma Bhushan: Microsoft''s Satya Nadella, and Google''s Sundar Pichai get Padma Bhushan, India''s third-highest civilian award - Times of India\"" [ref=e1330] [cursor=pointer]':
+                    - /url: https://timesofindia.indiatimes.com/gadgets-news/microsofts-satya-nadella-and-googles-sundar-pichai-get-padma-bhushan-indias-third-highest-civilian-award/articleshow/89122582.cms
+                  - text: . The Times of India. 25 January 2022.
+                  - link "Archived" [ref=e1331] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20220126103328/https://timesofindia.indiatimes.com/gadgets-news/microsofts-satya-nadella-and-googles-sundar-pichai-get-padma-bhushan-indias-third-highest-civilian-award/articleshow/89122582.cms
+                  - text: from the original on 26 January 2022
+                  - generic [ref=e1332]: . Retrieved 26 January 2022
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Times+of+India&rft.atitle=Padma+Bhushan%3A+Microsoft%27s+Satya+Nadella%2C+and+Google%27s+Sundar+Pichai+get+Padma+Bhushan%2C+India%27s+third-highest+civilian+award+-+Times+of+India&rft.date=2022-01-25&rft_id=https%3A%2F%2Ftimesofindia.indiatimes.com%2Fgadgets-news%2Fmicrosofts-satya-nadella-and-googles-sundar-pichai-get-padma-bhushan-indias-third-highest-civilian-award%2Farticleshow%2F89122582.cms&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1333]:
+              - link "Jump up" [ref=e1934] [cursor=pointer]:
+                - /url: "#cite_ref-78"
+                - text: ^
+              - generic [ref=e1337]:
+                - generic [ref=e1338]:
+                  - link "\"Georgia Tech Presents Satya Nadella With Honorary Degree\"" [ref=e1339] [cursor=pointer]:
+                    - /url: https://news.gatech.edu/news/2024/01/25/georgia-tech-presents-satya-nadella-honorary-degree
+                  - text: .
+                  - generic [ref=e1340]:
+                    - link "Georgia Tech" [ref=e1341] [cursor=pointer]:
+                      - /url: /wiki/Georgia_Tech
+                    - text: News Center
+                  - text: . 25 January 2024
+                  - generic [ref=e1342]: . Retrieved 26 January 2024
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Georgia+Tech+News+Center&rft.atitle=Georgia+Tech+Presents+Satya+Nadella+With+Honorary+Degree&rft.date=2024-01-25&rft_id=https%3A%2F%2Fnews.gatech.edu%2Fnews%2F2024%2F01%2F25%2Fgeorgia-tech-presents-satya-nadella-honorary-degree&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1343]:
+              - link "Jump up" [ref=e1935] [cursor=pointer]:
+                - /url: "#cite_ref-79"
+                - text: ^
+              - generic [ref=e1347]:
+                - generic [ref=e1348]:
+                  - text: admin (6 June 2019).
+                  - link "\"The Exceptional First Lady of Microsoft | The Software Report\"" [ref=e1349] [cursor=pointer]:
+                    - /url: https://www.thesoftwarereport.com/the-first-lady-of-microsoft/
+                  - generic [ref=e1350]: . Retrieved 5 June 2024
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=The+Exceptional+First+Lady+of+Microsoft+%7C+The+Software+Report&rft.date=2019-06-06&rft.au=admin&rft_id=https%3A%2F%2Fwww.thesoftwarereport.com%2Fthe-first-lady-of-microsoft%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1351]:
+              - link "Jump up" [ref=e1936] [cursor=pointer]:
+                - /url: "#cite_ref-80"
+                - text: ^
+              - generic [ref=e1355]:
+                - generic [ref=e1356]:
+                  - link "\"Meet woman, daughter of IAS officer, her husband has Rs 450 crore salary, she is married to Indian genius\"" [ref=e1357] [cursor=pointer]:
+                    - /url: https://www.dnaindia.com/business/report-meet-women-daughter-of-ias-officer-her-husband-earns-over-rs-450-crore-salary-she-is-3085470
+                  - text: . www.dnaindia.com
+                  - generic [ref=e1358]: . Retrieved 5 June 2024
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=www.dnaindia.com&rft.atitle=Meet+woman%2C+daughter+of+IAS+officer%2C+her+husband+has+Rs+450+crore+salary%2C+she+is+married+to+Indian+genius&rft_id=https%3A%2F%2Fwww.dnaindia.com%2Fbusiness%2Freport-meet-women-daughter-of-ias-officer-her-husband-earns-over-rs-450-crore-salary-she-is-3085470&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1359]:
+              - link "Jump up" [ref=e1937] [cursor=pointer]:
+                - /url: "#cite_ref-81"
+                - text: ^
+              - generic [ref=e1363]:
+                - generic [ref=e1364]:
+                  - link "\"Satya Nadella, Microsoft CEO\"" [ref=e1365] [cursor=pointer]:
+                    - /url: https://findingmastery.com/podcasts/satya-nadella/
+                  - text: . Finding Mastery.
+                  - link "Archived" [ref=e1366] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20230801050901/https://findingmastery.com/podcasts/satya-nadella/
+                  - text: from the original on 1 August 2023
+                  - generic [ref=e1367]: . Retrieved 1 August 2023
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Finding+Mastery&rft.atitle=Satya+Nadella%2C+Microsoft+CEO&rft_id=https%3A%2F%2Ffindingmastery.com%2Fpodcasts%2Fsatya-nadella%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1368]:
+              - link "Jump up" [ref=e1938] [cursor=pointer]:
+                - /url: "#cite_ref-82"
+                - text: ^
+              - generic [ref=e1372]:
+                - generic [ref=e1373]:
+                  - text: Nikhila Henry & Rohit P S, TNN (5 February 2014).
+                  - 'link "\"Nadella''s other passions: Cricket, running and pastries\"" [ref=e1374] [cursor=pointer]':
+                    - /url: https://timesofindia.indiatimes.com/city/hyderabad/Nadellas-other-passions-Cricket-running-and-pastries/articleshow/29871877.cms
+                  - text: .
+                  - link "The Times of India" [ref=e1376] [cursor=pointer]:
+                    - /url: /wiki/The_Times_of_India
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=The+Times+of+India&rft.atitle=Nadella%27s+other+passions%3A+Cricket%2C+running+and+pastries&rft.date=2014-02-05&rft.au=Nikhila+Henry+%26+Rohit+P+S%2C+TNN&rft_id=https%3A%2F%2Ftimesofindia.indiatimes.com%2Fcity%2Fhyderabad%2FNadellas-other-passions-Cricket-running-and-pastries%2Farticleshow%2F29871877.cms&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1377]:
+              - link "Jump up" [ref=e1939] [cursor=pointer]:
+                - /url: "#cite_ref-83"
+                - text: ^
+              - generic [ref=e1381]:
+                - generic [ref=e1382]:
+                  - text: Zap, Claudine (14 January 2016).
+                  - link "\"A Quick Download on Microsoft CEO Satya Nadella's $3.5M House in Washington\"" [ref=e1383] [cursor=pointer]:
+                    - /url: http://www.realtor.com/news/celebrity-real-estate/microsoft-ceo-selling-washington-house/
+                  - text: . Realtor.com.
+                  - link "Archived" [ref=e1384] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20160531204359/http://www.realtor.com/news/celebrity-real-estate/microsoft-ceo-selling-washington-house/
+                  - text: from the original on 31 May 2016
+                  - generic [ref=e1385]: . Retrieved 14 May 2016
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Realtor.com&rft.atitle=A+Quick+Download+on+Microsoft+CEO+Satya+Nadella%27s+%243.5M+House+in+Washington&rft.date=2016-01-14&rft.aulast=Zap&rft.aufirst=Claudine&rft_id=http%3A%2F%2Fwww.realtor.com%2Fnews%2Fcelebrity-real-estate%2Fmicrosoft-ceo-selling-washington-house%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1386]:
+              - link "Jump up" [ref=e1940] [cursor=pointer]:
+                - /url: "#cite_ref-POLITICO_04FEB14_84-0"
+                - text: ^
+              - generic [ref=e1390]:
+                - generic [ref=e1391]:
+                  - text: Drusch, Andrea (2 April 2014).
+                  - 'link "\"10 things to know: Satya Nadella\"" [ref=e1392] [cursor=pointer]':
+                    - /url: https://www.politico.com/story/2014/02/satya-nadella-biography-key-facts-career-background-microsoft-103106.html
+                  - text: . Politico.com.
+                  - link "Archived" [ref=e1393] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20140302013302/http://www.politico.com/story/2014/02/satya-nadella-biography-key-facts-career-background-microsoft-103106.html
+                  - text: from the original on 2 March 2014.
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Politico.com&rft.atitle=10+things+to+know%3A+Satya+Nadella&rft.date=2014-04-02&rft.aulast=Drusch&rft.aufirst=Andrea&rft_id=https%3A%2F%2Fwww.politico.com%2Fstory%2F2014%2F02%2Fsatya-nadella-biography-key-facts-career-background-microsoft-103106.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1394]:
+              - link "Jump up" [ref=e1941] [cursor=pointer]:
+                - /url: "#cite_ref-85"
+                - text: ^
+              - generic [ref=e1398]:
+                - generic [ref=e1399]:
+                  - 'link "\"Microsoft CEO Satya Nadella to employees on coronavirus crisis: ''There is no playbook for this''\"" [ref=e1400] [cursor=pointer]':
+                    - /url: https://www.seattletimes.com/business/microsoft-ceo-satya-nadella-to-employees-on-coronavirus-crisis-we-need-the-world-to-do-well/
+                    - text: "\"Microsoft CEO Satya Nadella to employees on coronavirus crisis: 'There is no playbook for this'"
+                    - text: "\""
+                  - text: . Seattle Times. 22 March 2020.
+                  - link "Archived" [ref=e1402] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20220121122521/https://www.seattletimes.com/business/microsoft-ceo-satya-nadella-to-employees-on-coronavirus-crisis-we-need-the-world-to-do-well/
+                  - text: from the original on 21 January 2022
+                  - generic [ref=e1403]: . Retrieved 30 July 2020
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&rft.genre=unknown&rft.btitle=Microsoft+CEO+Satya+Nadella+to+employees+on+coronavirus+crisis%3A+%27There+is+no+playbook+for+this%27&rft.pub=Seattle+Times&rft.date=2020-03-22&rft_id=https%3A%2F%2Fwww.seattletimes.com%2Fbusiness%2Fmicrosoft-ceo-satya-nadella-to-employees-on-coronavirus-crisis-we-need-the-world-to-do-well%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1404]:
+              - link "Jump up" [ref=e1942] [cursor=pointer]:
+                - /url: "#cite_ref-86"
+                - text: ^
+              - generic [ref=e1408]:
+                - generic [ref=e1409]:
+                  - link "\"Microsoft Says Son of CEO Satya Nadella Has Died\"" [ref=e1410] [cursor=pointer]:
+                    - /url: https://finance.yahoo.com/news/microsoft-says-son-ceo-satya-051821797.html
+                  - text: . finance.yahoo.com. March 2022.
+                  - link "Archived" [ref=e1411] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20221101170756/https://finance.yahoo.com/news/microsoft-says-son-ceo-satya-051821797.html
+                  - text: from the original on 1 November 2022
+                  - generic [ref=e1412]: . Retrieved 1 March 2022
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=finance.yahoo.com&rft.atitle=Microsoft+Says+Son+of+CEO+Satya+Nadella+Has+Died&rft.date=2022-03&rft_id=https%3A%2F%2Ffinance.yahoo.com%2Fnews%2Fmicrosoft-says-son-ceo-satya-051821797.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1413]:
+              - link "Jump up" [ref=e1943] [cursor=pointer]:
+                - /url: "#cite_ref-87"
+                - text: ^
+              - generic [ref=e1417]:
+                - generic [ref=e1418]:
+                  - link "\"Zain's birth was a turning point in Satya Nadella's life; tech boss says his son taught him empathy, influenced Microsoft's vision of 'accessibility'\"" [ref=e1419] [cursor=pointer]:
+                    - /url: https://economictimes.indiatimes.com/magazines/panache/zains-birth-was-a-turning-point-in-satya-nadellas-life-tech-boss-says-his-son-taught-him-empathy-influenced-microsofts-vision-of-accessibility/articleshow/89918905.cms?from=mdr
+                    - text: "\"Zain's birth was a turning point in Satya Nadella's life; tech boss says his son taught him empathy, influenced Microsoft's vision of 'accessibility'"
+                    - text: "\""
+                  - text: . The Economic Times. 3 March 2022.
+                  - link "ISSN" [ref=e1421] [cursor=pointer]:
+                    - /url: /wiki/ISSN_(identifier)
+                  - link "0013-0389" [ref=e1422] [cursor=pointer]:
+                    - /url: https://search.worldcat.org/issn/0013-0389
+                  - text: .
+                  - link "Archived" [ref=e1423] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20230801052424/https://economictimes.indiatimes.com/magazines/panache/zains-birth-was-a-turning-point-in-satya-nadellas-life-tech-boss-says-his-son-taught-him-empathy-influenced-microsofts-vision-of-accessibility/articleshow/89918905.cms?from=mdr
+                  - text: from the original on 1 August 2023
+                  - generic [ref=e1424]: . Retrieved 1 August 2023
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=The+Economic+Times&rft.atitle=Zain%27s+birth+was+a+turning+point+in+Satya+Nadella%27s+life%3B+tech+boss+says+his+son+taught+him+empathy%2C+influenced+Microsoft%27s+vision+of+%27accessibility%27&rft.date=2022-03-03&rft.issn=0013-0389&rft_id=https%3A%2F%2Feconomictimes.indiatimes.com%2Fmagazines%2Fpanache%2Fzains-birth-was-a-turning-point-in-satya-nadellas-life-tech-boss-says-his-son-taught-him-empathy-influenced-microsofts-vision-of-accessibility%2Farticleshow%2F89918905.cms%3Ffrom%3Dmdr&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1425]:
+              - link "Jump up" [ref=e1944] [cursor=pointer]:
+                - /url: "#cite_ref-88"
+                - text: ^
+              - generic [ref=e1429]:
+                - generic [ref=e1430]:
+                  - 'link "\"All for love: When Microsoft CEO Satya Nadella surrendered his Green Card for wife Anu\"" [ref=e1431] [cursor=pointer]':
+                    - /url: http://www.firstpost.com/world/all-for-love-when-satya-nadella-surrendered-his-green-card-for-h1-b-visa-4083165.html
+                  - text: . Firstpost.com. 26 September 2017.
+                  - link "Archived" [ref=e1432] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20171103222307/http://www.firstpost.com/world/all-for-love-when-satya-nadella-surrendered-his-green-card-for-h1-b-visa-4083165.html
+                  - text: from the original on 3 November 2017
+                  - generic [ref=e1433]: . Retrieved 5 November 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Firstpost.com&rft.atitle=All+for+love%3A+When+Microsoft+CEO+Satya+Nadella+surrendered+his+Green+Card+for+wife+Anu&rft.date=2017-09-26&rft_id=http%3A%2F%2Fwww.firstpost.com%2Fworld%2Fall-for-love-when-satya-nadella-surrendered-his-green-card-for-h1-b-visa-4083165.html&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1434]:
+              - link "Jump up" [ref=e1945] [cursor=pointer]:
+                - /url: "#cite_ref-89"
+                - text: ^
+              - generic [ref=e1438]:
+                - generic [ref=e1439]:
+                  - text: Ghatak, Lopamudra (23 October 2017).
+                  - link "\"3 lessons that Satya Nadella took from the cricket field to the CEO's office\"" [ref=e1440] [cursor=pointer]:
+                    - /url: https://economictimes.indiatimes.com/magazines/panache/3-lessons-that-satya-nadella-took-from-the-cricket-field-to-the-ceos-office/articleshow/61020777.cms?from=mdr
+                  - text: . The Economic Times.
+                  - link "ISSN" [ref=e1441] [cursor=pointer]:
+                    - /url: /wiki/ISSN_(identifier)
+                  - link "0013-0389" [ref=e1442] [cursor=pointer]:
+                    - /url: https://search.worldcat.org/issn/0013-0389
+                  - text: .
+                  - link "Archived" [ref=e1443] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20230801053653/https://economictimes.indiatimes.com/magazines/panache/3-lessons-that-satya-nadella-took-from-the-cricket-field-to-the-ceos-office/articleshow/61020777.cms?from=mdr
+                  - text: from the original on 1 August 2023
+                  - generic [ref=e1444]: . Retrieved 1 August 2023
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=The+Economic+Times&rft.atitle=3+lessons+that+Satya+Nadella+took+from+the+cricket+field+to+the+CEO%27s+office&rft.date=2017-10-23&rft.issn=0013-0389&rft.aulast=Ghatak&rft.aufirst=Lopamudra&rft_id=https%3A%2F%2Feconomictimes.indiatimes.com%2Fmagazines%2Fpanache%2F3-lessons-that-satya-nadella-took-from-the-cricket-field-to-the-ceos-office%2Farticleshow%2F61020777.cms%3Ffrom%3Dmdr&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1445]:
+              - link "Jump up" [ref=e1946] [cursor=pointer]:
+                - /url: "#cite_ref-90"
+                - text: ^
+              - generic [ref=e1449]:
+                - generic [ref=e1450]:
+                  - text: Evans, Jayda (13 August 2019).
+                  - link "\"Russell Wilson, Ciara, Macklemore, Microsoft CEO Satya Nadella and more join Sounders ownership\"" [ref=e1451] [cursor=pointer]:
+                    - /url: https://www.seattletimes.com/sports/sounders/russell-wilson-ciara-macklemore-microsoft-execs-and-more-join-sounders-ownership-group/
+                  - text: . The Seattle Times.
+                  - link "Archived" [ref=e1452] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20190813201028/https://www.seattletimes.com/sports/sounders/russell-wilson-ciara-macklemore-microsoft-execs-and-more-join-sounders-ownership-group/
+                  - text: from the original on 13 August 2019
+                  - generic [ref=e1453]: . Retrieved 1 September 2019
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=article&rft.jtitle=The+Seattle+Times&rft.atitle=Russell+Wilson%2C+Ciara%2C+Macklemore%2C+Microsoft+CEO+Satya+Nadella+and+more+join+Sounders+ownership&rft.date=2019-08-13&rft.aulast=Evans&rft.aufirst=Jayda&rft_id=https%3A%2F%2Fwww.seattletimes.com%2Fsports%2Fsounders%2Frussell-wilson-ciara-macklemore-microsoft-execs-and-more-join-sounders-ownership-group%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1454]:
+              - link "Jump up" [ref=e1947] [cursor=pointer]:
+                - /url: "#cite_ref-91"
+                - text: ^
+              - generic [ref=e1458]:
+                - generic [ref=e1459]:
+                  - link "\"Must-read inspirational tech books to add to your reading list\"" [ref=e1460] [cursor=pointer]:
+                    - /url: https://thegadgetflow.com/blog/must-read-inspirational-tech-books-add-your-reading-list/
+                  - text: . Gadget Flow
+                  - generic [ref=e1461]: . Retrieved 5 June 2024
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Gadget+Flow&rft.atitle=Must-read+inspirational+tech+books+to+add+to+your+reading+list&rft_id=https%3A%2F%2Fthegadgetflow.com%2Fblog%2Fmust-read-inspirational-tech-books-add-your-reading-list%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1462]:
+              - link "Jump up" [ref=e1948] [cursor=pointer]:
+                - /url: "#cite_ref-92"
+                - text: ^
+              - generic [ref=e1466]:
+                - generic [ref=e1467]:
+                  - link "\"Microsoft CEO Satya Nadella is writing a book called Hit Refresh\"" [ref=e1468] [cursor=pointer]:
+                    - /url: https://www.theverge.com/2016/6/29/12061722/microsoft-ceo-book-satya-nadella-hit-refresh
+                  - text: . The Verge. 29 June 2016.
+                  - link "Archived" [ref=e1469] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20170425121704/http://www.theverge.com/2016/6/29/12061722/microsoft-ceo-book-satya-nadella-hit-refresh
+                  - text: from the original on 25 April 2017
+                  - generic [ref=e1470]: . Retrieved 24 April 2017
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=The+Verge&rft.atitle=Microsoft+CEO+Satya+Nadella+is+writing+a+book+called+Hit+Refresh&rft.date=2016-06-29&rft_id=https%3A%2F%2Fwww.theverge.com%2F2016%2F6%2F29%2F12061722%2Fmicrosoft-ceo-book-satya-nadella-hit-refresh&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1471]:
+              - link "Jump up" [ref=e1949] [cursor=pointer]:
+                - /url: "#cite_ref-93"
+                - text: ^
+              - generic [ref=e1475]:
+                - generic [ref=e1476]:
+                  - link "\"Microsoft CEO Satya Nadella Offers A Business-Like Memoir | Star2.com\"" [ref=e1477] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20180212083436/https://www.star2.com/culture/2018/02/02/microsoft-satya-nadella-memoir/
+                  - text: . Star2.com. 2 February 2018. Archived from
+                  - link "the original" [ref=e1478] [cursor=pointer]:
+                    - /url: https://www.star2.com/culture/2018/02/02/microsoft-satya-nadella-memoir/
+                  - text: on 12 February 2018
+                  - generic [ref=e1479]: . Retrieved 11 February 2018
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Star2.com&rft.atitle=Microsoft+CEO+Satya+Nadella+Offers+A+Business-Like+Memoir+%7C+Star2.com&rft.date=2018-02-02&rft_id=https%3A%2F%2Fwww.star2.com%2Fculture%2F2018%2F02%2F02%2Fmicrosoft-satya-nadella-memoir%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+            - listitem [ref=e1480]:
+              - link "Jump up" [ref=e1950] [cursor=pointer]:
+                - /url: "#cite_ref-94"
+                - text: ^
+              - generic [ref=e1484]:
+                - generic [ref=e1485]:
+                  - text: MacLellan, Lila (25 September 2017).
+                  - link "\"With his new book, Satya Nadella takes control of the Microsoft narrative\"" [ref=e1486] [cursor=pointer]:
+                    - /url: https://qz.com/1086618/satya-nadella-takes-control-of-the-microsoft-narrative-with-his-book-hit-refresh-msft/
+                  - text: . Quartz.
+                  - link "Archived" [ref=e1487] [cursor=pointer]:
+                    - /url: https://web.archive.org/web/20180212083326/https://qz.com/1086618/satya-nadella-takes-control-of-the-microsoft-narrative-with-his-book-hit-refresh-msft/
+                  - text: from the original on 12 February 2018
+                  - generic [ref=e1488]: . Retrieved 11 February 2018
+                  - text: .
+                - generic "ctx_ver=Z39.88-2004&rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&rft.genre=unknown&rft.jtitle=Quartz&rft.atitle=With+his+new+book%2C+Satya+Nadella+takes+control+of+the+Microsoft+narrative&rft.date=2017-09-25&rft.aulast=MacLellan&rft.aufirst=Lila&rft_id=https%3A%2F%2Fqz.com%2F1086618%2Fsatya-nadella-takes-control-of-the-microsoft-narrative-with-his-book-hit-refresh-msft%2F&rfr_id=info%3Asid%2Fen.wikipedia.org%3ASatya+Nadella"
+          - heading "External links" [level=2] [ref=e1490]
+          - generic [ref=e1496]:
+            - text: Wikiquote has quotations related to
+            - link "Satya Nadella" [ref=e1499] [cursor=pointer]:
+              - /url: https://en.wikiquote.org/wiki/Special:Search/Satya_Nadella
+            - text: .
+          - generic [ref=e1501]:
+            - link "Wikimedia Commons logo" [ref=e1504] [cursor=pointer]:
+              - /url: /wiki/File:Commons-logo.svg
+              - img "Wikimedia Commons logo" [ref=e1505]
+            - generic [ref=e1506]:
+              - text: Wikimedia Commons has media related to
+              - link "Satya Nadella" [ref=e1508] [cursor=pointer]:
+                - /url: https://commons.wikimedia.org/wiki/Category:Satya_Nadella
+              - text: .
+          - list [ref=e1509]:
+            - listitem [ref=e1510]:
+              - link "Appearances" [ref=e1511] [cursor=pointer]:
+                - /url: https://www.c-span.org/person/?96698
+              - text: "on"
+              - link "C-SPAN" [ref=e1512] [cursor=pointer]:
+                - /url: /wiki/C-SPAN
+            - listitem [ref=e1513]:
+              - link "Profile" [ref=e1514] [cursor=pointer]:
+                - /url: https://news.microsoft.com/exec/satya-nadella/
+              - text: from Microsoft
+            - listitem [ref=e1515]:
+              - link "Profile" [ref=e1516] [cursor=pointer]:
+                - /url: https://www.forbes.com/profile/satya-nadella/
+              - text: "on"
+              - link "Forbes" [ref=e1518] [cursor=pointer]:
+                - /url: /wiki/Forbes
+          - text: Business positions Preceded by
+          - link "Steve Ballmer" [ref=e1520] [cursor=pointer]:
+            - /url: /wiki/Steve_Ballmer
+          - generic [ref=e1521]:
+            - text: CEO of
+            - link "Microsoft" [ref=e1522] [cursor=pointer]:
+              - /url: /wiki/Microsoft
+          - text: 2014–present Incumbent
+          - navigation "Padma Bhushan award recipients (2020–2029)" [ref=e1523]:
+            - table [ref=e1524]:
+              - rowgroup [ref=e1525]:
+                - row "[show] v · t · e Padma Bhushan award recipients (2020–2029)" [ref=e1526]:
+                  - columnheader "[show] v · t · e Padma Bhushan award recipients (2020–2029)" [ref=e1527]:
+                    - button "[show]" [ref=e1951] [cursor=pointer]
+                    - list [ref=e1529]:
+                      - listitem [ref=e1530]:
+                        - link "v" [ref=e1531] [cursor=pointer]:
+                          - /url: /wiki/Template:Padma_Bhushan_Award_Recipients_2020%E2%80%932029
+                        - text: ·
+                      - listitem [ref=e1532]:
+                        - link "t" [ref=e1533] [cursor=pointer]:
+                          - /url: /wiki/Template_talk:Padma_Bhushan_Award_Recipients_2020%E2%80%932029
+                        - text: ·
+                      - listitem [ref=e1534]:
+                        - link "e" [ref=e1535] [cursor=pointer]:
+                          - /url: /wiki/Special:EditPage/Template:Padma_Bhushan_Award_Recipients_2020%E2%80%932029
+                    - generic [ref=e1536]:
+                      - link "Padma Bhushan" [ref=e1537] [cursor=pointer]:
+                        - /url: /wiki/Padma_Bhushan
+                      - text: award recipients (
+                      - link "2020–2029" [ref=e1538] [cursor=pointer]:
+                        - /url: /wiki/List_of_Padma_Bhushan_award_recipients_(2020%E2%80%932029)
+                      - text: )
+                - row: · · · · · · · · · · · · · · ·
+                - row: · · · · · · · · ·
+                - row: · · · · · · · · · · · · · · · · ·
+                - row: · · · · · · · ·
+                - row: · · · · · · · · · · · · · · · ·
+                - row: · · · · · · · · · · · · · · · · ·
+                - row: · · · · · · · · · · · ·
+                - row: · · · · · · ·
+          - navigation "Microsoft Corporation" [ref=e1539]:
+            - table [ref=e1540]:
+              - rowgroup [ref=e1541]:
+                - row "[show] v · t · e Microsoft Corporation" [ref=e1542]:
+                  - columnheader "[show] v · t · e Microsoft Corporation" [ref=e1543]:
+                    - button "[show]" [ref=e1952] [cursor=pointer]
+                    - list [ref=e1545]:
+                      - listitem [ref=e1546]:
+                        - link "v" [ref=e1547] [cursor=pointer]:
+                          - /url: /wiki/Template:Microsoft
+                        - text: ·
+                      - listitem [ref=e1548]:
+                        - link "t" [ref=e1549] [cursor=pointer]:
+                          - /url: /wiki/Template_talk:Microsoft
+                        - text: ·
+                      - listitem [ref=e1550]:
+                        - link "e" [ref=e1551] [cursor=pointer]:
+                          - /url: /wiki/Special:EditPage/Template:Microsoft
+                    - link "Microsoft Corporation" [ref=e1553] [cursor=pointer]:
+                      - /url: /wiki/Microsoft
+                - row: ·
+                - row: · · · · · · · · · · · · · · · · · · · · · · · ·
+                - row: · · · ( · · · · · · · ) · · · · ( · ) · · · · · · · · · · ( · · · ) · · · · · · · · · · · · · · · ( · · ) · () · · · ·
+                - row: · · · · · · · · ( · ) · ( · · ) · · · · · · ·
+                - row: · · · ·
+                - row: · · · · · · ( · · )
+                - row: · · · · · · · ·
+                - row: · · · () · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · · () · · ·
+                - row
+          - navigation "Authority control databases Edit this at Wikidata" [ref=e1554]:
+            - table [ref=e1555]:
+              - rowgroup [ref=e1556]:
+                - row "[show] Authority control databases Edit this at Wikidata" [ref=e1953]:
+                  - columnheader "[show] Authority control databases Edit this at Wikidata" [ref=e1954]:
+                    - button "[show]" [ref=e1955] [cursor=pointer]
+                    - generic [ref=e1559]:
+                      - link "Authority control databases" [ref=e1560] [cursor=pointer]:
+                        - /url: /wiki/Help:Authority_control
+                      - link "Edit this at Wikidata" [ref=e1562] [cursor=pointer]:
+                        - /url: https://www.wikidata.org/wiki/Q7426870#identifiers
+                        - img "Edit this at Wikidata" [ref=e1563]
+                - row: · · ·
+                - row: · · · · · · · · · ·
+                - row
+                - row: ·
+        - generic [ref=e1640]:
+          - link "Categories" [ref=e1641] [cursor=pointer]:
+            - /url: /wiki/Help:Category
+          - text: ":"
+          - list [ref=e1642]:
+            - listitem [ref=e1643]:
+              - link "Living people" [ref=e1644] [cursor=pointer]:
+                - /url: /wiki/Category:Living_people
+            - listitem [ref=e1645]:
+              - link "1967 births" [ref=e1646] [cursor=pointer]:
+                - /url: /wiki/Category:1967_births
+            - listitem [ref=e1647]:
+              - link "20th-century American businesspeople" [ref=e1648] [cursor=pointer]:
+                - /url: /wiki/Category:20th-century_American_businesspeople
+            - listitem [ref=e1649]:
+              - link "20th-century Indian businesspeople" [ref=e1650] [cursor=pointer]:
+                - /url: /wiki/Category:20th-century_Indian_businesspeople
+            - listitem [ref=e1651]:
+              - link "20th-century American engineers" [ref=e1652] [cursor=pointer]:
+                - /url: /wiki/Category:20th-century_American_engineers
+            - listitem [ref=e1653]:
+              - link "20th-century Indian engineers" [ref=e1654] [cursor=pointer]:
+                - /url: /wiki/Category:20th-century_Indian_engineers
+            - listitem [ref=e1655]:
+              - link "21st-century American businesspeople" [ref=e1656] [cursor=pointer]:
+                - /url: /wiki/Category:21st-century_American_businesspeople
+            - listitem [ref=e1657]:
+              - link "21st-century Indian businesspeople" [ref=e1658] [cursor=pointer]:
+                - /url: /wiki/Category:21st-century_Indian_businesspeople
+            - listitem [ref=e1659]:
+              - link "21st-century American engineers" [ref=e1660] [cursor=pointer]:
+                - /url: /wiki/Category:21st-century_American_engineers
+            - listitem [ref=e1661]:
+              - link "21st-century Indian engineers" [ref=e1662] [cursor=pointer]:
+                - /url: /wiki/Category:21st-century_Indian_engineers
+            - listitem [ref=e1663]:
+              - link "American businesspeople in the computer industry" [ref=e1664] [cursor=pointer]:
+                - /url: /wiki/Category:American_businesspeople_in_the_computer_industry
+            - listitem [ref=e1665]:
+              - link "American chief executives in technology" [ref=e1666] [cursor=pointer]:
+                - /url: /wiki/Category:American_chief_executives_in_technology
+            - listitem [ref=e1667]:
+              - link "American chief executives of Fortune 500 companies" [ref=e1668] [cursor=pointer]:
+                - /url: /wiki/Category:American_chief_executives_of_Fortune_500_companies
+            - listitem [ref=e1669]:
+              - link "American computer programmers" [ref=e1670] [cursor=pointer]:
+                - /url: /wiki/Category:American_computer_programmers
+            - listitem [ref=e1671]:
+              - link "American corporate directors" [ref=e1672] [cursor=pointer]:
+                - /url: /wiki/Category:American_corporate_directors
+            - listitem [ref=e1673]:
+              - link "American electrical engineers" [ref=e1674] [cursor=pointer]:
+                - /url: /wiki/Category:American_electrical_engineers
+            - listitem [ref=e1675]:
+              - link "American Hindus" [ref=e1676] [cursor=pointer]:
+                - /url: /wiki/Category:American_Hindus
+            - listitem [ref=e1677]:
+              - link "American people of Telugu descent" [ref=e1678] [cursor=pointer]:
+                - /url: /wiki/Category:American_people_of_Telugu_descent
+            - listitem [ref=e1679]:
+              - link "American software engineers" [ref=e1680] [cursor=pointer]:
+                - /url: /wiki/Category:American_software_engineers
+            - listitem [ref=e1681]:
+              - link "Businesspeople from Hyderabad, India" [ref=e1682] [cursor=pointer]:
+                - /url: /wiki/Category:Businesspeople_from_Hyderabad,_India
+            - listitem [ref=e1683]:
+              - link "Businesspeople from Telangana" [ref=e1684] [cursor=pointer]:
+                - /url: /wiki/Category:Businesspeople_from_Telangana
+            - listitem [ref=e1685]:
+              - link "Businesspeople in the software industry" [ref=e1686] [cursor=pointer]:
+                - /url: /wiki/Category:Businesspeople_in_the_software_industry
+            - listitem [ref=e1687]:
+              - link "Chief executives in technology" [ref=e1688] [cursor=pointer]:
+                - /url: /wiki/Category:Chief_executives_in_technology
+            - listitem [ref=e1689]:
+              - link "Directors of Starbucks" [ref=e1690] [cursor=pointer]:
+                - /url: /wiki/Category:Directors_of_Starbucks
+            - listitem [ref=e1691]:
+              - link "Engineers from Andhra Pradesh" [ref=e1692] [cursor=pointer]:
+                - /url: /wiki/Category:Engineers_from_Andhra_Pradesh
+            - listitem [ref=e1693]:
+              - link "Fred Hutchinson Cancer Research Center people" [ref=e1694] [cursor=pointer]:
+                - /url: /wiki/Category:Fred_Hutchinson_Cancer_Research_Center_people
+            - listitem [ref=e1695]:
+              - link "Indian businesspeople in the computer industry" [ref=e1696] [cursor=pointer]:
+                - /url: /wiki/Category:Indian_businesspeople_in_the_computer_industry
+            - listitem [ref=e1697]:
+              - link "Indian chief executives in technology" [ref=e1698] [cursor=pointer]:
+                - /url: /wiki/Category:Indian_chief_executives_in_technology
+            - listitem [ref=e1699]:
+              - link "Indian computer programmers" [ref=e1700] [cursor=pointer]:
+                - /url: /wiki/Category:Indian_computer_programmers
+            - listitem [ref=e1701]:
+              - link "Indian corporate directors" [ref=e1702] [cursor=pointer]:
+                - /url: /wiki/Category:Indian_corporate_directors
+            - listitem [ref=e1703]:
+              - link "Indian electrical engineers" [ref=e1704] [cursor=pointer]:
+                - /url: /wiki/Category:Indian_electrical_engineers
+            - listitem [ref=e1705]:
+              - link "Indian emigrants to the United States" [ref=e1706] [cursor=pointer]:
+                - /url: /wiki/Category:Indian_emigrants_to_the_United_States
+            - listitem [ref=e1707]:
+              - link "Indian Hindus" [ref=e1708] [cursor=pointer]:
+                - /url: /wiki/Category:Indian_Hindus
+            - listitem [ref=e1709]:
+              - link "Indian software engineers" [ref=e1710] [cursor=pointer]:
+                - /url: /wiki/Category:Indian_software_engineers
+            - listitem [ref=e1711]:
+              - link "Manipal Academy of Higher Education alumni" [ref=e1712] [cursor=pointer]:
+                - /url: /wiki/Category:Manipal_Academy_of_Higher_Education_alumni
+            - listitem [ref=e1713]:
+              - link "Microsoft employees" [ref=e1714] [cursor=pointer]:
+                - /url: /wiki/Category:Microsoft_employees
+            - listitem [ref=e1715]:
+              - link "People from Andhra Pradesh" [ref=e1716] [cursor=pointer]:
+                - /url: /wiki/Category:People_from_Andhra_Pradesh
+            - listitem [ref=e1717]:
+              - link "People from Bellevue, Washington" [ref=e1718] [cursor=pointer]:
+                - /url: /wiki/Category:People_from_Bellevue,_Washington
+            - listitem [ref=e1719]:
+              - link "People from Clyde Hill, Washington" [ref=e1720] [cursor=pointer]:
+                - /url: /wiki/Category:People_from_Clyde_Hill,_Washington
+            - listitem [ref=e1721]:
+              - link "People from Hyderabad, India" [ref=e1722] [cursor=pointer]:
+                - /url: /wiki/Category:People_from_Hyderabad,_India
+            - listitem [ref=e1723]:
+              - link "Recipients of Pravasi Bharatiya Samman" [ref=e1724] [cursor=pointer]:
+                - /url: /wiki/Category:Recipients_of_Pravasi_Bharatiya_Samman
+            - listitem [ref=e1725]:
+              - link "Recipients of the Padma Bhushan in trade and industry" [ref=e1726] [cursor=pointer]:
+                - /url: /wiki/Category:Recipients_of_the_Padma_Bhushan_in_trade_and_industry
+            - listitem [ref=e1727]:
+              - link "Sun Microsystems people" [ref=e1728] [cursor=pointer]:
+                - /url: /wiki/Category:Sun_Microsystems_people
+            - listitem [ref=e1729]:
+              - link "Telugu people" [ref=e1730] [cursor=pointer]:
+                - /url: /wiki/Category:Telugu_people
+            - listitem [ref=e1731]:
+              - link "University of Chicago alumni" [ref=e1732] [cursor=pointer]:
+                - /url: /wiki/Category:University_of_Chicago_alumni
+            - listitem [ref=e1733]:
+              - link "University of Chicago Booth School of Business alumni" [ref=e1734] [cursor=pointer]:
+                - /url: /wiki/Category:University_of_Chicago_Booth_School_of_Business_alumni
+            - listitem [ref=e1735]:
+              - link "University of Chicago trustees" [ref=e1736] [cursor=pointer]:
+                - /url: /wiki/Category:University_of_Chicago_trustees
+            - listitem [ref=e1737]:
+              - link "University of Wisconsin–Milwaukee alumni" [ref=e1738] [cursor=pointer]:
+                - /url: /wiki/Category:University_of_Wisconsin%E2%80%93Milwaukee_alumni
+            - listitem [ref=e1739]:
+              - link "Proprietary technology salespersons" [ref=e1740] [cursor=pointer]:
+                - /url: /wiki/Category:Proprietary_technology_salespersons
+    - contentinfo [ref=e1742]:
+      - list [ref=e1743]:
+        - listitem [ref=e1744]: This page was last edited on 12 June 2026, at 19:11 (UTC).
+        - listitem [ref=e1745]:
+          - text: Text is available under the
+          - link "Creative Commons Attribution-ShareAlike 4.0 License" [ref=e1746] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:Text_of_the_Creative_Commons_Attribution-ShareAlike_4.0_International_License
+          - text: ; additional terms may apply. By using this site, you agree to the
+          - link "Terms of Use" [ref=e1747] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Terms_of_Use
+          - text: and
+          - link "Privacy Policy" [ref=e1748] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+          - text: . Wikipedia® is a registered trademark of the
+          - link "Wikimedia Foundation, Inc." [ref=e1749] [cursor=pointer]:
+            - /url: https://wikimediafoundation.org/
+          - text: ", a non-profit organization."
+      - list:
+        - listitem [ref=e1750]:
+          - link "Privacy policy" [ref=e1751] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Privacy_policy
+        - listitem [ref=e1752]:
+          - link "About Wikipedia" [ref=e1753] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:About
+        - listitem [ref=e1754]:
+          - link "Disclaimers" [ref=e1755] [cursor=pointer]:
+            - /url: /wiki/Wikipedia:General_disclaimer
+        - listitem [ref=e1756]:
+          - link "Contact Wikipedia" [ref=e1757] [cursor=pointer]:
+            - /url: //en.wikipedia.org/wiki/Wikipedia:Contact_us
+        - listitem [ref=e1758]:
+          - link "Legal & safety contacts" [ref=e1759] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Legal:Wikimedia_Foundation_Legal_and_Safety_Contact_Information
+        - listitem [ref=e1760]:
+          - link "Code of Conduct" [ref=e1761] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Universal_Code_of_Conduct
+        - listitem [ref=e1762]:
+          - link "Developers" [ref=e1763] [cursor=pointer]:
+            - /url: https://developer.wikimedia.org
+        - listitem [ref=e1764]:
+          - link "Statistics" [ref=e1765] [cursor=pointer]:
+            - /url: https://stats.wikimedia.org/#/en.wikipedia.org
+        - listitem [ref=e1766]:
+          - link "Cookie statement" [ref=e1767] [cursor=pointer]:
+            - /url: https://foundation.wikimedia.org/wiki/Special:MyLanguage/Policy:Cookie_statement
+        - listitem [ref=e1768]:
+          - link "Mobile view" [ref=e1769] [cursor=pointer]:
+            - /url: //en.wikipedia.org/w/index.php?title=Satya_Nadella&mobileaction=toggle_view_mobile
+      - list [ref=e1770]:
+        - listitem [ref=e1771]:
+          - link "Wikimedia Foundation" [ref=e1772] [cursor=pointer]:
+            - /url: https://www.wikimedia.org/
+            - img "Wikimedia Foundation" [ref=e1774]
+        - listitem [ref=e1775]:
+          - link "Powered by MediaWiki" [ref=e1776] [cursor=pointer]:
+            - /url: https://www.mediawiki.org/
+            - img "Powered by MediaWiki" [ref=e1778]
+  - generic [ref=e1956]:
+    - list

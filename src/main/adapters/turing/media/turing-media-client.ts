@@ -14,9 +14,9 @@
  * login), and `resolveTuringMachineBaseUrl()` for the host.
  */
 import type { BackendImageData, BackendImageRequest, ToolContext } from 'turing-harness'
-import { readStoredApiKey } from '../providers/turing-credentials'
 import { createLogger } from '../../../logger'
 import { resolveTuringMachineBaseUrl } from '../../pi/pi-provider-catalog'
+import { readStoredApiKey } from '../providers/turing-credentials'
 
 const logger = createLogger('turing-media-client')
 
@@ -144,4 +144,49 @@ export async function analyzeMediaViaTuring(
   // Billing happens server-side (recordTextConsumption), so we don't need to
   // surface token usage back to the tool here.
   return { text }
+}
+
+/** Envelope returned by `POST /turing-machine/assets` for every asset kind. */
+export interface TuringAssetResponse {
+  readonly kind: 'image' | 'video' | 'audio' | '3d'
+  readonly model: string
+  readonly url?: string
+  readonly b64?: string
+  readonly mimeType?: string
+  readonly raw?: unknown
+}
+
+/**
+ * Generate an asset of any kind through the backend.
+ *
+ * The app deliberately holds no provider logic: it forwards `kind` and lets the
+ * backend decide who serves it. A kind with no configured provider comes back as
+ * a 501, which surfaces as a real error rather than a stand-in file — the agent
+ * must not be able to claim it produced an asset that does not exist.
+ */
+export async function generateAssetViaTuring(
+  request: {
+    readonly kind: TuringAssetResponse['kind']
+    readonly prompt: string
+    readonly model?: string
+    readonly options?: Record<string, unknown>
+  },
+  ctx: ToolContext,
+  opts: TuringMediaClientOptions = {},
+): Promise<TuringAssetResponse> {
+  logger.debug('Generating asset via turing-machine backend', {
+    kind: request.kind,
+    model: request.model,
+  })
+  return postJson<TuringAssetResponse>(
+    '/assets',
+    {
+      kind: request.kind,
+      prompt: request.prompt,
+      ...(request.model ? { model: request.model } : {}),
+      ...(request.options ? { options: request.options } : {}),
+    },
+    opts,
+    ctx.signal,
+  )
 }
