@@ -71,7 +71,9 @@ const persistedPhaseTranscriptToolSchema = Schema.Struct({
 })
 
 const pendingUserQuestionSchema = Schema.Struct({
-  phase: Schema.Literal('prepare', 'plan', 'perform', 'perfect'),
+  // v2: the harness labels questions with the driving categorizer id
+  // ('read' | 'write_edit' | …, plus custom setup ids) — any string.
+  phase: Schema.String,
   question: Schema.String,
   kind: Schema.optional(Schema.Literal('clarification', 'plan_review')),
   reason: Schema.optional(Schema.String),

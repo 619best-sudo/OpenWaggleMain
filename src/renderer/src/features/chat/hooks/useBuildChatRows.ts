@@ -1,6 +1,6 @@
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { MachineExecutionState } from '@shared/types/machine'
-import { getAgentPhaseTitle } from '@shared/types/phase-titles'
+import { getPhaseTitleForAnyPhase } from '@shared/types/phase-titles'
 import type { SessionInterruptedRun } from '@shared/types/session'
 import type { AgentTransportPhaseEndEvent } from '@shared/types/stream'
 import type { PendingUserQuestionRequest } from '@shared/types/user-question'
@@ -218,10 +218,7 @@ function createLivePhaseRows(
       ...(event.pendingUserQuestion ? { pendingUserQuestion: event.pendingUserQuestion } : {}),
       tools: (event.toolCallIds ?? []).map<PhaseTimelineToolDetail>((toolCallId) => ({
         toolCallId,
-        toolName:
-          toolLookup.toolCalls.get(toolCallId)?.name ??
-          toolLookup.toolResults.get(toolCallId)?.toolName ??
-          'tool',
+        toolName: toolLookup.toolCalls.get(toolCallId)?.name ?? 'tool',
         status: toolLookup.toolResults.has(toolCallId) ? 'completed' : 'running',
         toolCall: toolLookup.toolCalls.get(toolCallId),
         toolResult: toolLookup.toolResults.get(toolCallId),
@@ -234,14 +231,16 @@ function createLivePendingQuestionPhaseRow(
   request: PendingUserQuestionRequest,
   phase: StreamingPhaseState,
 ): PhaseTimelineChatRow {
-  const livePhaseLabel = phase.current?.label ?? getAgentPhaseTitle(request.phase)
+  const livePhaseLabel = phase.current?.label ?? getPhaseTitleForAnyPhase(request.phase)
 
   return {
     type: 'phase',
     id: `live-pending-question:${request.phase}`,
     sourceMessageId: `live-pending-question:${request.phase}`,
     phase: {
-      id: request.phase,
+      // The question belongs to the live 'working' run; request.phase (a v2
+      // categorizer id) feeds the LABEL, not the card's phase id.
+      id: 'working',
       label: livePhaseLabel,
       activityText: request.reason ?? 'Waiting for your answer to continue.',
       status: 'running',
@@ -504,9 +503,7 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
       // Phase cards are fully suppressed — tool calls render inline via
       // AssistantMessageBubble's InlineToolBlock. UserQuestionCard and
       // PlanReviewActions now render as standalone inline rows below.
-      const pendingRows = phaseRows.filter(
-        (row) => row.phase.pendingUserQuestion !== undefined,
-      )
+      const pendingRows = phaseRows.filter((row) => row.phase.pendingUserQuestion !== undefined)
       if (pendingRows.length > 0) {
         renderedPendingQuestionPhase = true
       }

@@ -101,7 +101,7 @@ describe('turing-event-mapper', () => {
     vi.useRealTimers()
   })
 
-  it('projects chain_start/chain_end as a single working phase', () => {
+  it('projects the first categorizer_start as a single working phase; agent_end closes it', () => {
     const emitted: AgentTransportEvent[] = []
     const mapEvent = createTuringEventMapper({
       runId: 'run-3',
@@ -109,8 +109,9 @@ describe('turing-event-mapper', () => {
       emit: (event) => emitted.push(event),
     })
 
-    mapEvent({ type: 'chain_start', task: 'fix the title' } as never)
-    mapEvent({ type: 'chain_end', success: true, iterations: 1 } as never)
+    mapEvent({ type: 'categorizer_start', categorizer: 'read', model: 'm' } as never)
+    mapEvent({ type: 'categorizer_end', categorizer: 'read' } as never)
+    mapEvent({ type: 'agent_end', messages: [] } as never)
 
     expect(emitted.map((event) => event.type)).toEqual(['phase_start', 'phase_end'])
     const [start, end] = emitted as Array<
@@ -122,16 +123,17 @@ describe('turing-event-mapper', () => {
     expect(end.status).toBe('completed')
   })
 
-  it('marks a failed chain_end as a failed working phase', () => {
+  it('marks a failed run (resolver) as a failed working phase', () => {
     const emitted: AgentTransportEvent[] = []
     const mapEvent = createTuringEventMapper({
       runId: 'run-3b',
       model: 'claude-sonnet-4-5',
       emit: (event) => emitted.push(event),
+      resolveEndStatus: () => 'failed',
     })
 
-    mapEvent({ type: 'chain_start', task: 'fix the title' } as never)
-    mapEvent({ type: 'chain_end', success: false, iterations: 2 } as never)
+    mapEvent({ type: 'categorizer_start', categorizer: 'write_edit', model: 'm' } as never)
+    mapEvent({ type: 'agent_end', messages: [] } as never)
 
     const end = emitted.find((event) => event.type === 'phase_end')
     if (end?.type !== 'phase_end') throw new Error('expected phase_end')
@@ -139,7 +141,27 @@ describe('turing-event-mapper', () => {
     expect(end.phaseId).toBe('working')
   })
 
-  it('drops the 4P phase_* events the flat loop no longer emits', () => {
+  it('hop starts refresh the label; hop ends are telemetry-only no-ops', () => {
+    const emitted: AgentTransportEvent[] = []
+    const mapEvent = createTuringEventMapper({
+      runId: 'run-3c',
+      model: 'claude-sonnet-4-5',
+      emit: (event) => emitted.push(event),
+    })
+
+    mapEvent({ type: 'categorizer_start', categorizer: 'read', model: 'm' } as never)
+    mapEvent({ type: 'categorizer_start', categorizer: 'activity_inspect', model: 'm' } as never)
+    mapEvent({ type: 'categorizer_end', categorizer: 'activity_inspect' } as never)
+    mapEvent({ type: 'agent_end', messages: [] } as never)
+
+    const starts = emitted.filter((event) => event.type === 'phase_start')
+    expect(starts).toHaveLength(2)
+    if (starts[1].type !== 'phase_start') throw new Error('expected phase_start')
+    expect(starts[1].label).toBe('Verifying')
+    expect(emitted.filter((event) => event.type === 'phase_end')).toHaveLength(1)
+  })
+
+  it('drops the retired 4P phase_* events', () => {
     const emitted: AgentTransportEvent[] = []
     const mapEvent = createTuringEventMapper({
       runId: 'run-4',

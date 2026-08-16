@@ -4,10 +4,6 @@ import type {
   AgentEvent,
   AgentHost,
   AskUserQuestionRequest,
-  MediaRef,
-  Phase,
-  PhaseResult,
-  RunPhaseOptions,
   Session,
   ThreadFollowUpContext,
   ThreadRunSnapshot,
@@ -100,29 +96,10 @@ export function createThreadSnapshotAgentHost(
     subscribe(fn: (e: AgentEvent) => void) {
       return session.subscribe(fn)
     },
-    runChain(
-      task: string,
-      opts?: {
-        signal?: AbortSignal
-        askUserQuestion?: (request: AskUserQuestionRequest) => Promise<string>
-        followUpContext?: ThreadFollowUpContext
-        transcriptMode?: import('turing-harness').TranscriptMode
-      },
-    ) {
-      const followUpContext = resolvePersistedFollowUpContext(
-        session,
-        persistedSnapshot,
-        opts?.followUpContext,
-      )
-      return session.runChain(task, {
-        ...opts,
-        ...(followUpContext ? { followUpContext } : {}),
-      })
-    },
     /**
-     * Flat loop driver passthrough. `HarnessAgent` with `mode:'chain'` calls this
-     * under the hood; the structured-continue follow-up context is injected the
-     * same way as for the legacy runChain/runPhase shims.
+     * The categorizer chain (v2) — the single execution path. The structured-
+     * continue follow-up context from the persisted thread snapshot is injected
+     * so a warm session continues from what the previous run established.
      */
     run(
       task: string,
@@ -132,6 +109,7 @@ export function createThreadSnapshotAgentHost(
         followUpContext?: ThreadFollowUpContext
         transcriptMode?: import('turing-harness').TranscriptMode
         images?: Array<{ path: string; mimeType: string }>
+        planMode?: boolean
         skipPlan?: boolean
       },
     ) {
@@ -144,27 +122,6 @@ export function createThreadSnapshotAgentHost(
         ...opts,
         ...(followUpContext ? { followUpContext } : {}),
       })
-    },
-    runPhase(
-      phase: Phase,
-      task: string,
-      opts?: {
-        priorRefs?: MediaRef[]
-        signal?: AbortSignal
-        askUserQuestion?: (request: AskUserQuestionRequest) => Promise<string>
-        followUpContext?: ThreadFollowUpContext
-        transcriptMode?: import('turing-harness').TranscriptMode
-      },
-    ) {
-      const followUpContext = resolvePersistedFollowUpContext(
-        session,
-        persistedSnapshot,
-        opts?.followUpContext,
-      )
-      return session.runPhase(phase, task, {
-        ...opts,
-        ...(followUpContext ? { followUpContext } : {}),
-      } satisfies RunPhaseOptions)
     },
     orchestrator: session.orchestrator,
     get threadSnapshot() {

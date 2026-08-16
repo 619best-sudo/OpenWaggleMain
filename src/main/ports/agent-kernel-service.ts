@@ -47,7 +47,8 @@ export interface AgentKernelStandardsContext {
  */
 export interface AgentKernelPendingUserQuestionResolution {
   readonly request: {
-    readonly phase: 'prepare' | 'plan' | 'perform' | 'perfect'
+    /** v2: the categorizer id the question came from (arbitrary string). */
+    readonly phase: string
     readonly question: string
     readonly reason?: string
   }

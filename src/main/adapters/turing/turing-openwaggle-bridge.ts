@@ -276,7 +276,8 @@ export async function attachOpenWaggleRuntime(
         source: 'external',
         name: skill.name,
         description: describeSkill(skill),
-        phases: ['prepare', 'plan', 'perform', 'perfect'],
+        // v2: registry scope is by categorizer id; skills ride every category.
+        categorizers: ['conversation', 'read', 'write_edit', 'activity_inspect'],
         tools: [
           {
             name: toolName,
@@ -431,7 +432,8 @@ export async function connectMcpBackground(
         source: 'external',
         name: skill.name,
         description: describeSkill(skill),
-        phases: ['prepare', 'plan', 'perform', 'perfect'],
+        // v2: registry scope is by categorizer id; skills ride every category.
+        categorizers: ['conversation', 'read', 'write_edit', 'activity_inspect'],
         tools: [
           {
             name: toolName,
@@ -566,7 +568,7 @@ export async function connectMcpBackground(
 }
 
 export function buildOpenWaggleRuntimeDebugValue(
-  session: Pick<Session, 'listCapabilities' | 'toolsForPhase'>,
+  session: Pick<Session, 'listCapabilities' | 'toolsForCategorizer'>,
   runtime: {
     readonly mcpSettings?: McpSettingsView
     readonly standardsContext?: AgentKernelStandardsContext
@@ -576,7 +578,9 @@ export function buildOpenWaggleRuntimeDebugValue(
   },
 ) {
   const providers = session.listCapabilities()
-  const prepareTools = session.toolsForPhase('prepare').map((tool) => tool.name)
+  // v2: the read categorizer's toolset is the successor of the old 'prepare'
+  // view (memory-first, read-only discovery).
+  const prepareTools = session.toolsForCategorizer('read').map((tool) => tool.name)
   return {
     mcpAdapterEnabled: runtime.mcpSettings?.adapter.enabled ?? false,
     mcpRuntimeConfigPath: runtime.mcpSettings?.runtimeConfigPath ?? null,
@@ -641,7 +645,7 @@ function buildScreenRoutingGuidance(toolNames: readonly string[]): string[] {
     // contradict that for any app with flavors or a non-default entrypoint —
     // which is most of them.
     out.push(
-      'GETTING THE APP ONTO A DEVICE IS A `bash` JOB — no MCP tool does it, and a simulator with no app on it just screenshots someone else\'s screen. Use the command THIS project declares for it (its package scripts, a Makefile target, the run section of its README / CLAUDE.md / AGENTS.md, or the CI workflow) — the one that BUILDS, INSTALLS AND LAUNCHES, not a build/assemble/archive task, which produces an artifact and installs nothing. Run it through `bash` with `background: true` and poll the log it returns; a cold first build takes minutes, so do not shorten `timeoutMs` and do not read a kill as a failure.',
+      "GETTING THE APP ONTO A DEVICE IS A `bash` JOB — no MCP tool does it, and a simulator with no app on it just screenshots someone else's screen. Use the command THIS project declares for it (its package scripts, a Makefile target, the run section of its README / CLAUDE.md / AGENTS.md, or the CI workflow) — the one that BUILDS, INSTALLS AND LAUNCHES, not a build/assemble/archive task, which produces an artifact and installs nothing. Run it through `bash` with `background: true` and poll the log it returns; a cold first build takes minutes, so do not shorten `timeoutMs` and do not read a kill as a failure.",
     )
   }
   out.push(
@@ -662,7 +666,8 @@ export function buildOpenWaggleRuntimePrompt(
     >
     readonly pendingUserQuestionResolution?: {
       readonly request: {
-        readonly phase: 'prepare' | 'plan' | 'perform' | 'perfect'
+        /** v2: the categorizer id the question came from. */
+        readonly phase: string
         readonly question: string
         readonly reason?: string
       }
@@ -674,7 +679,9 @@ export function buildOpenWaggleRuntimePrompt(
   const standards = runtime.standardsContext
 
   if (standards?.agentsInstruction?.trim()) {
-    sections.push(['TURING MACHINE AGENT INSTRUCTIONS:', standards.agentsInstruction.trim()].join('\n'))
+    sections.push(
+      ['TURING MACHINE AGENT INSTRUCTIONS:', standards.agentsInstruction.trim()].join('\n'),
+    )
   }
 
   if (standards?.agentsScopedInstructions?.length) {

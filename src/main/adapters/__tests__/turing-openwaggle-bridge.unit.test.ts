@@ -163,7 +163,11 @@ describe('turing OpenWaggle bridge', () => {
           { id: 'turing-machine:mcp:playwright', kind: 'mcp' },
           { id: 'turing-machine:skill:ui_critic', kind: 'skill' },
         ],
-        toolsForPhase: () => [{ name: 'ls' }, { name: 'read' }, { name: 'playwright_navigate' }],
+        toolsForCategorizer: () => [
+          { name: 'ls' },
+          { name: 'read' },
+          { name: 'playwright_navigate' },
+        ],
       } as never,
       {
         mcpSettings: {

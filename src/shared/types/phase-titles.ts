@@ -80,6 +80,32 @@ const PERFORM_FAILED_VERIFICATION_TITLE_VARIANTS = [
   'Okay! Let me refine the implementation so the verification can pass',
 ] as const
 
+/**
+ * Title for ANY phase/categorizer id: the known ids get their variant titles;
+ * a v2 categorizer id ('read' | 'write_edit' | 'activity_inspect' | custom)
+ * falls back to a prettified id ('Write edit' → 'Write Edit') so a question or
+ * card from a custom category still renders a sane label.
+ */
+export function getPhaseTitleForAnyPhase(
+  phaseId: string,
+  occurrenceIndex = 0,
+  options?: AgentPhaseTitleOptions,
+): string {
+  if (
+    phaseId === 'working' ||
+    phaseId === 'prepare' ||
+    phaseId === 'plan' ||
+    phaseId === 'perform' ||
+    phaseId === 'perfect'
+  ) {
+    return getAgentPhaseTitle(phaseId, occurrenceIndex, options)
+  }
+  return phaseId
+    .split('_')
+    .map((part) => (part ? part.charAt(0).toUpperCase() + part.slice(1) : part))
+    .join(' ')
+}
+
 export function getAgentPhaseTitle(
   phaseId: AgentPhaseId,
   occurrenceIndex = 0,

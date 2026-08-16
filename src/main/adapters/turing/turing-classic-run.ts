@@ -16,13 +16,14 @@ import type { ToolPermissionMode } from '@shared/types/settings'
 import type { AgentTransportEvent } from '@shared/types/stream'
 import { TURING_BRIDGE_STATUS_CUSTOM_TYPE } from '@shared/types/structural-nodes'
 import type { PendingToolPermissionRequest } from '@shared/types/tool-permission'
+import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import {
   HarnessAgent,
   type HarnessAgentState,
   type ThinkingLevel,
+  type AskUserQuestionRequest as TuringAskUserQuestionRequest,
   type Message as TuringMessage,
 } from 'turing-harness'
-import { env } from '../../env'
 import {
   beginPlanReviewRequest,
   beginToolPermissionRequest,
@@ -77,14 +78,8 @@ import { auditVisualVerification, describesRuntimeSymptom } from './turing-visua
  * The 4P execution mode used for a classic (single-agent) run.
  *
  * turing-harness's native operation is the full Prepare→Plan→Perform→Perfect
- * chain, but a chat turn can also be run as a single phase. Controlled by
- * `OPENWAGGLE_TURING_MODE` (`chain` | `prepare` | `plan` | `perform` | `perfect`),
- * defaulting to the full chain.
+ * categorizer chain (v2): router → focused categorizer hops → one final summary.
  */
-function resolveRunMode() {
-  return env.OPENWAGGLE_TURING_MODE ?? 'chain'
-}
-
 function resolveProjectPath(session: AgentKernelRunInput['session']) {
   const projectPath = session.projectPath
   if (!projectPath) {
@@ -349,6 +344,16 @@ function buildToolNameLookup(messages: readonly TuringMessage[]) {
  * The node keeps the same custom type so the persisted-card renderer is
  * unchanged — it just renders one "Working" entry instead of four phases.
  */
+export // v2: the harness labels questions with the driving categorizer and the field
+// is optional; the app type keeps a required phase for the renderer. Normalize
+// in ONE place so the IPC request and the persisted transcript node agree.
+function toAppQuestionRequest(request: TuringAskUserQuestionRequest): PendingUserQuestionRequest {
+  return {
+    ...request,
+    phase: request.phase ?? 'conversation',
+  }
+}
+
 export function buildRunTranscriptNode(
   state: Pick<
     HarnessAgentState,
@@ -432,7 +437,9 @@ export function buildRunTranscriptNode(
     elapsedMs: 0,
     ...(summaryWithAudit ? { summary: summaryWithAudit } : {}),
     ...(planSet ? { planSet: planSet as unknown as JsonValue } : {}),
-    ...(state.pendingUserQuestion ? { pendingUserQuestion: state.pendingUserQuestion } : {}),
+    ...(state.pendingUserQuestion
+      ? { pendingUserQuestion: toAppQuestionRequest(state.pendingUserQuestion) }
+      : {}),
     tools: toolCalls,
   }
   const transcript: PersistedPhaseTranscript = {
@@ -467,7 +474,6 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     mcpSettings: input.mcpSettings,
     standardsContext: input.standardsContext,
   })
-  const runMode = resolveRunMode()
   const turingSession = warmProject.session
   const persistedThreadSnapshot = extractPersistedThreadSnapshot(input.persistedTranscriptNodes)
   const mcpPool = getSharedMcpPool(projectPath)
@@ -544,7 +550,6 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     // instead of the run being allowed to edit blind and then told off for it.
     ...(describesRuntimeSymptom(input.payload.text) ? { isBugFix: true } : {}),
     thinkingLevel: input.payload.thinkingLevel,
-    mode: runMode,
     transcriptMode: 'compact',
     // `compact` alone seeds BOTH emission axes off, and the only thing that can
     // turn them back on mid-run is a tool call's permission decision (the
@@ -571,14 +576,19 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     // cover the rest. Pass `maxStepsPerStep` again only for a deliberately
     // latency-bounded run.
   })
-  // Under run() the four `models` keys are ROLE SLOTS, not phases: 'perform' is
-  // the work-loop driver, 'prepare' is the intent router and the conversational
-  // reply, 'perfect' is the end-of-run summary, and only 'plan' is genuinely
-  // inert. The constructor's `model` writes the 'orchestrator' override, which is
-  // what every unset slot falls back to — so router and summary already run on
-  // the user's model. This line pins the driver explicitly.
-  // See turing-harness docs/models.md#the-model-slots.
-  agent.setPhaseModel('perform', llmConfig.modelSlug)
+  // v2 (categorizer chain): model configuration lives in the categorizer
+  // setup, and the role-slot keys survive as compat aliases — 'prepare' drives
+  // the router + conversation hop, 'perform' drives the work categorizers
+  // (read/write_edit/activity_inspect), 'perfect' drives the final
+  // summary-of-summaries turn, and the constructor's `model` wrote the
+  // 'orchestrator' slot (the clearing_doubt fallback). Pin the three LIVE slots
+  // per run so every hop runs on the user's model — sessions are warm-cached,
+  // so a slot left unset would fall back to the harness default, not the model
+  // the user picked. Per-call escalation still wins via toolModelCandidates +
+  // routeModel below.
+  for (const slot of ['prepare', 'perform', 'perfect'] as const) {
+    agentHost.orchestrator.setModel(slot, llmConfig.modelSlug)
+  }
 
   // Build the runtime prompt WITH the resolved bridge so the model sees the
   // exact "CONNECTED MCP TOOLS" / "UNAVAILABLE MCP SERVERS" sections at turn 1.
@@ -868,7 +878,7 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     try {
       const resolution = await beginUserQuestionRequest(
         input.session.id,
-        questionRequest,
+        toAppQuestionRequest(questionRequest),
         input.signal,
       )
       emitCustomEvent(onEvent, input.model, USER_QUESTION_RESOLVED_EVENT, {
@@ -903,6 +913,11 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     runId: input.runId,
     model: input.model,
     emit: onEvent,
+    // v2 has no chain_end; the mapper closes the 'working' phase on agent_end,
+    // by which point state.error is final. An abort is an interruption, not a
+    // failure.
+    resolveEndStatus: () =>
+      input.signal.aborted ? 'interrupted' : agent.state.error ? 'failed' : 'completed',
   })
   const unsubscribe = agent.subscribe(mapEvent)
 
@@ -1095,7 +1110,7 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     bridgeDebugTimestamp,
     aborted,
     ...(agent.state.pendingUserQuestion
-      ? { pendingUserQuestion: agent.state.pendingUserQuestion }
+      ? { pendingUserQuestion: toAppQuestionRequest(agent.state.pendingUserQuestion) }
       : {}),
     ...(phaseTranscriptNode
       ? {

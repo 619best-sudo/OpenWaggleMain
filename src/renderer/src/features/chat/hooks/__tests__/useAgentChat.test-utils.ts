@@ -2,7 +2,7 @@ import type { AgentSendPayload } from '@shared/types/agent'
 import { MessageId, SessionId, ToolCallId } from '@shared/types/brand'
 import type { SessionDetail } from '@shared/types/session'
 import { act, cleanup } from '@testing-library/react'
-import { afterEach, beforeEach, vi } from 'vitest'
+import { afterEach, beforeEach, type Mock, vi } from 'vitest'
 import { useOptimisticUserMessageStore } from '../../state/optimistic-user-message-store'
 
 const {
@@ -20,8 +20,8 @@ const {
   runCompletedHandlers,
 } = vi.hoisted(() => {
   const agentEventBatchHandlers: Array<(payload: unknown) => void> = []
-  const markLivePipelineSessionMock = vi.fn()
-  const unmarkLivePipelineSessionMock = vi.fn()
+  const markLivePipelineSessionMock: Mock = vi.fn()
+  const unmarkLivePipelineSessionMock: Mock = vi.fn()
   const runCompletedHandlers: Array<(payload: unknown) => void> = []
   const runRenderSnapshots = new Map<
     string,

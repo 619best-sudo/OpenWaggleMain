@@ -13,6 +13,13 @@ export interface TuringEventMapperOptions {
   readonly runId: string
   readonly model: string
   readonly emit: (event: AgentTransportEvent) => void
+  /**
+   * Resolves the final status of the synthetic 'working' phase when the run
+   * ends. v2 (the categorizer chain) has no `chain_end` carrying success — the
+   * agent's `agent_end` fires from the prompt's finally block, by which point
+   * `state.error` is already final, so the adapter can answer this honestly.
+   */
+  readonly resolveEndStatus?: () => 'completed' | 'failed' | 'interrupted'
 }
 
 type TuringMessageUpdate = Extract<TuringAgentEvent, { type: 'message_update' }>
@@ -23,11 +30,13 @@ interface TuringMapperState {
   readonly model: string
   readonly emit: (event: AgentTransportEvent) => void
   /**
-   * Whether the synthetic 'working' phase has been started. The flat loop emits
-   * `chain_start` once per run; we project that into a single `phase_start` with
-   * `phaseId: 'working'`, and `chain_end` closes it. (The 4P `phase_*` events are
-   * no longer emitted by `run()`, so the multi-phase stepper state is gone — one
-   * working phase wraps the whole run.)
+   * Whether the synthetic 'working' phase has been started. v2 (the categorizer
+   * chain) emits `categorizer_start`/`categorizer_end` per hop — progress
+   * telemetry with NO deliverable payload — so we still project ONE 'working'
+   * phase wrapping the whole run: the first hop opens it, each hop refreshes its
+   * label (Reading → Writing → Verifying…), and `agent_end` closes it. Per-hop
+   * deliverables are internal handoffs; only the run's final summary is
+   * user-facing, and it rides the persisted transcript node.
    */
   workingPhaseStarted: boolean
   /**
@@ -52,6 +61,8 @@ interface TuringMapperState {
    * part (a duplicate). So: buffer until the id resolves, then flush in order.
    */
   readonly pendingToolCalls: Map<number, PendingToolCall>
+  /** Final 'working' status resolver (see TuringEventMapperOptions). */
+  readonly resolveEndStatus: () => 'completed' | 'failed' | 'interrupted'
 }
 
 interface PendingToolCall {
@@ -94,6 +105,7 @@ export function createTuringEventMapper(options: TuringEventMapperOptions) {
     workingPhaseStarted: false,
     streamedMessageIds: [],
     pendingToolCalls: new Map(),
+    resolveEndStatus: options.resolveEndStatus ?? (() => 'completed' as const),
   }
   const handler = (event: TuringAgentEvent) => {
     logger.debug('turing event ←', describeTuringEvent(event))
@@ -123,12 +135,12 @@ function describeTuringEvent(event: TuringAgentEvent): Record<string, unknown> {
       return { type: event.type, toolCallId: event.toolCallId, toolName: event.toolName }
     case 'tool_execution_end':
       return { type: event.type, toolCallId: event.toolCallId, isError: event.isError }
-    case 'chain_start':
+    case 'categorizer_start':
+      return { type: event.type, categorizer: event.categorizer, model: event.model }
+    case 'categorizer_end':
+      return { type: event.type, categorizer: event.categorizer }
+    case 'agent_end':
       return { type: event.type }
-    case 'chain_end':
-      return { type: event.type, success: event.success }
-    case 'chain_iteration':
-      return { type: event.type, iteration: event.iteration }
     default:
       return { type: (event as { type: string }).type }
   }
@@ -136,8 +148,9 @@ function describeTuringEvent(event: TuringAgentEvent): Record<string, unknown> {
 
 function handleTuringEvent(state: TuringMapperState, event: TuringAgentEvent) {
   matchBy(event, 'type')
-    .with('chain_start', () => emitWorkingPhaseStart(state))
-    .with('chain_end', (value) => emitWorkingPhaseEnd(state, value.success))
+    .with('categorizer_start', (value) => emitWorkingPhaseStart(state, value.categorizer))
+    .with('categorizer_end', () => undefined)
+    .with('agent_end', () => emitWorkingPhaseEnd(state, state.resolveEndStatus()))
     .with('message_start', () => beginMessage(state))
     .with('message_update', (value) => handleAssistantEvent(state, value.assistantMessageEvent))
     .with('message_end', () => endMessage(state))
@@ -430,41 +443,72 @@ function emitToolExecutionEnd(
 }
 
 /**
- * Emit the synthetic 'working' phase_start when the flat loop begins
- * (`chain_start`). The 4P `phase_*` events are no longer emitted by `run()`, so
- * the multi-phase stepper is replaced by ONE working phase wrapping the whole
- * run. The persisted transcript node (built post-run in turing-classic-run.ts)
- * carries the run summary, steps, and planSet for the rehydrated card.
+ * Open (or refresh) the synthetic 'working' phase on each categorizer hop.
+ * v2 hop events are progress telemetry with no deliverable, so the hop's only
+ * visible effect is the phase LABEL: the first hop opens the phase, later hops
+ * re-emit `phase_start` with their label so the session chip tracks the run
+ * (Reading → Writing → Verifying). No per-hop cards: the run's single
+ * user-facing summary rides the persisted transcript node.
  */
-function emitWorkingPhaseStart(state: TuringMapperState) {
-  if (state.workingPhaseStarted) return
+function emitWorkingPhaseStart(state: TuringMapperState, categorizer: string) {
+  const first = !state.workingPhaseStarted
   state.workingPhaseStarted = true
   state.emit({
     type: 'phase_start',
     phaseId: 'working',
-    label: getAgentPhaseTitle('working'),
+    // The opening label is the generic one; refreshes name the live hop.
+    label: first ? getAgentPhaseTitle('working') : categorizerLabel(categorizer),
     timestamp: Date.now(),
     model: state.model,
   })
 }
 
+/** Human label for a categorizer id, for the live phase chip. */
+function categorizerLabel(categorizer: string): string {
+  switch (categorizer) {
+    case 'read':
+      return 'Reading the code'
+    case 'write_edit':
+      return 'Writing code'
+    case 'activity_inspect':
+      return 'Verifying'
+    case 'conversation':
+      return 'Thinking'
+    default:
+      return categorizer
+        .split('_')
+        .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : part))
+        .join(' ')
+  }
+}
+
 /**
- * Close the synthetic 'working' phase on `chain_end`. Status reflects whether the
- * run succeeded. The richer detail (summary, steps, planSet) is attached to the
- * persisted transcript node rather than this live event, since `run()` doesn't
- * surface them per-event.
+ * Close the synthetic 'working' phase on `agent_end` (the categorizer chain has
+ * no chain_end). Status comes from the adapter, which knows the final
+ * `state.error`. The richer detail (summary, steps, planSet) is attached to the
+ * persisted transcript node rather than this live event.
  */
-function emitWorkingPhaseEnd(state: TuringMapperState, success: boolean) {
+function emitWorkingPhaseEnd(
+  state: TuringMapperState,
+  status: 'completed' | 'failed' | 'interrupted',
+) {
   if (!state.workingPhaseStarted) {
-    // Defensive: a chain_end without a chain_start (shouldn't happen). Open then
-    // close so the renderer's phase pair stays balanced.
-    emitWorkingPhaseStart(state)
+    // Defensive: an end without a start (shouldn't happen). Open then close so
+    // the renderer's phase pair stays balanced.
+    state.workingPhaseStarted = true
+    state.emit({
+      type: 'phase_start',
+      phaseId: 'working',
+      label: getAgentPhaseTitle('working'),
+      timestamp: Date.now(),
+      model: state.model,
+    })
   }
   state.emit({
     type: 'phase_end',
     phaseId: 'working',
     label: getAgentPhaseTitle('working'),
-    status: success ? 'completed' : 'failed',
+    status,
     timestamp: Date.now(),
     model: state.model,
   })

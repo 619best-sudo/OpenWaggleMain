@@ -51,7 +51,13 @@ export interface UserQuestionAttachmentRequest {
 }
 
 export interface PendingUserQuestionRequest {
-  readonly phase: 'prepare' | 'plan' | 'perform' | 'perfect'
+  /**
+   * The categorizer the question came from (v2: 'read' | 'write_edit' |
+   * 'activity_inspect' | 'conversation' | a custom id). Kept as a plain string:
+   * the harness labels it with the driving categorizer, and custom setups can
+   * add categories. Render via a title lookup with a prettified-id fallback.
+   */
+  readonly phase: string
   readonly question: string
   readonly kind?: 'clarification' | 'plan_review'
   readonly reason?: string

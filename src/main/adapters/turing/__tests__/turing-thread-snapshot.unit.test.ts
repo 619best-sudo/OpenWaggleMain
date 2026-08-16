@@ -27,10 +27,11 @@ function makeFakeSession() {
     orchestrator: { setModel: vi.fn() },
     subscribe: vi.fn(() => () => undefined),
     clearThreadSnapshot: vi.fn(),
-    runChain: vi.fn(async (_task: string, opts?: Record<string, unknown>) => ({
+    run: vi.fn(async (_task: string, opts?: Record<string, unknown>) => ({
+      task: _task,
+      route: 'task',
       success: true,
-      iterations: 0,
-      phases: { history: [] },
+      steps: [],
       refs: [],
       usage: {
         input: 0,
@@ -40,21 +41,6 @@ function makeFakeSession() {
         totalTokens: 0,
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
       },
-      ...(opts?.followUpContext ? { forwardedFollowUpContext: opts.followUpContext } : {}),
-    })),
-    runPhase: vi.fn(async (_phase: string, _task: string, opts?: Record<string, unknown>) => ({
-      phase: 'prepare',
-      summary: 'done',
-      complexity: 0,
-      usage: {
-        input: 0,
-        output: 0,
-        cacheRead: 0,
-        cacheWrite: 0,
-        totalTokens: 0,
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-      },
-      messages: [],
       ...(opts?.followUpContext ? { forwardedFollowUpContext: opts.followUpContext } : {}),
     })),
   } as {
@@ -71,8 +57,7 @@ function makeFakeSession() {
     orchestrator: { setModel: ReturnType<typeof vi.fn> }
     subscribe: ReturnType<typeof vi.fn>
     clearThreadSnapshot: ReturnType<typeof vi.fn>
-    runChain: ReturnType<typeof vi.fn>
-    runPhase: ReturnType<typeof vi.fn>
+    run: ReturnType<typeof vi.fn>
   }
 }
 
@@ -109,9 +94,9 @@ describe('turing-thread-snapshot', () => {
     const session = makeFakeSession()
     const host = createThreadSnapshotAgentHost(session as never, persistedSnapshot)
 
-    await host.runChain('Refine the implementation')
+    await host.run('Refine the implementation')
 
-    expect(session.runChain).toHaveBeenCalledWith(
+    expect(session.run).toHaveBeenCalledWith(
       'Refine the implementation',
       expect.objectContaining({
         followUpContext: {
@@ -130,9 +115,9 @@ describe('turing-thread-snapshot', () => {
     }
     const host = createThreadSnapshotAgentHost(session as never, persistedSnapshot)
 
-    await host.runChain('Refine the implementation')
+    await host.run('Refine the implementation')
 
-    expect(session.runChain).toHaveBeenCalledWith(
+    expect(session.run).toHaveBeenCalledWith(
       'Refine the implementation',
       expect.not.objectContaining({
         followUpContext: expect.anything(),
@@ -144,9 +129,9 @@ describe('turing-thread-snapshot', () => {
     const session = makeFakeSession()
     const host = createThreadSnapshotAgentHost(session as never, abortedSnapshot)
 
-    await host.runChain('Continue after the stop')
+    await host.run('Continue after the stop')
 
-    expect(session.runChain).toHaveBeenCalledWith(
+    expect(session.run).toHaveBeenCalledWith(
       'Continue after the stop',
       expect.objectContaining({
         followUpContext: {
