@@ -1,4 +1,5 @@
 import { match, P } from '@diegogbrisa/ts-match'
+import { toolCallTitle } from 'turing-harness/tool-titles'
 import type { JsonObject } from '@shared/types/json'
 
 type PiNativeToolName = 'read' | 'write' | 'edit' | 'bash' | 'grep' | 'find' | 'ls'
@@ -106,6 +107,18 @@ function formatToolTarget(name: string, args: JsonObject, primaryArg: string) {
       // Prefer the tool's declared primary arg when available.
       const value = primaryArg ? args[primaryArg] : undefined
       if (typeof value === 'string' && value.trim()) return value
+      // Action-dispatch tools (one tool, many verbs) used to fall through to the
+      // `action` scan below and print the raw enum token — "Graph Memory /
+      // stats", "File Memory / search". The harness ships a label per verb;
+      // that is what the user should read. It also covers the very common call
+      // that OMITS `action` and lets the tool infer it.
+      // Not for the Pi-native tools: those declare a primary arg, and a bare
+      // `read` with no path must stay verb-only ("Reading…") rather than gain a
+      // second label.
+      if (!primaryArg) {
+        const harnessTitle = toolCallTitle(name, args)
+        if (harnessTitle) return harnessTitle
+      }
       // Unknown / MCP / structured tools: surface the most informative scalar
       // field so the title carries useful detail instead of repeating the tool
       // name. Scanned in priority order.
@@ -157,6 +170,11 @@ function formatReadLineSuffix(args: JsonObject) {
   return `:${String(startLine)}-${String(startLine + limit - 1)}`
 }
 
+/**
+ * Short verbs used only when the call has an OPERAND to append ("Remember: use
+ * Tailwind"). A bare call falls back to the harness's own label for the action
+ * instead — "Get memory" said no more than the tool name beside it did.
+ */
 const PROJECT_MEMORY_ACTION_LABEL: Record<string, string> = {
   get: 'Get memory',
   remember: 'Remember',
@@ -178,6 +196,9 @@ function formatProjectMemoryTarget(args: JsonObject): string {
   const rawAction = typeof args.action === 'string' ? args.action : ''
   const action = rawAction in PROJECT_MEMORY_ACTION_LABEL ? rawAction : ''
   const verb = action ? PROJECT_MEMORY_ACTION_LABEL[action] : 'Memory'
+  // What to show when there is no operand to append: what the call DOES, from
+  // the harness (it infers the action the same way the tool does).
+  const bare = toolCallTitle('project_memory', args) ?? verb
 
   const text = typeof args.text === 'string' ? args.text.trim() : ''
   const category = typeof args.category === 'string' ? args.category.trim() : ''
@@ -189,14 +210,14 @@ function formatProjectMemoryTarget(args: JsonObject): string {
   if (action === 'recall') {
     if (text) return `${verb} "${truncate(text, 40)}"`
     if (tags.length) return `${verb} #${tags[0]}`
-    return verb
+    return bare
   }
   if (action === 'set_category' && category) return `${verb}: ${category}`
   // No/unknown action: infer from the operand (mirrors the tool's own inference).
   if (category) return `Set category: ${category}`
   if (text) return `Recall "${truncate(text, 40)}"`
   if (tags.length) return `Recall #${tags[0]}`
-  return verb
+  return bare
 }
 
 /**

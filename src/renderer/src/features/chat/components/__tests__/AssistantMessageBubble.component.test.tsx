@@ -338,10 +338,11 @@ describe('AssistantMessageBubble', () => {
       />,
     )
 
-    // The chip is the Title-Cased tool name; the title carries a meaningful
-    // action summary, not a second copy of the raw tool identifier.
+    // The chip (Title-Cased tool name) stays; only the text beside it changed —
+    // from "Get memory", which restated the chip, to what the call actually does.
     expect(screen.getByText('Project Memory')).toBeInTheDocument()
-    expect(screen.getByText('Get memory')).toBeInTheDocument()
+    expect(screen.getByText('Read what we know about this project')).toBeInTheDocument()
+    expect(screen.queryByText('Get memory')).not.toBeInTheDocument()
     expect(screen.queryByText('project_memory')).not.toBeInTheDocument()
     expect(screen.queryByText('PROJECT_MEMORY')).not.toBeInTheDocument()
   })

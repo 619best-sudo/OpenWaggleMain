@@ -40,6 +40,15 @@ interface TuringMapperState {
    */
   workingPhaseStarted: boolean
   /**
+   * The run's ONE closing summary, composed by the harness from every hop
+   * (its `run_summary` event, emitted after the last hop). Held here so
+   * `phase_end` can carry it LIVE: without it the phase card has no summary
+   * until the transcript is re-read from disk, and the last thing on screen is
+   * the final `deliver` card — that hop's own note, which reads as the verdict
+   * on the whole run while describing only the step that ran last.
+   */
+  runSummary?: string
+  /**
    * The streamed messageIds, one per completed assistant turn, IN STREAM ORDER.
    * Each turing `message_start…message_end` cycle is one assistant turn and maps
    * 1:1 (positionally) to an assistant message in `agent.state.messages`. The
@@ -139,6 +148,8 @@ function describeTuringEvent(event: TuringAgentEvent): Record<string, unknown> {
       return { type: event.type, categorizer: event.categorizer, model: event.model }
     case 'categorizer_end':
       return { type: event.type, categorizer: event.categorizer }
+    case 'run_summary':
+      return { type: event.type, length: event.summary.length }
     case 'agent_end':
       return { type: event.type }
     default:
@@ -150,6 +161,9 @@ function handleTuringEvent(state: TuringMapperState, event: TuringAgentEvent) {
   matchBy(event, 'type')
     .with('categorizer_start', (value) => emitWorkingPhaseStart(state, value.categorizer))
     .with('categorizer_end', () => undefined)
+    .with('run_summary', (value) => {
+      state.runSummary = value.summary
+    })
     .with('agent_end', () => emitWorkingPhaseEnd(state, state.resolveEndStatus()))
     .with('message_start', () => beginMessage(state))
     .with('message_update', (value) => handleAssistantEvent(state, value.assistantMessageEvent))
@@ -509,8 +523,10 @@ function emitWorkingPhaseEnd(
     phaseId: 'working',
     label: getAgentPhaseTitle('working'),
     status,
+    ...(state.runSummary ? { summary: state.runSummary } : {}),
     timestamp: Date.now(),
     model: state.model,
   })
   state.workingPhaseStarted = false
+  state.runSummary = undefined
 }

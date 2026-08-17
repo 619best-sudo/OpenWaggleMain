@@ -97,7 +97,11 @@ describe('summarizeToolTarget', () => {
   })
 
   it('formats project_memory targets with action + operand', () => {
-    expect(summarizeToolTarget('project_memory', { action: 'get' })).toBe('Get memory')
+    // A bare call has no operand to append, so it reads as what the call does
+    // rather than 'Get memory', which only restated the badge beside it.
+    expect(summarizeToolTarget('project_memory', { action: 'get' })).toBe(
+      'Read what we know about this project',
+    )
     expect(summarizeToolTarget('project_memory', { action: 'recall', text: 'html' })).toBe(
       'Recall "html"',
     )
@@ -113,7 +117,9 @@ describe('summarizeToolTarget', () => {
       'Set category: backend',
     )
     // No operand at all → just the verb.
-    expect(summarizeToolTarget('project_memory', {})).toBe('Memory')
+    // No action and no operand: the tool infers `get`, so say what that does
+    // instead of the bare word 'Memory'.
+    expect(summarizeToolTarget('project_memory', {})).toBe('Read what we know about this project')
   })
 
   it('formats ask_user_question targets with the question', () => {
@@ -138,5 +144,33 @@ describe('summarizeToolTarget', () => {
 
   it('returns empty string when no informative arg is present', () => {
     expect(summarizeToolTarget('customTool', {})).toBe('')
+  })
+})
+
+describe('harness tool labels', () => {
+  it('labels an action-dispatch call by what the verb does, not the raw enum token', () => {
+    // Before: these rendered as "stats" / "search" / "get" — the identifier.
+    expect(summarizeToolTarget('graph_memory', { action: 'stats' })).toBe('Summarize the code graph')
+    expect(summarizeToolTarget('file_memory', { action: 'search', query: 'router' })).toBe(
+      'Find the files that matter here',
+    )
+    expect(summarizeToolTarget('media_analysis', { lens: 'qa' })).toBe(
+      'Check this against what was asked',
+    )
+  })
+
+  it('labels a call that omitted its action, which is the common one', () => {
+    expect(summarizeToolTarget('file_memory', { query: 'router' })).toBe(
+      'Find the files that matter here',
+    )
+  })
+
+  it('labels a single-purpose tool by what it does', () => {
+    expect(summarizeToolTarget('deliver', {})).toBe('Finish and hand off the result')
+  })
+
+  it('leaves Pi-native tools alone', () => {
+    expect(summarizeToolTarget('read', {})).toBe('')
+    expect(summarizeToolTarget('read', { path: 'src/a.ts' })).toBe('src/a.ts')
   })
 })

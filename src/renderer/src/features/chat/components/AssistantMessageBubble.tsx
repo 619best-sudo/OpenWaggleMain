@@ -22,6 +22,7 @@ import { useActiveProjectPath } from '../lib/use-active-project-path'
 import { AgentLabel } from './AgentLabel'
 import { MachinePlanStreamingPlaceholder } from './MachinePlanStreamingPlaceholder'
 import { StreamingText } from './StreamingText'
+import { toolCallTitle } from 'turing-harness/tool-titles'
 import { FileContentView, UnifiedDiffView } from './ToolCallBlockParts'
 import { ToolMediaPreview } from './ToolMediaPreview'
 
@@ -195,8 +196,10 @@ function InlineToolBlockImpl({
       const isCommand = lower === 'bash' || lower === 'bash_readonly'
       return isCommand ? rawPath : relativeToProject(projectPath, rawPath)
     }
-    return summarizeToolTarget(lower, parsedArgs)
-  }, [args, argsStreaming, lower, parsedArgs, projectPath])
+    // Falls back to the harness's label for the call ("Analyze an image or
+    // video") — never to the raw tool name.
+    return summarizeToolTarget(lower, parsedArgs) || toolCallTitle(toolName, parsedArgs) || ''
+  }, [args, argsStreaming, lower, parsedArgs, projectPath, toolName])
   // Raw target path (unrelativized) — used to infer the syntax-highlighting
   // language for the file/diff bodies.
   const filePath = useMemo(

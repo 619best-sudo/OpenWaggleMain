@@ -176,3 +176,49 @@ describe('turing-event-mapper', () => {
     expect(emitted).toEqual([])
   })
 })
+
+describe('turing-event-mapper run summary', () => {
+  it("carries the run's combined summary on phase_end instead of leaving the last deliver card as the ending", () => {
+    const emitted: AgentTransportEvent[] = []
+    const mapEvent = createTuringEventMapper({
+      runId: 'run-summary-1',
+      model: 'claude-sonnet-4-5',
+      emit: (event) => emitted.push(event),
+    })
+
+    mapEvent({ type: 'categorizer_start', categorizer: 'read', model: 'm' } as never)
+    mapEvent({ type: 'categorizer_end', categorizer: 'read' } as never)
+    mapEvent({ type: 'categorizer_start', categorizer: 'activity_inspect', model: 'm' } as never)
+    mapEvent({ type: 'categorizer_end', categorizer: 'activity_inspect' } as never)
+    // The harness composes ONE closing summary from every hop, after the last one.
+    mapEvent({
+      type: 'run_summary',
+      summary: 'Recolored the sun to blood purple in index.html and verified it on screen.',
+    } as never)
+    mapEvent({ type: 'agent_end', messages: [] } as never)
+
+    const phaseEnd = emitted.find((event) => event.type === 'phase_end')
+    expect(phaseEnd).toBeDefined()
+    expect((phaseEnd as { summary?: string }).summary).toBe(
+      'Recolored the sun to blood purple in index.html and verified it on screen.',
+    )
+  })
+
+  it('does not leak a run summary into the next run', () => {
+    const emitted: AgentTransportEvent[] = []
+    const mapEvent = createTuringEventMapper({
+      runId: 'run-summary-2',
+      model: 'claude-sonnet-4-5',
+      emit: (event) => emitted.push(event),
+    })
+    mapEvent({ type: 'categorizer_start', categorizer: 'read', model: 'm' } as never)
+    mapEvent({ type: 'run_summary', summary: 'first run' } as never)
+    mapEvent({ type: 'agent_end', messages: [] } as never)
+    mapEvent({ type: 'categorizer_start', categorizer: 'read', model: 'm' } as never)
+    mapEvent({ type: 'agent_end', messages: [] } as never)
+
+    const ends = emitted.filter((event) => event.type === 'phase_end')
+    expect((ends[0] as { summary?: string }).summary).toBe('first run')
+    expect((ends[1] as { summary?: string }).summary).toBeUndefined()
+  })
+})

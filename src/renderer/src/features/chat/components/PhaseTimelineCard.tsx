@@ -17,6 +17,7 @@ import {
 import { summarizeToolTarget } from '@/features/chat/lib/tool-display'
 import { getToolMediaOutput } from '@/features/chat/lib/tool-media-output'
 import { useActiveProjectPath } from '@/features/chat/lib/use-active-project-path'
+import { toolCallTitle } from 'turing-harness/tool-titles'
 import { cn } from '@/shared/lib/cn'
 import { safeMarkdownComponents } from '@/shared/lib/markdown-link-components'
 import { safeMarkdownRehypePlugins, safeMarkdownUrlTransform } from '@/shared/lib/markdown-safety'
@@ -233,7 +234,9 @@ function ToolStrip({
       const isCommand = tool.toolName === 'bash' || tool.toolName === 'bash_readonly'
       return isCommand ? pathOrQuery : relativeToProject(projectPath, pathOrQuery)
     }
-    return summarizeToolTarget(tool.toolName, parsedArgs) || tool.toolName
+    // Last resort is the harness's own label for the call, never the raw tool
+    // name — that is the identifier the user should never have to read.
+    return summarizeToolTarget(tool.toolName, parsedArgs) || toolCallTitle(tool.toolName) || ''
   }, [pathOrQuery, projectPath, tool.toolName, parsedArgs])
   const result = useMemo(() => toToolResultPayload(tool), [tool])
   const diff = useMemo(
