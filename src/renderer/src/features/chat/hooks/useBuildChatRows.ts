@@ -9,6 +9,7 @@ import type { StreamingPhaseState } from '@/features/chat/hooks/useStreamingPhas
 import { createRendererLogger } from '@/shared/lib/logger'
 import type {
   ChatRow,
+  ClosingSummaryChatRow,
   MessageChatRow,
   PhaseTimelineChatRow,
   PhaseTimelineToolDetail,
@@ -194,6 +195,29 @@ function createPhaseRows(
       ...(phase.pendingUserQuestion ? { pendingUserQuestion: phase.pendingUserQuestion } : {}),
     },
   }))
+}
+
+/**
+ * Lift each phase's closing summary into a row of its own.
+ *
+ * `activityText` is deliberately not a fallback: it is filler the mapper derives
+ * ("<label> completed."), and rendering that as the run's answer would be worse
+ * than rendering nothing.
+ */
+function createClosingSummaryRows(
+  phaseRows: readonly PhaseTimelineChatRow[],
+): ClosingSummaryChatRow[] {
+  const summaryRows: ClosingSummaryChatRow[] = []
+  for (const row of phaseRows) {
+    const summary = row.phase.summary?.trim()
+    if (!summary) continue
+    summaryRows.push({
+      type: 'closing-summary',
+      id: `closing-summary:${row.id}`,
+      summary,
+    })
+  }
+  return summaryRows
 }
 
 function createLivePhaseRows(
@@ -503,6 +527,10 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
       // Phase cards are fully suppressed — tool calls render inline via
       // AssistantMessageBubble's InlineToolBlock. UserQuestionCard and
       // PlanReviewActions now render as standalone inline rows below.
+      // The closing summary is the one thing on a phase that has no other home:
+      // it is not a text part on any message, so it has to be lifted out here or
+      // suppressing the card silently discards the run's answer.
+      rows.push(...createClosingSummaryRows(phaseRows))
       const pendingRows = phaseRows.filter((row) => row.phase.pendingUserQuestion !== undefined)
       if (pendingRows.length > 0) {
         renderedPendingQuestionPhase = true
@@ -563,7 +591,10 @@ export function buildChatRows(params: BuildChatRowsParams): ChatRow[] {
   }
 
   if (livePhaseRows.length > 0) {
-    // Phase cards are fully suppressed.
+    // Phase cards are fully suppressed. The live closing summary still has to
+    // land: `livePhaseRows` is empty once a phase-transcript message exists, so
+    // this is the pre-persist half of the same row and never doubles up with it.
+    rows.push(...createClosingSummaryRows(livePhaseRows))
     const livePendingRows = livePhaseRows.filter(
       (row) => row.phase.pendingUserQuestion !== undefined,
     )

@@ -53,6 +53,10 @@ export function areChatRowsEqual(left: ChatRow, right: ChatRow): boolean {
         })
       )
     }
+    case 'closing-summary': {
+      const other = right as Extract<ChatRow, { type: 'closing-summary' }>
+      return left.id === other.id && left.summary === other.summary
+    }
     case 'machine-timeline': {
       const other = right as Extract<ChatRow, { type: 'machine-timeline' }>
       return left.id === other.id && left.variant === other.variant && left.plan === other.plan

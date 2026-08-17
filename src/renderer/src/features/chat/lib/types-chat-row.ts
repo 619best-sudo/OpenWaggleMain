@@ -71,6 +71,22 @@ export interface PhaseTimelineChatRow {
   phase: PhaseTimelinePhaseRow
 }
 
+/**
+ * The run's closing summary — the harness `run_summary`, composed from every
+ * hop and the only part of a run addressed to the user.
+ *
+ * It needs a row of its own because it is not an assistant message: the harness
+ * carries it on the phase transcript, not as a text part, so suppressing phase
+ * cards used to drop it entirely. On a run that changed files that only cost a
+ * closing line; on a read-only run the summary IS the deliverable, so the run
+ * ended on a `deliver` tool card with the answer nowhere on screen.
+ */
+export interface ClosingSummaryChatRow {
+  type: 'closing-summary'
+  id: string
+  summary: string
+}
+
 // ─── ChatRow Discriminated Union ──────────────────────────
 
 export type ChatRow =
@@ -85,6 +101,7 @@ export type ChatRow =
   | MessageChatRow
   | WaggleTurnChatRow
   | PhaseTimelineChatRow
+  | ClosingSummaryChatRow
   | MachineTimelineChatRow
   | { type: 'branch-summary'; id: string; summary: string }
   | { type: 'compaction-summary'; id: string; summary: string; tokensBefore: number }

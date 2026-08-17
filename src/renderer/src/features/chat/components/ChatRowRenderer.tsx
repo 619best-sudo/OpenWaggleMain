@@ -11,6 +11,7 @@ import { areChatRowsEqual } from '../lib/chat-row-equality'
 import type { ChatRow } from '../lib/types-chat-row'
 import { BranchSummaryCard } from './BranchSummaryCard'
 import { ChatErrorDisplay } from './ChatErrorDisplay'
+import { ClosingSummary } from './ClosingSummary'
 import { CompactionSummaryCard } from './CompactionSummaryCard'
 import { InterruptedRunNotice } from './InterruptedRunNotice'
 import { MachineTimelineBubble } from './MachineTimelineBubble'
@@ -132,6 +133,7 @@ function ChatRowRendererImpl({
         onResolveUserQuestion={onResolveUserQuestion}
       />
     ))
+    .with('closing-summary', (value) => <ClosingSummary summary={value.summary} />)
     .with('machine-timeline', (value) => (
       <MachineTimelineBubble
         plan={value.plan}

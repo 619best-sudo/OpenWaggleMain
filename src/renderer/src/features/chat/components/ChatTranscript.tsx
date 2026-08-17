@@ -88,6 +88,7 @@ function getChatRowKey(row: ChatRow) {
     .with('message', (value) => `message:${value.message.id}`)
     .with('waggle-turn', (value) => value.id)
     .with('phase', (value) => value.id)
+    .with('closing-summary', (value) => value.id)
     .with('machine-timeline', (value) => value.id)
     .with('interrupted-run', (value) => `interrupted-run:${value.runId}`)
     .with('branch-summary', (value) => `branch-summary:${value.id}`)
