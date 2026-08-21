@@ -15,6 +15,12 @@ export interface SessionListenerState {
   readonly thinkingSteps: Set<string>
   readonly startedToolCalls: Set<string>
   readonly toolCallInputs: Map<string, JsonValue>
+  /**
+   * Per-tool-call timestamps of the last `tool_execution_update` we forwarded.
+   * Used to pace cumulative tool-output snapshots (see {@link TOOL_OUTPUT_UPDATE_MIN_INTERVAL_MS}
+   * in `session-listener.ts`); keyed by tool call id within this run's scope.
+   */
+  readonly toolOutputUpdateEmittedAt: Map<string, number>
 }
 
 export interface PiAssistantToolCall {

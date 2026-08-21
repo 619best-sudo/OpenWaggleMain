@@ -146,7 +146,7 @@ export interface TuringModelConfig {
 export const TURING_MODELS: TuringModelConfig = {
   // The orchestrator/driver — the work-loop model for every run. Vision is routed
   // separately to `vision` below, so keep this a text model.
-  driver: 'poolside/laguna-s-2.1',
+  driver: 'poolside/laguna-xs-2.1',
 
   // Verified multimodal: ["file","image","text","audio","video"].
   vision: 'google/gemini-2.5-flash',

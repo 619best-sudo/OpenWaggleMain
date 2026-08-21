@@ -20,6 +20,15 @@ import type {
 } from './listener-types'
 import { emitEvent } from './transport-emitter'
 
+/**
+ * Minimum gap between forwarded `tool_execution_update` snapshots for a single
+ * tool call. Pi emits a cumulative (full-tail) snapshot per stdout chunk; this
+ * caps main + renderer cost to ~1 snapshot / tool call / 150ms while a run is
+ * streaming live output. See {@link handleToolExecutionUpdate} for the full
+ * rationale (this is the fix for the typing-time "Application Not Responding").
+ */
+const TOOL_OUTPUT_UPDATE_MIN_INTERVAL_MS = 150
+
 function classifyAgentEndTransportError(input: {
   readonly model: string
   readonly error: { readonly message: string }
@@ -51,6 +60,7 @@ function handleToolExecutionStart(
   state: SessionListenerState,
   event: ToolExecutionStartSessionEvent,
 ) {
+  state.toolOutputUpdateEmittedAt.delete(event.toolCallId)
   const toolInput = toJsonValue(event.args)
   state.toolCallInputs.set(event.toolCallId, toolInput)
   emitEvent(state.input.onEvent, {
@@ -68,6 +78,29 @@ function handleToolExecutionUpdate(
   state: SessionListenerState,
   event: ToolExecutionUpdateSessionEvent,
 ) {
+  // Pace cumulative tool-output snapshots. Pi's bash/terminal tool emits a
+  // `tool_execution_update` on EVERY stdout/stderr chunk, and each carries the
+  // ENTIRE rolling tail buffer (up to ~50KB of text), not a delta. A long-lived
+  // dev server (`pnpm dev`, `tsc --watch`, …) streams chunks continuously, so
+  // without throttling a single run can emit thousands of these per minute —
+  // each one deep-serialized through the main process and reduced through an
+  // O(transcript) scan in the renderer per tool call. With several such runs
+  // across projects the main + renderer event loops saturate, input stops being
+  // serviced, and the app is reported "Application Not Responding".
+  //
+  // Because the snapshots are CUMULATIVE, every in-flight update fully
+  // supersedes the previous one, so dropping the ones caught in a burst is safe:
+  // the very next forwarded snapshot (or the final `tool_execution_end`, which
+  // always carries the complete result) shows the same and fresher state. We
+  // forward at most one snapshot per tool call per interval — fast enough that
+  // live output still reads smoothly, slow enough to cap per-run cost.
+  const now = Date.now()
+  const lastEmittedAt = state.toolOutputUpdateEmittedAt.get(event.toolCallId) ?? 0
+  if (now - lastEmittedAt < TOOL_OUTPUT_UPDATE_MIN_INTERVAL_MS) {
+    return
+  }
+  state.toolOutputUpdateEmittedAt.set(event.toolCallId, now)
+
   const toolInput = toJsonValue(event.args)
   state.toolCallInputs.set(event.toolCallId, toolInput)
   emitEvent(state.input.onEvent, {
@@ -76,12 +109,16 @@ function handleToolExecutionUpdate(
     toolName: event.toolName,
     args: toolInput,
     partialResult: toJsonValue(event.partialResult),
-    timestamp: Date.now(),
+    timestamp: now,
     model: state.input.model,
   })
 }
 
 function handleToolExecutionEnd(state: SessionListenerState, event: ToolExecutionEndSessionEvent) {
+  // The end event carries the complete result and clears the partial output, so
+  // any buffered update is now redundant — drop its pacing state so a later call
+  // reusing this id (ids are unique per call, but treat it as a fresh cadence).
+  state.toolOutputUpdateEmittedAt.delete(event.toolCallId)
   emitEvent(state.input.onEvent, {
     type: 'tool_execution_end',
     toolCallId: event.toolCallId,
@@ -209,6 +246,7 @@ export function createSessionListener(input: SessionListenerInput, runId: string
     thinkingSteps: new Set<string>(),
     startedToolCalls: new Set<string>(),
     toolCallInputs: new Map<string, JsonValue>(),
+    toolOutputUpdateEmittedAt: new Map<string, number>(),
   }
 
   return (event: AgentSessionEvent) => handleSessionEvent(state, event)
