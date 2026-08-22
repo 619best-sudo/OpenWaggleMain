@@ -503,6 +503,18 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
       mcpPool,
     },
   )
+  // Per-run MCP selection (the composer picker): named servers join every
+  // categorizer; everything else stays connected-but-out-of-chain. Applied
+  // immediately — the session re-applies the selection to servers that attach
+  // after this point, and the QA hops' surface gating drops off-surface tools
+  // regardless of selection. Before this, merely ENABLING a server in settings
+  // put its tools into every QA hop of every project (a Flutter run opening
+  // with ~62 tools, two-thirds of them browser tools it could not use).
+  const mcpSelection = turingSession.selectMcpServers(input.payload.mcpServers ?? [])
+  logger.info('MCP selection applied for run', {
+    selected: mcpSelection.selected,
+    connectedOnly: mcpSelection.dropped,
+  })
   let bridge: BridgeResult | undefined
   try {
     bridge = await new Promise<BridgeResult | undefined>((resolve) => {
@@ -592,11 +604,13 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
 
   // Build the runtime prompt WITH the resolved bridge so the model sees the
   // exact "CONNECTED MCP TOOLS" / "UNAVAILABLE MCP SERVERS" sections at turn 1.
-  // This is what steers the model toward `browser_navigate` instead of
-  // `npm install playwright`: it both has the tool AND is told to prefer it.
+  // The MCP section is filtered to the composer's selection — connected is not
+  // selected, and advertising tools the chain holds none of is how a write pass
+  // stalls itself calling them.
   const runtimePrompt = buildOpenWaggleRuntimePrompt(input.payload.text, {
     standardsContext: input.standardsContext,
     bridge,
+    mcpSelection: input.payload.mcpServers ?? [],
     pendingUserQuestionResolution: input.pendingUserQuestionResolution,
   })
 

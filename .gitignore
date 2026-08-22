@@ -56,3 +56,11 @@ release
 
 # Curated runtime env shipped in the packaged app (contains credentials).
 build/app.env
+
+# Local runtime artifacts — never commit (the 143k-file commit that shall not
+# be named swept all of these in; several exceed GitHub's 100MB hard limit).
+.dbg/
+.electron-cache/
+.openwaggle-user-data/
+.openwaggle-user-data-*/
+.turing/

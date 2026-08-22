@@ -568,7 +568,7 @@ export async function connectMcpBackground(
 }
 
 export function buildOpenWaggleRuntimeDebugValue(
-  session: Pick<Session, 'listCapabilities' | 'toolsForCategorizer'>,
+  session: Pick<Session, 'listCapabilities' | 'toolsForCategorizer' | 'mcpServersSelected'>,
   runtime: {
     readonly mcpSettings?: McpSettingsView
     readonly standardsContext?: AgentKernelStandardsContext
@@ -585,6 +585,12 @@ export function buildOpenWaggleRuntimeDebugValue(
     mcpAdapterEnabled: runtime.mcpSettings?.adapter.enabled ?? false,
     mcpRuntimeConfigPath: runtime.mcpSettings?.runtimeConfigPath ?? null,
     enabledMcpNames: [...(runtime.bridge?.enabledMcpNames ?? [])],
+    // The composer selection: which of the connected servers the user actually
+    // offered to THIS run. enabled-but-unselected is the normal state now —
+    // connection is not selection — and the distinction belongs in the status
+    // node so a "why doesn't the model see my MCP" question is answerable
+    // from the persisted card alone.
+    selectedMcpNames: [...(session.mcpServersSelected ?? [])],
     attemptedMcpNames: [...(runtime.bridge?.attemptedMcpNames ?? [])],
     connectedMcpIds: [...(runtime.bridge?.connectedMcpIds ?? [])],
     bridgeIssues: (runtime.bridge?.issues ?? []).map((issue) => ({
@@ -664,6 +670,17 @@ export function buildOpenWaggleRuntimePrompt(
       BridgeResult,
       'issues' | 'skillToolNames' | 'connectedMcpToolNames' | 'failedMcpNames'
     >
+    /**
+     * The composer's MCP selection for THIS run. When present (even empty),
+     * the CONNECTED MCP TOOLS section is filtered to the selected servers —
+     * connected-but-unselected servers must not be advertised, or the model
+     * calls tool names that exist in no hop's toolset. From the field: with
+     * both browser MCPs connected and nothing selected, the prompt listed
+     * ~40 browser tools the chain held none of, and the write pass stalled
+     * itself to death calling `playwright` / `browser_navigate` it had just
+     * been told to use. Absent = legacy callers that predate selection.
+     */
+    readonly mcpSelection?: readonly string[]
     readonly pendingUserQuestionResolution?: {
       readonly request: {
         /** v2: the categorizer id the question came from. */
@@ -717,10 +734,16 @@ export function buildOpenWaggleRuntimePrompt(
   }
 
   if (runtime.bridge) {
-    // Connected MCP tools: list every tool from every connected MCP server
-    // so the model knows EXACTLY what browser/automation tools it can call.
+    // Connected MCP tools — FILTERED BY THE RUN'S SELECTION. The chain only
+    // holds selected servers' tools (connection is not selection); advertising
+    // the rest here hands the model tool names that will be refused in every
+    // hop, which is how a run stalls itself calling tools it was just told to
+    // use. `mcpSelection` absent = legacy caller predating selection.
     const connected = runtime.bridge.connectedMcpToolNames
-    const connectedEntries = Object.entries(connected)
+    const selection = runtime.mcpSelection
+    const connectedEntries = Object.entries(connected).filter(([serverName]) =>
+      selection ? selection.includes(serverName) : true,
+    )
     if (connectedEntries.length > 0) {
       const lines = connectedEntries.map(
         ([serverName, toolNames]) => `  - ${serverName}: ${toolNames.join(', ')}`,

@@ -229,6 +229,9 @@ describe('turing OpenWaggle bridge', () => {
       mcpAdapterEnabled: true,
       mcpRuntimeConfigPath: '/tmp/runtime.json',
       enabledMcpNames: ['playwright'],
+      // Connected is not selected: playwright is enabled and connected here,
+      // but nothing was named for the run, so the selection reads empty.
+      selectedMcpNames: [],
       attemptedMcpNames: ['playwright'],
       connectedMcpIds: ['turing-machine:mcp:playwright'],
       bridgeIssues: [],
@@ -364,6 +367,45 @@ describe('turing OpenWaggle bridge', () => {
       expect(prompt).toContain('CONNECTED MCP TOOLS')
       expect(prompt).not.toContain('VERIFYING A SCREEN')
       expect(prompt).not.toContain('GETTING THE APP ONTO A DEVICE')
+    })
+
+    it('advertising follows the SELECTION, not the connection — unselected servers are not listed', () => {
+      // From the field: both browser MCPs connected, nothing selected, and the
+      // prompt listed ~40 tools the chain held none of — the write pass then
+      // stalled itself calling `playwright` / `browser_navigate` it had just
+      // been told to use. Connected is not selected.
+      const prompt = buildOpenWaggleRuntimePrompt('Change the popup title', {
+        bridge: {
+          connectedMcpToolNames: {
+            'chrome-devtools': ['browser_navigate', 'browser_click'],
+            playwright: ['browser_navigate', 'browser_snapshot'],
+          },
+          failedMcpNames: [],
+          issues: [],
+          skillToolNames: [],
+        },
+        mcpSelection: [],
+      })
+      expect(prompt).not.toContain('CONNECTED MCP TOOLS')
+      expect(prompt).not.toContain('chrome-devtools')
+      expect(prompt).not.toContain('playwright')
+    })
+
+    it('a selected server is advertised; a connected-but-unselected one is not', () => {
+      const prompt = buildOpenWaggleRuntimePrompt('Change the popup title', {
+        bridge: {
+          connectedMcpToolNames: {
+            'chrome-devtools': ['browser_navigate', 'browser_click'],
+            playwright: ['browser_navigate', 'browser_snapshot'],
+          },
+          failedMcpNames: [],
+          issues: [],
+          skillToolNames: [],
+        },
+        mcpSelection: ['chrome-devtools'],
+      })
+      expect(prompt).toContain('chrome-devtools: browser_navigate, browser_click')
+      expect(prompt).not.toContain('playwright:')
     })
 
     it('says nothing about MCP routing when no server is connected', () => {

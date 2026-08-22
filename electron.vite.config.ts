@@ -8,7 +8,25 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tailwindcss from '@tailwindcss/vite'
 import svgr from 'vite-plugin-svgr'
 
-const ALWAYS_EXTERNAL = ['electron', 'bufferutil', 'utf-8-validate', 'node-pty']
+// `turing-harness` is BUNDLED below (ESM-only), which used to pull in nothing —
+// it had zero runtime dependencies. It now lazily imports two, and bundling
+// either is wrong:
+//   - `playwright-core` cannot be bundled at all (its bidi/driver internals
+//     resist Rolldown — "Rolldown failed to resolve import
+//     chromium-bidi/lib/cjs/bidiMapper/BidiMapper"), and a browser-automation
+//     library is a classic external anyway;
+//   - `jimp` is pure JS but huge; bundling it bloats the main process for no
+//     gain.
+// Both are declared in package.json dependencies so the runtime `require` from
+// the bundled main resolves, and electron-builder ships them.
+const ALWAYS_EXTERNAL = [
+  'electron',
+  'bufferutil',
+  'utf-8-validate',
+  'node-pty',
+  'jimp',
+  'playwright-core',
+]
 const PI_EXTENSION_LOADER_PATH = '@mariozechner/pi-coding-agent/dist/core/extensions/loader.js'
 const PI_EXTENSION_IMPORT_META_RESOLVE_LINE =
   'return fileURLToPath(import.meta.resolve(specifier));'

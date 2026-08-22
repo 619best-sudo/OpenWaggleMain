@@ -13,6 +13,16 @@ export interface ComposerState {
   cursorIndex: number
   setInput: (value: string) => void
   setCursorIndex: (index: number) => void
+  /**
+   * EXTERNAL MCP servers selected for the next send (the composer's MCP
+   * picker). Selected servers join every categorizer of the run; unselected
+   * servers stay connected in the pool but out of the chain — connection is
+   * not selection. Deliberately STICKY across sends (like a mode toggle, not
+   * an attachment): pick once, it applies until changed.
+   */
+  mcpServers: string[]
+  toggleMcpServer: (name: string) => void
+  setMcpServers: (names: readonly string[]) => void
   promptHistory: readonly string[]
   historyIndex: number
   draftInput: string
@@ -54,6 +64,7 @@ export interface ComposerState {
 export interface InitialComposerState {
   input: string
   cursorIndex: number
+  mcpServers: string[]
   promptHistory: readonly string[]
   historyIndex: number
   draftInput: string

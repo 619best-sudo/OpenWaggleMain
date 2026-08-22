@@ -82,6 +82,16 @@ export interface AgentSendPayload {
    * Absent/false is the default flat loop — one work loop, no decomposition.
    */
   readonly planMode?: boolean
+  /**
+   * EXTERNAL MCP servers the user selected for this message (the composer's
+   * MCP picker). Selected servers join every categorizer for this run;
+   * absent/empty means no external MCP tools in the chain — servers may still
+   * be connected into the shared pool, connection is not selection. The QA
+   * hops additionally drop off-surface tools by project category (a mobile
+   * project's inspect hop carries the device toolkit, not the browser) — see
+   * the harness's `gateQaSurface`.
+   */
+  readonly mcpServers?: readonly string[]
 }
 
 export interface CompactionSummaryMetadata {
