@@ -317,6 +317,39 @@ function extractBashCommands(messages: readonly TuringMessage[]): string[] {
   return commands
 }
 
+/** The first-party tools whose action lives in an argument, not in the name. */
+const DEVICE_ACTION_TOOLS = new Set(['mobile', 'drive'])
+
+/**
+ * Action-qualified names for the first-party device and web tools.
+ *
+ * Exactly the problem {@link extractBashCommands} solves, for exactly the same
+ * reason: `mobile` and `drive` take their action as an argument, so the tool name
+ * alone cannot tell a screenshot (`look`, `shot`) from a tap or an app launch —
+ * every call shows up as the single name `mobile`. The audit classifies by name,
+ * so give it names that carry the action. The harness names its own actions this
+ * way internally (`mobileActionToolName`) for the same reason.
+ */
+function extractDeviceActionToolNames(messages: readonly TuringMessage[]): string[] {
+  const names: string[] = []
+  for (const message of messages) {
+    if (message.role !== 'assistant') continue
+    for (const block of message.content) {
+      if (block.type !== 'toolCall') continue
+      const bare = block.name.includes('__')
+        ? block.name.slice(block.name.lastIndexOf('__') + 2)
+        : block.name
+      if (!DEVICE_ACTION_TOOLS.has(bare)) continue
+      const args = block.arguments as { action?: unknown } | undefined
+      const action = typeof args?.action === 'string' ? args.action.trim() : ''
+      // No action means a malformed call the harness refused; the bare name still
+      // says the run reached for the device, which is all the runtime trigger asks.
+      names.push(action ? `${bare}_${action}` : bare)
+    }
+  }
+  return names
+}
+
 function buildToolNameLookup(messages: readonly TuringMessage[]) {
   const lookup = new Map<string, string>()
   for (const message of messages) {
@@ -395,7 +428,7 @@ export function buildRunTranscriptNode(
   // than what it reported, which is why an otherwise-clean run can still fail it.
   const visualAudit = auditVisualVerification({
     writtenPaths: snapshot?.writtenPaths ?? [],
-    toolNames: [...toolNameLookup.values()],
+    toolNames: [...toolNameLookup.values(), ...extractDeviceActionToolNames(messages)],
     executedCommands: extractBashCommands(messages),
     ...(auditContext.userText ? { userText: auditContext.userText } : {}),
     ...(auditContext.availableToolNames
@@ -1076,11 +1109,19 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
         : {}),
     })),
   })
-  // The tools the run COULD have reached: every MCP tool that actually attached.
-  // The audit uses this so it only faults a run for skipping verification that
-  // was genuinely available — on a machine with no simulator and no browser MCP
-  // there is nothing to skip.
-  const availableToolNames = Object.values(bridge?.connectedMcpToolNames ?? {}).flat()
+  // The tools the run COULD have reached. The audit uses this so it only faults a
+  // run for skipping verification that was genuinely available.
+  //
+  // MCP tools are the part that varies, so they are looked up. The harness's own
+  // `mobile` and `drive` are registered unconditionally — they report their own
+  // install hints rather than disappearing when the binary is missing — so they
+  // are always reachable and belong here too. Listing only MCP tools meant a
+  // first-party setup looked like a machine with no runtime tooling at all, and
+  // the runtime-symptom trigger could never fire on it.
+  const availableToolNames = [
+    ...Object.values(bridge?.connectedMcpToolNames ?? {}).flat(),
+    ...DEVICE_ACTION_TOOLS,
+  ]
   const phaseTranscriptNode = buildRunTranscriptNode(agent.state, appended, Date.now(), {
     userText: input.payload.text,
     availableToolNames,

@@ -111,3 +111,51 @@ describe('buildRunTranscriptNode', () => {
     expect(node).toBeUndefined()
   })
 })
+
+/**
+ * The audit classifies by tool NAME, and the first-party `mobile`/`drive` tools
+ * carry their action in an argument — so every call reaches it as the single name
+ * `mobile`, which tells it nothing about whether the run looked at the screen.
+ * This is the same gap `executedCommands` exists to close for `bash`, and it is
+ * closed the same way: the action is extracted and appended to the tool names.
+ *
+ * Without it, the run replayed here — a Flutter screen edited, then screenshotted
+ * on a simulator — was reported as never having captured anything.
+ */
+describe('device tool actions reach the visual audit', () => {
+  const deviceCall = (id: string, action: string) => ({
+    role: 'assistant' as const,
+    content: [{ type: 'toolCall' as const, id, name: 'mobile', arguments: { action } }],
+  })
+
+  const nodeFor = (messages: readonly unknown[]) =>
+    buildRunTranscriptNode(
+      makeState({
+        lastRunSummary: 'Changed the popup title.',
+        lastThreadSnapshot: {
+          timestamp: 1,
+          task: 'change the title of delete account popup',
+          route: 'task',
+          disposition: 'completed',
+          recommendedFollowUpMode: 'structured_continue',
+          summary: 'Changed the popup title.',
+          writtenPaths: ['/app/lib/screens/profile/profile_screen.dart'],
+        } as never,
+      }),
+      messages as never,
+      789,
+      { userText: 'change the title of delete account popup', availableToolNames: ['mobile', 'drive'] },
+    )
+
+  it('does not warn when the run screenshotted the screen it changed', () => {
+    const node = nodeFor([deviceCall('c1', 'launch'), deviceCall('c2', 'look')])
+    expect(node).toBeDefined()
+    expect(node!.contentJson).not.toContain('Unverified visual change')
+  })
+
+  it('still warns when the run only launched the app', () => {
+    const node = nodeFor([deviceCall('c1', 'launch'), deviceCall('c2', 'tap')])
+    expect(node).toBeDefined()
+    expect(node!.contentJson).toContain('Unverified visual change')
+  })
+})

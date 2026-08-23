@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   auditVisualVerification,
+  isRuntimeObservationTool,
   isViewLayerPath,
   isVisualCaptureTool,
 } from '../turing-visual-verification'
@@ -259,5 +260,76 @@ describe('machine mode (planMode) runs reach the gate', () => {
       availableToolNames: AVAILABLE,
     })
     expect(a.unverified).toBe(false)
+  })
+})
+
+/**
+ * The harness's OWN device and web tools.
+ *
+ * The marker lists were written against the external device MCP server this
+ * backend replaced, whose tools were named one-per-action
+ * (`mobile_take_screenshot`). The first-party replacements are single tools that
+ * take the action as an argument — `mobile { action: 'look' }`, `drive { action:
+ * 'shot' }` — so their names carry none of the words the markers look for, and
+ * `'mobile'.includes('mobile_')` is false.
+ *
+ * The result was not a near miss. Every run that verified on a simulator or in
+ * the browser was reported as never having captured anything, which is the false
+ * positive the header comment on this file calls the expensive kind. Replayed
+ * below from the run that surfaced it: eight `mobile { action: 'look' }` calls
+ * against a Flutter screen, still flagged unverified.
+ */
+describe('first-party device and web tools', () => {
+  it('counts look and shot as captures', () => {
+    for (const name of ['mobile_look', 'drive_look', 'drive_shot']) {
+      expect(isVisualCaptureTool(name), name).toBe(true)
+    }
+  })
+
+  it('does not count driving or launching as a capture', () => {
+    // Same rule as the structural-inspection cases above: acting on the screen
+    // is not seeing it.
+    for (const name of ['mobile_tap', 'mobile_launch', 'mobile_devices', 'drive_click', 'drive_fill']) {
+      expect(isVisualCaptureTool(name), name).toBe(false)
+    }
+  })
+
+  it('counts any first-party device or web call as having run the software', () => {
+    for (const name of ['mobile', 'drive', 'mobile_launch', 'mobile_tap', 'drive_open']) {
+      expect(isRuntimeObservationTool(name), name).toBe(true)
+    }
+  })
+
+  it('does not read an unrelated tool that merely contains "drive" as browser control', () => {
+    // Substring matching would have made a Google Drive MCP tool look like a
+    // browser session.
+    for (const name of ['google_drive_search', 'mcp__gdrive__google_drive_list', 'driver_options']) {
+      expect(isRuntimeObservationTool(name), name).toBe(false)
+      expect(isVisualCaptureTool(name), name).toBe(false)
+    }
+  })
+
+  it('clears the replayed run: a Flutter screen edited and screenshotted on a simulator', () => {
+    const audit = auditVisualVerification({
+      writtenPaths: ['/Users/shashankv/Documents/Projects/cards_mobile_app/lib/screens/profile/profile_screen.dart'],
+      toolNames: ['read', 'edit', 'bash', 'mobile_launch', 'mobile_look', 'mobile_tap', 'mobile_look'],
+      executedCommands: ['flutter build ios --simulator'],
+      userText: 'change the title of delete account popup',
+      availableToolNames: ['mobile', 'drive'],
+    })
+    expect(audit.capturedVisual).toBe(true)
+    expect(audit.unverified).toBe(false)
+  })
+
+  it('still flags the same run when it only launched the app and never looked', () => {
+    const audit = auditVisualVerification({
+      writtenPaths: ['/Users/shashankv/Documents/Projects/cards_mobile_app/lib/screens/profile/profile_screen.dart'],
+      toolNames: ['read', 'edit', 'bash', 'mobile_launch'],
+      executedCommands: ['flutter build ios --simulator'],
+      userText: 'change the title of delete account popup',
+      availableToolNames: ['mobile', 'drive'],
+    })
+    expect(audit.unverified).toBe(true)
+    expect(audit.trigger).toBe('view-layer')
   })
 })

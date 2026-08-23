@@ -31,6 +31,40 @@
 const VISUAL_CAPTURE_TOOL_MARKERS = ['screenshot', 'activity_inspect', 'screen_capture'] as const
 
 /**
+ * The harness's OWN device and web tools, which no marker above can match.
+ *
+ * `mobile` and `drive` are single tools that take the action as an ARGUMENT
+ * (`mobile { action: 'look' }`), so their name carries none of the words the
+ * substring markers look for — and the marker list still assumed the external
+ * device MCP server this backend replaced, whose tools were individually named
+ * `mobile_take_screenshot`. The consequence was not a near miss: a run that
+ * screenshotted a simulator eight times was reported as never having captured
+ * anything, on every run, which is how a real one-line edit ended up flagged
+ * "unverified" while the actual wrong-file edit went unmentioned.
+ *
+ * Names here are the tool plus its action, as {@link extractDeviceActionToolNames}
+ * emits them. `look` earns capture status on both surfaces because it
+ * photographs the screen as well as returning element rects — unlike the
+ * structural-only tools the doc comment above excludes, which return a tree and
+ * no image.
+ */
+const FIRST_PARTY_CAPTURE_TOOLS = ['mobile_look', 'drive_look', 'drive_shot'] as const
+
+/**
+ * The first-party tool families, by bare name.
+ *
+ * Matched exactly or as `<tool>_<action>` rather than as a substring, which
+ * matters for `drive`: an MCP server's `google_drive_search` CONTAINS "drive"
+ * and would otherwise be read as the run having driven a browser.
+ */
+const FIRST_PARTY_RUNTIME_TOOLS = ['mobile', 'drive'] as const
+
+/** Strip an MCP server's namespace prefix, mirroring the harness's own matching. */
+function bareToolName(toolName: string): string {
+  return toolName.includes('__') ? toolName.slice(toolName.lastIndexOf('__') + 2) : toolName
+}
+
+/**
  * Extensions that are view-layer wherever they appear. A stylesheet or a markup
  * template has no non-visual use, so the extension alone is sufficient evidence.
  */
@@ -137,7 +171,9 @@ export function isViewLayerPath(filePath: string): boolean {
 /** Did this tool name put an actual image in front of the model? */
 export function isVisualCaptureTool(toolName: string): boolean {
   const normalized = toolName.toLowerCase()
-  return VISUAL_CAPTURE_TOOL_MARKERS.some((marker) => normalized.includes(marker))
+  if (VISUAL_CAPTURE_TOOL_MARKERS.some((marker) => normalized.includes(marker))) return true
+  const bare = bareToolName(normalized)
+  return FIRST_PARTY_CAPTURE_TOOLS.some((name) => bare === name)
 }
 
 /**
@@ -220,7 +256,12 @@ export function describesRuntimeSymptom(userText: string | undefined): boolean {
 /** Did this tool name interact with the software while it was running? */
 export function isRuntimeObservationTool(toolName: string): boolean {
   const normalized = toolName.toLowerCase()
-  return RUNTIME_OBSERVATION_TOOL_MARKERS.some((marker) => normalized.includes(marker))
+  if (RUNTIME_OBSERVATION_TOOL_MARKERS.some((marker) => normalized.includes(marker))) return true
+  // The first-party families, whatever action they carried: for this trigger the
+  // question is "did it run the thing at all", so `mobile { action: 'launch' }`
+  // counts as much as a screenshot.
+  const bare = bareToolName(normalized)
+  return FIRST_PARTY_RUNTIME_TOOLS.some((name) => bare === name || bare.startsWith(`${name}_`))
 }
 
 export interface VisualVerificationAudit {
