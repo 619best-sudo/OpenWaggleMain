@@ -36,6 +36,7 @@ import { useBranchSummaryWorkflow } from './useBranchSummaryWorkflow'
 import { useChatPanelEnvironment } from './useChatPanelEnvironment'
 import { useChatSendWorkflow } from './useChatSendWorkflow'
 import { useComposerSection } from './useComposerSection'
+import { useResumeRun } from './useResumeRun'
 import { useSessionCopyWorkflow } from './useSessionCopyWorkflow'
 import { useSteerWorkflow } from './useSteerWorkflow'
 import { useTranscriptSection } from './useTranscriptSection'
@@ -411,7 +412,10 @@ export function useChatPanelSections(): ChatPanelSections {
           continue
         }
 
-        if (event.name === USER_QUESTION_REQUEST_EVENT && isPendingUserQuestionRequest(event.value)) {
+        if (
+          event.name === USER_QUESTION_REQUEST_EVENT &&
+          isPendingUserQuestionRequest(event.value)
+        ) {
           pendingUserQuestionVersionRef.current += 1
           setPendingUserQuestionRequest(event.value)
           continue
@@ -768,6 +772,18 @@ export function useChatPanelSections(): ChatPanelSections {
     }
   }
 
+  const {
+    resumeState,
+    busy: resumeBusy,
+    resume: handleResumeRun,
+    dismiss: handleDismissResume,
+  } = useResumeRun({
+    sessionId: activeSessionId,
+    model,
+    isRunning: isLoading,
+    onError: showToast,
+  })
+
   const followUpSuggestion = getTuringFollowUpSuggestion({
     messages: transcript.messages,
     waggleStatus,
@@ -817,6 +833,10 @@ export function useChatPanelSections(): ChatPanelSections {
     activeSessionId,
     waggleStatus,
     followUpSuggestion,
+    resumeState,
+    resumeBusy,
+    onResumeRun: handleResumeRun,
+    onDismissResume: handleDismissResume,
     commandPaletteOpen,
     slashSkills: catalog?.skills ?? [],
     phase,

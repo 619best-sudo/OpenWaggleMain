@@ -6,9 +6,6 @@ export function buildInitialComposerState() {
   return {
     input: '',
     cursorIndex: 0,
-    // Sticky per-thread MCP selection (composer picker); empty = chain runs on
-    // built-in tools only, which is the default the QA-surface gating expects.
-    mcpServers: [],
     promptHistory: loaded,
     historyIndex: loaded.length,
     draftInput: '',

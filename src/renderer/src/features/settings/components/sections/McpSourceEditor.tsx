@@ -50,19 +50,19 @@ export function McpSourceEditor({
     <div className="flex flex-col h-full">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="mb-5 max-w-[560px] text-[13px] leading-5 text-text-tertiary">
+          <p className="mb-5 max-w-[560px] text-[12px] leading-5 text-text-tertiary">
             Advanced setup lets you edit the raw MCP JSON directly when you need full control.
           </p>
 
           {sources.length > 0 && onSelectSource && (
             <div className="mb-4 space-y-2">
               <label className="flex items-center gap-2">
-                <span className="text-[12px] font-medium text-text-secondary">Edit:</span>
+                <span className="text-[11px] font-medium text-text-secondary">Edit:</span>
                 <Select
                   value={selectedSource?.id ?? ''}
                   disabled={busy}
                   onChange={(e) => onSelectSource(e.target.value as McpConfigSourceId)}
-                  className="h-8 w-full max-w-[320px] pr-8 text-[12px]"
+                  className="h-8 w-full max-w-[320px] pr-8 text-[11px]"
                 >
                   <option value="" disabled>
                     Choose config to edit...
@@ -77,7 +77,7 @@ export function McpSourceEditor({
                 </Select>
               </label>
               {selectedSourceDetails ? (
-                <p className="text-[11px] leading-5 text-text-muted">
+                <p className="text-[10px] leading-5 text-text-muted">
                   {selectedSourceDetails.helper}
                 </p>
               ) : null}
@@ -87,7 +87,7 @@ export function McpSourceEditor({
           {selectedSource?.parseError && (
             <p
               role="alert"
-              className="mt-2 rounded-lg border border-error/25 bg-error/6 px-3 py-2 text-[12px] text-error"
+              className="mt-2 rounded-lg border border-error/25 bg-error/6 px-3 py-2 text-[11px] text-error"
             >
               {selectedSource.parseError}
             </p>
@@ -111,7 +111,7 @@ export function McpSourceEditor({
             if (!selectedSource) return
             onRawJsonChange(selectedSource.id, event.target.value)
           }}
-          className="h-full min-h-[320px] w-full border-transparent bg-code-card p-3 text-[13px] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] focus:border-accent/20"
+          className="h-full min-h-[320px] w-full border-transparent bg-code-card p-3 text-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] focus:border-accent/20"
         />
       </div>
 

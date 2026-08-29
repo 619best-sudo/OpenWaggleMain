@@ -30,7 +30,7 @@ export function InterruptedRunNotice({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm font-medium text-text-primary">Run interrupted</p>
-              <p className="mt-1 text-[13px] text-text-tertiary">
+              <p className="mt-1 text-[12px] text-text-tertiary">
                 Turing Machine closed before this{' '}
                 {runMode === 'waggle'
                   ? 'Waggle'
@@ -52,7 +52,7 @@ export function InterruptedRunNotice({
               </Button>
             ) : null}
           </div>
-          <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-text-muted">
+          <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-text-muted">
             <span className="rounded-md bg-bg-hover px-2 py-0.5">{String(model)}</span>
             <span className="rounded-md bg-bg-hover px-2 py-0.5">
               {formatRelativeTime(interruptedAt)}

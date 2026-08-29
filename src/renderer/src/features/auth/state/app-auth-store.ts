@@ -10,10 +10,10 @@ import {
   signupWithPassword,
 } from '@/features/auth/lib/auth-client'
 import {
-  createGithubRepoStats,
   type AppLeaderboardSnapshot,
   type AppSubscriptionSnapshot,
   type AppTuringMachineActivitySnapshot,
+  createGithubRepoStats,
   fetchSubscriptionSnapshot,
   fetchTuringMachineActivity,
   fetchTuringMachineLeaderboard,
@@ -593,9 +593,13 @@ export const useAppAuthStore = create<AppAuthState>((set, get) => ({
     try {
       const idToken = await api.startAppGoogleOAuth()
       const user = await googleAuthWithIdToken({ idToken })
-      await applyAuthenticatedUser(user, 'Failed to sync backend model token after Google sign-in', {
-        syncGithubRepoStats: true,
-      })
+      await applyAuthenticatedUser(
+        user,
+        'Failed to sync backend model token after Google sign-in',
+        {
+          syncGithubRepoStats: true,
+        },
+      )
     } catch (error) {
       set({
         status: 'signed_out',

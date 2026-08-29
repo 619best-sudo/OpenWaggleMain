@@ -4,6 +4,12 @@ import '@fontsource/fira-sans/400.css'
 import '@fontsource/fira-sans/500.css'
 import '@fontsource/fira-sans/600.css'
 import '@fontsource/fira-sans/700.css'
+// Code face, bundled rather than hoped-for: the mono stack named JetBrains Mono
+// first but nothing shipped it, so every code surface silently fell through to
+// the OS default monospace.
+import '@fontsource/jetbrains-mono/400.css'
+import '@fontsource/jetbrains-mono/500.css'
+import '@fontsource/jetbrains-mono/600.css'
 import { AppErrorBoundary } from '@/shared/ui/AppErrorBoundary'
 import { App } from './App'
 import { getHighlighter } from './shared/lib/shiki/highlighter'

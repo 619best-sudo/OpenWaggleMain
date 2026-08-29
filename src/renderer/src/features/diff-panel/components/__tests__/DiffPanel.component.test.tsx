@@ -2,6 +2,7 @@ import type { GitFileDiff } from '@shared/types/git'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/shared/lib/ipc'
+import { useUIStore } from '@/shell/ui-store'
 import { useReviewStore } from '../../state/review-store'
 import { DiffFileSection } from '../DiffFileSection'
 import { DiffPanel } from '../DiffPanel'
@@ -11,6 +12,10 @@ import { FileTree } from '../FileTree'
 vi.mock('@/shared/lib/ipc', () => ({
   api: {
     getGitDiff: vi.fn(),
+    getGitStatus: vi.fn(async () => null),
+    showConfirm: vi.fn(),
+    revertAllGitChanges: vi.fn(),
+    stageAllGitChanges: vi.fn(),
   },
 }))
 
@@ -41,7 +46,11 @@ function fileDiff(path = 'src/app.ts') {
 describe('Diff panel components', () => {
   beforeEach(() => {
     vi.mocked(api.getGitDiff).mockReset()
+    vi.mocked(api.showConfirm).mockReset()
+    vi.mocked(api.revertAllGitChanges).mockReset()
+    vi.mocked(api.stageAllGitChanges).mockReset()
     useReviewStore.setState({ comments: [], activeCommentLocation: null })
+    useUIStore.setState({ toastMessage: null, toastData: null })
   })
 
   it('loads project diffs and sends accumulated review comments', async () => {
@@ -138,6 +147,55 @@ describe('Diff panel components', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss comment' }))
 
     expect(onSetActiveComment).toHaveBeenCalledWith(null)
+  })
+
+  it('reverts all changes after the confirm dialog and toasts the result', async () => {
+    vi.mocked(api.getGitDiff).mockResolvedValue([fileDiff()])
+    vi.mocked(api.showConfirm).mockResolvedValue(true)
+    vi.mocked(api.revertAllGitChanges).mockResolvedValue({
+      ok: true,
+      summary: 'Reverted all changes',
+    })
+
+    render(<DiffPanel projectPath="/repo" onSendMessage={vi.fn()} />)
+    await screen.findByText('new line')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Revert all' }))
+
+    await waitFor(() => expect(api.revertAllGitChanges).toHaveBeenCalledWith('/repo'))
+    expect(useUIStore.getState().toastMessage).toBe('Reverted all changes')
+  })
+
+  it('does not revert when the confirm dialog is dismissed', async () => {
+    vi.mocked(api.getGitDiff).mockResolvedValue([fileDiff()])
+    vi.mocked(api.showConfirm).mockResolvedValue(false)
+
+    render(<DiffPanel projectPath="/repo" onSendMessage={vi.fn()} />)
+    await screen.findByText('new line')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Revert all' }))
+
+    await waitFor(() => expect(api.showConfirm).toHaveBeenCalledOnce())
+    expect(api.revertAllGitChanges).not.toHaveBeenCalled()
+  })
+
+  it('surfaces a failed worktree mutation as an error toast', async () => {
+    vi.mocked(api.getGitDiff).mockResolvedValue([fileDiff()])
+    vi.mocked(api.stageAllGitChanges).mockResolvedValue({
+      ok: false,
+      code: 'not-git-repo',
+      message: 'Selected folder is not a Git repository.',
+    })
+
+    render(<DiffPanel projectPath="/repo" onSendMessage={vi.fn()} />)
+    await screen.findByText('new line')
+
+    fireEvent.click(screen.getByRole('button', { name: /Stage all/ }))
+
+    await waitFor(() =>
+      expect(useUIStore.getState().toastMessage).toBe('Selected folder is not a Git repository.'),
+    )
+    expect(useUIStore.getState().toastData?.variant).toBe('error')
   })
 
   it('renders nested file tree controls and bottom action state', () => {

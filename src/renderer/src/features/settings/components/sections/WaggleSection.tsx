@@ -153,7 +153,7 @@ export function WaggleSection({ showHeading = true }: { readonly showHeading?: b
   return (
     <div className="space-y-6">
       {showHeading ? (
-        <h2 className="text-[20px] font-semibold text-text-primary">Council of Experts</h2>
+        <h2 className="text-[17px] font-semibold text-text-primary">Council of Experts</h2>
       ) : null}
       {!isDialogOpen && displayedError && (
         <p

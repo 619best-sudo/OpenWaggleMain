@@ -150,7 +150,9 @@ describe('summarizeToolTarget', () => {
 describe('harness tool labels', () => {
   it('labels an action-dispatch call by what the verb does, not the raw enum token', () => {
     // Before: these rendered as "stats" / "search" / "get" — the identifier.
-    expect(summarizeToolTarget('graph_memory', { action: 'stats' })).toBe('Summarize the code graph')
+    expect(summarizeToolTarget('graph_memory', { action: 'stats' })).toBe(
+      'Summarize the code graph',
+    )
     expect(summarizeToolTarget('file_memory', { action: 'search', query: 'router' })).toBe(
       'Find the files that matter here',
     )

@@ -8,7 +8,7 @@ export function NoProjectState() {
           <Search className="size-5 text-text-tertiary" />
         </div>
         <p className="text-sm font-medium text-text-primary">No project selected</p>
-        <p className="mt-1 text-[13px] text-text-tertiary">
+        <p className="mt-1 text-[12px] text-text-tertiary">
           Select a project folder to manage AGENTS.md and project skills.
         </p>
       </div>
@@ -28,8 +28,8 @@ export function EmptySkillsState() {
         <div className="h-2.5 w-44 rounded bg-bg-tertiary/40" />
       </div>
       <div className="px-1 pb-2 pt-4">
-        <p className="text-[12px] font-medium text-text-secondary">No skills discovered</p>
-        <p className="mt-1 text-[11px] text-text-tertiary leading-relaxed">
+        <p className="text-[11px] font-medium text-text-secondary">No skills discovered</p>
+        <p className="mt-1 text-[10px] text-text-tertiary leading-relaxed">
           Import a skill or add one to your project skills folder or `.agents/skills`.
         </p>
       </div>

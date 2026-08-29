@@ -32,9 +32,9 @@ export function CommandPaletteItemButton({
       <span className={cn('shrink-0', highlighted ? 'text-text-primary' : 'text-text-muted')}>
         {item.icon}
       </span>
-      <span className="shrink-0 text-[12px] font-medium">{item.label}</span>
+      <span className="shrink-0 text-[11px] font-medium">{item.label}</span>
       {item.description ? (
-        <span className="truncate text-[11px] text-text-muted">{item.description}</span>
+        <span className="truncate text-[10px] text-text-muted">{item.description}</span>
       ) : null}
       <CommandPaletteTrailingContent item={item} />
     </Button>
@@ -55,7 +55,7 @@ function CommandPaletteTrailingContent({ item }: CommandPaletteTrailingContentPr
           {item.trailingBadge}
         </span>
       ) : null}
-      {item.trailing ? <span className="text-[11px] text-text-muted">{item.trailing}</span> : null}
+      {item.trailing ? <span className="text-[10px] text-text-muted">{item.trailing}</span> : null}
     </span>
   )
 }

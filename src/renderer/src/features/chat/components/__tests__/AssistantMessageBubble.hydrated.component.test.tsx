@@ -148,9 +148,13 @@ describe('AssistantMessageBubble (hydrated / post-completion)', () => {
     expect(nameIndex).toBeGreaterThanOrEqual(0)
     // Counts are the very next element after the filename.
     expect(countsIndex).toBe(nameIndex + 1)
-    // A flex spacer follows them, so they sit beside the name rather than at the
-    // extreme right edge of the strip.
-    expect(children[countsIndex + 1]?.className).toContain('flex-1')
+    // A flex spacer comes somewhere after them, so the counts (and the
+    // disclosure chevron that follows them) sit beside the name rather than at
+    // the extreme right edge of the strip.
+    // `classList`, not `className`: the chevron is an <svg>, whose className
+    // is an SVGAnimatedString rather than a string.
+    const spacerIndex = children.findIndex((el) => el.classList.contains('flex-1'))
+    expect(spacerIndex).toBeGreaterThan(countsIndex)
   })
 
   it('READ: recovers the file body from a sibling tool-result when the call has no inline output', () => {
@@ -203,7 +207,9 @@ describe('AssistantMessageBubble (hydrated / post-completion)', () => {
             toolCallId: 'call-read-html',
             state: 'complete',
             content: {
-              content: [{ type: 'text', text: '1\t<!DOCTYPE html>\n2\t<html><title>kofin</title></html>' }],
+              content: [
+                { type: 'text', text: '1\t<!DOCTYPE html>\n2\t<html><title>kofin</title></html>' },
+              ],
               details: { path: `${PROJECT_ROOT}/index.html`, lineCount: 2 },
             },
           },

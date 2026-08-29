@@ -37,7 +37,7 @@ export function BranchPickerList({
 }
 
 function BranchPickerEmptyState() {
-  return <div className="px-2.5 py-2 text-[12px] text-text-tertiary">No branches found.</div>
+  return <div className="px-2.5 py-2 text-[11px] text-text-tertiary">No branches found.</div>
 }
 
 interface BranchPickerSectionProps {
@@ -86,7 +86,7 @@ interface BranchPickerSectionHeaderProps {
 
 function BranchPickerSectionHeader({ label }: BranchPickerSectionHeaderProps) {
   return (
-    <div className="home-divider-b px-2.5 py-1 text-[11px] uppercase tracking-wide text-text-muted">
+    <div className="home-divider-b px-2.5 py-1 text-[10px] uppercase tracking-wide text-text-muted">
       {label}
     </div>
   )
@@ -134,7 +134,7 @@ function RemoteBranchRow({ branch, onCheckout }: BranchRowProps) {
       type="button"
       onClick={() => onCheckout(branch.name)}
       className={cn(
-        'home-divider-b flex w-full items-center justify-between px-2.5 py-1.5 text-left text-[12px] transition-colors hover:bg-bg-hover last:border-b-0',
+        'home-divider-b flex w-full items-center justify-between px-2.5 py-1.5 text-left text-[11px] transition-colors hover:bg-bg-hover last:border-b-0',
         branch.isCurrent ? 'text-accent' : 'text-text-secondary',
       )}
     >
@@ -151,7 +151,7 @@ function BranchCheckoutButton({ branch, onCheckout }: BranchRowProps) {
       type="button"
       onClick={() => onCheckout(branch.name)}
       className={cn(
-        'flex min-w-0 flex-1 items-center justify-between rounded px-1 py-0.5 text-left text-[12px] transition-colors hover:bg-bg-hover',
+        'flex min-w-0 flex-1 items-center justify-between rounded px-1 py-0.5 text-left text-[11px] transition-colors hover:bg-bg-hover',
         branch.isCurrent ? 'text-accent' : 'text-text-secondary',
       )}
     >

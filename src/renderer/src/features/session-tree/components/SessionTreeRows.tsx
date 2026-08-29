@@ -77,7 +77,7 @@ function SessionTreeRowItem({ actions, index, refs, row, view }: SessionTreeRowI
           >
             {sessionTreeNodeRoleLabel(rowState.node)}
           </span>
-          <span className="text-[12px]">{sessionTreeNodeLabel(rowState.node)}</span>
+          <span className="text-[11px]">{sessionTreeNodeLabel(rowState.node)}</span>
         </span>
         <SessionTreeRowBadges
           archivedBranch={rowState.archivedBranch}

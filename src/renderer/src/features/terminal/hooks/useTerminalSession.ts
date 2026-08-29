@@ -33,7 +33,9 @@ function createTerminal() {
   return new Terminal({
     theme: TERMINAL_THEME,
     fontSize: FONT_SIZE,
-    fontFamily: '"SF Mono", "Fira Code", "JetBrains Mono", monospace',
+    // Same bundled face as the rest of the app's code surfaces, first in the
+    // stack so the terminal and the transcript render code identically.
+    fontFamily: '"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace',
     cursorBlink: true,
     allowProposedApi: true,
   })

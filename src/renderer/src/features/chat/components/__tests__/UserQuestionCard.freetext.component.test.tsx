@@ -7,10 +7,11 @@
  * single- or multi-select had exactly two moves: pick something wrong, or kill
  * the run. Either way the agent never learns what they actually meant.
  */
+
+import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { UserQuestionCard } from '../UserQuestionCard'
-import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 
 const base: PendingUserQuestionRequest = {
   phase: 'plan',

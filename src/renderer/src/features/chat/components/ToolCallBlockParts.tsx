@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import {
   buildFencedCodeMarkdown,
   FILE_CONTENT_ARG_KEYS,
+  getToolResultParts,
   getToolResultText,
   getUnifiedDiffLineClassName,
   inferLanguageFromPath,
@@ -27,6 +28,7 @@ import { useCopyToClipboard } from '@/shared/hooks/useCopyToClipboard'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { FileContentView } from './FileContentView'
+import { ReadFileView } from './ReadFileView'
 import { StreamingText } from './StreamingText'
 
 export function CopyButton({ label, value }: { readonly label: string; readonly value: string }) {
@@ -39,7 +41,7 @@ export function CopyButton({ label, value }: { readonly label: string; readonly 
     <Button
       variant="unstyled"
       type="button"
-      className="inline-flex items-center gap-1 rounded border-2 border-home-border px-1.5 py-0.5 text-[11px] text-[color:var(--color-code-card-muted-text)] transition-colors hover:bg-bg-hover hover:text-[color:var(--color-code-card-label-text)]"
+      className="inline-flex items-center gap-1 rounded border-2 border-home-border px-1.5 py-0.5 text-[10px] text-[color:var(--color-code-card-muted-text)] transition-colors hover:bg-bg-hover hover:text-[color:var(--color-code-card-label-text)]"
       onClick={(event) => {
         event.stopPropagation()
         copy(value)
@@ -66,7 +68,7 @@ export function ToolArgs({
 }) {
   if (name === 'bash' && typeof args.command === 'string') {
     return (
-      <div className="home-panel-frame-soft rounded-md bg-code-card px-3 py-2 font-mono text-[13px] text-[color:var(--color-code-card-text)]">
+      <div className="home-panel-frame-soft rounded-md bg-code-card px-3 py-2 font-mono text-[12px] text-[color:var(--color-code-card-text)]">
         <span className="select-none text-[color:var(--color-code-card-muted-text)]">$ </span>
         {args.command}
       </div>
@@ -76,7 +78,7 @@ export function ToolArgs({
   const entries = Object.entries(args).filter(([key]) => !hiddenArgKeys?.has(key))
   if (entries.length === 0) {
     return (
-      <pre className="home-panel-frame-soft overflow-x-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-[color:var(--color-code-card-text)]">
+      <pre className="home-panel-frame-soft overflow-x-auto rounded-md bg-code-card p-2 font-mono text-[12px] text-[color:var(--color-code-card-text)]">
         {rawArgs || '{}'}
       </pre>
     )
@@ -107,7 +109,7 @@ function ToolArgValue({
 
   return (
     <div>
-      <span className="text-[13px] text-[color:var(--color-code-card-label-text)]">{name}: </span>
+      <span className="text-[12px] text-[color:var(--color-code-card-label-text)]">{name}: </span>
       {isLong && typeof value === 'string' && FILE_CONTENT_ARG_KEYS.has(name) ? (
         <HighlightedFileContent
           content={value}
@@ -116,7 +118,7 @@ function ToolArgValue({
         />
       ) : isLong ? (
         <pre
-          className="home-panel-frame-soft mt-0.5 overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-[color:var(--color-code-card-text)]"
+          className="home-panel-frame-soft mt-0.5 overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[12px] text-[color:var(--color-code-card-text)]"
           style={{ maxHeight: LONG_ARGUMENT_MAX_HEIGHT_PX }}
         >
           {display}
@@ -124,7 +126,7 @@ function ToolArgValue({
       ) : (
         <span
           className={cn(
-            'text-[13px] font-mono text-[color:var(--color-code-card-text)]',
+            'text-[12px] font-mono text-[color:var(--color-code-card-text)]',
             isPathLikeKey && 'font-medium text-[color:var(--color-tool-call-file-text)]',
           )}
         >
@@ -147,11 +149,11 @@ function HighlightedFileContent({
   if (!shouldHighlightCode(content)) {
     return (
       <div>
-        <div className="mb-1 text-[12px] text-[color:var(--color-code-card-muted-text)]">
+        <div className="mb-1 text-[11px] text-[color:var(--color-code-card-muted-text)]">
           Large file preview shown without syntax highlighting to keep the UI responsive.
         </div>
         <pre
-          className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-[color:var(--color-code-card-text)] whitespace-pre-wrap break-words"
+          className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[12px] text-[color:var(--color-code-card-text)] whitespace-pre-wrap break-words"
           style={{ maxHeight }}
         >
           {content}
@@ -164,7 +166,7 @@ function HighlightedFileContent({
     <div className="tool-result-code overflow-y-auto" style={{ maxHeight }}>
       <StreamingText
         text={buildFencedCodeMarkdown(content, language)}
-        className="[&_pre]:max-h-none [&_pre]:text-[13px] [&_pre]:leading-relaxed"
+        className="[&_pre]:max-h-none [&_pre]:text-[12px] [&_pre]:leading-relaxed"
       />
     </div>
   )
@@ -190,7 +192,7 @@ export function ToolResult({
       <div className="rounded-md border-2 border-error/20 bg-error/5 px-3 py-2">
         <div className="flex items-start gap-2">
           <AlertCircle className="size-3.5 text-error shrink-0 mt-0.5" />
-          <pre className="text-[13px] font-mono text-error whitespace-pre-wrap break-words flex-1">
+          <pre className="text-[12px] font-mono text-error whitespace-pre-wrap break-words flex-1">
             {displayContent}
           </pre>
         </div>
@@ -199,10 +201,14 @@ export function ToolResult({
   }
 
   if (name === 'read' && displayContent) {
+    // The harness concatenates the numbered bytes and its reasoning about them
+    // into one block. Keep them apart: bytes in the numbered viewer, reasoning
+    // behind a "Show reasoning" badge that expands prose below the file.
+    const parts = getToolResultParts(content)
     return (
-      <FileContentView
-        content={displayContent}
-        variant="default"
+      <ReadFileView
+        body={parts.body}
+        reasoning={parts.notes}
         concernSet={concernLines}
         maxHeight={READ_VIEW_MAX_HEIGHT_PX}
         path={path}
@@ -212,7 +218,7 @@ export function ToolResult({
 
   return (
     <pre
-      className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] text-[color:var(--color-code-card-text)] whitespace-pre-wrap break-words"
+      className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[12px] text-[color:var(--color-code-card-text)] whitespace-pre-wrap break-words"
       style={{ maxHeight: RESULT_MAX_HEIGHT_PX }}
     >
       {displayContent}

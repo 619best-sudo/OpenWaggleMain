@@ -164,13 +164,18 @@ export function splitNumberedFileLines(content: string): readonly NumberedLine[]
   })
 }
 
-function textFromContentBlocks(content: readonly unknown[]) {
+function textBlocksOf(content: readonly unknown[]) {
   const textBlocks: string[] = []
   for (const block of content) {
     if (isTextContentBlock(block)) {
       textBlocks.push(block.text)
     }
   }
+  return textBlocks
+}
+
+function textFromContentBlocks(content: readonly unknown[]) {
+  const textBlocks = textBlocksOf(content)
   return textBlocks.length > 0 ? textBlocks.join('\n') : null
 }
 
@@ -203,6 +208,96 @@ export function getToolResultText(content: unknown) {
     .with(P.string, (value) => value)
     .when(isRecord, (value) => textFromResultRecord(value) ?? formatUnknownContent(value))
     .otherwise((value) => formatUnknownContent(value))
+}
+
+/**
+ * A tool result split into its primary payload and any trailing commentary.
+ *
+ * A result is a LIST of content blocks. `getToolResultText` joins them with
+ * newlines, which is right for a shell transcript but wrong for a file read:
+ * the first block is the file's bytes and any block after it is the harness
+ * talking ABOUT the file — a note, a truncation warning, a reason the read was
+ * limited. Joined and fed to the numbered viewer, that commentary arrives as
+ * numbered lines at the bottom of the file, which reads as though it were part
+ * of the file itself.
+ *
+ * Splitting here lets the caller render the body as code and the notes as
+ * prose, so the two can never be mistaken for each other.
+ */
+export interface ToolResultParts {
+  /** The primary payload — for a read, the file's own text. */
+  readonly body: string
+  /** Commentary that followed it, joined; empty when there was none. */
+  readonly notes: string
+}
+
+/**
+ * The file bytes and the harness's reasoning about them, separated from a read
+ * result's text.
+ *
+ * The harness `read` returns `<numbered bytes>\n\n<tail>` as ONE text block
+ * (tail = the region map, reuse notes, NEXT FILE pointer). Fed whole to the
+ * numbered viewer, the tail's unnumbered lines fall back to index numbers and
+ * render as the file's last few rows. The bytes are always the maximal prefix
+ * of `<n>\t`-prefixed lines — blank lines inside the file still carry their
+ * prefix — so everything after the first line that fails to match, from the
+ * next numbered-looking line onward, is reasoning, not content.
+ */
+export interface ReadReasoningSplit {
+  readonly body: string
+  readonly reasoning: string
+}
+
+const NUMBERED_LINE_RE = /^\d+\t/
+
+export function splitReadReasoningTail(text: string): ReadReasoningSplit {
+  if (!NUMBERED_LINE_RE.test(text)) {
+    return { body: text, reasoning: '' }
+  }
+  const lines = text.split(LINE_SPLIT_SEPARATOR)
+  let i = 0
+  while (i < lines.length && (NUMBERED_LINE_RE.test(lines[i] ?? '') || (lines[i] ?? '') === '')) {
+    i += 1
+  }
+  // Walk back over blank lines: they belong to neither side; the tail starts at
+  // the first unnumbered non-blank line after the numbered run.
+  let splitAt = i
+  while (splitAt > 0 && (lines[splitAt - 1] ?? '') === '') {
+    splitAt -= 1
+  }
+  let end = lines.length
+  while (end > splitAt && (lines[end - 1] ?? '') === '') {
+    end -= 1
+  }
+  // Trailing blanks with no reasoning after them: the whole text is the body.
+  if (splitAt >= end) {
+    return { body: text.replace(/\n+$/s, ''), reasoning: '' }
+  }
+  return {
+    body: lines.slice(0, splitAt).join(LINE_SPLIT_SEPARATOR),
+    reasoning: lines.slice(i, end).join(LINE_SPLIT_SEPARATOR),
+  }
+}
+
+export function getToolResultParts(content: unknown): ToolResultParts {
+  const parsed = parseResultPayload(content)
+  if (isRecord(parsed) && Array.isArray(parsed.content)) {
+    const blocks = textBlocksOf(parsed.content)
+    if (blocks.length > 1) {
+      return {
+        body: blocks[0] ?? '',
+        notes: blocks
+          .slice(1)
+          .map((block) => block.trim())
+          .filter(Boolean)
+          .join('\n\n'),
+      }
+    }
+  }
+  // Single block — the harness's real shape: bytes and reasoning concatenated.
+  const text = getToolResultText(content)
+  const split = splitReadReasoningTail(text)
+  return { body: split.body, notes: split.reasoning }
 }
 
 export function getStringArg(args: JsonObject, key: string) {

@@ -101,7 +101,7 @@ function AttachmentChip({ name }: { readonly name: string }) {
     <div
       className={cn(
         'inline-flex items-center gap-1.5 rounded-md border-2 border-home-border',
-        'bg-bg-tertiary px-2 py-1 text-[12px] text-text-secondary',
+        'bg-bg-tertiary px-2 py-1 text-[11px] text-text-secondary',
       )}
     >
       <AttachmentIcon name={name} />
@@ -173,7 +173,7 @@ export function UserMessageBubble({
               type="button"
               title="Branch from message"
               onClick={() => onBranchFromMessage(message.id)}
-              className="flex items-center gap-1 text-[12px] text-text-muted hover:text-text-secondary cursor-pointer"
+              className="flex items-center gap-1 text-[11px] text-text-muted hover:text-text-secondary cursor-pointer"
             >
               <GitBranch className="size-3" />
             </Button>
@@ -185,7 +185,7 @@ export function UserMessageBubble({
               type="button"
               title="Fork to new session"
               onClick={() => onForkFromMessage(message.id)}
-              className="flex cursor-pointer items-center gap-1 text-[12px] text-text-muted hover:text-text-secondary"
+              className="flex cursor-pointer items-center gap-1 text-[11px] text-text-muted hover:text-text-secondary"
             >
               <GitFork className="size-3" />
             </Button>
@@ -196,7 +196,7 @@ export function UserMessageBubble({
             type="button"
             title="Copy message"
             onClick={handleCopy}
-            className="flex items-center gap-1 text-[12px] text-text-muted hover:text-text-secondary cursor-pointer"
+            className="flex items-center gap-1 text-[11px] text-text-muted hover:text-text-secondary cursor-pointer"
           >
             {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
           </Button>

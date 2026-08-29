@@ -5,10 +5,11 @@
  * `options: string[]`, and the user was handed bare labels: exactly the "what
  * should I do?" the choices existed to prevent.
  */
+
+import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { UserQuestionCard } from '../UserQuestionCard'
-import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 
 const request: PendingUserQuestionRequest = {
   phase: 'plan',
@@ -17,7 +18,11 @@ const request: PendingUserQuestionRequest = {
   answerMode: 'single-select',
   options: ['Postgres', 'SQLite'],
   choices: [
-    { label: 'Postgres', description: 'Migrations included; needs a running service', recommended: true },
+    {
+      label: 'Postgres',
+      description: 'Migrations included; needs a running service',
+      recommended: true,
+    },
     { label: 'SQLite', description: 'Zero setup; painful once you need concurrency' },
   ],
 }
@@ -46,7 +51,9 @@ describe('UserQuestionCard choices', () => {
 
   it('still works for a host that only sends labels', () => {
     const { options, ...bare } = request
-    render(<UserQuestionCard request={{ ...bare, options, choices: undefined }} onSubmit={vi.fn()} />)
+    render(
+      <UserQuestionCard request={{ ...bare, options, choices: undefined }} onSubmit={vi.fn()} />,
+    )
     expect(screen.getByText('Postgres')).toBeInTheDocument()
     expect(screen.getByText('SQLite')).toBeInTheDocument()
   })

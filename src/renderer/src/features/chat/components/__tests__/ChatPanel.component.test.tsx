@@ -173,8 +173,10 @@ describe('ChatPanel', () => {
     const heading = screen.getByRole('heading', { name: 'What are we building?' })
     const projectPickerButton = screen.getByRole('button', { name: 'project' })
 
+    // The welcome heading is the app's one display-weight element; everything
+    // in the chrome sits at 600 or below.
     expect(heading).toHaveClass('font-bold')
-    expect(projectPickerButton).toHaveClass('bg-accent', 'text-[16px]', 'font-semibold')
+    expect(projectPickerButton).toHaveClass('bg-accent', 'text-[14px]', 'font-semibold')
   })
 
   it('opens the folder picker directly from the empty-state CTA', () => {

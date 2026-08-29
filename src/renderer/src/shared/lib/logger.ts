@@ -48,8 +48,9 @@ export function createRendererLogger(namespace: string): Logger {
     }
 
     try {
-      ;(window as { api?: { forwardRendererLog?: (entry: unknown) => void } }).api
-        ?.forwardRendererLog?.({ namespace, level, message, data })
+      ;(
+        window as { api?: { forwardRendererLog?: (entry: unknown) => void } }
+      ).api?.forwardRendererLog?.({ namespace, level, message, data })
     } catch {
       // Preload not ready / sandboxed — never let logging throw.
     }

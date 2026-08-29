@@ -9,6 +9,7 @@ import { Button } from '@/shared/ui/Button'
 import { useUIStore } from '@/shell/ui-store'
 import { useChatScrollBehaviour } from '../hooks/useChatScrollBehaviour'
 import type { ChatRow } from '../lib/types-chat-row'
+import { useChainedWheel } from '../lib/use-chained-wheel'
 import type { ChatTranscriptSectionState } from '../model'
 import { ChatRowRenderer } from './ChatRowRenderer'
 import { PlanReviewCard } from './PlanReviewCard'
@@ -448,6 +449,11 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
     onUserDidSendConsumed,
   })
 
+  // Inline blocks (thinking bodies, file views, diffs, tool output) have their
+  // own scrollable boxes; this keeps a wheel gesture over one of them from
+  // stranding the transcript. See the hook for what CSS alone cannot fix.
+  useChainedWheel(scrollerRef)
+
   const hasPendingInlinePopup = Boolean(pendingToolPermissionRequest || pendingUserQuestionRequest)
   if (messages.length === 0 && rows.length === 0 && !isLoading && !hasPendingInlinePopup) {
     return (
@@ -518,8 +524,8 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
             >
               <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
                 <div>
-                  <h3 className="text-[13px] font-semibold text-text-primary">Transcript Debug</h3>
-                  <p className="text-[11px] text-text-tertiary">
+                  <h3 className="text-[12px] font-semibold text-text-primary">Transcript Debug</h3>
+                  <p className="text-[10px] text-text-tertiary">
                     Copy this payload and paste it back to debug repeated transcript issues.
                   </p>
                 </div>
@@ -537,7 +543,7 @@ export function ChatTranscript({ section }: ChatTranscriptProps) {
                 <textarea
                   readOnly
                   value={transcriptDebugPayload}
-                  className="min-h-[320px] max-h-[60vh] w-full resize-y rounded-xl border border-border bg-bg-secondary px-3 py-3 text-[12px] leading-5 text-text-secondary outline-none"
+                  className="min-h-[320px] max-h-[60vh] w-full resize-y rounded-xl border border-border bg-bg-secondary px-3 py-3 text-[11px] leading-5 text-text-secondary outline-none"
                   aria-label="Transcript debug payload"
                 />
               </div>

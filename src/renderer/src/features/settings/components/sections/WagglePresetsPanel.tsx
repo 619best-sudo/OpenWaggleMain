@@ -187,10 +187,10 @@ export function WagglePresetsPanel({
     <div className="w-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-8 border-b border-white/[0.04]">
         <div className="space-y-4">
-          <h3 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500 tracking-tight">
+          <h3 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500 tracking-tight">
             Council of Experts
           </h3>
-          <p className="max-w-[640px] text-[15px] leading-relaxed text-text-secondary">
+          <p className="max-w-[640px] text-[13.5px] leading-relaxed text-text-secondary">
             A Council of Experts workflow runs a two-agent loop designed for one clear task.
           </p>
         </div>
@@ -210,10 +210,10 @@ export function WagglePresetsPanel({
       <div className="space-y-12">
         {presets.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 px-4 py-12 text-center">
-            <p className="text-[14px] font-medium text-text-primary">
+            <p className="text-[13px] font-medium text-text-primary">
               No Council of Experts workflows yet
             </p>
-            <p className="mt-2 text-[13px] text-text-tertiary">
+            <p className="mt-2 text-[12px] text-text-tertiary">
               Create a Council of Experts workflow to save a repeatable workflow.
             </p>
           </div>
@@ -222,12 +222,12 @@ export function WagglePresetsPanel({
           <section key={section.id} className="space-y-4">
             <div className="space-y-1">
               <div className="flex items-center gap-3">
-                <h4 className="text-[16px] font-bold text-text-primary">{section.title}</h4>
-                <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium text-text-muted">
+                <h4 className="text-[14px] font-semibold text-text-primary">{section.title}</h4>
+                <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium text-text-muted">
                   {section.presets.length}
                 </span>
               </div>
-              <p className="max-w-[760px] text-[13px] leading-relaxed text-text-muted">
+              <p className="max-w-[760px] text-[12px] leading-relaxed text-text-muted">
                 {section.description}
               </p>
             </div>
@@ -370,16 +370,16 @@ function WagglePresetCard({
                 </div>
               ) : null}
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-[16px] font-semibold text-text-primary leading-tight line-clamp-1">
+                <h3 className="text-[14px] font-semibold text-text-primary leading-tight line-clamp-1">
                   {preset.name}
                 </h3>
               </div>
-              <p className="mt-2 text-[12px] leading-[1.45] text-text-secondary line-clamp-3 min-h-[54px]">
+              <p className="mt-2 text-[11px] leading-[1.45] text-text-secondary line-clamp-3 min-h-[54px]">
                 {preset.description}
               </p>
               {preflight ? (
                 <p
-                  className="mt-2 text-[11px] leading-5 text-text-muted"
+                  className="mt-2 text-[10px] leading-5 text-text-muted"
                   data-testid={`preset-preflight-summary-${String(preset.id)}`}
                 >
                   {preflight.summary}
@@ -485,7 +485,7 @@ function WagglePresetCard({
                   }
                 >
                   <div className="space-y-1">
-                    <div className="px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-text-muted">
+                    <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
                       Launch {preset.name} With
                     </div>
                     {starterPrompts.map((starterPrompt) => (
@@ -499,7 +499,7 @@ function WagglePresetCard({
                           void onLaunch(starterPrompt.prompt)
                         }}
                       >
-                        <span className="truncate text-[12px]">{starterPrompt.title}</span>
+                        <span className="truncate text-[11px]">{starterPrompt.title}</span>
                       </Button>
                     ))}
                   </div>

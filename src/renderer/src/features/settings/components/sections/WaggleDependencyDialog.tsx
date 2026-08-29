@@ -47,8 +47,8 @@ export function WaggleDependencyDialog({
       >
         <div className="shrink-0 flex items-start justify-between gap-4 border-b border-border px-5 py-4">
           <div className="space-y-1">
-            <h2 className="text-[15px] font-semibold text-text-primary">{preset.name} Setup</h2>
-            <p className="max-w-[580px] text-[12px] leading-5 text-text-tertiary">
+            <h2 className="text-[13.5px] font-semibold text-text-primary">{preset.name} Setup</h2>
+            <p className="max-w-[580px] text-[11px] leading-5 text-text-tertiary">
               These checks apply only to this Council of Experts workflow. Standard chat and non-app
               Council of Experts flows are unchanged.
             </p>
@@ -74,7 +74,7 @@ export function WaggleDependencyDialog({
               isReady ? 'border-accent/25 bg-accent/8' : 'border-border-light bg-bg-secondary/40',
             )}
           >
-            <div className="flex flex-wrap items-center gap-2 text-[12px]">
+            <div className="flex flex-wrap items-center gap-2 text-[11px]">
               <span
                 className={cn(
                   'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium',
@@ -104,19 +104,19 @@ export function WaggleDependencyDialog({
                     : `${dependencyCount} dependencies declared`}
               </span>
             </div>
-            <p className="mt-2 text-[12px] leading-5 text-text-tertiary">
+            <p className="mt-2 text-[11px] leading-5 text-text-tertiary">
               Review the dependencies below, install known recipes, and finish any project-specific
               setup notes. Required dependencies gate launch. Optional dependencies unlock broader
               task coverage without blocking narrower requests.
             </p>
             {preflight ? (
-              <p className="mt-2 text-[12px] leading-5 text-text-secondary">{preflight.summary}</p>
+              <p className="mt-2 text-[11px] leading-5 text-text-secondary">{preflight.summary}</p>
             ) : null}
           </div>
 
           {preflight && preflight.checks.length > 0 ? (
             <div className="rounded-xl border border-border-light bg-bg-secondary/35 px-4 py-3">
-              <div className="text-[12px] font-medium text-text-primary">Preflight Checks</div>
+              <div className="text-[11px] font-medium text-text-primary">Preflight Checks</div>
               <div className="mt-3 space-y-2">
                 {preflight.checks.map((check) => (
                   <div
@@ -124,7 +124,7 @@ export function WaggleDependencyDialog({
                     className="flex flex-col gap-1 rounded-lg border border-white/6 bg-black/10 px-3 py-2"
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[12px] font-medium text-text-primary">
+                      <span className="text-[11px] font-medium text-text-primary">
                         {check.label}
                       </span>
                       <span
@@ -138,7 +138,7 @@ export function WaggleDependencyDialog({
                         {check.status}
                       </span>
                     </div>
-                    <p className="text-[12px] leading-5 text-text-tertiary">{check.detail}</p>
+                    <p className="text-[11px] leading-5 text-text-tertiary">{check.detail}</p>
                   </div>
                 ))}
               </div>
@@ -146,7 +146,7 @@ export function WaggleDependencyDialog({
           ) : null}
 
           {status?.unsupportedCount ? (
-            <div className="rounded-xl border border-warning/25 bg-warning/8 px-4 py-3 text-[12px] leading-5 text-warning">
+            <div className="rounded-xl border border-warning/25 bg-warning/8 px-4 py-3 text-[11px] leading-5 text-warning">
               {status.unsupportedCount} dependency
               {status.unsupportedCount === 1 ? '' : 'ies'} still need a recipe before this Council
               of Experts workflow can be fully app-managed.
@@ -155,7 +155,7 @@ export function WaggleDependencyDialog({
 
           <div className="space-y-3">
             {dependencyCount === 0 ? (
-              <div className="rounded-xl border border-dashed border-border px-4 py-5 text-[12px] text-text-tertiary">
+              <div className="rounded-xl border border-dashed border-border px-4 py-5 text-[11px] text-text-tertiary">
                 No MCPs or skills are declared for this Council of Experts workflow yet.
               </div>
             ) : (
@@ -165,7 +165,7 @@ export function WaggleDependencyDialog({
                   className="rounded-xl border border-border-light bg-bg-secondary/35 px-4 py-3"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[13px] font-medium text-text-primary">
+                    <span className="text-[12px] font-medium text-text-primary">
                       {dependency.label}
                     </span>
                     <DependencyKindBadge kind={dependency.kind} />
@@ -173,22 +173,22 @@ export function WaggleDependencyDialog({
                     <DependencyStateBadge state={dependency.state} />
                   </div>
                   {dependency.description ? (
-                    <p className="mt-2 text-[12px] leading-5 text-text-secondary">
+                    <p className="mt-2 text-[11px] leading-5 text-text-secondary">
                       {dependency.description}
                     </p>
                   ) : null}
                   {dependency.detail ? (
-                    <p className="mt-2 text-[12px] leading-5 text-text-tertiary">
+                    <p className="mt-2 text-[11px] leading-5 text-text-tertiary">
                       {dependency.detail}
                     </p>
                   ) : null}
                   {dependency.setupSteps && dependency.setupSteps.length > 0 ? (
                     <div className="mt-3 rounded-lg border border-white/6 bg-black/10 px-3 py-2.5">
-                      <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-text-secondary">
+                      <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-text-secondary">
                         <AlertCircle className="size-3.5" />
                         Setup Notes
                       </div>
-                      <div className="mt-2 space-y-1.5 text-[12px] leading-5 text-text-tertiary">
+                      <div className="mt-2 space-y-1.5 text-[11px] leading-5 text-text-tertiary">
                         {dependency.setupSteps.map((step) => (
                           <p key={step}>- {step}</p>
                         ))}

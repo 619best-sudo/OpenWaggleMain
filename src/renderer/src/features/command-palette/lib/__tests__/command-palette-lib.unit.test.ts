@@ -170,9 +170,7 @@ describe('mcp command palette matching', () => {
     expect(createMcpItems(servers, 'play', vi.fn()).map((item) => item.label)).toEqual([
       'playwright',
     ])
-    expect(createMcpItems(servers, 'off', vi.fn()).map((item) => item.label)).toEqual([
-      'database',
-    ])
+    expect(createMcpItems(servers, 'off', vi.fn()).map((item) => item.label)).toEqual(['database'])
     expect(createConfigureMcpItem('mcp', vi.fn())).toHaveLength(1)
   })
 })

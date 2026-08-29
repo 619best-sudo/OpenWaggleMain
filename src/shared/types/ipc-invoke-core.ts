@@ -4,6 +4,7 @@ import type { ContextCompactionResult, ContextUsageSnapshot } from './context-us
 import type { ProviderInfo, SupportedModelId } from './llm'
 import type { McpSetServerEnabledInput, McpSettingsView, McpWriteSourceConfigInput } from './mcp'
 import type { PendingPlanReviewRequest, PlanReviewResolution } from './plan-review'
+import type { SessionResumeState } from './resume'
 import type {
   SessionCopyToNewResult,
   SessionDetail,
@@ -59,6 +60,20 @@ export interface IpcCoreInvokeChannelMap {
   'agent:get-pending-user-question': {
     args: [sessionId: SessionId]
     return: PendingUserQuestionRequest | null
+  }
+  /** Is there a stopped run in this session worth offering to continue? */
+  'agent:get-resume-state': {
+    args: [sessionId: SessionId]
+    return: SessionResumeState | null
+  }
+  /**
+   * Continue this session's stopped run. `answer` is required when the run
+   * stopped waiting on one — the harness refuses without it rather than landing
+   * straight back on the same question.
+   */
+  'agent:resume-run': {
+    args: [sessionId: SessionId, model: SupportedModelId, answer?: string]
+    return: undefined
   }
   'agent:get-context-usage': {
     args: [sessionId: SessionId, model: SupportedModelId]

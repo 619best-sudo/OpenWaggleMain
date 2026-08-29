@@ -31,10 +31,10 @@ export function ArchivedGroup({ group, onRestore, onDelete }: ArchivedGroupProps
         className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-bg-hover"
       >
         <Chevron className="size-3 shrink-0 text-text-muted" />
-        <span className="text-[13px] font-medium text-text-secondary">
+        <span className="text-[12px] font-medium text-text-secondary">
           {group.path ? projectName(group.path) : 'No project'}
         </span>
-        <span className="text-[11px] text-text-muted">({group.sessions.length})</span>
+        <span className="text-[10px] text-text-muted">({group.sessions.length})</span>
       </Button>
 
       <div
@@ -70,8 +70,8 @@ function ArchivedSessionRow({
   return (
     <div className={cn('group flex items-center gap-3 rounded-md border border-border px-3 py-2')}>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] text-text-secondary">{session.title}</p>
-        <p className="text-[11px] text-text-muted">
+        <p className="truncate text-[12px] text-text-secondary">{session.title}</p>
+        <p className="text-[10px] text-text-muted">
           {session.messageCount} messages · {formatRelativeTime(session.updatedAt)}
         </p>
       </div>
@@ -79,7 +79,7 @@ function ArchivedSessionRow({
         variant="unstyled"
         type="button"
         onClick={() => onRestore(session.id)}
-        className="shrink-0 rounded-md px-2 py-1 text-[12px] text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+        className="shrink-0 rounded-md px-2 py-1 text-[11px] text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
         title="Restore session"
       >
         <RotateCcw className="size-3.5" />
@@ -88,7 +88,7 @@ function ArchivedSessionRow({
         variant="unstyled"
         type="button"
         onClick={() => onDelete(session.id)}
-        className="shrink-0 rounded-md px-2 py-1 text-[12px] text-text-muted transition-colors hover:bg-bg-hover hover:text-error"
+        className="shrink-0 rounded-md px-2 py-1 text-[11px] text-text-muted transition-colors hover:bg-bg-hover hover:text-error"
         title="Delete permanently"
       >
         <Trash2 className="size-3.5" />
@@ -116,10 +116,10 @@ export function ArchivedBranchGroup({ group, onRestoreBranch }: ArchivedBranchGr
         className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-bg-hover"
       >
         <Chevron className="size-3 shrink-0 text-text-muted" />
-        <span className="text-[13px] font-medium text-text-secondary">
+        <span className="text-[12px] font-medium text-text-secondary">
           {group.path ? projectName(group.path) : 'No project'}
         </span>
-        <span className="text-[11px] text-text-muted">({count})</span>
+        <span className="text-[10px] text-text-muted">({count})</span>
       </Button>
 
       <div
@@ -152,8 +152,8 @@ function ArchivedBranchSession({
   return (
     <div className="rounded-md border border-border px-3 py-2">
       <div className="mb-2 min-w-0">
-        <p className="truncate text-[13px] text-text-secondary">{session.title}</p>
-        <p className="text-[11px] text-text-muted">
+        <p className="truncate text-[12px] text-text-secondary">{session.title}</p>
+        <p className="text-[10px] text-text-muted">
           Updated {formatRelativeTime(session.updatedAt)}
         </p>
       </div>
@@ -164,8 +164,8 @@ function ArchivedBranchSession({
             className="flex items-center gap-3 rounded-md bg-bg-secondary px-2 py-1.5"
           >
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[12px] text-text-secondary">{branch.name}</p>
-              <p className="text-[11px] text-text-muted">
+              <p className="truncate text-[11px] text-text-secondary">{branch.name}</p>
+              <p className="text-[10px] text-text-muted">
                 Branch · {formatRelativeTime(branch.updatedAt)}
               </p>
             </div>
@@ -173,7 +173,7 @@ function ArchivedBranchSession({
               variant="unstyled"
               type="button"
               onClick={() => onRestoreBranch(session.id, branch.id)}
-              className="shrink-0 rounded-md px-2 py-1 text-[12px] text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
+              className="shrink-0 rounded-md px-2 py-1 text-[11px] text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary"
               title="Restore branch"
             >
               <RotateCcw className="size-3.5" />
@@ -207,10 +207,10 @@ export function ArchivedSectionContent({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-[15px] font-medium text-text-primary">
+        <h2 className="text-[13.5px] font-medium text-text-primary">
           Archived sessions and branches
         </h2>
-        <p className="mt-1 text-[13px] text-text-tertiary">
+        <p className="mt-1 text-[12px] text-text-tertiary">
           Sessions and branches removed from normal navigation. Restore them to bring them back.
         </p>
       </div>
@@ -218,7 +218,7 @@ export function ArchivedSectionContent({
       {queryError && <ArchivedErrorAlert message={queryError} subtle />}
       {groups.length > 0 ? (
         <div className="space-y-2">
-          <h3 className="px-2 text-[12px] font-medium text-text-tertiary">Archived sessions</h3>
+          <h3 className="px-2 text-[11px] font-medium text-text-tertiary">Archived sessions</h3>
           {groups.map((group) => (
             <ArchivedGroup
               key={group.path ?? '__none__'}
@@ -231,7 +231,7 @@ export function ArchivedSectionContent({
       ) : null}
       {branchGroups.length > 0 ? (
         <div className="space-y-2">
-          <h3 className="px-2 text-[12px] font-medium text-text-tertiary">Archived branches</h3>
+          <h3 className="px-2 text-[11px] font-medium text-text-tertiary">Archived branches</h3>
           {branchGroups.map((group) => (
             <ArchivedBranchGroup
               key={group.path ?? '__none__'}
@@ -249,7 +249,7 @@ export function ArchivedEmptyState() {
   return (
     <div className="flex flex-col items-center gap-3 py-20 text-center">
       <Archive className="size-6 text-text-muted/60" />
-      <p className="text-[13px] text-text-muted">No archived sessions or branches</p>
+      <p className="text-[12px] text-text-muted">No archived sessions or branches</p>
     </div>
   )
 }
@@ -265,7 +265,7 @@ export function ArchivedErrorAlert({
     <p
       role="alert"
       className={cn(
-        'rounded-md px-3 py-2 text-[13px] text-error',
+        'rounded-md px-3 py-2 text-[12px] text-error',
         subtle ? 'border border-error/20 bg-error/5' : 'border border-error/30 bg-error/10',
       )}
     >

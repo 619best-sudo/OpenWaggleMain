@@ -41,7 +41,7 @@ export function InlineComment({
         <div className="flex h-[18px] items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-1.5">
             <MessageSquare className="size-[11px] shrink-0 text-text-tertiary" />
-            <span className="truncate text-[11px] font-medium text-text-secondary">
+            <span className="truncate text-[10px] font-medium text-text-secondary">
               Comment on {lineLabel}
             </span>
           </div>
@@ -66,7 +66,7 @@ export function InlineComment({
           }}
           placeholder="Leave feedback on this change…"
           resize="none"
-          className="h-[58px] w-full min-w-0 rounded-md border-button-border bg-diff-bg px-2.5 text-[12px] text-text-primary placeholder:text-text-tertiary focus:border-accent/50"
+          className="h-[58px] w-full min-w-0 rounded-md border-button-border bg-diff-bg px-2.5 text-[11px] text-text-primary placeholder:text-text-tertiary focus:border-accent/50"
         />
 
         {/* Actions */}

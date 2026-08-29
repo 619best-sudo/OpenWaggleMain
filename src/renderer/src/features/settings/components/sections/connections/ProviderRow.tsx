@@ -37,7 +37,7 @@ export function ProviderRow({ providerInfo, isLast, autoEdit, onEditingChange }:
       <div className="flex items-center justify-between h-14 px-5">
         <div className="flex items-center gap-2 min-w-0">
           <Icon className="size-3.5 shrink-0" style={{ color: meta.color }} />
-          <span className="truncate text-[13px] font-medium text-text-primary">
+          <span className="truncate text-[12px] font-medium text-text-primary">
             {providerInfo.displayName}
           </span>
         </div>
@@ -45,7 +45,7 @@ export function ProviderRow({ providerInfo, isLast, autoEdit, onEditingChange }:
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1 rounded-[10px] px-2 h-[22px]">
             <div className="size-1.5 rounded-full" style={{ backgroundColor: statusColor }} />
-            <span className="text-[11px] font-medium" style={{ color: statusColor }}>
+            <span className="text-[10px] font-medium" style={{ color: statusColor }}>
               {statusText}
             </span>
           </div>

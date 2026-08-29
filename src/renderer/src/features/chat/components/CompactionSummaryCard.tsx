@@ -36,8 +36,8 @@ export function CompactionSummaryCard({
             <Archive className="size-3" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[12px] font-semibold text-text-secondary">Compaction</span>
-            <span className="block text-[12px] text-text-tertiary">
+            <span className="block text-[11px] font-semibold text-text-secondary">Compaction</span>
+            <span className="block text-[11px] text-text-tertiary">
               Compacted from {tokenLabel} tokens
             </span>
           </span>
@@ -59,7 +59,7 @@ export function CompactionSummaryCard({
       </div>
 
       {expanded ? (
-        <div className={cn('home-divider-t mt-3 pt-3 text-[13px] text-text-secondary')}>
+        <div className={cn('home-divider-t mt-3 pt-3 text-[12px] text-text-secondary')}>
           <StreamingText text={summary} />
         </div>
       ) : null}

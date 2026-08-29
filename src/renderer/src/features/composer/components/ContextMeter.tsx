@@ -1,4 +1,7 @@
-import { buildSubscriptionUsageSummary, formatUsdDisplay } from '@/features/auth/lib/subscription-plan'
+import {
+  buildSubscriptionUsageSummary,
+  formatUsdDisplay,
+} from '@/features/auth/lib/subscription-plan'
 import { useAppAuthStore } from '@/features/auth/state/app-auth-store'
 import { useChatStore } from '@/features/chat/state'
 import { useProviderStore } from '@/features/providers/state'
@@ -27,7 +30,7 @@ function MonthlyQuotaStrip() {
 
   return (
     <div
-      className="hidden h-8 min-w-0 shrink-0 items-center gap-2 rounded-[8px] bg-bg-secondary/40 px-2.5 text-[12px] text-text-secondary sm:flex"
+      className="hidden h-8 min-w-0 shrink-0 items-center gap-2 rounded-[8px] bg-bg-secondary/40 px-2.5 text-[11px] text-text-secondary @[780px]:flex"
       title={`Turing Machine used: ${String(roundedPercent)}% used, ${String(Math.max(0, 100 - roundedPercent))}% left ($${formatUsdDisplay(usage.consumed)} of $${formatUsdDisplay(usage.totalBudget)})`}
     >
       <span className="text-[10px] font-medium text-text-tertiary">Used</span>
@@ -37,7 +40,7 @@ function MonthlyQuotaStrip() {
           style={{ width: `${String(percent)}%`, backgroundColor: tone }}
         />
       </div>
-      <span className="font-mono text-[11px] font-semibold leading-none text-text-secondary tabular-nums">
+      <span className="font-mono text-[10px] font-semibold leading-none text-text-secondary tabular-nums">
         {roundedPercent}%
       </span>
     </div>
@@ -68,7 +71,7 @@ export function ContextMeter() {
   return (
     <div className="flex items-center gap-1.5" title={meter.title}>
       <MonthlyQuotaStrip />
-      <div className="flex h-6 min-w-0 shrink-0 items-center gap-1.5 rounded-[5px] bg-bg-secondary/40 px-2 text-[12px] text-text-secondary">
+      <div className="flex h-6 min-w-0 shrink-0 items-center gap-1.5 rounded-[5px] bg-bg-secondary/40 px-2 text-[11px] text-text-secondary">
         <span
           className="font-mono text-[10px] font-semibold leading-none tabular-nums"
           style={{ color: meter.strokeColor }}
@@ -76,7 +79,7 @@ export function ContextMeter() {
           {meter.displayValue}
         </span>
         {meter.contextWindow ? (
-          <span className="font-mono text-[10px] font-semibold leading-none text-text-secondary tabular-nums">
+          <span className="font-mono text-[10px] font-semibold leading-none text-text-secondary tabular-nums @max-[620px]:hidden">
             / {formatContextWindow(meter.contextWindow)}
           </span>
         ) : null}

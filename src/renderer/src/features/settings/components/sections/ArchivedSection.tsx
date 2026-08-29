@@ -89,7 +89,7 @@ export function ArchivedSection() {
 
   if (archivedQuery.isPending || archivedBranchesQuery.isPending) {
     return (
-      <div className="flex items-center justify-center py-20 text-text-muted text-[13px]">
+      <div className="flex items-center justify-center py-20 text-text-muted text-[12px]">
         Loading archived sessions…
       </div>
     )

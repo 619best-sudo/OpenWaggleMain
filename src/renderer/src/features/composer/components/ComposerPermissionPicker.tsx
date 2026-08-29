@@ -44,7 +44,7 @@ export function ComposerPermissionPicker() {
           variant="unstyled"
           type="button"
           onClick={() => setOpen((current) => !current)}
-          className="home-panel-frame-soft flex h-6 shrink items-center gap-1 rounded-[5px] px-2 text-[12px] text-text-secondary transition-colors hover:bg-bg-hover"
+          className="home-panel-frame-soft flex h-6 min-w-0 shrink items-center gap-1 rounded-[5px] px-2 text-[11px] text-text-secondary transition-colors hover:bg-bg-hover"
           title={triggerLabel}
           aria-label={triggerLabel}
           aria-expanded={open}
@@ -57,7 +57,9 @@ export function ComposerPermissionPicker() {
           ) : (
             <Shield className="size-[13px] shrink-0 text-text-tertiary" />
           )}
-          <span className="whitespace-nowrap">{PERMISSION_MODE_LABELS[permissionMode]}</span>
+          <span className="whitespace-nowrap @max-[560px]:hidden">
+            {PERMISSION_MODE_LABELS[permissionMode]}
+          </span>
           <span className="shrink-0 text-[9px] text-text-tertiary">&#x2228;</span>
         </Button>
       }
@@ -77,12 +79,16 @@ export function ComposerPermissionPicker() {
                 onClick={() => handleSelect(mode)}
                 className={cn(
                   'flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left transition-colors',
-                  active ? 'bg-bg-hover text-text-primary' : 'text-text-secondary hover:bg-bg-hover',
+                  active
+                    ? 'bg-bg-hover text-text-primary'
+                    : 'text-text-secondary hover:bg-bg-hover',
                 )}
               >
                 <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="text-[12px] font-medium">{PERMISSION_MODE_LABELS[mode]}</span>
-                  <span className="text-[11px] text-text-muted">{PERMISSION_MODE_HELPER[mode]}</span>
+                  <span className="text-[11px] font-medium">{PERMISSION_MODE_LABELS[mode]}</span>
+                  <span className="text-[10px] text-text-muted">
+                    {PERMISSION_MODE_HELPER[mode]}
+                  </span>
                 </div>
                 {active ? <Check className="mt-0.5 size-3.5 shrink-0 text-accent" /> : null}
               </Button>

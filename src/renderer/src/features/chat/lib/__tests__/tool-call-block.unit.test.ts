@@ -6,9 +6,11 @@ import {
   getResultError,
   getStringArg,
   getToolDiffData,
+  getToolResultParts,
   getToolResultText,
   inferLanguageFromPath,
   shouldHighlightCode,
+  splitReadReasoningTail,
 } from '../tool-call-block'
 
 const LONG_HIGHLIGHT_TEXT = `${'x'.repeat(80_000)}x`
@@ -130,5 +132,68 @@ describe('tool call block view helpers', () => {
       expect(getConcernLinesFromResultCached(payload)).toBeNull()
       expect(getConcernLinesFromResultCached(payload)).toBeNull()
     })
+  })
+})
+
+describe('getToolResultParts', () => {
+  it('splits trailing commentary off the primary payload', () => {
+    const parts = getToolResultParts({
+      content: [
+        { type: 'text', text: '1\tconst a = 1' },
+        { type: 'text', text: '  Truncated after 1 line.  ' },
+      ],
+    })
+
+    expect(parts.body).toBe('1\tconst a = 1')
+    expect(parts.notes).toBe('Truncated after 1 line.')
+  })
+
+  it('leaves a single-block result whole, with no notes', () => {
+    const parts = getToolResultParts({ content: [{ type: 'text', text: 'only this' }] })
+
+    expect(parts.body).toBe('only this')
+    expect(parts.notes).toBe('')
+  })
+
+  it('falls back to the joined text for non-block payloads', () => {
+    expect(getToolResultParts('plain string')).toEqual({ body: 'plain string', notes: '' })
+  })
+
+  it('splits the harness single-block read: numbered bytes then reasoning tail', () => {
+    // The shape `readTool` actually returns: `${numbered}\n\n${tail}` in ONE
+    // text block. The tail (region map / reuse note / NEXT FILE) must never
+    // reach the numbered viewer, or it renders as the file's last rows.
+    const parts = getToolResultParts({
+      content: [
+        {
+          type: 'text',
+          text: '1\tconst a = 1\n2\t\n3\tconst b = 2\n\nREGIONS: 1-3 — demo\nNEXT FILE: ../x.ts',
+        },
+      ],
+    })
+
+    expect(parts.body).toBe('1\tconst a = 1\n2\t\n3\tconst b = 2')
+    expect(parts.notes).toBe('REGIONS: 1-3 — demo\nNEXT FILE: ../x.ts')
+  })
+})
+
+describe('splitReadReasoningTail', () => {
+  it('keeps an unnumbered payload whole', () => {
+    expect(splitReadReasoningTail('no numbering here')).toEqual({
+      body: 'no numbering here',
+      reasoning: '',
+    })
+  })
+
+  it('leaves a pure numbered body untouched, trailing blanks dropped', () => {
+    const parts = splitReadReasoningTail('1\ta\n2\t\n')
+    expect(parts.body).toBe('1\ta\n2\t')
+    expect(parts.reasoning).toBe('')
+  })
+
+  it('moves everything after the numbered prefix to reasoning', () => {
+    const parts = splitReadReasoningTail('1\ta\n\nnote line\n2\tquoted from tail')
+    expect(parts.body).toBe('1\ta')
+    expect(parts.reasoning).toBe('note line\n2\tquoted from tail')
   })
 })

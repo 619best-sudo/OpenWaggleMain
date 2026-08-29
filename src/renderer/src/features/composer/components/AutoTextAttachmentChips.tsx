@@ -43,14 +43,14 @@ function AttachmentFileChip({
     <div
       className={cn(
         'home-panel-frame-soft group/chip relative inline-flex items-center gap-2 rounded-lg',
-        'bg-bg px-2.5 py-1.5 text-[12px] text-text-secondary',
+        'bg-bg px-2.5 py-1.5 text-[11px] text-text-secondary',
       )}
     >
       <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-bg-tertiary">
         <Icon className="size-4 text-text-tertiary" />
       </div>
       <div className="flex flex-col gap-0 overflow-hidden">
-        <span className="max-w-[180px] truncate text-[12px] font-medium leading-tight text-text-primary">
+        <span className="max-w-[180px] truncate text-[11px] font-medium leading-tight text-text-primary">
           {attachment.name}
         </span>
         <span className="text-[10px] leading-tight text-text-tertiary">
@@ -105,7 +105,7 @@ export function AutoTextAttachmentChips({
       {pendingTextAttachmentChips.map((chip) => (
         <span
           key={chip.operationId}
-          className="home-panel-frame-soft inline-flex min-w-[210px] flex-col rounded-lg bg-bg px-2.5 py-1.5 text-[12px] text-text-secondary"
+          className="home-panel-frame-soft inline-flex min-w-[210px] flex-col rounded-lg bg-bg px-2.5 py-1.5 text-[11px] text-text-secondary"
         >
           <span className="inline-flex items-center gap-1.5">
             {chip.status === 'ready' ? (
@@ -114,7 +114,7 @@ export function AutoTextAttachmentChips({
               <Loader2 className="size-3 animate-spin text-text-tertiary" />
             )}
             <span className="max-w-[120px] truncate">{chip.name}</span>
-            <span className="text-[11px] text-text-tertiary">{String(chip.progressPercent)}%</span>
+            <span className="text-[10px] text-text-tertiary">{String(chip.progressPercent)}%</span>
             {chip.status === 'ready' && chip.attachmentId ? (
               <Button
                 variant="unstyled"

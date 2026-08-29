@@ -54,7 +54,11 @@ export const useProjectMemoryStore = create<ProjectMemoryState>((set) => ({
     try {
       const status = await api.getProjectMemoryStatus(projectPath, modelRef)
       set((state) => {
-        if (equalProjectMemoryStatus(state.status, status) && state.isLoading === false && state.error === null) {
+        if (
+          equalProjectMemoryStatus(state.status, status) &&
+          state.isLoading === false &&
+          state.error === null
+        ) {
           return state
         }
         return { status, isLoading: false, error: null }

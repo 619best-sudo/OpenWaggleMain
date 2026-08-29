@@ -12,6 +12,8 @@
   --color-bg-active: var(--theme-bg-active);
   --color-bg-elevated: var(--theme-bg-elevated);
   --color-bg-primary: var(--theme-bg-primary);
+  --color-bg-sidebar: var(--theme-bg-sidebar);
+  --color-bg-chat: var(--theme-bg-chat);
 
   /* Borders */
   --color-border: var(--theme-border);
@@ -51,6 +53,38 @@
   --color-code-card: var(--theme-code-card);
   --color-code-card-hover: var(--theme-code-card-hover);
   --color-link-yellow: var(--theme-link-yellow);
+
+  /*
+   * Badge tones — the only place a category may take a hue. Always a tinted
+   * wash + text pair, always inside a small chip with an icon. Never on body
+   * text, headings or filenames; see the note in theme.css.
+   */
+  --color-badge-blue-bg: var(--theme-badge-blue-bg);
+  --color-badge-blue-text: var(--theme-badge-blue-text);
+  --color-badge-amber-bg: var(--theme-badge-amber-bg);
+  --color-badge-amber-text: var(--theme-badge-amber-text);
+  --color-badge-green-bg: var(--theme-badge-green-bg);
+  --color-badge-green-text: var(--theme-badge-green-text);
+  --color-badge-violet-bg: var(--theme-badge-violet-bg);
+  --color-badge-violet-text: var(--theme-badge-violet-text);
+  --color-badge-teal-bg: var(--theme-badge-teal-bg);
+  --color-badge-teal-text: var(--theme-badge-teal-text);
+  --color-badge-neutral-bg: var(--theme-badge-neutral-bg);
+  --color-badge-neutral-text: var(--theme-badge-neutral-text);
+
+  /* The inline prompt card — the one surface allowed to interrupt reading. */
+  --color-prompt-bg: var(--theme-prompt-bg);
+  --color-prompt-border: var(--theme-prompt-border);
+  --color-prompt-accent: var(--theme-prompt-accent);
+  --color-prompt-heading: var(--theme-prompt-heading);
+
+  /* Inline chips inside prose */
+  --color-inline-code-bg: var(--theme-inline-code-bg);
+  --color-inline-code-border: var(--theme-inline-code-border);
+  --color-inline-code-text: var(--theme-inline-code-text);
+  --color-inline-file-bg: var(--theme-inline-file-bg);
+  --color-inline-file-border: var(--theme-inline-file-border);
+  --color-inline-file-text: var(--theme-inline-file-text);
   --color-thinking-text: var(--theme-thinking-text);
   --radius-panel: 22px;
 
@@ -85,7 +119,14 @@
   --color-diff-stage-bg: var(--theme-diff-stage-bg);
 
   /* Typography */
-  --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
+  /*
+   * JetBrains Mono is BUNDLED (see main.tsx) and therefore first: it was already
+   * named in this stack but never shipped, so code fell back to whatever the OS
+   * called monospace. It is drawn for code at small sizes — a tall x-height and
+   * wide apertures — which is what the 12.5px code cells need.
+   */
+  --font-mono:
+    "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   --font-sans:
     "Fira Sans", Inter, "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
@@ -98,8 +139,32 @@
     padding: 0;
   }
 
+  /*
+   * Type scale.
+   *
+   * Four weights, and only four, so "important" means the same thing wherever
+   * it appears:
+   *   400 body — every paragraph, every value, every filename
+   *   500 UI   — nav items, buttons, tabs, labels that sit next to body text
+   *   600 emphasis — headings, section titles, badge labels, `<strong>`
+   *   700 display — reserved for the welcome screen. Nothing in the chrome.
+   *
+   * 700 is deliberately near-unused: in a dense tool UI it reads as shouting,
+   * and once two adjacent things are both bold neither one is emphasised.
+   */
   :root {
     color-scheme: light dark;
+    --weight-body: 400;
+    /*
+     * Long-form assistant prose. A notch above body: the transcript is the
+     * thing being READ, and at 13px on a large panel 400 sat too light against
+     * the chrome around it. Thinking text deliberately does NOT get this — it
+     * stays at body weight and muted, so the two are separable at a glance.
+     */
+    --weight-reading: 500;
+    --weight-ui: 500;
+    --weight-emphasis: 600;
+    --weight-display: 700;
   }
 
   html,
@@ -111,41 +176,56 @@
     background: var(--color-bg-app);
     color: var(--color-text-primary);
     font-family: var(--font-sans);
-    font-size: 16px;
+    /* Was 16px. This is a dense, information-first app — the old base pushed
+       every derived size up with it and made panels feel zoomed. */
+    font-size: 14px;
+    font-weight: var(--weight-body);
     line-height: 1.5;
     letter-spacing: 0.004em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /*
+   * Elevated panel edge. `border-style` is set explicitly because these classes
+   * are applied to elements that often carry no Tailwind border utility, and a
+   * width without a style renders nothing — which is why the double border
+   * never showed up.
+   */
   .home-panel-frame {
+    border-style: solid;
     border-width: var(--theme-home-frame-border-width);
     border-color: var(--color-home-border-vibrant);
     box-shadow: var(--theme-home-frame-shadow);
   }
 
   .home-panel-frame-soft {
+    border-style: solid;
     border-width: var(--theme-home-frame-border-width);
     border-color: var(--color-home-border);
     box-shadow: var(--theme-home-frame-soft-shadow);
   }
 
   .home-divider-t {
+    border-top-style: solid;
     border-top-width: var(--theme-home-divider-width);
     border-top-color: var(--color-home-border);
   }
 
   .home-divider-b {
+    border-bottom-style: solid;
     border-bottom-width: var(--theme-home-divider-width);
     border-bottom-color: var(--color-home-border);
   }
 
   .home-divider-l {
+    border-left-style: solid;
     border-left-width: var(--theme-home-divider-width);
     border-left-color: var(--color-home-border);
   }
 
   .home-divider-x {
+    border-style: solid;
     border-left-width: var(--theme-home-divider-width);
     border-right-width: var(--theme-home-divider-width);
     border-left-color: var(--color-home-border);
@@ -269,15 +349,16 @@
   /* Code blocks */
   pre code {
     font-family: var(--font-mono);
-    font-size: 13.5px;
+    font-size: 12.5px;
     line-height: 1.55;
   }
 
   /* Markdown prose */
   .prose {
     color: var(--color-transcript-text);
-    line-height: 1.65;
-    font-size: 14px;
+    line-height: 1.62;
+    font-size: 13px;
+    font-weight: var(--weight-body);
   }
 
   .prose p {
@@ -287,25 +368,55 @@
     margin-bottom: 0;
   }
 
-  /* Inline code */
+  /*
+   * Inline code — a NEUTRAL chip. A paragraph can hold a dozen of these, so it
+   * gets separation from a surface step and a border, not from a hue.
+   */
   .prose code {
     font-family: var(--font-mono);
     font-size: 0.875em;
-    background: color-mix(in srgb, var(--color-bg-secondary) 40%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-border) 15%, transparent);
+    background: var(--color-inline-code-bg);
+    border: 1px solid var(--color-inline-code-border);
     padding: 0.15em 0.4em;
     border-radius: 6px;
-    color: var(--color-text-secondary);
+    color: var(--color-inline-code-text);
   }
 
-  /* Code blocks */
-  .prose pre {
-    background: var(--color-code-card);
-    border: 1px solid color-mix(in srgb, var(--color-border) 10%, transparent);
-    border-radius: 12px;
-    padding: 1em;
+  /*
+   * A file path reads as a pointer, and matches the @mention chip. It earns its
+   * separation from WEIGHT and a firmer border — full-strength text against the
+   * dimmer plain chip — never from a hue, because paths turn up several times a
+   * paragraph. Applied by the markdown renderer, which knows which spans are
+   * paths.
+   */
+  .prose code.inline-path,
+  .inline-path {
+    background: var(--color-inline-file-bg);
+    border-color: var(--color-inline-file-border);
+    color: var(--color-inline-file-text);
+    font-weight: 500;
+  }
+
+  /*
+   * Code blocks.
+   *
+   * Scoped to `:not([data-code-card])`. Fenced code inside the transcript is
+   * rendered by <CodeBlock>, which draws its OWN card — header bar, border,
+   * padding. These element-plus-class rules outrank the utility classes on that
+   * inner <pre>, so the card was getting a second background, a second border,
+   * 1em of padding it did not ask for and a 0.75rem margin inside its own
+   * frame. That stray inset around every code block was this rule.
+   *
+   * The styles below now only reach a bare <pre> — markdown rendered outside
+   * the CodeBlock path, e.g. the skills panel.
+   */
+  .prose pre:not([data-code-card]) {
+    background: var(--color-code-view-bg);
+    border: 1px solid var(--color-code-view-border);
+    border-radius: 10px;
+    padding: 0.75em;
     overflow-x: auto;
-    margin: 0.75rem 0;
+    margin: 0.6rem 0;
   }
   .prose pre code {
     background: none;
@@ -313,6 +424,7 @@
     border: none;
     border-radius: 0;
     color: inherit;
+    font-weight: var(--weight-body);
   }
 
   /* Shiki dark mode override */
@@ -400,8 +512,8 @@
   .prose h2,
   .prose h3,
   .prose h4 {
-    font-weight: 600;
-    margin: 1.15em 0 0.48em;
+    font-weight: var(--weight-emphasis);
+    margin: 1.1em 0 0.45em;
     letter-spacing: -0.008em;
   }
   .prose h1,
@@ -409,15 +521,15 @@
     color: var(--color-transcript-heading);
   }
   .prose h1 {
-    font-size: 1.4em;
+    font-size: 1.3em;
     padding-bottom: 0.3em;
     border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
   }
   .prose h2 {
-    font-size: 1.2em;
+    font-size: 1.15em;
   }
   .prose h3 {
-    font-size: 1.05em;
+    font-size: 1.02em;
     color: var(--color-transcript-heading-soft);
   }
   .prose h4 {
@@ -426,8 +538,10 @@
   }
 
   /* Emphasis */
+  /* One emphasis weight, matching headings — 650 was a fifth weight nobody
+     else in the app used, and it made bold runs look heavier than titles. */
   .prose strong {
-    font-weight: 650;
+    font-weight: var(--weight-emphasis);
     color: var(--color-text-primary);
   }
   .prose em {
@@ -473,7 +587,7 @@
   }
   .prose th {
     background: var(--color-bg-tertiary);
-    font-weight: 600;
+    font-weight: var(--weight-emphasis);
     font-size: 0.875em;
     color: var(--color-text-secondary);
   }
@@ -492,10 +606,19 @@
     margin-top: 0.75rem;
   }
 
+  /*
+   * Reading modifier: the model's own answer text, as opposed to its reasoning.
+   * Applied at the call site rather than to `.prose` itself, because the
+   * thinking bodies render through the same component.
+   */
+  .prose-reading {
+    font-weight: var(--weight-reading);
+  }
+
   /* User bubble compact modifier — must appear after .prose rules (overrides via source order) */
   .prose-user {
     color: var(--color-transcript-text);
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.55;
   }
   .prose-user p {
@@ -557,6 +680,11 @@
 
   .prose-thinking blockquote {
     border-left-color: color-mix(in srgb, var(--color-thinking-text) 55%, transparent);
+  }
+
+  /* Reasoning stays at body weight even if a parent opts into reading weight. */
+  .prose-thinking {
+    font-weight: var(--weight-body);
   }
 }
 

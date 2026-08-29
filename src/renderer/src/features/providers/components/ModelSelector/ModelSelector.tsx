@@ -156,7 +156,7 @@ export function ModelSelector({
         )}
       >
         {selectedModel && <SelectedModelIcon provider={selectedModel.provider} />}
-        <span className="max-w-[180px] truncate text-[12px]">
+        <span className="max-w-[180px] truncate text-[11px]">
           {selectedModel?.name ?? 'Select model'}
         </span>
         <span className="text-[9px] text-text-muted">&#x2228;</span>

@@ -59,50 +59,50 @@ export function useSessionStatusMonitor(): void {
 
     const unsubEvent = api.onAgentEventBatch(({ sessionId, events }) => {
       for (const event of events) {
-      matchBy(event, 'type')
-        .with('custom', (value) => {
-          if (value.name === 'machine:run-start') {
-            activeMachineSessions.add(sessionId)
-            setStatusWithVisitCheck(sessionId, 'machine-running')
-            return
-          }
-          if (value.name === 'machine:run-end') {
-            activeMachineSessions.delete(sessionId)
-          }
-        })
-        .with('agent_start', () => {
-          if (!activeWaggleSessions.has(sessionId) && !activeMachineSessions.has(sessionId)) {
-            setStatusWithVisitCheck(sessionId, 'connecting')
-          }
-        })
-        .with('agent_end', (value) => {
-          if (value.reason === 'error') {
-            setStatusWithVisitCheck(sessionId, 'error')
-            return
-          }
-          if (isTerminalTransportEvent(value)) {
-            setStatusWithVisitCheck(sessionId, 'completed')
-          }
-        })
-        .with('message_update', (value) => {
-          matchBy(value.assistantMessageEvent, 'type')
-            .with('text_delta', 'toolcall_start', () => {
-              if (!activeWaggleSessions.has(sessionId) && !activeMachineSessions.has(sessionId)) {
-                setStatusWithVisitCheck(sessionId, 'working')
-              }
-            })
-            .otherwise(() => undefined)
-        })
-        .with('tool_execution_start', () => {
-          if (!activeWaggleSessions.has(sessionId) && !activeMachineSessions.has(sessionId)) {
-            setStatusWithVisitCheck(sessionId, 'working')
-          }
-        })
-        .otherwise((value) => {
-          if (isTerminalTransportEvent(value)) {
-            setStatusWithVisitCheck(sessionId, 'completed')
-          }
-        })
+        matchBy(event, 'type')
+          .with('custom', (value) => {
+            if (value.name === 'machine:run-start') {
+              activeMachineSessions.add(sessionId)
+              setStatusWithVisitCheck(sessionId, 'machine-running')
+              return
+            }
+            if (value.name === 'machine:run-end') {
+              activeMachineSessions.delete(sessionId)
+            }
+          })
+          .with('agent_start', () => {
+            if (!activeWaggleSessions.has(sessionId) && !activeMachineSessions.has(sessionId)) {
+              setStatusWithVisitCheck(sessionId, 'connecting')
+            }
+          })
+          .with('agent_end', (value) => {
+            if (value.reason === 'error') {
+              setStatusWithVisitCheck(sessionId, 'error')
+              return
+            }
+            if (isTerminalTransportEvent(value)) {
+              setStatusWithVisitCheck(sessionId, 'completed')
+            }
+          })
+          .with('message_update', (value) => {
+            matchBy(value.assistantMessageEvent, 'type')
+              .with('text_delta', 'toolcall_start', () => {
+                if (!activeWaggleSessions.has(sessionId) && !activeMachineSessions.has(sessionId)) {
+                  setStatusWithVisitCheck(sessionId, 'working')
+                }
+              })
+              .otherwise(() => undefined)
+          })
+          .with('tool_execution_start', () => {
+            if (!activeWaggleSessions.has(sessionId) && !activeMachineSessions.has(sessionId)) {
+              setStatusWithVisitCheck(sessionId, 'working')
+            }
+          })
+          .otherwise((value) => {
+            if (isTerminalTransportEvent(value)) {
+              setStatusWithVisitCheck(sessionId, 'completed')
+            }
+          })
       }
     })
 

@@ -1,6 +1,6 @@
 import { match, P } from '@diegogbrisa/ts-match'
-import { toolCallTitle } from 'turing-harness/tool-titles'
 import type { JsonObject } from '@shared/types/json'
+import { toolCallTitle } from 'turing-harness/tool-titles'
 
 type PiNativeToolName = 'read' | 'write' | 'edit' | 'bash' | 'grep' | 'find' | 'ls'
 

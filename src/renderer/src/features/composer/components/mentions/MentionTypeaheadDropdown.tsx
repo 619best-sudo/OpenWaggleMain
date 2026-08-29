@@ -75,7 +75,7 @@ export function MentionTypeaheadDropdown({
             key={item.path}
             type="button"
             className={cn(
-              'flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-left',
+              'flex w-full items-center gap-2 px-3 py-1.5 text-[12px] text-left',
               index === highlightIndex ? 'bg-bg-hover' : 'hover:bg-bg-hover',
             )}
             onMouseDown={(e) => {

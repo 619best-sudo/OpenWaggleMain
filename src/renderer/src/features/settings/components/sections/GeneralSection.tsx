@@ -30,8 +30,8 @@ function ThemeSection() {
   return (
     <div className="space-y-3">
       <div className="space-y-1">
-        <h3 className="text-[16px] font-semibold text-text-primary">Theme</h3>
-        <p className="text-[13px] text-text-tertiary">
+        <h3 className="text-[14px] font-semibold text-text-primary">Theme</h3>
+        <p className="text-[12px] text-text-tertiary">
           Choose the appearance used across the workspace.
         </p>
       </div>
@@ -69,11 +69,11 @@ function ThemeSection() {
                       >
                         <OptionIcon className="size-4" />
                       </div>
-                      <span className="text-[14px] font-semibold text-text-primary">
+                      <span className="text-[13px] font-semibold text-text-primary">
                         {option.label}
                       </span>
                     </div>
-                    <p className="text-[12px] leading-5 text-text-tertiary">{option.description}</p>
+                    <p className="text-[11px] leading-5 text-text-tertiary">{option.description}</p>
                   </div>
 
                   {isSelected ? (
@@ -127,7 +127,7 @@ function ThemeSection() {
           })}
         </div>
 
-        <p className="mt-4 text-[12px] text-text-muted">
+        <p className="mt-4 text-[11px] text-text-muted">
           Active now:{' '}
           <span className="font-medium text-text-secondary">{isDarkTheme ? 'Dark' : 'Light'}</span>
         </p>
@@ -141,7 +141,7 @@ export function GeneralSection() {
     <div className="space-y-6">
       <div className="space-y-1">
         <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-text-primary">General</h2>
-        <p className="max-w-[720px] text-[13px] leading-6 text-text-tertiary">
+        <p className="max-w-[720px] text-[12px] leading-6 text-text-tertiary">
           Manage workspace-wide preferences such as theme and appearance.
         </p>
       </div>

@@ -23,6 +23,7 @@ import type {
   GitCommitResult,
   GitFileDiff,
   GitStatusSummary,
+  GitWorktreeResult,
 } from './git'
 import type { IpcEventPayload } from './ipc'
 import type { ProviderInfo, SupportedModelId } from './llm'
@@ -30,6 +31,7 @@ import type { McpSetServerEnabledInput, McpSettingsView, McpWriteSourceConfigInp
 import type { AgentPhaseState } from './phase'
 import type { PendingPlanReviewRequest, PlanReviewResolution } from './plan-review'
 import type { ProjectMemoryStatus } from './project-memory'
+import type { SessionResumeState } from './resume'
 import type {
   SessionCopyToNewResult,
   SessionDetail,
@@ -98,6 +100,16 @@ export interface OpenWaggleApi {
   /** The plan currently awaiting review in this session, if any. */
   getPendingPlanReview(sessionId: SessionId): Promise<PendingPlanReviewRequest | null>
   getPendingUserQuestion(sessionId: SessionId): Promise<PendingUserQuestionRequest | null>
+  /**
+   * The stopped run this session could continue, if any. `null` means the last
+   * run settled — there is nothing to offer.
+   */
+  getResumeState(sessionId: SessionId): Promise<SessionResumeState | null>
+  /**
+   * Continue this session's stopped run from where it stopped. `answer` is
+   * required when `getResumeState().needsAnswer` is true.
+   */
+  resumeRun(sessionId: SessionId, model: SupportedModelId, answer?: string): Promise<undefined>
   /**
    * Subscribe to live Pi-shaped runtime events from the main process. One
    * callback per coalesced batch (roughly per animation frame while streaming):
@@ -207,6 +219,8 @@ export interface OpenWaggleApi {
   getGitStatus(projectPath: string): Promise<GitStatusSummary | null>
   commitGit(projectPath: string, payload: GitCommitPayload): Promise<GitCommitResult>
   getGitDiff(projectPath: string): Promise<GitFileDiff[]>
+  revertAllGitChanges(projectPath: string): Promise<GitWorktreeResult>
+  stageAllGitChanges(projectPath: string): Promise<GitWorktreeResult>
   /** Resolves to `null` when the folder is not a Git repository. */
   listGitBranches(projectPath: string): Promise<GitBranchListResult | null>
   checkoutGitBranch(

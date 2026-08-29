@@ -63,7 +63,7 @@ export function ImportSkillDialog({ isImporting, onImport, onClose }: ImportSkil
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div>
             <h2 className="text-sm font-semibold text-text-primary">Import Skill</h2>
-            <p className="mt-1 text-[12px] text-text-tertiary">
+            <p className="mt-1 text-[11px] text-text-tertiary">
               Paste a URL that resolves to a valid `SKILL.md`.
             </p>
           </div>
@@ -81,7 +81,7 @@ export function ImportSkillDialog({ isImporting, onImport, onClose }: ImportSkil
         <div className="space-y-3 p-4">
           {choices.length === 0 ? (
             <div className="space-y-1.5">
-              <label htmlFor="skill-url" className="text-[12px] font-medium text-text-secondary">
+              <label htmlFor="skill-url" className="text-[11px] font-medium text-text-secondary">
                 Skill Source URL
               </label>
               <TextInput
@@ -92,7 +92,7 @@ export function ImportSkillDialog({ isImporting, onImport, onClose }: ImportSkil
                 disabled={isImporting}
                 autoFocus
               />
-              <p className="text-[11px] leading-relaxed text-text-tertiary">
+              <p className="text-[10px] leading-relaxed text-text-tertiary">
                 Paste a GitHub repository URL or a direct link to a{' '}
                 <code className="rounded bg-white/5 px-1 py-0.5">SKILL.md</code> file.
               </p>
@@ -101,8 +101,8 @@ export function ImportSkillDialog({ isImporting, onImport, onClose }: ImportSkil
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[12px] font-medium text-text-secondary">Choose a skill</p>
-                  <p className="mt-1 text-[11px] text-text-tertiary">
+                  <p className="text-[11px] font-medium text-text-secondary">Choose a skill</p>
+                  <p className="mt-1 text-[10px] text-text-tertiary">
                     This repository contains multiple skills. Pick one to import.
                   </p>
                 </div>
@@ -126,20 +126,20 @@ export function ImportSkillDialog({ isImporting, onImport, onClose }: ImportSkil
                     className="flex w-full items-start justify-between gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <div className="min-w-0">
-                      <div className="truncate text-[12px] font-medium text-text-primary">
+                      <div className="truncate text-[11px] font-medium text-text-primary">
                         {choice.name}
                       </div>
                       <div className="mt-1 truncate font-mono text-[10px] text-text-tertiary">
                         {choice.path}
                       </div>
                     </div>
-                    <span className="shrink-0 text-[11px] text-text-secondary">Import</span>
+                    <span className="shrink-0 text-[10px] text-text-secondary">Import</span>
                   </button>
                 ))}
               </div>
             </div>
           )}
-          {error && <p className="text-[13px] text-error">{error}</p>}
+          {error && <p className="text-[12px] text-error">{error}</p>}
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-3">

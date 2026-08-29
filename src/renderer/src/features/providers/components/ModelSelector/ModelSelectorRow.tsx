@@ -41,9 +41,9 @@ export function ModelSelectorRow({ model, isSelected, onSelect }: ModelSelectorR
         className="size-4 shrink-0 flex-none"
         style={{ color: iconColor }}
       />
-      <div className="min-w-0 flex-1 truncate text-[13px] font-medium">
+      <div className="min-w-0 flex-1 truncate text-[12px] font-medium">
         {model.name}
-        <span className="ml-1.5 text-[11px] font-normal text-text-tertiary">
+        <span className="ml-1.5 text-[10px] font-normal text-text-tertiary">
           {model.providerName}
         </span>
       </div>

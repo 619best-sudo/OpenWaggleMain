@@ -63,6 +63,13 @@ import {
   connectMcpBackground,
 } from './turing-openwaggle-bridge'
 import {
+  buildResumeClearedNode,
+  buildResumeRecord,
+  buildResumeTokenNode,
+  extractPersistedResumeRecord,
+  isResumeToken,
+} from './turing-resume-token'
+import {
   resolveAgentEndReason,
   resolveTerminalError,
   runDispositionToStatus,
@@ -172,6 +179,13 @@ function buildRunResult(input: {
   readonly pendingUserQuestion?: import('@shared/types/user-question').PendingUserQuestionRequest
   readonly phaseTranscriptNode?: ProjectedSessionNodeInput
   readonly threadSnapshotNode?: ProjectedSessionNodeInput
+  /**
+   * The run's resume token, or its tombstone — see `turing-resume-token.ts`.
+   * A trailing artifact like the others: never a conversational turn.
+   */
+  readonly resumeNode?: ProjectedSessionNodeInput
+  /** The user-facing half of the same thing, returned so the run can report it. */
+  readonly resumeState?: import('@shared/types/resume').SessionResumeState
 }) {
   const hidden = input.runInput.promptDelivery?.mode === 'hidden-custom-message'
   // Project the appended turing messages ONCE. The snapshot timeline (below) and
@@ -236,6 +250,7 @@ function buildRunResult(input: {
       ...transcriptNodes,
       ...(input.phaseTranscriptNode ? [input.phaseTranscriptNode] : []),
       ...(input.threadSnapshotNode ? [input.threadSnapshotNode] : []),
+      ...(input.resumeNode ? [input.resumeNode] : []),
     ],
     baseSnapshot.activeNodeId,
     baseSnapshot.nodes.length,
@@ -293,6 +308,7 @@ function buildRunResult(input: {
     ...(input.aborted ? { aborted: true } : {}),
     ...(input.terminalError ? { terminalError: input.terminalError } : {}),
     ...(input.pendingUserQuestion ? { pendingUserQuestion: input.pendingUserQuestion } : {}),
+    ...(input.resumeState ? { resumeState: input.resumeState } : {}),
   }
 }
 
@@ -536,14 +552,17 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
       mcpPool,
     },
   )
-  // Per-run MCP selection (the composer picker): named servers join every
-  // categorizer; everything else stays connected-but-out-of-chain. Applied
-  // immediately — the session re-applies the selection to servers that attach
-  // after this point, and the QA hops' surface gating drops off-surface tools
-  // regardless of selection. Before this, merely ENABLING a server in settings
-  // put its tools into every QA hop of every project (a Flutter run opening
-  // with ~62 tools, two-thirds of them browser tools it could not use).
-  const mcpSelection = turingSession.selectMcpServers(input.payload.mcpServers ?? [])
+  // Enabled = used: every ENABLED MCP server joins the run's chain. The
+  // command palette's '/' items (and Settings) are the only MCP gate — a
+  // server the user enabled is a server they want the model to have. The
+  // harness still distinguishes connection from selection internally, so we
+  // feed it the enabled set explicitly; late-attaching servers inherit the
+  // selection. Disabled servers never reach the pool at all (the bridge only
+  // attaches enabled ones), so out-of-chain and unconnected coincide here.
+  const enabledMcpNames = (input.mcpSettings?.servers ?? [])
+    .filter((summary) => summary.enabled)
+    .map((summary) => summary.name)
+  const mcpSelection = turingSession.selectMcpServers(enabledMcpNames)
   logger.info('MCP selection applied for run', {
     selected: mcpSelection.selected,
     connectedOnly: mcpSelection.dropped,
@@ -637,13 +656,9 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
 
   // Build the runtime prompt WITH the resolved bridge so the model sees the
   // exact "CONNECTED MCP TOOLS" / "UNAVAILABLE MCP SERVERS" sections at turn 1.
-  // The MCP section is filtered to the composer's selection — connected is not
-  // selected, and advertising tools the chain holds none of is how a write pass
-  // stalls itself calling them.
   const runtimePrompt = buildOpenWaggleRuntimePrompt(input.payload.text, {
     standardsContext: input.standardsContext,
     bridge,
-    mcpSelection: input.payload.mcpServers ?? [],
     pendingUserQuestionResolution: input.pendingUserQuestionResolution,
   })
 
@@ -1029,15 +1044,48 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
   // Machine mode => plan mode: decompose, surface the plan for approval via
   // the `planApproval` callback wired above (PLAN_REVIEW_REQUEST_EVENT), then
   // run each approved step as its own sub-loop. Off => one flat work loop.
+  // CONTINUING A STOPPED RUN. The token comes out of this session's own
+  // persisted nodes, never from the caller — so "continue" cannot be pointed at
+  // another session's half-finished work. The harness validates it again on its
+  // side (build version, working directory, plan cursor) and refuses rather than
+  // guessing, so a token from an older app build degrades to a clear error
+  // instead of replaying stale context into a fresh run.
+  let resumeConsumed = false
+  const carriedResume = input.resumeRun
+    ? extractPersistedResumeRecord(input.persistedTranscriptNodes)
+    : undefined
+  if (input.resumeRun && !carriedResume) {
+    logger.warn('A run was asked to continue, but this session has no resume token; running fresh')
+  }
+  const resumeOption =
+    carriedResume && isResumeToken(carriedResume.token)
+      ? {
+          token: carriedResume.token,
+          ...(input.resumeRun?.answer ? { answer: input.resumeRun.answer } : {}),
+          ...(input.resumeRun?.attachments?.length
+            ? { attachments: [...input.resumeRun.attachments] }
+            : {}),
+        }
+      : undefined
+
   const runAgentPrompt = async (
     prompt: string,
     attachments: typeof turingAttachments,
     planMode: boolean = input.payload.planMode === true,
   ): Promise<string | undefined> => {
     try {
-      await agent.prompt(prompt, attachments, { planMode })
+      await agent.prompt(prompt, attachments, {
+        planMode,
+        // Only the FIRST prompt of the run resumes. The retry paths below
+        // (backend auth renewal) must not re-apply the token: by then the
+        // resumed run is already under way, and re-seeding it would replay its
+        // hops a second time.
+        ...(resumeOption && !resumeConsumed ? { resume: resumeOption } : {}),
+      })
+      resumeConsumed = true
       return agent.state.error
     } catch (error) {
+      resumeConsumed = true
       return error instanceof Error ? error.message : String(error)
     }
   }
@@ -1130,6 +1178,24 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     agent.state.lastThreadSnapshot,
     Date.now(),
   )
+  // HOW THIS RUN STOPPED. A run that stopped short of its plan leaves the token
+  // that carries it on; a run that finished leaves a TOMBSTONE, so an older
+  // token from an earlier stop stops being offered. Doing nothing on a finished
+  // run would leave the previous stop's Continue button live, and clicking it
+  // would re-run a plan that is already done.
+  const resumeRecord = buildResumeRecord(agent.state.lastStop)
+  const resumeNode = resumeRecord
+    ? buildResumeTokenNode(resumeRecord, Date.now())
+    : extractPersistedResumeRecord(input.persistedTranscriptNodes)
+      ? buildResumeClearedNode(Date.now())
+      : undefined
+  if (resumeRecord) {
+    logger.info('Run stopped short of its plan; a resume token was persisted', {
+      kind: resumeRecord.state.kind,
+      remainingSteps: resumeRecord.state.remainingSteps,
+      needsAnswer: resumeRecord.state.needsAnswer,
+    })
+  }
   const stopReason = turingStopReasonToAgentEndReason(appended)
   const aborted = input.signal.aborted || stopReason === 'aborted'
   terminalError = resolveTerminalError({
@@ -1183,6 +1249,8 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
           } satisfies ProjectedSessionNodeInput,
         }
       : {}),
+    ...(resumeNode ? { resumeNode } : {}),
+    ...(resumeRecord ? { resumeState: resumeRecord.state } : {}),
     ...(threadSnapshotNode
       ? {
           threadSnapshotNode: {

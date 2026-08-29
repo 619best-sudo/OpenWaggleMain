@@ -46,12 +46,12 @@ export function CommitDialogBody({
   return (
     <div className="space-y-4 bg-bg p-4">
       {statusError && (
-        <p className="rounded-lg border border-error/20 bg-error/8 px-3 py-2 text-[13px] text-error">
+        <p className="rounded-lg border border-error/20 bg-error/8 px-3 py-2 text-[12px] text-error">
           {statusError}
         </p>
       )}
       {error && (
-        <p className="rounded-lg border border-error/20 bg-error/8 px-3 py-2 text-[13px] text-error">
+        <p className="rounded-lg border border-error/20 bg-error/8 px-3 py-2 text-[12px] text-error">
           {error}
         </p>
       )}
@@ -79,7 +79,7 @@ function CommitMessageFields({
   return (
     <>
       <label className="block" htmlFor={COMMIT_MESSAGE_ID}>
-        <span className="mb-1.5 block text-[13px] font-medium text-text-secondary">
+        <span className="mb-1.5 block text-[12px] font-medium text-text-secondary">
           Commit message
         </span>
         <Textarea
@@ -117,13 +117,13 @@ function ChangedFilesSelector({
       {changedFiles.length > 0 && (
         <div className="home-divider-b flex items-center gap-2 bg-bg-secondary/60 px-3 py-2">
           <Checkbox checked={selectedPaths.size === changedFiles.length} onChange={onToggleAll} />
-          <span className="text-[12px] font-medium text-text-tertiary">
+          <span className="text-[11px] font-medium text-text-tertiary">
             {selectedPaths.size === changedFiles.length ? 'Deselect all' : 'Select all'}
           </span>
         </div>
       )}
       {changedFiles.length === 0 ? (
-        <div className="px-3 py-2 text-[13px] text-text-tertiary">No file changes detected.</div>
+        <div className="px-3 py-2 text-[12px] text-text-tertiary">No file changes detected.</div>
       ) : (
         changedFiles.map((file) => (
           <Checkbox
@@ -132,10 +132,10 @@ function ChangedFilesSelector({
             onChange={() => onTogglePath(file.path)}
             label={
               <>
-                <span className={cn('flex-1 truncate text-[13px]', STATUS_CLASS[file.status])}>
+                <span className={cn('flex-1 truncate text-[12px]', STATUS_CLASS[file.status])}>
                   {file.path}
                 </span>
-                <span className="w-[72px] shrink-0 text-right font-mono text-[12px] tracking-tight text-text-tertiary">
+                <span className="w-[72px] shrink-0 text-right font-mono text-[11px] tracking-tight text-text-tertiary">
                   {file.additions > 0 ? (
                     <span className="text-diff-add-text">+{file.additions}</span>
                   ) : (

@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Highlighter } from 'shiki'
 import { useIncrementalMarkdown } from '@/features/chat/hooks/useIncrementalMarkdown'
+import { inlineCodeTone, inlineCodeToneClass } from '@/features/chat/lib/inline-code-tone'
 import { SafeMarkdownLink } from '@/shared/lib/markdown-link-components'
 import { type RehypePlugins, safeMarkdownUrlTransform } from '@/shared/lib/markdown-safety'
 import { isReactElementWithProps } from '@/shared/lib/react-element-guard'
@@ -56,8 +57,21 @@ const markdownComponents: Components = {
     className?: string | undefined
     children?: ReactNode | undefined
   }) {
+    // Fenced blocks arrive with a `language-*` class and are already coloured by
+    // shiki — only bare inline spans get a semantic tone.
+    const isInline = !className?.includes('language-')
+    // Single-text-node spans arrive either as a bare string or a one-element
+    // array depending on which renderer (tail vs. prefix HAST) produced them.
+    const rawText =
+      typeof children === 'string'
+        ? children
+        : Array.isArray(children) && children.length === 1 && typeof children[0] === 'string'
+          ? children[0]
+          : null
+    const tone =
+      isInline && rawText !== null ? inlineCodeToneClass(inlineCodeTone(rawText)) : undefined
     return (
-      <code className={className} {...props}>
+      <code className={[className, tone].filter(Boolean).join(' ') || undefined} {...props}>
         {children}
       </code>
     )

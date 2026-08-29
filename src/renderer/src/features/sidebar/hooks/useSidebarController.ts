@@ -119,6 +119,7 @@ function buildControllerOutput(
     handleSelectProjectPath: actions.project.selectProjectPath,
     handleSelectSession: actions.session.select,
     handleToggleBranches: actions.branch.toggle,
+    handleToggleSidebar: state.toggleSidebar,
     handleToggleProjectCollapsed(path: string) {
       state.setCollapsedProjectPaths((current) => toggleCollapsedProject(current, path))
     },

@@ -10,6 +10,9 @@ interface ChatDiffPaneProps {
   readonly isExpanded?: boolean
   readonly onClose: () => void
   readonly onToggleExpanded?: () => void
+  /** Whether the pane is on screen — forwarded to `DiffPanel` so a pending
+   *  "View file" scroll is only consumed while the panel is visible. */
+  readonly visible?: boolean
 }
 
 export function ChatDiffPane({
@@ -17,6 +20,7 @@ export function ChatDiffPane({
   isExpanded = false,
   onClose,
   onToggleExpanded,
+  visible = true,
 }: ChatDiffPaneProps) {
   const diffRefreshKey = useUIStore((s) => s.diffRefreshKey)
   const bumpDiffRefreshKey = useUIStore((s) => s.bumpDiffRefreshKey)
@@ -26,8 +30,8 @@ export function ChatDiffPane({
     <div className="home-panel-frame-soft flex size-full min-w-0 flex-col overflow-hidden bg-diff-bg">
       <header className="home-divider-b drag-region flex h-12 shrink-0 items-center justify-between px-4">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="no-drag text-[13px] font-semibold text-text-primary">Changes</span>
-          <span className="no-drag text-[11px] text-text-tertiary">Working tree diff</span>
+          <span className="no-drag text-[12px] font-semibold text-text-primary">Changes</span>
+          <span className="no-drag text-[10px] text-text-tertiary">Working tree diff</span>
         </div>
         <div className="no-drag flex items-center gap-1">
           {onToggleExpanded ? (
@@ -69,6 +73,7 @@ export function ChatDiffPane({
         <DiffPanel
           key={diffRefreshKey}
           projectPath={section.projectPath}
+          visible={visible}
           onSendMessage={(content) => {
             void section.onSendMessage(content)
           }}

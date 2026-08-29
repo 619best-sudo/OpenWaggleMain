@@ -3,9 +3,10 @@ import { buildOpenWaggleRuntimeDebugValue } from '../turing-openwaggle-bridge'
 
 /**
  * The bridge status node is the persisted answer to "why doesn't the model see
- * my MCP". Since selection became explicit, "connected" and "selected" are
- * different states — enabled-but-unselected is now the NORMAL state — and the
- * status node must record both sides of that distinction or the question is
+ * my MCP". A run selects every ENABLED server (enabled = used; the '/' command
+ * palette is the gate), so selected and enabled normally coincide — but a
+ * server that fails to connect or attaches late still makes the two lists
+ * diverge, and the status node must record both sides or the question is
  * unanswerable from the run card alone.
  */
 describe('buildOpenWaggleRuntimeDebugValue', () => {

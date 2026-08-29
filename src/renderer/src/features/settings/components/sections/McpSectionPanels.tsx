@@ -51,10 +51,8 @@ function SourceButton({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[13px] font-medium">{source.label}</div>
-          <div className="mt-1 truncate text-[11px] text-text-muted">
-            {source.path}
-          </div>
+          <div className="text-[12px] font-medium">{source.label}</div>
+          <div className="mt-1 truncate text-[10px] text-text-muted">{source.path}</div>
         </div>
         <span
           className={cn(
@@ -70,9 +68,9 @@ function SourceButton({
         </span>
       </div>
       {source.parseError ? (
-        <div className="mt-2 line-clamp-2 text-[11px] text-error">{source.parseError}</div>
+        <div className="mt-2 line-clamp-2 text-[10px] text-error">{source.parseError}</div>
       ) : (
-        <div className="mt-3 flex gap-2 text-[11px] text-text-tertiary">
+        <div className="mt-3 flex gap-2 text-[10px] text-text-tertiary">
           <span
             className={cn(
               'rounded-full px-2 py-0.5',
@@ -119,10 +117,10 @@ function ServerRow({
       )}
     >
       <div className="min-w-0 flex-1 flex items-center gap-3">
-        <span className="text-[13px] font-medium text-text-primary min-w-[140px] truncate">
+        <span className="text-[12px] font-medium text-text-primary min-w-[140px] truncate">
           {server.name}
         </span>
-        <span className="truncate text-[11px] text-text-tertiary">
+        <span className="truncate text-[10px] text-text-tertiary">
           {formatServerDetail(server)}
         </span>
       </div>
@@ -156,8 +154,8 @@ function ServerRow({
 export function McpSectionHeading() {
   return (
     <div className="space-y-1">
-      <h2 className="text-[20px] font-semibold text-text-primary">MCP</h2>
-      <p className="max-w-[760px] text-[13px] leading-5 text-text-tertiary">
+      <h2 className="text-[17px] font-semibold text-text-primary">MCP</h2>
+      <p className="max-w-[760px] text-[12px] leading-5 text-text-tertiary">
         Connect external tools and services to Turing Machine using the Model Context Protocol.
       </p>
     </div>
@@ -178,12 +176,12 @@ export function McpErrorAlert({ message }: { readonly message: string | null | u
 
 function McpAdapterStatus({ enabled }: { readonly enabled: boolean }) {
   return enabled ? (
-    <span className="inline-flex items-center gap-1 rounded bg-success/10 px-1.5 py-0.5 text-[11px] text-success">
+    <span className="inline-flex items-center gap-1 rounded bg-success/10 px-1.5 py-0.5 text-[10px] text-success">
       <CheckCircle2 className="size-3" />
       Enabled
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 rounded bg-bg-tertiary px-1.5 py-0.5 text-[11px] text-text-muted">
+    <span className="inline-flex items-center gap-1 rounded bg-bg-tertiary px-1.5 py-0.5 text-[10px] text-text-muted">
       <AlertTriangle className="size-3" />
       Off
     </span>
@@ -207,7 +205,7 @@ export function McpAdapterCard({
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Network className="size-4 text-accent" />
-          <h3 className="text-[13px] font-medium text-text-primary">MCP Connection</h3>
+          <h3 className="text-[12px] font-medium text-text-primary">MCP Connection</h3>
           <McpAdapterStatus enabled={adapterEnabled} />
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -217,12 +215,12 @@ export function McpAdapterCard({
             disabled={busy}
             onClick={onRefresh}
             leftIcon={<RotateCw className="size-3" />}
-            className="h-7 text-[11px] px-2.5"
+            className="h-7 text-[10px] px-2.5"
           >
             Refresh
           </Button>
           <div className="flex items-center gap-2 rounded-full border border-border bg-bg-tertiary px-2.5 py-1">
-            <span className="text-[11px] font-medium text-text-secondary">
+            <span className="text-[10px] font-medium text-text-secondary">
               {adapterEnabled ? 'On' : 'Off'}
             </span>
             <ToggleSwitch
@@ -350,18 +348,18 @@ export function McpQuickInstallPanel({
     <div className="flex flex-col h-full">
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="space-y-1">
-          <p className="max-w-[500px] text-[13px] leading-5 text-text-tertiary">
+          <p className="max-w-[500px] text-[12px] leading-5 text-text-tertiary">
             Configure a server manually by giving its command and arguments, or a remote URL.
           </p>
         </div>
         {sources.length > 0 && (
           <label className="flex shrink-0 items-center gap-2">
-            <span className="text-[12px] font-medium text-text-secondary">Install for:</span>
+            <span className="text-[11px] font-medium text-text-secondary">Install for:</span>
             <Select
               value={selectedSource?.id ?? ''}
               disabled={busy}
               onChange={(e) => onSelectSource(e.target.value as McpConfigSourceId)}
-              className="h-8 w-[200px] rounded-lg border-[var(--theme-border-overlay-strong)] bg-[var(--theme-surface-overlay-subtle)] py-1.5 pl-3 pr-8 text-[12px] hover:bg-[var(--theme-surface-overlay)]"
+              className="h-8 w-[200px] rounded-lg border-[var(--theme-border-overlay-strong)] bg-[var(--theme-surface-overlay-subtle)] py-1.5 pl-3 pr-8 text-[11px] hover:bg-[var(--theme-surface-overlay)]"
             >
               <option value="" disabled>
                 Choose destination...
@@ -377,78 +375,78 @@ export function McpQuickInstallPanel({
       </div>
 
       <div className="space-y-3">
+        <div className="grid gap-3 rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4 md:grid-cols-[180px_minmax(0,1fr)]">
+          <label className="space-y-1.5">
+            <span className="text-[11px] font-medium text-text-primary">Connection Type</span>
+            <Select
+              value={transport}
+              disabled={busy}
+              onChange={(event) => setTransport(event.target.value as 'stdio' | 'http')}
+              className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[11px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)]"
+            >
+              <option value="stdio">Local Command</option>
+              <option value="http">Remote URL</option>
+            </Select>
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-[11px] font-medium text-text-primary">Server Name</span>
+            <TextInput
+              value={name}
+              disabled={busy}
+              placeholder="playwright"
+              onChange={(event) => setName(event.target.value)}
+              className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[11px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
+            />
+          </label>
+        </div>
+
+        {transport === 'stdio' ? (
           <div className="grid gap-3 rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4 md:grid-cols-[180px_minmax(0,1fr)]">
             <label className="space-y-1.5">
-              <span className="text-[12px] font-medium text-text-primary">Connection Type</span>
-              <Select
-                value={transport}
+              <span className="flex items-center gap-1.5 text-[11px] font-medium text-text-primary">
+                <TerminalSquare className="size-3.5 text-text-tertiary" />
+                Command
+              </span>
+              <TextInput
+                value={command}
                 disabled={busy}
-                onChange={(event) => setTransport(event.target.value as 'stdio' | 'http')}
-                className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)]"
-              >
-                <option value="stdio">Local Command</option>
-                <option value="http">Remote URL</option>
-              </Select>
+                placeholder="npx"
+                onChange={(event) => setCommand(event.target.value)}
+                className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[11px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
+              />
             </label>
             <label className="space-y-1.5">
-              <span className="text-[12px] font-medium text-text-primary">Server Name</span>
+              <span className="text-[11px] font-medium text-text-primary">Arguments</span>
               <TextInput
-                value={name}
+                value={args}
                 disabled={busy}
-                placeholder="playwright"
-                onChange={(event) => setName(event.target.value)}
-                className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
+                placeholder="-y @playwright/mcp@latest"
+                onChange={(event) => setArgs(event.target.value)}
+                className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[11px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
               />
             </label>
           </div>
-
-          {transport === 'stdio' ? (
-            <div className="grid gap-3 rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4 md:grid-cols-[180px_minmax(0,1fr)]">
-              <label className="space-y-1.5">
-                <span className="flex items-center gap-1.5 text-[12px] font-medium text-text-primary">
-                  <TerminalSquare className="size-3.5 text-text-tertiary" />
-                  Command
-                </span>
-                <TextInput
-                  value={command}
-                  disabled={busy}
-                  placeholder="npx"
-                  onChange={(event) => setCommand(event.target.value)}
-                  className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
-                />
-              </label>
-              <label className="space-y-1.5">
-                <span className="text-[12px] font-medium text-text-primary">Arguments</span>
-                <TextInput
-                  value={args}
-                  disabled={busy}
-                  placeholder="-y @playwright/mcp@latest"
-                  onChange={(event) => setArgs(event.target.value)}
-                  className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
-                />
-              </label>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4">
-              <label className="space-y-1.5">
-                <span className="flex items-center gap-1.5 text-[12px] font-medium text-text-primary">
-                  <Globe className="size-3.5 text-text-tertiary" />
-                  Server URL
-                </span>
-                <TextInput
-                  value={url}
-                  disabled={busy}
-                  placeholder="http://localhost:3000/mcp"
-                  onChange={(event) => setUrl(event.target.value)}
-                  className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[12px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
-                />
-              </label>
-            </div>
-          )}
-        </div>
+        ) : (
+          <div className="rounded-xl border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] p-4">
+            <label className="space-y-1.5">
+              <span className="flex items-center gap-1.5 text-[11px] font-medium text-text-primary">
+                <Globe className="size-3.5 text-text-tertiary" />
+                Server URL
+              </span>
+              <TextInput
+                value={url}
+                disabled={busy}
+                placeholder="http://localhost:3000/mcp"
+                onChange={(event) => setUrl(event.target.value)}
+                className="h-9 w-full border-transparent bg-[var(--theme-surface-overlay-subtle)] text-[11px] hover:bg-[var(--theme-surface-overlay)] focus:border-[var(--theme-border-overlay-strong)] placeholder:text-text-muted"
+              />
+            </label>
+          </div>
+        )}
+      </div>
 
       <div className="mt-8 flex items-center justify-between gap-4 border-t border-[var(--theme-border-overlay-subtle)] pt-4">
-        <p className="min-w-0 text-[12px] text-text-muted">{availableTarget}</p>
+        <p className="min-w-0 text-[11px] text-text-muted">{availableTarget}</p>
         <Button
           variant={canInstall ? 'accent' : 'secondary'}
           disabled={!canInstall}
@@ -492,12 +490,12 @@ export function McpSourcesPanel({
     <div className="rounded-2xl border border-[var(--theme-border-overlay-subtle)] bg-[linear-gradient(180deg,var(--theme-panel-gradient-start),var(--theme-panel-gradient-end))] p-5 shadow-[inset_0_1px_0_var(--theme-panel-shadow-highlight)]">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
-          <h3 className="text-[16px] font-semibold text-text-primary">Sources</h3>
-          <p className="mt-1 text-[12px] text-text-tertiary">
+          <h3 className="text-[14px] font-semibold text-text-primary">Sources</h3>
+          <p className="mt-1 text-[11px] text-text-tertiary">
             Choose where new MCP servers should be written and which config you want to edit.
           </p>
         </div>
-        <span className="rounded-full border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] px-2.5 py-1 text-[11px] text-text-secondary">
+        <span className="rounded-full border border-[var(--theme-border-overlay-subtle)] bg-[var(--theme-surface-overlay-subtle)] px-2.5 py-1 text-[10px] text-text-secondary">
           {sources.length} total
         </span>
       </div>
@@ -548,7 +546,7 @@ export function McpServersPanel({
           />
         ))
       ) : (
-        <p className="px-4 py-6 text-[13px] text-text-muted text-center">
+        <p className="px-4 py-6 text-[12px] text-text-muted text-center">
           No MCP servers configured.
         </p>
       )}

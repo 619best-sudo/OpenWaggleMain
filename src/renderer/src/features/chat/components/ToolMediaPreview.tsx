@@ -34,7 +34,7 @@ interface ResolvedMedia {
 
 function MediaError({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 text-[12px] text-error">
+    <div className="flex items-center gap-2 px-3 py-2 text-[11px] text-error">
       <AlertCircle className="size-3.5 shrink-0" />
       <span className="truncate">{message}</span>
     </div>
@@ -190,7 +190,7 @@ function HtmlPreview({ output }: { output: ToolHtmlOutput }) {
   if (state === 'loading') return <MediaSkeleton />
   if (!sanitized.trim()) {
     return (
-      <div className="px-3 py-2 text-[12px] text-[color:var(--color-code-card-muted-text)]">
+      <div className="px-3 py-2 text-[11px] text-[color:var(--color-code-card-muted-text)]">
         Nothing to preview.
       </div>
     )
@@ -199,7 +199,7 @@ function HtmlPreview({ output }: { output: ToolHtmlOutput }) {
     // HTML is run through sanitizeToolHtml first: scripts, inline handlers,
     // and dangerous URIs are stripped before reaching the DOM.
     <div
-      className="tool-html-preview max-h-[360px] overflow-auto bg-white text-[13px] text-black"
+      className="tool-html-preview max-h-[360px] overflow-auto bg-white text-[12px] text-black"
       // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized above
       dangerouslySetInnerHTML={{ __html: sanitized }}
     />

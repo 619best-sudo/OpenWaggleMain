@@ -147,7 +147,7 @@ export function AuthScreen() {
                       />
                     </div>
                     <div>
-                      <p className="text-[18px] font-semibold tracking-[-0.02em] text-white sm:text-[20px]">
+                      <p className="text-[18px] font-semibold tracking-[-0.02em] text-white sm:text-[17px]">
                         Turing Machine
                       </p>
                     </div>
@@ -157,7 +157,7 @@ export function AuthScreen() {
                     <h1 className="text-4xl font-semibold tracking-[-0.04em] text-white xl:text-[2.75rem]">
                       The universal machine for code.
                     </h1>
-                    <p className="text-[14px] leading-6 text-white/64 xl:text-[15px]">
+                    <p className="text-[13px] leading-6 text-white/64 xl:text-[13.5px]">
                       Dedicated to Alan Turing's legacy. A workspace designed for the logic and
                       computation of modern software.
                     </p>
@@ -177,7 +177,7 @@ export function AuthScreen() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">Turing Machine</p>
-                  <p className="text-[12px] text-white/48">Universal computation for code</p>
+                  <p className="text-[11px] text-white/48">Universal computation for code</p>
                 </div>
               </div>
 
@@ -188,7 +188,7 @@ export function AuthScreen() {
                       type="button"
                       onClick={() => switchView('login')}
                       className={cn(
-                        'rounded-full px-4 py-2 text-[13px] font-medium transition-colors',
+                        'rounded-full px-4 py-2 text-[12px] font-medium transition-colors',
                         isLoginView ? 'bg-white text-black' : 'text-white/56 hover:text-white',
                       )}
                     >
@@ -198,7 +198,7 @@ export function AuthScreen() {
                       type="button"
                       onClick={() => switchView('signup')}
                       className={cn(
-                        'rounded-full px-4 py-2 text-[13px] font-medium transition-colors',
+                        'rounded-full px-4 py-2 text-[12px] font-medium transition-colors',
                         !isLoginView ? 'bg-white text-black' : 'text-white/56 hover:text-white',
                       )}
                     >
@@ -216,7 +216,7 @@ export function AuthScreen() {
                 {visibleError ? (
                   <div
                     role="alert"
-                    className="mb-5 rounded-2xl border border-red-400/25 bg-red-400/10 px-4 py-3 text-[13px] text-red-100"
+                    className="mb-5 rounded-2xl border border-red-400/25 bg-red-400/10 px-4 py-3 text-[12px] text-red-100"
                   >
                     {visibleError}
                   </div>
@@ -232,7 +232,7 @@ export function AuthScreen() {
                     }}
                     disabled={isSubmitting}
                     className={cn(
-                      'relative flex h-12 w-full items-center justify-center rounded-2xl border border-white/12 bg-white/5 px-4 text-[14px] font-semibold tracking-[-0.01em] text-white transition-colors shadow-[0_10px_24px_rgba(0,0,0,0.16)]',
+                      'relative flex h-12 w-full items-center justify-center rounded-2xl border border-white/12 bg-white/5 px-4 text-[13px] font-semibold tracking-[-0.01em] text-white transition-colors shadow-[0_10px_24px_rgba(0,0,0,0.16)]',
                       isSubmitting ? 'cursor-wait opacity-70' : 'hover:bg-white/[0.075]',
                     )}
                   >
@@ -242,7 +242,7 @@ export function AuthScreen() {
                     <span>Continue with Google</span>
                   </button>
 
-                  <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-white/28">
+                  <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.16em] text-white/28">
                     <div className="h-px flex-1 bg-white/10" />
                     <span>Or continue with email</span>
                     <div className="h-px flex-1 bg-white/10" />
@@ -258,7 +258,7 @@ export function AuthScreen() {
                     }}
                   >
                     <label className="block space-y-2">
-                      <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-white/44">
+                      <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-white/44">
                         Email
                       </span>
                       <TextInput
@@ -270,11 +270,11 @@ export function AuthScreen() {
                           setLoginForm((state) => ({ ...state, email: event.target.value }))
                         }
                         disabled={isSubmitting}
-                        className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[14px] text-white placeholder:text-white/28 focus:border-white/30"
+                        className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[13px] text-white placeholder:text-white/28 focus:border-white/30"
                       />
                     </label>
                     <label className="block space-y-2">
-                      <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-white/44">
+                      <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-white/44">
                         Password
                       </span>
                       <TextInput
@@ -286,7 +286,7 @@ export function AuthScreen() {
                           setLoginForm((state) => ({ ...state, password: event.target.value }))
                         }
                         disabled={isSubmitting}
-                        className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[14px] text-white placeholder:text-white/28 focus:border-white/30"
+                        className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[13px] text-white placeholder:text-white/28 focus:border-white/30"
                       />
                     </label>
 
@@ -295,12 +295,12 @@ export function AuthScreen() {
                       fullWidth
                       type="submit"
                       disabled={isSubmitting}
-                      className="mt-2 flex h-12 items-center justify-center rounded-2xl bg-white text-[14px] font-semibold text-black transition-transform duration-200 hover:scale-[0.99] disabled:opacity-50"
+                      className="mt-2 flex h-12 items-center justify-center rounded-2xl bg-white text-[13px] font-semibold text-black transition-transform duration-200 hover:scale-[0.99] disabled:opacity-50"
                     >
                       {isSubmitting ? 'Signing In...' : 'Sign In'}
                     </Button>
 
-                    <p className="text-[13px] text-white/42">
+                    <p className="text-[12px] text-white/42">
                       Need an account?{' '}
                       <button
                         type="button"
@@ -320,7 +320,7 @@ export function AuthScreen() {
                     }}
                   >
                     <label className="block space-y-2">
-                      <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-white/44">
+                      <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-white/44">
                         Full name
                       </span>
                       <TextInput
@@ -331,11 +331,11 @@ export function AuthScreen() {
                           setSignupForm((state) => ({ ...state, name: event.target.value }))
                         }
                         disabled={isSubmitting}
-                        className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[14px] text-white placeholder:text-white/28 focus:border-white/30"
+                        className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[13px] text-white placeholder:text-white/28 focus:border-white/30"
                       />
                     </label>
                     <label className="block space-y-2">
-                      <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-white/44">
+                      <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-white/44">
                         Email
                       </span>
                       <TextInput
@@ -347,12 +347,12 @@ export function AuthScreen() {
                           setSignupForm((state) => ({ ...state, email: event.target.value }))
                         }
                         disabled={isSubmitting}
-                        className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[14px] text-white placeholder:text-white/28 focus:border-white/30"
+                        className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[13px] text-white placeholder:text-white/28 focus:border-white/30"
                       />
                     </label>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="block space-y-2">
-                        <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-white/44">
+                        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-white/44">
                           Password
                         </span>
                         <TextInput
@@ -364,11 +364,11 @@ export function AuthScreen() {
                             setSignupForm((state) => ({ ...state, password: event.target.value }))
                           }
                           disabled={isSubmitting}
-                          className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[14px] text-white placeholder:text-white/28 focus:border-white/30"
+                          className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[13px] text-white placeholder:text-white/28 focus:border-white/30"
                         />
                       </label>
                       <label className="block space-y-2">
-                        <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-white/44">
+                        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-white/44">
                           Confirm
                         </span>
                         <TextInput
@@ -383,7 +383,7 @@ export function AuthScreen() {
                             }))
                           }
                           disabled={isSubmitting}
-                          className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[14px] text-white placeholder:text-white/28 focus:border-white/30"
+                          className="rounded-2xl border-white/10 bg-white/5 px-4 py-3 text-[13px] text-white placeholder:text-white/28 focus:border-white/30"
                         />
                       </label>
                     </div>
@@ -393,13 +393,13 @@ export function AuthScreen() {
                       fullWidth
                       type="submit"
                       disabled={isSubmitting}
-                      className="mt-2 flex h-12 items-center justify-center gap-2 rounded-2xl bg-white text-[14px] font-semibold text-black transition-transform duration-200 hover:scale-[0.99] disabled:opacity-50"
+                      className="mt-2 flex h-12 items-center justify-center gap-2 rounded-2xl bg-white text-[13px] font-semibold text-black transition-transform duration-200 hover:scale-[0.99] disabled:opacity-50"
                     >
                       <UserPlus className="size-4" />
                       {isSubmitting ? 'Creating Account...' : 'Create Account'}
                     </Button>
 
-                    <p className="flex items-center gap-1 text-[13px] text-white/42">
+                    <p className="flex items-center gap-1 text-[12px] text-white/42">
                       Already registered?
                       <button
                         type="button"

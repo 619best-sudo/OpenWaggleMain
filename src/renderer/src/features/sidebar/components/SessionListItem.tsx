@@ -77,8 +77,11 @@ function SessionActionsTrigger({
     <div className="relative ml-2 flex items-center justify-end">
       <span
         className={cn(
-          'text-[10.5px] font-medium whitespace-nowrap transition-colors',
-          isActive ? 'text-text-secondary' : 'text-text-tertiary group-hover:text-text-secondary',
+          // Body weight and the muted tone: a timestamp on every row is a
+          // second column of text down the whole list, so it has to sit well
+          // below the titles it runs beside.
+          'text-[10px] whitespace-nowrap transition-colors',
+          isActive ? 'text-text-tertiary' : 'text-text-muted group-hover:text-text-tertiary',
         )}
       >
         {formatRelativeTime(session.updatedAt)}
@@ -122,7 +125,7 @@ export function SessionListItem({ session, isActive, actions }: SessionListItemP
     <li
       aria-current={isActive ? 'true' : undefined}
       className={cn(
-        'group mx-3 flex h-9 items-center rounded-lg transition-colors pl-8 pr-2',
+        'group mx-2 flex h-[34px] items-center rounded-md transition-colors pl-7 pr-2',
         isActive ? 'bg-bg-active' : 'hover:bg-bg-hover',
       )}
       onContextMenu={handleContextMenu}

@@ -36,15 +36,15 @@ function DraftSessionRow({
       aria-current="true"
       aria-label={`Draft session in ${projectLabel}`}
       onClick={onSelect}
-      className="home-panel-frame-soft group mx-3 flex h-10 w-[calc(100%-24px)] items-center gap-2 rounded-xl bg-bg-active pl-4 pr-3 text-left transition-colors hover:bg-bg-hover"
+      className="group mx-2 flex h-[34px] w-[calc(100%-16px)] items-center gap-2 rounded-md bg-bg-active pl-3 pr-2 text-left transition-colors hover:bg-bg-hover"
     >
       <Edit3 className="size-3.5 shrink-0 text-text-primary" />
-      <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-text-primary">
+      {/* The row is already visually selected and says "New session" — a framed
+          pill reading DRAFT on top of that was a third emphasis on one row. */}
+      <span className="min-w-0 flex-1 truncate text-[12px] font-medium text-text-primary">
         New session
       </span>
-      <span className="home-panel-frame-soft shrink-0 rounded-full bg-bg-secondary px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.16em] text-text-tertiary">
-        Draft
-      </span>
+      <span className="shrink-0 text-[10px] text-text-muted">Draft</span>
     </Button>
   )
 }
@@ -62,16 +62,12 @@ function EmptyProjectSessionsRow({
       type="button"
       aria-label={`Start first session in ${projectLabel}`}
       onClick={onSelect}
-      className="group mx-3 flex min-h-9 w-[calc(100%-24px)] items-start pl-8 pr-2 pt-1.5 text-left transition-colors"
+      className="group mx-2 flex h-[34px] w-[calc(100%-16px)] items-center pl-7 pr-2 text-left transition-colors"
     >
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[12.5px] font-medium text-text-tertiary group-hover:text-text-secondary">
-          No sessions yet
-        </div>
-        <div className="truncate text-[11px] text-text-tertiary/80 group-hover:text-text-tertiary">
-          Start the first thread in this project
-        </div>
-      </div>
+      {/* One line, not two: an empty project should take a row, not a card. */}
+      <span className="min-w-0 flex-1 truncate text-[12px] text-text-muted group-hover:text-text-tertiary">
+        No sessions yet — start one
+      </span>
     </Button>
   )
 }
@@ -122,9 +118,11 @@ function ProjectSessionRows({
   // every project header stays reachable. Inactive projects are collapsed
   // (render no rows), so this only ever binds the one expanded group.
   const isActiveProject = group.projectPath === state.projectPath
+  // Rows sit flush. A gap between every thread turned the list into stripes;
+  // the hover/active background is what separates one row from the next.
   const listClassName = isActiveProject
-    ? 'mt-1.5 space-y-1 max-h-[50vh] overflow-y-auto sidebar-scroll pr-1'
-    : 'mt-1.5 space-y-1'
+    ? 'mt-0.5 max-h-[50vh] overflow-y-auto sidebar-scroll pr-1'
+    : 'mt-0.5'
 
   return (
     <div className={listClassName}>
@@ -201,7 +199,7 @@ export function SidebarProjectGroupSection({
   const collapsed = renderState.collapsedProjectPaths.has(group.projectPath)
 
   return (
-    <section className="mb-3">
+    <section className="mb-1.5">
       <SidebarProjectHeader
         group={group}
         projectLabel={projectLabel}

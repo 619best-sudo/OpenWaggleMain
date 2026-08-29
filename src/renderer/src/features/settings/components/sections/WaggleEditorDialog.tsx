@@ -65,9 +65,11 @@ export function WaggleEditorDialog({
                   <PencilLine className="size-4" />
                 )}
               </div>
-              <h2 className="text-[15px] font-semibold tracking-wide text-text-primary">{title}</h2>
+              <h2 className="text-[13.5px] font-semibold tracking-wide text-text-primary">
+                {title}
+              </h2>
             </div>
-            <p className="max-w-[680px] text-[13px] leading-relaxed text-text-tertiary">
+            <p className="max-w-[680px] text-[12px] leading-relaxed text-text-tertiary">
               {description}
             </p>
           </div>
@@ -86,7 +88,7 @@ export function WaggleEditorDialog({
           {errorMessage ? (
             <p
               role="alert"
-              className="mb-6 rounded-lg border border-error/25 bg-error/6 px-4 py-3 text-[13px] text-error"
+              className="mb-6 rounded-lg border border-error/25 bg-error/6 px-4 py-3 text-[12px] text-error"
             >
               {errorMessage}
             </p>
@@ -94,11 +96,11 @@ export function WaggleEditorDialog({
 
           <div className="space-y-4">
             <label className="block space-y-1.5">
-              <span className="text-[12px] font-medium text-text-secondary">
+              <span className="text-[11px] font-medium text-text-secondary">
                 Council of Experts Title
               </span>
               <input
-                className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-lg border border-border bg-bg px-3 py-2 text-[12px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
                 value={formState.titleText}
                 onChange={(event) =>
                   dispatchForm({ type: 'set-title-text', value: event.target.value })
@@ -109,11 +111,11 @@ export function WaggleEditorDialog({
               />
             </label>
             <label className="block space-y-1.5">
-              <span className="text-[12px] font-medium text-text-secondary">
+              <span className="text-[11px] font-medium text-text-secondary">
                 Council of Experts Description
               </span>
               <textarea
-                className="min-h-[88px] w-full resize-y rounded-lg border border-border bg-bg px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50"
+                className="min-h-[88px] w-full resize-y rounded-lg border border-border bg-bg px-3 py-2 text-[12px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50"
                 value={formState.descriptionText}
                 onChange={(event) =>
                   dispatchForm({ type: 'set-description-text', value: event.target.value })
@@ -124,7 +126,7 @@ export function WaggleEditorDialog({
             </label>
 
             <div className="flex items-center justify-between gap-3 rounded-xl border border-border-light bg-bg-secondary/35 px-4 py-3">
-              <div className="text-[12px] leading-5 text-text-tertiary">
+              <div className="text-[11px] leading-5 text-text-tertiary">
                 Configure each Expert in the collaboration loop. Council of Experts rotates through
                 every active Expert in order, and individual slots can opt into prompt-keyword
                 gating when they should only join certain requests.
@@ -155,7 +157,7 @@ export function WaggleEditorDialog({
           </div>
 
           <div className="mt-6">
-            <div className="mb-3 rounded-xl border border-border-light bg-bg-secondary/50 px-4 py-3 text-[12px] leading-5 text-text-tertiary">
+            <div className="mb-3 rounded-xl border border-border-light bg-bg-secondary/50 px-4 py-3 text-[11px] leading-5 text-text-tertiary">
               Council of Experts workflows bundle Expert roles with the MCPs and skills they depend
               on. GreatX handles model routing for the run, so this editor focuses on role prompts,
               dependencies, and stop rules. When using MCPs, always map artifact starter payload
@@ -217,12 +219,12 @@ function DependencyEditor(input: {
 }) {
   return (
     <label className="rounded-xl border border-border-light bg-bg-secondary/35 p-4">
-      <div className="text-[12px] font-medium uppercase tracking-wide text-text-secondary">
+      <div className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">
         {input.label}
       </div>
-      <div className="mt-1 text-[12px] leading-5 text-text-tertiary">{input.description}</div>
+      <div className="mt-1 text-[11px] leading-5 text-text-tertiary">{input.description}</div>
       <textarea
-        className="mt-3 min-h-[120px] w-full resize-y rounded-lg border border-border bg-bg px-3 py-2 text-[13px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50"
+        className="mt-3 min-h-[120px] w-full resize-y rounded-lg border border-border bg-bg px-3 py-2 text-[12px] text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent/50"
         value={input.value}
         onChange={(event) => input.onChange(event.target.value)}
         placeholder={input.placeholder}

@@ -10,9 +10,10 @@
  * this the misalignment you meant?") is cheap to answer with the screenshot on
  * screen and near-impossible from a file path.
  */
+
+import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { PendingUserQuestionRequest } from '@shared/types/user-question'
 import { UserQuestionCard } from '../UserQuestionCard'
 
 const PROJECT = '/tmp/project'
@@ -48,9 +49,7 @@ describe('UserQuestionCard attachments', () => {
         request={{
           phase: 'perfect',
           question: 'Is this the misalignment you meant?',
-          attachments: [
-            { path: '/abs/shot.png', mimeType: 'image/png', note: 'what I captured' },
-          ],
+          attachments: [{ path: '/abs/shot.png', mimeType: 'image/png', note: 'what I captured' }],
         }}
         onSubmit={vi.fn()}
       />,
@@ -103,7 +102,9 @@ describe('UserQuestionCard attachments', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
     await waitFor(() =>
-      expect(screen.getByText(/Attach the Figma export of the hero to continue\./)).toBeInTheDocument(),
+      expect(
+        screen.getByText(/Attach the Figma export of the hero to continue\./),
+      ).toBeInTheDocument(),
     )
     expect(onSubmit).not.toHaveBeenCalled()
   })

@@ -174,16 +174,23 @@ describe('Sidebar project actions', () => {
     expect(navigateMock).not.toHaveBeenCalled()
   })
 
-  it('hides collapsed sidebar contents from accessibility and hit testing', () => {
+  it('collapses to an icon rail that keeps the primary actions reachable', () => {
     useUIStore.setState({ sidebarOpen: false })
 
     const { container } = render(<Sidebar />)
     const sidebarWrapper = container.firstElementChild
 
-    expect(sidebarWrapper).toHaveAttribute('aria-hidden', 'true')
-    expect(sidebarWrapper).toHaveAttribute('inert')
-    expect(sidebarWrapper).toHaveClass('pointer-events-none', 'w-0')
-    expect(screen.queryByRole('button', { name: 'Skills' })).toBeNull()
+    // Collapsing narrows the panel; it does not remove it, so it stays visible
+    // to assistive tech and to the pointer.
+    expect(sidebarWrapper).not.toHaveAttribute('aria-hidden')
+    expect(sidebarWrapper).not.toHaveAttribute('inert')
+    expect(sidebarWrapper).toHaveClass('w-[68px]')
+
+    // The thread list is what collapsing trades away — not the navigation.
+    expect(screen.getByRole('button', { name: 'Skills' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New thread' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show sidebar' })).toBeInTheDocument()
+    expect(screen.queryByText('THREADS')).toBeNull()
   })
 
   it('hides the app sidebar while the settings overlay is active', () => {
@@ -211,8 +218,10 @@ describe('Sidebar project actions', () => {
     })
     const draftRow = screen.getByRole('button', { name: /draft session in openwaggle/i })
     expect(draftRow).toBeInTheDocument()
-    expect(draftRow).toHaveClass('rounded-xl', 'home-panel-frame-soft', 'bg-bg-active')
-    expect(draftRow).not.toHaveClass('mx-2')
+    // The draft row is a selected list row, not a card: it shares the session
+    // rows' height, inset and radius, and is marked only by the active fill.
+    expect(draftRow).toHaveClass('rounded-md', 'bg-bg-active', 'mx-2', 'h-[34px]')
+    expect(draftRow).not.toHaveClass('home-panel-frame-soft')
   })
 
   it('opens the project folder from the project action menu', async () => {

@@ -7,7 +7,7 @@ interface SessionTreePanelContentProps {
 
 function EmptySessionTreeMessage({ searchActive }: { readonly searchActive: boolean }) {
   return (
-    <div className="px-2 py-6 text-center text-[12px] text-text-tertiary">
+    <div className="px-2 py-6 text-center text-[11px] text-text-tertiary">
       {searchActive ? 'No nodes match this search.' : 'No nodes match this filter.'}
     </div>
   )
@@ -33,7 +33,7 @@ export function SessionTreePanelContent({ content }: SessionTreePanelContentProp
         onScroll={onTreeScroll}
       >
         {!tree ? (
-          <div className="px-2 py-6 text-center text-[12px] text-text-tertiary">
+          <div className="px-2 py-6 text-center text-[11px] text-text-tertiary">
             No session tree yet.
           </div>
         ) : view?.visibleRows.length === 0 ? (

@@ -40,23 +40,33 @@ export function CodeBlock({ children, language, className }: CodeBlockProps) {
 
   return (
     <div
-      className={cn('home-panel-frame-soft group relative my-3 rounded-lg bg-code-card', className)}
+      className={cn(
+        'group relative my-2.5 overflow-hidden rounded-[10px]',
+        'border border-code-view-border bg-code-view-bg',
+        className,
+      )}
     >
-      <div className="home-divider-b flex items-center justify-between px-3 py-1.5">
-        <span className="font-mono text-[12px] font-medium text-[color:var(--color-tool-call-file-text)]">
+      <div className="flex items-center justify-between border-b border-code-view-border bg-code-view-gutter-bg px-2.5 py-1">
+        <span className="font-mono text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
           {language ?? 'text'}
         </span>
         <Button
           variant="unstyled"
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1 text-[13px] text-[color:var(--color-code-card-muted-text)] transition-colors hover:text-[color:var(--color-code-card-label-text)]"
+          className="flex items-center gap-1 text-[10px] text-[color:var(--color-code-card-muted-text)] transition-colors hover:text-[color:var(--color-code-card-label-text)]"
         >
           {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
           {copied ? 'Copied' : 'Copy'}
         </Button>
       </div>
-      <pre className="m-0 border-none bg-transparent p-3 overflow-x-auto [&>code]:font-mono [&>code]:text-[14px] [&>code]:leading-relaxed">
+      {/* data-code-card opts this <pre> out of the global `.prose pre` styling,
+          which would otherwise re-apply its own border, background, padding and
+          margin on top of the card this component already draws. */}
+      <pre
+        data-code-card=""
+        className="m-0 overflow-x-auto border-none bg-transparent p-2.5 [&>code]:font-mono [&>code]:text-[12.5px] [&>code]:leading-[1.55]"
+      >
         {children}
       </pre>
     </div>

@@ -41,10 +41,10 @@ export function WorkspacePanelSurface({
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
                   {title ? (
-                    <h2 className="text-[20px] font-semibold text-text-primary">{title}</h2>
+                    <h2 className="text-[17px] font-semibold text-text-primary">{title}</h2>
                   ) : null}
                   {description ? (
-                    <p className="max-w-[760px] text-[13px] leading-5 text-text-secondary">
+                    <p className="max-w-[760px] text-[12px] leading-5 text-text-secondary">
                       {description}
                     </p>
                   ) : null}

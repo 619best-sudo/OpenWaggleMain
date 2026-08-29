@@ -77,7 +77,7 @@ function editsSummary(draft: PlanStepDraft) {
  */
 function StepNumber({ order }: { readonly order: number }) {
   return (
-    <span className="mt-px flex size-[20px] shrink-0 items-center justify-center rounded-full bg-bg-hover text-[11px] font-medium tabular-nums text-text-tertiary">
+    <span className="mt-px flex size-[20px] shrink-0 items-center justify-center rounded-full bg-bg-hover text-[10px] font-medium tabular-nums text-text-tertiary">
       {order}
     </span>
   )
@@ -107,7 +107,7 @@ function StepFiles({
           <span
             key={file}
             className={cn(
-              'flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[11px]',
+              'flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px]',
               isNew ? 'bg-accent/10 text-accent' : 'bg-code-card text-tool-call-file-text',
             )}
             title={file}
@@ -133,17 +133,17 @@ function ResolvedStepEdits({ draft }: { readonly draft: PlanStepDraft }) {
   return (
     <div className="mt-1.5 space-y-1 border-l-2 border-accent/40 pl-2">
       {draft.notes.trim() ? (
-        <div className="text-[12px] text-text-secondary">
+        <div className="text-[11px] text-text-secondary">
           <span className="text-text-primary">Your instructions:</span> {draft.notes.trim()}
         </div>
       ) : null}
       {draft.attachments.length ? (
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[12px] text-text-primary">Attached:</span>
+          <span className="text-[11px] text-text-primary">Attached:</span>
           {draft.attachments.map((att) => (
             <span
               key={att.path}
-              className="max-w-[220px] truncate rounded bg-bg-hover px-1.5 py-0.5 font-mono text-[11px] text-text-secondary"
+              className="max-w-[220px] truncate rounded bg-bg-hover px-1.5 py-0.5 font-mono text-[10px] text-text-secondary"
               title={att.path}
             >
               {att.path.split('/').pop()}
@@ -181,7 +181,7 @@ function StepAdditions({
       <Button
         type="button"
         variant="unstyled"
-        className="mt-1.5 text-[12px] text-accent underline-offset-2 hover:underline"
+        className="mt-1.5 text-[11px] text-accent underline-offset-2 hover:underline"
         onClick={actions.onToggle}
         disabled={disabled}
       >
@@ -212,7 +212,7 @@ function StepAdditions({
             {draft.attachments.map((att) => (
               <span
                 key={att.path}
-                className="flex items-center gap-1 rounded bg-bg-hover px-1.5 py-0.5 text-[11px] text-text-secondary"
+                className="flex items-center gap-1 rounded bg-bg-hover px-1.5 py-0.5 text-[10px] text-text-secondary"
               >
                 <span className="max-w-[220px] truncate font-mono" title={att.path}>
                   {att.path.split('/').pop()}
@@ -256,20 +256,20 @@ export function PlanReviewStepRow({
       <div className="min-w-0 flex-1 pb-1">
         <div className="flex flex-wrap items-baseline gap-x-2">
           <span className="font-medium text-text-primary">{task.title}</span>
-          {planTitle ? <span className="text-[11px] text-text-tertiary">{planTitle}</span> : null}
+          {planTitle ? <span className="text-[10px] text-text-tertiary">{planTitle}</span> : null}
         </div>
-        <div className="mt-0.5 text-[13px] leading-[1.5] text-text-secondary">{task.summary}</div>
+        <div className="mt-0.5 text-[12px] leading-[1.5] text-text-secondary">{task.summary}</div>
 
         <StepFiles files={task.files} mutations={task.fileMutations} />
 
         {task.verification ? (
-          <div className="mt-1.5 text-[12px] leading-[1.45] text-text-secondary">
+          <div className="mt-1.5 text-[11px] leading-[1.45] text-text-secondary">
             <span className="text-text-tertiary">Done when </span>
             {task.verification}
           </div>
         ) : null}
         {task.risks ? (
-          <div className="mt-1 text-[12px] leading-[1.45] text-warning">{task.risks}</div>
+          <div className="mt-1 text-[11px] leading-[1.45] text-warning">{task.risks}</div>
         ) : null}
 
         <StepAdditions

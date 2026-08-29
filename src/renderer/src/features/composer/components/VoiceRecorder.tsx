@@ -29,7 +29,7 @@ export function VoiceRecorder({ fileInputRef, voice }: VoiceRecorderProps) {
             <VoiceVisualizer {...buildInlineVisualizerProps(voice.visualizerControls)} />
           </div>
 
-          <span className="w-10 text-right text-[12px] tabular-nums text-text-tertiary">
+          <span className="w-10 text-right text-[11px] tabular-nums text-text-tertiary">
             {formatVoiceDuration(voice.elapsedSeconds)}
           </span>
         </div>

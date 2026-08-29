@@ -1,8 +1,8 @@
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { Checkbox } from '@/shared/ui/Checkbox'
-import { TextInput } from '@/shared/ui/TextInput'
 import { Textarea } from '@/shared/ui/Textarea'
+import { TextInput } from '@/shared/ui/TextInput'
 
 /** What a label means and whether the agent recommends it. */
 export interface QuestionChoiceMeta {
@@ -53,7 +53,7 @@ function SuggestionChips({ state, actions }: QuestionAnswerInputProps) {
           variant="unstyled"
           disabled={state.disabled}
           onClick={() => actions.onTextChange(option)}
-          className="rounded-[10px] border border-border/35 bg-bg-primary/70 px-2.5 py-1.5 text-[14px] leading-[1.5] text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary disabled:opacity-60"
+          className="rounded-[10px] border border-border/35 bg-bg-primary/70 px-2.5 py-1.5 text-[13px] leading-[1.5] text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary disabled:opacity-60"
         >
           {option}
         </Button>
@@ -123,16 +123,16 @@ function SingleSelect({ state, actions }: QuestionAnswerInputProps) {
               />
             </span>
             <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="flex items-center gap-1.5 text-[14px] leading-[1.5]">
+              <span className="flex items-center gap-1.5 text-[13px] leading-[1.5]">
                 {option}
                 {meta?.recommended ? (
-                  <span className="rounded-full border border-accent/40 bg-accent/10 px-1.5 py-px text-[11px] leading-[1.4] text-accent">
+                  <span className="rounded-full border border-accent/40 bg-accent/10 px-1.5 py-px text-[10px] leading-[1.4] text-accent">
                     Recommended
                   </span>
                 ) : null}
               </span>
               {meta?.description ? (
-                <span className="text-[13px] leading-[1.45] text-text-secondary">
+                <span className="text-[12px] leading-[1.45] text-text-secondary">
                   {meta.description}
                 </span>
               ) : null}
@@ -156,10 +156,10 @@ function MultiSelect({ state, actions }: QuestionAnswerInputProps) {
               onChange={(event) => actions.onToggle(option, event.target.checked)}
               disabled={state.disabled}
               label={meta?.recommended ? `${option} · Recommended` : option}
-              labelClassName="text-[14px] leading-[1.5] text-text-primary"
+              labelClassName="text-[13px] leading-[1.5] text-text-primary"
             />
             {meta?.description ? (
-              <span className="pl-6 text-[13px] leading-[1.45] text-text-secondary">
+              <span className="pl-6 text-[12px] leading-[1.45] text-text-secondary">
                 {meta.description}
               </span>
             ) : null}
@@ -195,7 +195,7 @@ export function QuestionAnswerInput({ state, actions }: QuestionAnswerInputProps
 
       {state.mode !== 'text' && state.allowFreeText ? (
         <div className="mt-3 flex flex-col gap-1.5">
-          <div className="text-[13px] leading-[1.45] text-text-tertiary">
+          <div className="text-[12px] leading-[1.45] text-text-tertiary">
             None of these? Answer in your own words — it overrides the selection above.
           </div>
           <TextInput

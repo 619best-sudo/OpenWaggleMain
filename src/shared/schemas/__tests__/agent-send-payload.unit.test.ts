@@ -40,26 +40,4 @@ describe('agentSendPayloadSchema', () => {
       Schema.decodeUnknownSync(agentSendPayloadSchema)({ ...base, planMode: 'yes' }),
     ).toThrow()
   })
-
-  // The MCP selection (composer picker) crosses the same boundary with the same
-  // stakes: an undeclared field would be stripped and the picker would render
-  // as wired while doing nothing — the exact failure mode this suite exists for.
-  it('carries the MCP selection through the IPC boundary', () => {
-    const decoded = Schema.decodeUnknownSync(agentSendPayloadSchema)({
-      ...base,
-      mcpServers: ['chrome-devtools', 'github'],
-    })
-    expect(decoded.mcpServers).toEqual(['chrome-devtools', 'github'])
-  })
-
-  it('treats mcpServers as optional, so a normal send carries none', () => {
-    const decoded = Schema.decodeUnknownSync(agentSendPayloadSchema)(base)
-    expect(decoded.mcpServers).toBeUndefined()
-  })
-
-  it('rejects a non-string MCP entry instead of coercing it', () => {
-    expect(() =>
-      Schema.decodeUnknownSync(agentSendPayloadSchema)({ ...base, mcpServers: ['ok', 42] }),
-    ).toThrow()
-  })
 })

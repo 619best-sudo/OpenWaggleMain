@@ -29,7 +29,7 @@ function ComposerDropCapacityMessage() {
   return (
     <>
       <Ban className="size-4 text-red-400" />
-      <span className="text-[13px] font-medium text-red-400">Maximum files attached</span>
+      <span className="text-[12px] font-medium text-red-400">Maximum files attached</span>
     </>
   )
 }
@@ -38,7 +38,7 @@ function ComposerDropReadyMessage() {
   return (
     <>
       <ArrowDownToLine className="size-4 text-accent" />
-      <span className="text-[13px] font-medium text-accent">Drop files to attach</span>
+      <span className="text-[12px] font-medium text-accent">Drop files to attach</span>
     </>
   )
 }

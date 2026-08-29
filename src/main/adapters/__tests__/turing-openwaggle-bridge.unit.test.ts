@@ -229,8 +229,8 @@ describe('turing OpenWaggle bridge', () => {
       mcpAdapterEnabled: true,
       mcpRuntimeConfigPath: '/tmp/runtime.json',
       enabledMcpNames: ['playwright'],
-      // Connected is not selected: playwright is enabled and connected here,
-      // but nothing was named for the run, so the selection reads empty.
+      // The debug stub's session never ran a selection, so it reads empty.
+      // In a real run the selection is the enabled set (enabled = used).
       selectedMcpNames: [],
       attemptedMcpNames: ['playwright'],
       connectedMcpIds: ['turing-machine:mcp:playwright'],
@@ -369,11 +369,11 @@ describe('turing OpenWaggle bridge', () => {
       expect(prompt).not.toContain('GETTING THE APP ONTO A DEVICE')
     })
 
-    it('advertising follows the SELECTION, not the connection — unselected servers are not listed', () => {
-      // From the field: both browser MCPs connected, nothing selected, and the
-      // prompt listed ~40 tools the chain held none of — the write pass then
-      // stalled itself calling `playwright` / `browser_navigate` it had just
-      // been told to use. Connected is not selected.
+    it('every CONNECTED server is advertised — enabled is used, no per-run filter', () => {
+      // The run selects every enabled server (turing-classic-run), and only
+      // enabled servers are connected (the bridge), so anything in the
+      // connection snapshot must appear in the prompt — advertising a
+      // connected server is advertising a tool the chain actually holds.
       const prompt = buildOpenWaggleRuntimePrompt('Change the popup title', {
         bridge: {
           connectedMcpToolNames: {
@@ -384,28 +384,9 @@ describe('turing OpenWaggle bridge', () => {
           issues: [],
           skillToolNames: [],
         },
-        mcpSelection: [],
-      })
-      expect(prompt).not.toContain('CONNECTED MCP TOOLS')
-      expect(prompt).not.toContain('chrome-devtools')
-      expect(prompt).not.toContain('playwright')
-    })
-
-    it('a selected server is advertised; a connected-but-unselected one is not', () => {
-      const prompt = buildOpenWaggleRuntimePrompt('Change the popup title', {
-        bridge: {
-          connectedMcpToolNames: {
-            'chrome-devtools': ['browser_navigate', 'browser_click'],
-            playwright: ['browser_navigate', 'browser_snapshot'],
-          },
-          failedMcpNames: [],
-          issues: [],
-          skillToolNames: [],
-        },
-        mcpSelection: ['chrome-devtools'],
       })
       expect(prompt).toContain('chrome-devtools: browser_navigate, browser_click')
-      expect(prompt).not.toContain('playwright:')
+      expect(prompt).toContain('playwright: browser_navigate, browser_snapshot')
     })
 
     it('says nothing about MCP routing when no server is connected', () => {

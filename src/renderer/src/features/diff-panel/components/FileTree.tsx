@@ -90,7 +90,7 @@ function FileTreeNode({ node, depth, onFileClick }: FileTreeNodeProps) {
         )}
         <span
           className={cn(
-            'text-[12px] truncate',
+            'text-[11px] truncate',
             node.isChanged ? 'text-text-primary' : 'text-text-secondary',
           )}
         >
@@ -112,7 +112,7 @@ function FileTreeNode({ node, depth, onFileClick }: FileTreeNodeProps) {
         style={{ paddingLeft: `${String(paddingLeft)}px` }}
       >
         <ChevIcon className="size-[11px] text-text-tertiary shrink-0" />
-        <span className="text-[12px] text-text-secondary">{node.name}</span>
+        <span className="text-[11px] text-text-secondary">{node.name}</span>
       </Button>
       {expanded &&
         node.children.map((child) => (
@@ -150,7 +150,7 @@ export function FileTree({ files, onFileClick, onSendReview, reviewCount }: File
           disabled={reviewCount === 0}
           className={cn(
             'flex h-6 w-full items-center justify-center gap-1 rounded border border-[var(--theme-diff-review-send-border)] bg-[var(--theme-diff-review-send-bg)] text-[var(--theme-diff-review-send-text)]',
-            'text-[11px] font-semibold',
+            'text-[10px] font-semibold',
             'disabled:opacity-40 transition-opacity hover:bg-[var(--theme-diff-review-send-hover)]',
           )}
         >

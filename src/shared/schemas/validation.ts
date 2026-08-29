@@ -62,9 +62,6 @@ export const agentSendPayloadSchema = Schema.Struct({
   // strips anything it does not declare, so an omitted field is dropped between
   // renderer and main with no error — the toggle would look wired and do nothing.
   planMode: Schema.optional(Schema.Boolean),
-  // Per-message MCP selection (composer picker). Same IPC-boundary rule: an
-  // undeclared field would be stripped and the picker would do nothing.
-  mcpServers: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
 })
 
 export const toolPermissionResolutionSchema: Schema.Schema<ToolPermissionResolution> = Schema.Struct({

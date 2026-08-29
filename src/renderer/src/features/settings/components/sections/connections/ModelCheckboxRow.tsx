@@ -17,10 +17,10 @@ export function ModelCheckboxRow({ model, checked, provider, onToggle }: ModelCh
       className="accent-accent"
       label={
         <>
-          <span className="min-w-0 flex-1 truncate text-[13px] text-text-primary">
+          <span className="min-w-0 flex-1 truncate text-[12px] text-text-primary">
             {model.name}
           </span>
-          {!model.available && <span className="text-[11px] text-text-muted">Auth required</span>}
+          {!model.available && <span className="text-[10px] text-text-muted">Auth required</span>}
         </>
       }
       labelClassName="h-8 gap-2.5 rounded-lg px-2 hover:bg-bg-hover"

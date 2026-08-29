@@ -12,7 +12,7 @@ export function SessionTreePanelFilters({ filters }: SessionTreePanelFiltersProp
   return (
     <div className="home-divider-b grid h-12 shrink-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-4 px-4 py-2">
       <div className="flex h-8 items-center gap-2">
-        <label htmlFor="session-tree-filter" className="text-[12px] text-text-tertiary">
+        <label htmlFor="session-tree-filter" className="text-[11px] text-text-tertiary">
           Filter
         </label>
         <Select

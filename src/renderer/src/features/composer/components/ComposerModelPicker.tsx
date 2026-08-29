@@ -140,7 +140,7 @@ export function ComposerModelPicker() {
         </div>
         <div className="max-h-[200px] overflow-y-auto">
           {flatModels.length === 0 ? (
-            <div className="px-3 py-4 text-[12px] text-text-tertiary">No models configured.</div>
+            <div className="px-3 py-4 text-[11px] text-text-tertiary">No models configured.</div>
           ) : (
             <div className="space-y-px">
               {flatModels.map((model) => (
@@ -170,7 +170,7 @@ export function ComposerModelPicker() {
                 />
               ))
             ) : (
-              <div className="px-2 py-1 text-[12px] text-text-tertiary">
+              <div className="px-2 py-1 text-[11px] text-text-tertiary">
                 Loading thinking capabilities...
               </div>
             )}
@@ -207,7 +207,7 @@ function ComposerModelRow({
         className="size-4 shrink-0"
         style={{ color: resolveIconColor(model.provider) }}
       />
-      <span className="min-w-0 flex-1 truncate text-[12px]">
+      <span className="min-w-0 flex-1 truncate text-[11px]">
         {model.name}
         <span className="ml-1 text-[10px] text-text-muted">{model.providerName}</span>
       </span>
@@ -234,7 +234,7 @@ function ThinkingChip({
       type="button"
       onClick={onClick}
       className={cn(
-        'home-panel-frame-soft rounded-md px-2 py-1 text-[11px] transition-colors',
+        'home-panel-frame-soft rounded-md px-2 py-1 text-[10px] transition-colors',
         active
           ? 'bg-accent/10 text-text-primary'
           : 'bg-bg-secondary/30 text-text-secondary hover:bg-bg-hover hover:text-text-primary',

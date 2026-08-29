@@ -130,16 +130,22 @@ export function UserQuestionCard({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-[18px] bg-bg-primary p-[3px] shadow-sm ring-1 ring-border/40',
+        'relative overflow-hidden rounded-[16px] border border-prompt-border bg-prompt-bg',
+        // A prompt BLOCKS the run: it is not one more card in the transcript,
+        // so it takes its own tinted ground and a saturated left edge rather
+        // than the neutral surface every other block shares.
+        'border-l-[3px] border-l-prompt-accent',
         className,
       )}
     >
-      <div className="flex flex-col rounded-[15px] bg-bg-secondary/20 px-4 py-3.5 ring-1 ring-inset ring-border/20">
-        <div className="text-[14px] font-medium leading-[1.5] text-text-tertiary">{title}</div>
-        <div className="mt-1 text-[14px] leading-[1.5] text-text-primary">{request.question}</div>
+      <div className="flex flex-col px-4 py-3.5">
+        <div className="text-[12px] font-semibold uppercase tracking-[0.06em] leading-[1.5] text-prompt-heading">
+          {title}
+        </div>
+        <div className="mt-1 text-[13px] leading-[1.5] text-text-primary">{request.question}</div>
 
         {request.reason ? (
-          <div className="mt-1.5 text-[14px] leading-[1.5] text-text-secondary">
+          <div className="mt-1.5 text-[13px] leading-[1.5] text-text-secondary">
             {request.reason}
           </div>
         ) : null}
@@ -167,7 +173,7 @@ export function UserQuestionCard({
             </div>
 
             {error ? (
-              <div className="mt-2.5 text-[14px] leading-[1.5] text-error">{error}</div>
+              <div className="mt-2.5 text-[13px] leading-[1.5] text-error">{error}</div>
             ) : null}
 
             <QuestionCardFooter

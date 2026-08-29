@@ -31,7 +31,7 @@ export function CommandPaletteSearch({
           placeholder="Search"
           variant="transparent"
           inputSize="sm"
-          className="h-8 flex-1 px-0 text-[12px] placeholder:text-text-muted focus-visible:shadow-none"
+          className="h-8 flex-1 px-0 text-[11px] placeholder:text-text-muted focus-visible:shadow-none"
         />
         <Button
           variant="unstyled"

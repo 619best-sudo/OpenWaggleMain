@@ -78,11 +78,11 @@ function OAuthProviderIdentity({
         <Icon className="size-4" style={{ color: meta.color }} />
       </div>
       <div className="min-w-0">
-        <div className="truncate text-[13px] font-medium text-text-primary">
+        <div className="truncate text-[12px] font-medium text-text-primary">
           {providerInfo.displayName}
         </div>
         {connected && accountInfo?.label && (
-          <div className="truncate text-[11px] text-text-tertiary">{accountInfo.label}</div>
+          <div className="truncate text-[10px] text-text-tertiary">{accountInfo.label}</div>
         )}
       </div>
     </div>
@@ -100,7 +100,7 @@ function OAuthStatusIndicator({ rowState }: { readonly rowState: OAuthRowState }
         )}
         <span
           className={cn(
-            'text-[11px] font-medium',
+            'text-[10px] font-medium',
             rowState.isCodeReceived ? 'text-success' : 'text-accent',
           )}
         >
@@ -117,7 +117,7 @@ function OAuthStatusIndicator({ rowState }: { readonly rowState: OAuthRowState }
   return (
     <div className="flex h-[22px] items-center gap-1 rounded-[10px] px-2">
       <div className="size-1.5 rounded-full" style={{ backgroundColor: rowState.statusColor }} />
-      <span className="text-[11px] font-medium" style={{ color: rowState.statusColor }}>
+      <span className="text-[10px] font-medium" style={{ color: rowState.statusColor }}>
         {rowState.statusText}
       </span>
     </div>
@@ -143,7 +143,7 @@ function OAuthManualCodePrompt({
 
   return (
     <div className="mx-5 mb-3 space-y-2">
-      <p className="text-[11px] text-text-tertiary">
+      <p className="text-[10px] text-text-tertiary">
         Pi is waiting for the browser callback. If it does not finish automatically, paste the OAuth
         code or callback URL here.
       </p>
@@ -157,14 +157,14 @@ function OAuthManualCodePrompt({
           }}
           placeholder="Paste OAuth code or callback URL"
           monospace
-          className="flex-1 rounded-lg border-input-card-border text-[12px] placeholder:text-text-muted focus:border-border-light"
+          className="flex-1 rounded-lg border-input-card-border text-[11px] placeholder:text-text-muted focus:border-border-light"
         />
         <Button
           variant="primary"
           size="md"
           onClick={handleSubmitCode}
           disabled={!pasteValue.trim()}
-          className="text-[12px]"
+          className="text-[11px]"
         >
           Connect
         </Button>
@@ -186,14 +186,14 @@ function OAuthErrorMessage({
     <div className="mx-5 mb-3 flex items-start gap-2 rounded-lg border border-error/25 bg-error/6 px-3 py-2">
       <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-error" />
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] text-error/80">{message}</p>
+        <p className="text-[10px] text-error/80">{message}</p>
         <Button
           variant="unstyled"
           type="button"
           onClick={() => {
             void startOAuth(provider)
           }}
-          className="mt-1 text-[11px] font-medium text-error transition-colors hover:text-error/80"
+          className="mt-1 text-[10px] font-medium text-error transition-colors hover:text-error/80"
         >
           Try again
         </Button>

@@ -71,16 +71,22 @@ describe('UnifiedDiffView presentation', () => {
     const removeRow = rows.find((row) => row.textContent?.includes('background: yellow;'))
     const contextRow = rows.find((row) => row.textContent?.endsWith('kept'))
 
-    // Added → green wash + green accent bar; removed → red wash + red accent bar.
+    // Added → green wash; removed → red wash.
     expect(addRow?.className).toContain('bg-code-view-add-bg')
-    expect(addRow?.className).toContain('border-l-code-view-add-accent')
     expect(removeRow?.className).toContain('bg-code-view-remove-bg')
-    expect(removeRow?.className).toContain('border-l-code-view-remove-accent')
+
+    // The accent bar rides on the STICKY gutter, not the row, so it stays
+    // pinned while the code scrolls horizontally instead of sliding away.
+    const gutterOf = (row: Element | undefined) => row?.querySelector('span.sticky')
+    expect(gutterOf(addRow)?.className).toContain('border-l-code-view-add-accent')
+    expect(gutterOf(removeRow)?.className).toContain('border-l-code-view-remove-accent')
 
     // Unchanged context rows stay untinted, so the changes are what stands out.
     expect(contextRow?.className).not.toContain('bg-code-view-add-bg')
     expect(contextRow?.className).not.toContain('bg-code-view-remove-bg')
-    expect(contextRow?.className).toContain('border-l-transparent')
+    // Their bar takes the gutter's own colour rather than `transparent`, which
+    // would let the card background show through as a bright line.
+    expect(gutterOf(contextRow)?.className).toContain('border-l-code-view-gutter-bg')
   })
 
   it('numbers rows from the hunk header and scrolls on both axes', () => {

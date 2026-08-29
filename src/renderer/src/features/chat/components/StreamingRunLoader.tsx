@@ -1,8 +1,8 @@
 import type { AgentPhaseId } from '@shared/types/phase'
 import { isLightThemeMode } from '@shared/types/settings'
 import { usePreferencesStore } from '@/features/settings/state'
-import lightLoaderGif from '../../../../../assets/loader-light.gif'
 import darkLoaderGif from '../../../../../assets/loader.gif'
+import lightLoaderGif from '../../../../../assets/loader-light.gif'
 
 interface StreamingRunLoaderProps {
   readonly currentPhaseId?: AgentPhaseId | null

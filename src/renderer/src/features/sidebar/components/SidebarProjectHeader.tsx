@@ -214,7 +214,7 @@ function ProjectTitleArea({
       />
       <span
         className={cn(
-          'min-w-0 flex-1 truncate text-[12px] font-medium tracking-[-0.01em] transition-colors',
+          'min-w-0 flex-1 truncate text-[11px] font-semibold tracking-[-0.01em] transition-colors',
           state.isCurrentProject ? 'text-text-primary/90' : 'text-text-secondary',
         )}
       >
@@ -253,7 +253,10 @@ export function SidebarProjectHeader({
   return (
     <div
       className={cn(
-        'group mx-3 flex h-8 items-center rounded-lg px-3 transition-colors',
+        // `pl-4` lands the Folder icon at 24px from the panel edge (8px row
+        // margin + 16px padding), the same column the THREADS label starts in
+        // (`px-6`). The row background still starts at the 8px gutter.
+        'group mx-2 flex h-[32px] items-center rounded-md pr-2 pl-4 transition-colors',
         isCurrentProject ? 'bg-bg-secondary/40' : 'hover:bg-bg-hover',
       )}
       title={group.projectPath}

@@ -81,7 +81,8 @@ vi.mock('@/shell/ui-store', () => ({
 
 vi.mock('@/shared/lib/ipc', () => ({
   api: {
-    showConfirm: (...args: unknown[]) => mockState.showConfirm(args[0] as string, args[1] as string),
+    showConfirm: (...args: unknown[]) =>
+      mockState.showConfirm(args[0] as string, args[1] as string),
   },
 }))
 

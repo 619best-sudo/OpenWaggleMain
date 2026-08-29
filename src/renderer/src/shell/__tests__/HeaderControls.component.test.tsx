@@ -17,17 +17,13 @@ function gitStatus() {
 }
 
 describe('HeaderControls', () => {
-  it('renders the collapsed-sidebar header affordance and title', () => {
-    const onToggleSidebar = vi.fn()
-
-    render(
-      <HeaderLeft sidebarOpen={false} title="Working session" onToggleSidebar={onToggleSidebar} />,
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: 'Show sidebar' }))
+  it('renders the session title and leaves sidebar control to the rail', () => {
+    render(<HeaderLeft sidebarOpen={false} title="Working session" onToggleSidebar={vi.fn()} />)
 
     expect(screen.getByText('Working session')).toBeInTheDocument()
-    expect(onToggleSidebar).toHaveBeenCalledOnce()
+    // The collapsed sidebar is an icon rail with its own expand button, so a
+    // second one here would sit a few pixels away doing the same thing.
+    expect(screen.queryByRole('button', { name: 'Show sidebar' })).not.toBeInTheDocument()
   })
 
   it('disables terminal and commit buttons without a project', () => {

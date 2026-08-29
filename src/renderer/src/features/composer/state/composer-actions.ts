@@ -11,34 +11,11 @@ export function createComposerStoreState(set: ComposerSet, get: ComposerGet) {
     ...createTextActions(set),
     ...createHistoryActions(set, get),
     ...createAttachmentActions(set),
-    ...createMcpSelectionActions(set),
     ...createScopedDraftActions(set, get),
     ...createMenuActions(set),
     ...createSlashSkillActions(set),
     ...createEditorActions(set),
     reset: () => resetComposerState(set, get),
-  }
-}
-
-/**
- * The composer's MCP selection. NOT part of `resetComposerState` on purpose:
- * the selection is a mode, not an attachment — the user picks the servers once
- * and every subsequent send carries them until they change the pick. Clearing
- * it with the input would silently strip tools from the next message.
- */
-function createMcpSelectionActions(set: ComposerSet) {
-  return {
-    toggleMcpServer(name: string) {
-      set((state) => ({
-        mcpServers: state.mcpServers.includes(name)
-          ? state.mcpServers.filter((n) => n !== name)
-          : [...state.mcpServers, name],
-      }))
-    },
-
-    setMcpServers(names: readonly string[]) {
-      set({ mcpServers: [...names] })
-    },
   }
 }
 

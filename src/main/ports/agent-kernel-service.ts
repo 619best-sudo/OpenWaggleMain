@@ -2,6 +2,7 @@ import type { HydratedAgentSendPayload, Message } from '@shared/types/agent'
 import type { ContextCompactionResult, ContextUsageSnapshot } from '@shared/types/context-usage'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { McpSettingsView } from '@shared/types/mcp'
+import type { SessionResumeState } from '@shared/types/resume'
 import type { SessionDetail } from '@shared/types/session'
 import type { ToolPermissionMode } from '@shared/types/settings'
 import type { AgentTransportEvent } from '@shared/types/stream'
@@ -97,6 +98,22 @@ export interface AgentKernelRunInput {
   readonly persistedTranscriptNodes?: readonly ProjectedSessionNodeInput[]
   /** Answer to a previously-paused user question, to resume the run. Optional. */
   readonly pendingUserQuestionResolution?: AgentKernelPendingUserQuestionResolution
+  /**
+   * Carry a STOPPED run forward instead of starting a fresh one.
+   *
+   * The token itself is not passed in: it is read out of
+   * `persistedTranscriptNodes`, which this input already carries, so a caller
+   * cannot hand back a token from a different session. All the caller supplies
+   * is the intent — and the user's `answer`, when the run stopped on a question.
+   */
+  readonly resumeRun?: AgentKernelResumeRun
+}
+
+/** See `AgentKernelRunInput.resumeRun`. */
+export interface AgentKernelResumeRun {
+  /** The user's reply, required when the stopped run was waiting on one. */
+  readonly answer?: string
+  readonly attachments?: ReadonlyArray<{ readonly path: string; readonly mimeType: string }>
 }
 
 export interface HiddenCustomPromptDelivery {
@@ -121,6 +138,12 @@ export interface AgentKernelRunResult {
   readonly sessionSnapshot: AgentKernelSessionSnapshot
   readonly aborted?: boolean
   readonly terminalError?: string
+  /**
+   * Set when THIS run also stopped short of its plan — the user-facing half of
+   * the resume record. Absent means the run settled and there is nothing to
+   * continue.
+   */
+  readonly resumeState?: SessionResumeState
 }
 
 export interface AgentKernelSessionSnapshotResult {

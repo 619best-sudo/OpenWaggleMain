@@ -3,28 +3,48 @@ import type { UIMessage } from '@shared/types/chat-ui'
 import type { JsonObject } from '@shared/types/json'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { WaggleAgentColor } from '@shared/types/waggle'
-import { Brain, ChevronDown, CornerDownRight, GitBranch, LoaderCircle } from 'lucide-react'
+import {
+  Bot,
+  Brain,
+  ChevronDown,
+  CornerDownRight,
+  FileText,
+  FolderOpen,
+  GitBranch,
+  Globe,
+  LoaderCircle,
+  type LucideIcon,
+  Pencil,
+  Search,
+  Terminal,
+  Wrench,
+} from 'lucide-react'
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { toolCallTitle } from 'turing-harness/tool-titles'
 import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 import { looksLikeMachinePlanText } from '../lib/machine-plan-detection'
 import { relativeToProject } from '../lib/project-paths'
 import {
   getConcernLinesFromResultCached,
+  getResultPath,
   getToolDiffData,
+  getToolResultParts,
   getToolResultText,
   type LineConcern,
   READ_VIEW_MAX_HEIGHT_PX,
+  RESULT_MAX_HEIGHT_PX,
 } from '../lib/tool-call-block'
 import { ASK_USER_QUESTION_TITLE_MAX, summarizeToolTarget } from '../lib/tool-display'
 import { getToolMediaOutput, type ToolMediaOutput } from '../lib/tool-media-output'
 import { useActiveProjectPath } from '../lib/use-active-project-path'
 import { AgentLabel } from './AgentLabel'
 import { MachinePlanStreamingPlaceholder } from './MachinePlanStreamingPlaceholder'
+import { ReadFileView } from './ReadFileView'
 import { StreamingText } from './StreamingText'
-import { toolCallTitle } from 'turing-harness/tool-titles'
 import { FileContentView, UnifiedDiffView } from './ToolCallBlockParts'
 import { ToolMediaPreview } from './ToolMediaPreview'
+import { ViewFileButton } from './ViewFileButton'
 
 // ---- Inline tool block (matches PhaseTimelineCard ToolStrip styling) ----
 
@@ -65,10 +85,58 @@ function mediaActionLabel(media: ToolMediaOutput | null): string | null {
   return null
 }
 
-function toolTone(name: string) {
+/**
+ * Tool → badge appearance: an icon plus a tone.
+ *
+ * The badge is the one element in the transcript allowed to carry colour, so it
+ * does the categorising work that would otherwise leak into the text around it.
+ * Grouping is by KIND of side effect, not by individual tool — two tools that
+ * do the same thing must never look different — and the icon carries the
+ * meaning on its own, so the tone is reinforcement rather than the only signal.
+ */
+interface ToolBadge {
+  readonly icon: LucideIcon
+  readonly tone: string
+}
+
+const BADGE_READ: ToolBadge = { icon: FileText, tone: 'bg-badge-blue-bg text-badge-blue-text' }
+const BADGE_LIST: ToolBadge = { icon: FolderOpen, tone: 'bg-badge-teal-bg text-badge-teal-text' }
+const BADGE_EDIT: ToolBadge = { icon: Pencil, tone: 'bg-badge-amber-bg text-badge-amber-text' }
+const BADGE_RUN: ToolBadge = { icon: Terminal, tone: 'bg-badge-green-bg text-badge-green-text' }
+const BADGE_SEARCH: ToolBadge = { icon: Search, tone: 'bg-badge-violet-bg text-badge-violet-text' }
+const BADGE_WEB: ToolBadge = { icon: Globe, tone: 'bg-badge-blue-bg text-badge-blue-text' }
+const BADGE_AGENT: ToolBadge = { icon: Bot, tone: 'bg-badge-violet-bg text-badge-violet-text' }
+const BADGE_OTHER: ToolBadge = { icon: Wrench, tone: 'bg-badge-neutral-bg text-badge-neutral-text' }
+
+const TOOL_BADGES = new Map<string, ToolBadge>([
+  ['read', BADGE_READ],
+  ['cat', BADGE_READ],
+  ['notebookread', BADGE_READ],
+  ['ls', BADGE_LIST],
+  ['tree', BADGE_LIST],
+  ['glob', BADGE_LIST],
+  ['write', BADGE_EDIT],
+  ['edit', BADGE_EDIT],
+  ['multiedit', BADGE_EDIT],
+  ['notebookedit', BADGE_EDIT],
+  ['bash', BADGE_RUN],
+  ['bash_readonly', BADGE_RUN],
+  ['terminal', BADGE_RUN],
+  ['grep', BADGE_SEARCH],
+  ['find', BADGE_SEARCH],
+  ['search', BADGE_SEARCH],
+  ['webfetch', BADGE_WEB],
+  ['websearch', BADGE_WEB],
+  ['task', BADGE_AGENT],
+  ['agent', BADGE_AGENT],
+  ['workflow', BADGE_AGENT],
+])
+
+function toolBadge(name: string): ToolBadge {
   const lower = name.toLowerCase()
-  if (lower === 'read' || lower === 'cat') return 'bg-sky-500/10 text-sky-500'
-  return 'bg-text-tertiary/10 text-text-secondary'
+  // MCP tools are all external calls, whatever the server names them.
+  if (lower.startsWith('mcp__')) return BADGE_WEB
+  return TOOL_BADGES.get(lower) ?? BADGE_OTHER
 }
 
 /**
@@ -147,6 +215,35 @@ function toolDiffLineCount(
 }
 
 const FILE_VIEW_TOOLS = new Set(['read', 'write', 'edit'])
+/** Tools whose result is a shell transcript rather than a file. */
+const TERMINAL_TOOLS = new Set(['bash', 'bash_readonly', 'terminal'])
+
+/**
+ * Shell output.
+ *
+ * Rendered as a plain transcript — no line numbers, no gutter — because that is
+ * what it is. Numbering it would make it look like source, which is the same
+ * confusion the read view's note strip below exists to prevent.
+ */
+function TerminalOutputView({ output }: { readonly output: string }) {
+  const text = output.trim()
+  if (!text) {
+    return (
+      <div className="border-t border-code-view-border px-3 py-2 text-[11px] text-text-muted">
+        No output
+      </div>
+    )
+  }
+  return (
+    <pre
+      className="diff-scroll overflow-auto border-t border-code-view-border bg-code-view-bg px-3 py-2 font-mono text-[12.5px] leading-[1.55] whitespace-pre-wrap break-words text-[color:var(--color-code-card-text)]"
+      style={{ maxHeight: RESULT_MAX_HEIGHT_PX }}
+    >
+      {text}
+    </pre>
+  )
+}
+
 /** Shared empty args object, so the streaming path allocates nothing per delta. */
 const EMPTY_ARGS: JsonObject = Object.freeze({})
 
@@ -206,6 +303,14 @@ function InlineToolBlockImpl({
     () => (argsStreaming ? null : parsePathFromArgs(args)),
     [argsStreaming, args],
   )
+  // Target for the header's "View file" pill: read/write/edit only. A read
+  // prefers the path the HARNESS resolved (`details.path`) over the raw arg —
+  // the two can differ (relative args resolve against the run's cwd).
+  const viewFilePath = useMemo(
+    () =>
+      FILE_VIEW_TOOLS.has(lower) ? ((output ? getResultPath(output) : null) ?? filePath) : null,
+    [filePath, lower, output],
+  )
   const diff = useMemo(
     () => (output ? toolDiffLineCount(args, toolName, output) : null),
     [args, toolName, output],
@@ -214,8 +319,17 @@ function InlineToolBlockImpl({
     () => (output ? getToolDiffData(output, lower, parsedArgs) : null),
     [output, lower, parsedArgs],
   )
-  const readContent = useMemo(
-    () => (lower === 'read' && output ? getToolResultText(output) : null),
+  // A read result is file bytes FIRST and any harness commentary after it —
+  // as separate blocks, or concatenated in the harness's single text block.
+  // Keep them apart: the bytes go to the numbered viewer, the commentary to
+  // the reasoning section below the file (collapsed behind its badge).
+  const readParts = useMemo(
+    () => (lower === 'read' && output ? getToolResultParts(output) : null),
+    [lower, output],
+  )
+  // Shell output — a transcript, not source. Shown on demand, never auto-opened.
+  const terminalOutput = useMemo(
+    () => (TERMINAL_TOOLS.has(lower) && output != null ? getToolResultText(output) : null),
     [lower, output],
   )
   const writeContent = useMemo(() => {
@@ -268,13 +382,17 @@ function InlineToolBlockImpl({
     (lower === 'read' && output != null) ||
     (lower === 'write' && (writeContent != null || output != null)) ||
     (lower === 'edit' && output != null) ||
+    !!terminalOutput ||
     !!media ||
     askUserHasContent(askUserDetail)
   // read/write/edit, media, and ask_user_question tools default expanded; other
-  // tools stay header-only.
-  const [expanded, setExpanded] = useState(
-    (FILE_VIEW_TOOLS.has(lower) || !!media || !!askUserDetail) && hasBody,
-  )
+  // tools — shell runs included — stay header-only until clicked.
+  //
+  // A FAILED call is never auto-expanded whatever the tool: its body is an error
+  // payload, not the file view the expansion was meant to show, and a run that
+  // hits several failures in a row unrolls into a wall of them.
+  const autoExpands = !isError && (FILE_VIEW_TOOLS.has(lower) || !!media || !!askUserDetail)
+  const [expanded, setExpanded] = useState(autoExpands && hasBody)
   // `useState`'s initializer only runs once, at first mount. For a tool whose
   // "default expanded" signal arrives AFTER mount — a screenshot/media tool,
   // whose `media` is null until `tool_execution_end` streams the result — the
@@ -293,78 +411,97 @@ function InlineToolBlockImpl({
     if (userToggledRef.current) return
     if (autoExpandedBodyRef.current) return
     if (!hasBody) return
+    if (!autoExpands) return
     autoExpandedBodyRef.current = true
     setExpanded(true)
-  }, [hasBody])
+  }, [hasBody, autoExpands])
 
   const mediaLabel = mediaActionLabel(media)
   const showAction = mediaLabel ?? toolActionLabel(toolName)
+  const badge = toolBadge(toolName)
 
   return (
+    // ONE frame, not two. This used to be an outer bordered box with 1.5px of
+    // padding wrapped around an inner bordered box — which drew a second border
+    // and left a 1-2px band of page colour between the two, visible all the way
+    // around every expanded code view. The elevated edge now comes from the
+    // frame's ring (border + inner highlight), so the code sits flush against
+    // the card it lives in.
     <div
       className={cn(
-        'rounded-[14px] border p-[1.5px]',
-        isError ? 'border-red-500/30' : 'border-border/40',
+        'home-panel-frame-soft overflow-hidden rounded-[12px]',
+        isError ? 'border-error/40 bg-error/8' : 'border-border bg-bg-secondary',
       )}
     >
-      <div
-        className={cn(
-          // No padding here: the header carries its own, so the expanded code card
-          // can sit flush to the strip edges (no horizontal/bottom inset).
-          'overflow-hidden rounded-[12px] border',
-          isError ? 'border-red-500/20 bg-red-500/5' : 'border-border/45 bg-bg-secondary/[0.18]',
-        )}
-      >
-        <button
-          type="button"
-          aria-expanded={hasBody ? expanded : undefined}
-          onClick={() => {
-            if (hasBody) {
-              userToggledRef.current = true
-              setExpanded((value) => !value)
-            }
-          }}
-          className={cn(
-            'flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px]',
-            hasBody ? 'cursor-pointer' : 'cursor-default',
-          )}
-        >
-          {hasBody && (
-            <ChevronDown
-              className={cn(
-                'size-3 shrink-0 text-text-muted transition-transform',
-                !expanded && '-rotate-90',
-              )}
-            />
-          )}
-          {showAction && (
-            <span
-              className={cn(
-                'px-1.5 py-0.5 rounded-[6px] font-semibold uppercase tracking-[0.08em] text-[10px]',
-                toolTone(toolName),
-              )}
-            >
-              {showAction}
-            </span>
-          )}
-          {/* The filename sizes to its content (not flex-1) so the +/- counts sit
+      <div>
+        {/* Header row. The expand toggle has to be the BUTTON and the "View
+            file" pill its SIBLING — the whole header used to be one <button>,
+            and a nested button is invalid HTML. flex-1 keeps the toggle
+            spanning the row, so the pill sits at the extreme right. Only the
+            row is a flex container; the error line and body below it are
+            normal block siblings again. */}
+        <div className="flex items-center">
+          <button
+            type="button"
+            aria-expanded={hasBody ? expanded : undefined}
+            onClick={() => {
+              if (hasBody) {
+                userToggledRef.current = true
+                setExpanded((value) => !value)
+              }
+            }}
+            className={cn(
+              'flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2 text-left text-[11px]',
+              hasBody ? 'cursor-pointer' : 'cursor-default',
+            )}
+          >
+            {showAction && (
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-[6px] px-1.5 py-0.5',
+                  'text-[10px] font-semibold uppercase tracking-[0.08em]',
+                  badge.tone,
+                )}
+              >
+                <badge.icon className="size-3 shrink-0" strokeWidth={2.25} />
+                {showAction}
+              </span>
+            )}
+            {/* The filename sizes to its content (not flex-1) so the +/- counts sit
               directly beside it rather than being pushed to the far right. */}
-          <span className="min-w-0 truncate text-text-primary/88 font-mono">
-            {title || toolName}
-          </span>
-          {isDone && diff && (
-            <span className="flex items-center gap-1.5 text-[11px] font-medium tabular-nums shrink-0">
-              {diff.add > 0 && <span className="text-emerald-500">+{diff.add}</span>}
-              {diff.del > 0 && <span className="text-red-500">-{diff.del}</span>}
+            <span className="min-w-0 truncate font-mono text-text-secondary">
+              {title || toolName}
             </span>
-          )}
-          {/* Absorbs the remaining width, keeping status indicators right-aligned. */}
-          <span className="flex-1" />
-          {isStreaming && <LoaderCircle className="size-3 shrink-0 animate-spin text-text-muted" />}
-          {isError && <span className="text-[11px] text-red-500 shrink-0">Failed</span>}
-        </button>
+            {isDone && diff && (
+              <span className="flex items-center gap-1.5 text-[10px] font-medium tabular-nums shrink-0">
+                {diff.add > 0 && <span className="text-diff-add-text">+{diff.add}</span>}
+                {diff.del > 0 && <span className="text-diff-remove-text">-{diff.del}</span>}
+              </span>
+            )}
+            {/* Disclosure sits to the RIGHT of the name, so the row reads badge →
+              target → control. Leading it pushed every badge and filename one
+              notch right and left a ragged empty column on the strips that have
+              no body to open. It follows the +/- counts rather than splitting
+              them off the filename they describe. */}
+            {hasBody && (
+              <ChevronDown
+                className={cn(
+                  'size-3 shrink-0 text-text-muted transition-transform',
+                  !expanded && '-rotate-90',
+                )}
+              />
+            )}
+            {/* Absorbs the remaining width, keeping status indicators right-aligned. */}
+            <span className="flex-1" />
+            {isStreaming && (
+              <LoaderCircle className="size-3 shrink-0 animate-spin text-text-muted" />
+            )}
+            {isError && <span className="text-[10px] text-error shrink-0">Failed</span>}
+          </button>
+          {viewFilePath && <ViewFileButton path={viewFilePath} className="mr-2.5" />}
+        </div>
         {isError && error ? (
-          <div className="px-3 pb-2 text-[11px] text-red-400 font-mono truncate">{error}</div>
+          <div className="px-3 pb-2 text-[10px] text-error font-mono truncate">{error}</div>
         ) : null}
 
         {expanded && hasBody && (
@@ -380,14 +517,15 @@ function InlineToolBlockImpl({
             ) : (
               <>
                 {lower === 'read' && output != null && (
-                  <FileContentView
-                    content={readContent || getToolResultText(output)}
-                    variant="default"
+                  <ReadFileView
+                    body={readParts?.body || getToolResultText(output)}
+                    reasoning={readParts?.notes ?? ''}
                     concernSet={concernSet}
                     maxHeight={READ_VIEW_MAX_HEIGHT_PX}
                     path={filePath}
                   />
                 )}
+                {terminalOutput != null && <TerminalOutputView output={terminalOutput} />}
                 {lower === 'write' &&
                   (fullDiff && fullDiff.lines.length > 0 ? (
                     // Real unified diff from the tool result (previous file vs the
@@ -584,13 +722,13 @@ function AskUserQuestionBody({ detail }: { readonly detail: AskUserDetail }) {
   return (
     <div className="rounded-[12px] border border-border/40 bg-bg-secondary/30 px-3.5 py-3">
       {showQuestion ? (
-        <div className="text-[14px] leading-[1.5] text-text-primary">{detail.question}</div>
+        <div className="text-[13px] leading-[1.5] text-text-primary">{detail.question}</div>
       ) : null}
 
       {/* Why the agent had to ask only matters while it is still waiting. */}
       {!answer && detail.reason ? (
         <div
-          className={cn('text-[13px] leading-[1.5] text-text-secondary', showQuestion && 'mt-1')}
+          className={cn('text-[12px] leading-[1.5] text-text-secondary', showQuestion && 'mt-1')}
         >
           {detail.reason}
         </div>
@@ -602,11 +740,11 @@ function AskUserQuestionBody({ detail }: { readonly detail: AskUserDetail }) {
             <span
               key={option.label}
               title={option.description}
-              className="rounded-[8px] border border-border/35 bg-bg-primary/60 px-2 py-1 text-[13px] leading-[1.4] text-text-secondary"
+              className="rounded-[8px] border border-border/35 bg-bg-primary/60 px-2 py-1 text-[12px] leading-[1.4] text-text-secondary"
             >
               {option.label}
               {option.recommended ? (
-                <span className="ml-1 text-[11px] leading-[1.4] text-accent">· Recommended</span>
+                <span className="ml-1 text-[10px] leading-[1.4] text-accent">· Recommended</span>
               ) : null}
             </span>
           ))}
@@ -618,14 +756,14 @@ function AskUserQuestionBody({ detail }: { readonly detail: AskUserDetail }) {
           <CornerDownRight className="mt-[4px] size-3.5 shrink-0 text-text-tertiary" />
           <div className="min-w-0">
             {answer.text ? (
-              <div className="whitespace-pre-wrap break-words text-[14px] leading-[1.5] text-text-primary">
+              <div className="whitespace-pre-wrap break-words text-[13px] leading-[1.5] text-text-primary">
                 {answer.text}
               </div>
             ) : null}
             {attachmentNote ? (
               <div
                 className={cn(
-                  'text-[12px] leading-[1.5] text-text-tertiary',
+                  'text-[11px] leading-[1.5] text-text-tertiary',
                   answer.text && 'mt-1',
                 )}
               >
@@ -686,7 +824,9 @@ function AssistantTextPart({
   // Those blocks inset their content (border + horizontal padding) by ~13px,
   // so match that here — otherwise the text reads a hair further left and the
   // turn looks ragged.
-  return <StreamingText text={content} isStreaming={isStreaming} className="pl-[13px]" />
+  return (
+    <StreamingText text={content} isStreaming={isStreaming} className="prose-reading pl-[13px]" />
+  )
 }
 
 /** Reasoning is context, not the answer — it never grows past this many lines. */
@@ -716,30 +856,11 @@ function ReasoningBody({
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
-  const [overflowing, setOverflowing] = useState(false)
 
-  // Whether this block actually hit the cap. Chromium applies
-  // `overscroll-behavior: contain` to a scroll container even when it has
-  // nothing to scroll, which turned every SHORT thinking block into a dead zone
-  // that swallowed the wheel instead of passing it to the transcript. So the
-  // containment goes on only once there is really something to scroll.
-  //
-  // Both boxes are observed rather than re-measuring on every `content` change:
-  // the inner box grows as text streams in, and the outer one changes when the
-  // bubble is resized — a narrower bubble rewraps the text and can push a block
-  // over the cap without its content changing at all. Watching the DOM directly
-  // also means no observer is torn down and rebuilt on each streamed token.
-  useEffect(() => {
-    const el = scrollRef.current
-    const inner = contentRef.current
-    if (!el || !inner || typeof ResizeObserver === 'undefined') return
-    const measure = () => setOverflowing(el.scrollHeight > el.clientHeight + 1)
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(el)
-    observer.observe(inner)
-    return () => observer.disconnect()
-  }, [])
+  // A capped thinking block used to `overscroll-contain`, which stopped the
+  // wheel dead at its edge instead of handing it back to the transcript. It
+  // chains now; the transcript's delegated `useChainedWheel` covers the case
+  // CSS cannot — Chromium latching a gesture to the scroller it began on.
 
   // Pin to the newest text while it streams, so a capped block reads as live
   // thinking instead of a frozen first five lines.
@@ -755,13 +876,7 @@ function ReasoningBody({
     <div className={className}>
       <div
         ref={scrollRef}
-        className={cn(
-          'diff-scroll overflow-y-auto text-[13px] leading-[1.5]',
-          // `overflow-y-auto` on its own never blocks the wheel — a container
-          // with nothing to scroll chains normally. Only the containment has to
-          // wait until there is something to contain.
-          overflowing && 'overscroll-contain',
-        )}
+        className="diff-scroll overflow-y-auto text-[12px] leading-[1.5]"
         style={{ maxHeight: `${REASONING_MAX_LINES * REASONING_LINE_HEIGHT}em` }}
       >
         <div ref={contentRef}>
@@ -827,7 +942,7 @@ function ReasoningBlock({
         <button
           type="button"
           onClick={toggle}
-          className="flex w-full items-center gap-1.5 px-2.5 py-1 text-[11px] text-text-muted/80 hover:text-text-secondary transition-colors"
+          className="flex w-full items-center gap-1.5 px-2.5 py-1 text-[10px] text-text-muted/80 hover:text-text-secondary transition-colors"
           aria-expanded={open}
           aria-label={open ? 'Hide reasoning' : 'Show reasoning'}
         >
@@ -855,7 +970,7 @@ function ReasoningBlock({
       <button
         type="button"
         onClick={toggle}
-        className="flex w-full items-center gap-2 px-3 py-1.5 text-[12px] text-text-muted hover:text-text-secondary transition-colors"
+        className="flex w-full items-center gap-2 px-3 py-1.5 text-[11px] text-text-muted hover:text-text-secondary transition-colors"
         aria-expanded={open}
       >
         <Brain className="size-3.5 shrink-0" />
@@ -1024,7 +1139,7 @@ export function AssistantMessageBubble({
         <div
           key={`${message.id}-tr-${part.toolCallId ?? String(index)}`}
           className={cn(
-            'rounded-[12px] border px-3 py-1.5 text-[12px] font-mono',
+            'rounded-[12px] border px-3 py-1.5 text-[11px] font-mono',
             isError
               ? 'border-red-500/30 bg-red-500/5 text-red-400'
               : 'border-border/45 bg-bg-secondary/[0.12] text-text-muted',

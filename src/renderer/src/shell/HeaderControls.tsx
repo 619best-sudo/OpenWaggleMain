@@ -31,26 +31,20 @@ interface DiffToggleButtonProps {
   readonly onToggle: () => void
 }
 
-export function HeaderLeft({ sidebarOpen, title, onToggleSidebar }: HeaderLeftProps) {
+/**
+ * The header no longer carries a "show sidebar" button.
+ *
+ * Collapsing now leaves a 50px icon rail whose first control expands it again,
+ * so the header's copy sat ~40px away from the rail's and did the same thing.
+ * `sidebarOpen`/`onToggleSidebar` stay on the props so the header keeps a
+ * single source of truth about the panel for anything it adds later.
+ */
+export function HeaderLeft({ title }: HeaderLeftProps) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-      {!sidebarOpen && (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Show sidebar"
-          aria-expanded={sidebarOpen}
-          onClick={onToggleSidebar}
-          className="no-drag"
-          title="Show sidebar"
-        >
-          <PanelLeft className="size-4" />
-        </Button>
-      )}
-
       <Hash className="no-drag size-3.5 shrink-0 text-text-muted" />
       <div className="flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap">
-        <span className="no-drag block min-w-0 flex-1 truncate text-[14px] font-medium text-text-primary">
+        <span className="no-drag block min-w-0 flex-1 truncate text-[13px] font-medium text-text-primary">
           {title}
         </span>
       </div>
@@ -83,7 +77,7 @@ export function TerminalButton({ open, projectPath, onToggle }: TerminalButtonPr
       title={terminalTitle(projectPath, open)}
     >
       <SquareTerminal className="size-3.5 text-text-tertiary" />
-      <span className="text-[13px] font-medium text-text-primary">{open ? 'Hide' : 'Open'}</span>
+      <span className="text-[12px] font-medium text-text-primary">{open ? 'Hide' : 'Open'}</span>
       <span className="text-[9px] text-text-muted">&#x2228;</span>
     </Button>
   )
@@ -106,7 +100,7 @@ export function CommitButton({ isCommitting, projectPath, onOpen }: CommitButton
       disabled={disabled}
       title={projectPath ? 'Open commit dialog' : 'No project selected'}
     >
-      <span className="text-[13px] font-semibold">Commit</span>
+      <span className="text-[12px] font-semibold">Commit</span>
       <span className="text-[9px] opacity-50">&#x2228;</span>
     </Button>
   )
@@ -147,13 +141,13 @@ export function DiffToggleButton({
     >
       {status ? (
         <>
-          <span className="text-[13px] font-medium text-[var(--theme-header-diff-addition)]">
+          <span className="text-[12px] font-medium text-[var(--theme-header-diff-addition)]">
             +{status.additions}
           </span>
-          <span className="text-[13px] font-medium text-red-400">-{status.deletions}</span>
+          <span className="text-[12px] font-medium text-red-400">-{status.deletions}</span>
         </>
       ) : (
-        <span className="text-[13px] font-medium text-[var(--theme-header-diff-neutral)]">
+        <span className="text-[12px] font-medium text-[var(--theme-header-diff-neutral)]">
           {diffStatusText(error, isLoading)}
         </span>
       )}

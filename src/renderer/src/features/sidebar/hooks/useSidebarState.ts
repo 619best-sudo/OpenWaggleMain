@@ -49,6 +49,7 @@ function resolveActiveSessionState(
 
 export function useSidebarState() {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen)
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar)
   const showToast = useUIStore((s) => s.showToast)
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
@@ -124,5 +125,6 @@ export function useSidebarState() {
     sidebarOpen,
     sortMenuOpen,
     sortMode,
+    toggleSidebar,
   }
 }

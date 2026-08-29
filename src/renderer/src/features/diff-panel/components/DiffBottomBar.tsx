@@ -5,6 +5,8 @@ interface DiffBottomBarProps {
   onRevertAll: () => void
   onStageAll: () => void
   hasChanges: boolean
+  /** A revert/stage round-trip is in flight; keeps both buttons from firing twice. */
+  busy?: boolean
   isTreeExpanded: boolean
   onToggleTree: () => void
 }
@@ -13,6 +15,7 @@ export function DiffBottomBar({
   onRevertAll,
   onStageAll,
   hasChanges,
+  busy = false,
   isTreeExpanded,
   onToggleTree,
 }: DiffBottomBarProps) {
@@ -35,8 +38,8 @@ export function DiffBottomBar({
           variant="unstyled"
           type="button"
           onClick={onRevertAll}
-          disabled={!hasChanges}
-          className="flex items-center gap-1 h-[26px] px-3 rounded-[5px] border border-button-border text-[12px] text-text-secondary disabled:opacity-40 transition-opacity hover:bg-bg-hover"
+          disabled={!hasChanges || busy}
+          className="flex items-center gap-1 h-[26px] px-3 rounded-[5px] border border-button-border text-[11px] text-text-secondary disabled:opacity-40 transition-opacity hover:bg-bg-hover"
         >
           Revert all
         </Button>
@@ -44,10 +47,10 @@ export function DiffBottomBar({
           variant="unstyled"
           type="button"
           onClick={onStageAll}
-          disabled={!hasChanges}
-          className="flex items-center gap-1 h-[26px] px-3 rounded-[5px] bg-diff-stage-bg/10 border border-diff-stage-bg text-[12px] disabled:opacity-40 transition-colors hover:bg-diff-stage-bg hover:text-white group"
+          disabled={!hasChanges || busy}
+          className="flex items-center gap-1 h-[26px] px-3 rounded-[5px] bg-diff-stage-bg/10 border border-diff-stage-bg text-[11px] disabled:opacity-40 transition-colors hover:bg-diff-stage-bg hover:text-white group"
         >
-          <span className="text-[14px] font-semibold text-diff-stage-bg group-hover:text-white">
+          <span className="text-[13px] font-semibold text-diff-stage-bg group-hover:text-white">
             +
           </span>
           <span className="font-medium text-diff-stage-bg group-hover:text-white">Stage all</span>

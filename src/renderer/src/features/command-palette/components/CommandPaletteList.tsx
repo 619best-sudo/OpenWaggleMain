@@ -42,7 +42,7 @@ export function CommandPaletteList({
 
 function CommandPaletteEmptyState() {
   return (
-    <div className="mx-1.5 my-2 flex h-14 items-center justify-center border border-dashed border-border/45 bg-bg-secondary/40 text-[12px] text-text-muted">
+    <div className="mx-1.5 my-2 flex h-14 items-center justify-center border border-dashed border-border/45 bg-bg-secondary/40 text-[11px] text-text-muted">
       No matching commands
     </div>
   )

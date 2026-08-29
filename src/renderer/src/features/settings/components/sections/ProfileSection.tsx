@@ -295,13 +295,13 @@ function LeaderboardList({
     if (rank === 1) return '🥇'
     if (rank === 2) return '🥈'
     if (rank === 3) return '🥉'
-    return <span className="text-[11px] font-bold text-text-muted px-1">{rank}</span>
+    return <span className="text-[10px] font-semibold text-text-muted px-1">{rank}</span>
   }
 
   return (
     <div className="min-w-[180px] flex-1 overflow-hidden rounded-xl border border-border bg-bg">
       <div className="border-b border-border/70 bg-bg-secondary/50 px-3 py-2">
-        <h4 className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted">
+        <h4 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
           {title}
         </h4>
       </div>
@@ -310,9 +310,9 @@ function LeaderboardList({
         {list?.top.map((entry) => (
           <div
             key={entry.userId}
-            className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-x-2 px-3 py-1.5 text-[12px]"
+            className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-x-2 px-3 py-1.5 text-[11px]"
           >
-            <span className="w-5 shrink-0 text-center font-mono text-[11px] text-text-muted">
+            <span className="w-5 shrink-0 text-center font-mono text-[10px] text-text-muted">
               {getMedal(entry.rank)}
             </span>
             <span className="truncate font-medium text-text-primary">{entry.name}</span>
@@ -322,7 +322,7 @@ function LeaderboardList({
           </div>
         ))}
         {(!list?.top || list.top.length === 0) && (
-          <p className="px-3 py-2 text-[11px] text-text-tertiary">No data yet.</p>
+          <p className="px-3 py-2 text-[10px] text-text-tertiary">No data yet.</p>
         )}
       </div>
 
@@ -330,16 +330,18 @@ function LeaderboardList({
         (list.top.length === 0 || !list.top.some((t) => t.userId === list.user?.userId)) && (
           <>
             {list.top.length > 0 && (
-              <div className="border-t border-border/50 px-3 py-1 text-center font-mono text-[11px] tracking-[0.08em] text-text-muted">
+              <div className="border-t border-border/50 px-3 py-1 text-center font-mono text-[10px] tracking-[0.08em] text-text-muted">
                 ...
               </div>
             )}
-            <div className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-x-2 border-t border-border/70 bg-bg-secondary/30 px-3 py-1.5 text-[12px]">
-              <span className="w-5 shrink-0 text-center font-mono text-[11px] font-bold text-text-muted">
+            <div className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-x-2 border-t border-border/70 bg-bg-secondary/30 px-3 py-1.5 text-[11px]">
+              <span className="w-5 shrink-0 text-center font-mono text-[10px] font-semibold text-text-muted">
                 {list.user.rank}
               </span>
-              <span className="truncate font-bold text-text-primary">{list.user.name} (You)</span>
-              <span className="shrink-0 font-mono font-bold tabular-nums text-text-primary">
+              <span className="truncate font-semibold text-text-primary">
+                {list.user.name} (You)
+              </span>
+              <span className="shrink-0 font-mono font-semibold tabular-nums text-text-primary">
                 {formatter(list.user.score)}
               </span>
             </div>
@@ -738,8 +740,8 @@ export function ProfileSection() {
   return (
     <div className="w-full space-y-4">
       <div className="space-y-1">
-        <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-text-primary">Profile</h2>
-        <p className="max-w-[760px] text-[12px] leading-5 text-text-tertiary">
+        <h2 className="text-[17px] font-semibold tracking-[-0.02em] text-text-primary">Profile</h2>
+        <p className="max-w-[760px] text-[11px] leading-5 text-text-tertiary">
           Review your account details, usage, leaderboard, and quick access to your account website.
         </p>
       </div>
@@ -748,17 +750,17 @@ export function ProfileSection() {
         <section className="rounded-xl border border-border bg-bg-secondary px-4 py-4 sm:px-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-info/12 text-[16px] font-bold text-info">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-info/12 text-[14px] font-semibold text-info">
                 {profile.initials}
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-[16px] font-semibold text-text-primary">{profile.name}</h3>
+                  <h3 className="text-[14px] font-semibold text-text-primary">{profile.name}</h3>
                   <span className="rounded-full border border-info/25 bg-info/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-info">
                     {subscriptionPlan.planName}
                   </span>
                 </div>
-                <p className="text-[12px] text-text-secondary">{profile.email}</p>
+                <p className="text-[11px] text-text-secondary">{profile.email}</p>
               </div>
             </div>
 
@@ -774,7 +776,7 @@ export function ProfileSection() {
                   )
                 }
                 disabled={openingExternalTarget !== null}
-                className="h-8 bg-bg-tertiary px-2.5 text-[12px] text-text-secondary hover:bg-bg-hover"
+                className="h-8 bg-bg-tertiary px-2.5 text-[11px] text-text-secondary hover:bg-bg-hover"
               >
                 <ExternalLink className="size-3.5" />
                 {openingExternalTarget === 'account' ? 'Opening...' : 'My account'}
@@ -783,7 +785,7 @@ export function ProfileSection() {
                 variant="danger"
                 size="sm"
                 onClick={signOut}
-                className="h-8 px-2.5 text-[12px]"
+                className="h-8 px-2.5 text-[11px]"
               >
                 <LogOut className="size-3.5" />
                 Logout
@@ -801,7 +803,7 @@ export function ProfileSection() {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-[15px] font-semibold text-text-primary">Billing</h3>
+                    <h3 className="text-[13.5px] font-semibold text-text-primary">Billing</h3>
                     <span className="rounded-full border border-border bg-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-secondary">
                       Current Plan: {subscriptionPlan.planName}
                     </span>
@@ -843,7 +845,7 @@ export function ProfileSection() {
                       onClick={() => {
                         void openBillingPortal()
                       }}
-                      className="h-8 bg-bg-tertiary px-2.5 text-[12px] text-text-secondary hover:bg-bg-hover"
+                      className="h-8 bg-bg-tertiary px-2.5 text-[11px] text-text-secondary hover:bg-bg-hover"
                     >
                       <ExternalLink className="size-3.5" />
                       {openingExternalTarget === 'portal' ? 'Opening...' : 'Manage billing'}
@@ -855,7 +857,7 @@ export function ProfileSection() {
               <div className="mt-4 space-y-3">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
                       Upgrade Plan
                     </p>
 
@@ -865,7 +867,7 @@ export function ProfileSection() {
                           key={billingCycle}
                           onClick={() => setSelectedBillingCycle(billingCycle)}
                           className={cn(
-                            'relative rounded-md px-3 py-1.5 text-[11px] font-medium capitalize transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                            'relative rounded-md px-3 py-1.5 text-[10px] font-medium capitalize transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
                             billingCycle === selectedBillingCycle
                               ? 'bg-bg text-text-primary ring-1 ring-border/40'
                               : 'text-text-secondary hover:text-text-primary',
@@ -878,11 +880,11 @@ export function ProfileSection() {
                   </div>
 
                   {billingCatalogState === 'loading' && (
-                    <p className="text-[12px] text-text-muted">Loading plans from the backend...</p>
+                    <p className="text-[11px] text-text-muted">Loading plans from the backend...</p>
                   )}
 
                   {billingCatalogState === 'error' && (
-                    <p className="text-[12px] text-error">
+                    <p className="text-[11px] text-error">
                       {billingCatalogError ?? 'Failed to load billing plans.'}
                     </p>
                   )}
@@ -921,7 +923,7 @@ export function ProfileSection() {
                               <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-2">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <h4 className="text-[15px] font-semibold tracking-[-0.02em] text-text-primary">
+                                    <h4 className="text-[13.5px] font-semibold tracking-[-0.02em] text-text-primary">
                                       {tier.name}
                                     </h4>
                                     {isCurrentPlan && (
@@ -940,7 +942,7 @@ export function ProfileSection() {
                                       </span>
                                     )}
                                   </div>
-                                  <div className="max-w-[32ch] space-y-2 text-[12px] leading-5 text-text-tertiary">
+                                  <div className="max-w-[32ch] space-y-2 text-[11px] leading-5 text-text-tertiary">
                                     <p>{description.summary}</p>
                                     {description.bullets.length > 0 && (
                                       <ul className="space-y-1">
@@ -972,18 +974,18 @@ export function ProfileSection() {
                                 <span className="text-[30px] font-semibold tracking-[-0.05em] text-text-primary">
                                   ${formatUsdDisplay(pricing.finalCents / 100)}
                                 </span>
-                                <span className="pb-1 text-[12px] text-text-muted">
+                                <span className="pb-1 text-[11px] text-text-muted">
                                   / {selectedBillingCycle === 'monthly' ? 'month' : 'year'}
                                 </span>
                               </div>
 
                               <div className="mt-4 flex flex-wrap gap-2">
-                                <span className="rounded-full border border-border/40 bg-bg-secondary/70 px-2.5 py-1 text-[11px] font-medium text-text-secondary">
+                                <span className="rounded-full border border-border/40 bg-bg-secondary/70 px-2.5 py-1 text-[10px] font-medium text-text-secondary">
                                   ${formatUsdDisplay(tier.limits.turingMachineQuotaUsdCents / 100)}{' '}
                                   TM quota
                                 </span>
                                 {pricing.discountPercent > 0 && (
-                                  <span className="rounded-full border border-emerald-500/10 bg-emerald-500/8 px-2.5 py-1 text-[11px] font-medium text-emerald-400">
+                                  <span className="rounded-full border border-emerald-500/10 bg-emerald-500/8 px-2.5 py-1 text-[10px] font-medium text-emerald-400">
                                     Save {pricing.discountPercent}%
                                   </span>
                                 )}
@@ -992,7 +994,7 @@ export function ProfileSection() {
                               <div className="mt-auto pt-6">
                                 <div
                                   className={cn(
-                                    'flex items-center justify-between rounded-xl border px-3 py-2 text-[11px]',
+                                    'flex items-center justify-between rounded-xl border px-3 py-2 text-[10px]',
                                     isCurrentPlan
                                       ? 'border-border/35 bg-bg-secondary/70 text-text-secondary'
                                       : isSelected
@@ -1024,7 +1026,7 @@ export function ProfileSection() {
                   )}
 
                   {billingCatalogState === 'ready' && visibleBillingTiers.length === 0 && (
-                    <div className="mt-4 rounded-2xl border border-border bg-bg px-4 py-4 text-[12px] text-text-tertiary">
+                    <div className="mt-4 rounded-2xl border border-border bg-bg px-4 py-4 text-[11px] text-text-tertiary">
                       No higher plans are available for this account right now.
                     </div>
                   )}
@@ -1038,7 +1040,7 @@ export function ProfileSection() {
                     onClick={() => {
                       void startBillingCheckout()
                     }}
-                    className="mt-2 h-10 w-full font-semibold text-[13px]"
+                    className="mt-2 h-10 w-full font-semibold text-[12px]"
                   >
                     {openingExternalTarget === 'checkout'
                       ? 'Opening checkout...'
@@ -1061,8 +1063,8 @@ export function ProfileSection() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="space-y-1">
-                <h3 className="text-[15px] font-semibold text-text-primary">Leaderboard</h3>
-                <p className="text-[12px] text-text-tertiary">
+                <h3 className="text-[13.5px] font-semibold text-text-primary">Leaderboard</h3>
+                <p className="text-[11px] text-text-tertiary">
                   Compete with other 10x engineers. Rankings are updated in real-time.
                 </p>
               </div>
@@ -1095,38 +1097,38 @@ export function ProfileSection() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="space-y-1">
-                <h3 className="text-[15px] font-semibold text-text-primary">Usage</h3>
-                <p className="text-[12px] text-text-tertiary">{usage.periodLabel}</p>
+                <h3 className="text-[13.5px] font-semibold text-text-primary">Usage</h3>
+                <p className="text-[11px] text-text-tertiary">{usage.periodLabel}</p>
               </div>
 
               <div className="mt-4">
                 <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
                   <div className="space-y-1">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
                       Consumed
                     </p>
                     <div className="flex items-end gap-2">
                       <span className="text-[24px] font-semibold tracking-[-0.04em] text-text-primary">
                         ${formatUsdDisplay(usage.consumed)}
                       </span>
-                      <span className="pb-0.5 text-[11px] text-text-muted">
+                      <span className="pb-0.5 text-[10px] text-text-muted">
                         of ${formatUsdDisplay(usage.totalBudget)}
                       </span>
                     </div>
                   </div>
 
                   <div className="space-y-1 text-left sm:text-right">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
                       Left
                     </p>
-                    <p className="text-[20px] font-semibold tracking-[-0.03em] text-text-primary">
+                    <p className="text-[17px] font-semibold tracking-[-0.03em] text-text-primary">
                       ${formatUsdDisplay(usage.left)}
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-3">
-                  <div className="flex items-center justify-between text-[11px] text-text-muted">
+                  <div className="flex items-center justify-between text-[10px] text-text-muted">
                     <span>{usage.windowLabel}</span>
                     <span>{usagePercentLabel}</span>
                   </div>
@@ -1140,46 +1142,46 @@ export function ProfileSection() {
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-4">
                   <div className="rounded-lg border border-border bg-bg px-3 py-3">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
                       Plan
                     </p>
-                    <p className="mt-1 text-[14px] font-semibold text-text-primary">
+                    <p className="mt-1 text-[13px] font-semibold text-text-primary">
                       {subscriptionPlan.planName}
                     </p>
                   </div>
                   <div className="rounded-lg border border-border bg-bg px-3 py-3">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
                       Price
                     </p>
-                    <p className="mt-1 text-[14px] font-semibold text-text-primary">
+                    <p className="mt-1 text-[13px] font-semibold text-text-primary">
                       ${formatUsdDisplay(subscriptionPlan.planPriceUsd)}
                     </p>
                   </div>
                   <div className="rounded-lg border border-border bg-bg px-3 py-3">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
                       Turing Quota
                     </p>
-                    <p className="mt-1 text-[14px] font-semibold text-text-primary">
+                    <p className="mt-1 text-[13px] font-semibold text-text-primary">
                       ${formatUsdDisplay(subscriptionPlan.turingMachineQuotaUsd)}
                     </p>
                   </div>
                   <div className="rounded-lg border border-border bg-bg px-3 py-3">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
                       Tokens Used
                     </p>
-                    <p className="mt-1 text-[14px] font-semibold text-text-primary">
+                    <p className="mt-1 text-[13px] font-semibold text-text-primary">
                       {formatCompactNumber(usageTokenDisplayTotal)}
                     </p>
-                    <p className="mt-1 text-[11px] text-text-muted">
+                    <p className="mt-1 text-[10px] text-text-muted">
                       {formatCompactNumber(usage.inputTokens)} in /{' '}
                       {formatCompactNumber(usage.outputTokens)} out
                     </p>
                   </div>
                   <div className="rounded-lg border border-border bg-bg px-3 py-3">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
                       Cycle
                     </p>
-                    <p className="mt-1 text-[14px] font-semibold text-text-primary">
+                    <p className="mt-1 text-[13px] font-semibold text-text-primary">
                       {usage.windowLabel}
                     </p>
                   </div>
@@ -1196,8 +1198,8 @@ export function ProfileSection() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="space-y-1">
-                <h3 className="text-[15px] font-semibold text-text-primary">Activity</h3>
-                <p className="text-[12px] text-text-tertiary">
+                <h3 className="text-[13.5px] font-semibold text-text-primary">Activity</h3>
+                <p className="text-[11px] text-text-tertiary">
                   {activity.hoveredDay
                     ? `${DAY_FORMATTER.format(new Date(`${activity.hoveredDay.date}T00:00:00Z`))} used $${formatUsdDisplay(activity.hoveredDay.usd ?? activity.hoveredDay.usdCents / 100)} across ${String(activity.hoveredDay.requestCount)} request${activity.hoveredDay.requestCount === 1 ? '' : 's'}`
                     : activity.activeDays === 0

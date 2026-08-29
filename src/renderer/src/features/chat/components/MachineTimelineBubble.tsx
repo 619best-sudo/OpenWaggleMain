@@ -42,7 +42,7 @@ export function MachineTimelineBubble({
           <div className="min-w-0 flex-1">
             <div className="text-sm font-medium leading-6 text-text-primary">{plan.goal}</div>
             {plan.lastError ? (
-              <div className="mt-2 text-[13px] text-red-400">{plan.lastError}</div>
+              <div className="mt-2 text-[12px] text-red-400">{plan.lastError}</div>
             ) : null}
           </div>
 
@@ -75,16 +75,16 @@ export function MachineTimelineBubble({
         </div>
 
         <div className="mt-5 overflow-x-auto">
-          <table className="w-full border-collapse border border-border text-left text-[13px]">
+          <table className="w-full border-collapse border border-border text-left text-[12px]">
             <thead>
               <tr className="bg-bg-secondary">
-                <th className="w-10 border border-border px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
+                <th className="w-10 border border-border px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
                   No.
                 </th>
-                <th className="border border-border px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
+                <th className="border border-border px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
                   Task
                 </th>
-                <th className="w-28 border border-border px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
+                <th className="w-28 border border-border px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
                   Status
                 </th>
               </tr>
@@ -100,12 +100,12 @@ export function MachineTimelineBubble({
                       <div className="min-w-0">
                         <div className="font-medium text-text-primary">{task.title}</div>
                         {task.lastError ? (
-                          <div className="mt-2 text-[12px] text-red-400">{task.lastError}</div>
+                          <div className="mt-2 text-[11px] text-red-400">{task.lastError}</div>
                         ) : null}
                       </div>
                     </td>
                     <td className="border border-border px-3 py-3 align-top">
-                      <div className="inline-flex items-start gap-1.5 pt-0.5 text-[11px] uppercase tracking-wide text-text-secondary">
+                      <div className="inline-flex items-start gap-1.5 pt-0.5 text-[10px] uppercase tracking-wide text-text-secondary">
                         <TaskStatusIcon status={task.status} />
                         <span>{task.status.replace('_', ' ')}</span>
                       </div>

@@ -41,7 +41,7 @@ function SummaryButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'h-7 min-w-[76px] px-2.5 text-[11px] shadow-none disabled:cursor-not-allowed disabled:opacity-60',
+        'h-7 min-w-[76px] px-2.5 text-[10px] shadow-none disabled:cursor-not-allowed disabled:opacity-60',
         variant === 'secondary' &&
           'border-border-light bg-bg-secondary/80 text-text-secondary hover:bg-bg-hover',
         variant === 'ghost' &&
@@ -77,8 +77,8 @@ export function BranchSummaryPrompt({
             <GitBranch className="size-3.5" />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[12px] font-semibold text-text-primary">Branch summary</div>
-            <div className="text-[12px] leading-5 text-text-tertiary">{modeCopy(mode)}</div>
+            <div className="text-[11px] font-semibold text-text-primary">Branch summary</div>
+            <div className="text-[11px] leading-5 text-text-tertiary">{modeCopy(mode)}</div>
           </div>
           {busy ? <Loader2 className="size-3.5 shrink-0 animate-spin text-accent" /> : null}
         </div>

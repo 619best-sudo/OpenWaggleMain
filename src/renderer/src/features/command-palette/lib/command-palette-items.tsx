@@ -182,9 +182,7 @@ function mcpMatchesQuery(server: McpServerSummary, lowerQuery: string) {
   const lowerName = server.name.toLowerCase()
   const lowerSourceLabel = server.sourceLabel.toLowerCase()
   const lowerTransport = formatMcpTransport(server)
-  const statusTerms = server.enabled
-    ? ['enabled', 'active', 'on']
-    : ['disabled', 'inactive', 'off']
+  const statusTerms = server.enabled ? ['enabled', 'active', 'on'] : ['disabled', 'inactive', 'off']
 
   return (
     lowerName.includes(lowerQuery) ||

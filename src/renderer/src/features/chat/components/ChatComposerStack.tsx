@@ -14,6 +14,7 @@ import { useApplyPendingWaggleLaunchPrompt } from '@/features/waggle/hooks'
 import { Button } from '@/shared/ui/Button'
 import loaderGif from '../../../../../assets/loader.gif'
 import type { ChatComposerSectionState } from '../model'
+import { ResumeRunBanner } from './ResumeRunBanner'
 import { SessionForkSelector } from './SessionForkSelector'
 
 interface ChatComposerStackProps {
@@ -44,6 +45,10 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
     machinePlan,
     waggleStatus,
     followUpSuggestion,
+    resumeState,
+    resumeBusy,
+    onResumeRun,
+    onDismissResume,
     commandPaletteOpen,
     slashSkills,
     forkSelectorOpen,
@@ -83,15 +88,16 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
   const composerPlaceholder =
     branchSummaryMode === 'custom' ? 'Custom instructions for the branch summary' : undefined
   const showMachineStrip = machineModeEnabled || machinePlan !== null
-  const machineStripMessage = machinePlan?.phase === 'awaiting_approval'
-    ? 'has a generated plan ready for review.'
-    : machineStatus === 'running'
-      ? 'is running in this session.'
-      : machinePlan?.phase === 'completed'
-        ? 'finished its plan. Review the timeline in chat.'
-        : machinePlan?.phase === 'failed'
-          ? 'stopped before the plan finished.'
-          : 'is armed. Your next prompt will generate a plan and execute tasks sequentially.'
+  const machineStripMessage =
+    machinePlan?.phase === 'awaiting_approval'
+      ? 'has a generated plan ready for review.'
+      : machineStatus === 'running'
+        ? 'is running in this session.'
+        : machinePlan?.phase === 'completed'
+          ? 'finished its plan. Review the timeline in chat.'
+          : machinePlan?.phase === 'failed'
+            ? 'stopped before the plan finished.'
+            : 'is armed. Your next prompt will generate a plan and execute tasks sequentially.'
   const machineStripStatus = machinePlan ? machinePhaseLabel(machinePlan.phase) : 'Armed'
 
   return (
@@ -103,10 +109,19 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
         onUseFollowUpPrompt={onUseFollowUpPrompt}
       />
 
+      {resumeState ? (
+        <ResumeRunBanner
+          state={resumeState}
+          busy={resumeBusy}
+          onResume={onResumeRun}
+          onDismiss={onDismissResume}
+        />
+      ) : null}
+
       {activeTeammate ? (
         <div className="mx-auto mb-2 w-full max-w-[960px] px-5">
           <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg-secondary/50 px-4 py-3">
-            <div className="text-[13px] text-text-secondary">
+            <div className="text-[12px] text-text-secondary">
               <span className="font-semibold text-text-primary">
                 Council: {activeTeammate.name}
               </span>{' '}
@@ -131,13 +146,13 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
                 aria-hidden="true"
                 className="size-7 shrink-0 rounded-sm object-contain"
               />
-              <div className="min-w-0 text-[13px] text-text-secondary">
-                <span className="font-bold tracking-wide text-text-primary">Machine mode</span>{' '}
+              <div className="min-w-0 text-[12px] text-text-secondary">
+                <span className="font-semibold tracking-wide text-text-primary">Machine mode</span>{' '}
                 {machineStripMessage}
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-3">
-              <div className="text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
+              <div className="text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
                 {machineStripStatus}
               </div>
               {machineModeEnabled ? (

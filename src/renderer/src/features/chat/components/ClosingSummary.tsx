@@ -18,7 +18,7 @@ export const ClosingSummary = memo(function ClosingSummary({ summary }: ClosingS
 
   return (
     <div className="py-1">
-      <StreamingText text={summary} className="pl-[13px]" />
+      <StreamingText text={summary} className="prose-reading pl-[13px]" />
     </div>
   )
 })

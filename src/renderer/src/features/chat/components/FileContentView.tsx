@@ -35,6 +35,22 @@ const KEY_TEXT_CHARS = 16
  */
 const LINE_HEIGHT_PX = 20.625
 /** Gutter + code-cell horizontal padding (1.25rem + 0.75rem + 1rem), in rem. */
+/**
+ * Horizontal padding on the gutter cell (`px-2.5` → 0.625rem a side), in rem.
+ */
+const GUTTER_PADDING_REM = 1.25
+/**
+ * Chrome drawn INSIDE the gutter's box: the 3px accent bar plus the 1px divider.
+ *
+ * `box-sizing: border-box` is global, so a `min-width` of `Nch + padding` leaves
+ * the text only `Nch - 4px` of room. A gutter showing the widest number then
+ * overflows its minimum and the cell grows — which is why the divider jumped
+ * sideways exactly when the numbering crossed 9→10 or 99→100: the wide rows were
+ * 4px wider than the narrow ones. Counting the chrome here keeps every gutter
+ * the same width whatever digits it holds.
+ */
+const GUTTER_CHROME_PX = 4
+
 const ROW_PADDING_REM = 3
 
 type FileContentViewVariant = 'default' | 'additions'
@@ -99,12 +115,12 @@ function FileContentViewImpl({
   if (lines.length > READ_VIEW_MAX_LINES) {
     return (
       <div>
-        <div className="mb-1 text-[12px] text-[color:var(--color-code-card-muted-text)]">
+        <div className="mb-1 text-[11px] text-[color:var(--color-code-card-muted-text)]">
           Large file ({String(lines.length)} lines) shown without line highlighting to keep the UI
           responsive.
         </div>
         <pre
-          className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[13px] font-semibold text-[color:var(--color-code-card-text)] whitespace-pre-wrap break-words"
+          className="home-panel-frame-soft overflow-x-auto overflow-y-auto rounded-md bg-code-card p-2 font-mono text-[12px] text-[color:var(--color-code-card-text)] whitespace-pre-wrap break-words"
           style={{ maxHeight }}
         >
           {content}
@@ -188,31 +204,38 @@ function FileViewLine({
   tokens?: readonly HighlightedToken[]
 }) {
   const rowClassName = cn(
-    'group/line flex whitespace-pre border-l-[3px] border-l-transparent',
+    'group/line flex whitespace-pre',
     // A `write` draft is all-new content, so every row gets the added treatment.
-    variant === 'additions' && 'border-l-code-view-add-accent bg-code-view-add-bg',
-    isConcern && 'border-l-code-view-concern-accent bg-code-view-concern-bg',
+    variant === 'additions' && 'bg-code-view-add-bg',
+    isConcern && 'bg-code-view-concern-bg',
   )
   // The gutter is its OWN column with its own background, pinned with `sticky`
-  // so the line numbers stay visible while the code scrolls horizontally.
+  // so the line numbers stay visible while the code scrolls horizontally. It
+  // also carries the row's accent bar on its left edge, so the bar stays pinned
+  // with it. An unmarked row's bar is the GUTTER's colour rather than
+  // `transparent`: transparent let the card background through, which on the
+  // light theme drew a white line down the left edge of every code view.
   const gutterClassName = cn(
-    'sticky left-0 z-10 shrink-0 select-none border-r border-code-view-border bg-code-view-gutter-bg px-2.5 text-right tabular-nums text-code-view-gutter-text',
-    variant === 'additions' && 'font-semibold text-code-view-add-text',
-    isConcern && 'font-semibold text-code-view-concern-accent',
+    'sticky left-0 z-10 shrink-0 select-none border-l-[3px] border-l-code-view-gutter-bg border-r border-r-code-view-border bg-code-view-gutter-bg px-2.5 text-right tabular-nums text-code-view-gutter-text',
+    variant === 'additions' && 'border-l-code-view-add-accent font-medium text-code-view-add-text',
+    isConcern && 'border-l-code-view-concern-accent font-medium text-code-view-concern-accent',
   )
   return (
     <div className={rowClassName}>
       <span
         className={gutterClassName}
-        style={{ minWidth: `calc(${String(gutterWidth)}ch + 1.25rem)` }}
+        style={{
+          minWidth: `calc(${String(gutterWidth)}ch + ${String(GUTTER_PADDING_REM)}rem + ${String(GUTTER_CHROME_PX)}px)`,
+        }}
         aria-hidden
       >
         {String(line.number)}
       </span>
-      {/* `font-semibold`: at 12.5px, normal-weight mono on a dark surface reads
-          washed out — the weight is what makes the syntax colours land. Applied
-          to the code cell only, so the gutter keeps its own weights. */}
-      <span className="pl-3 pr-4 font-semibold text-[color:var(--color-code-card-text)]">
+      {/* Body weight. This used to be semibold to stop the mono washing out on
+          a dark surface, but that was compensating for a too-dim foreground —
+          a whole file rendered bolder than the prose around it. The syntax
+          colours and the raised card carry it now. */}
+      <span className="pl-3 pr-4 text-[color:var(--color-code-card-text)]">
         <CodeLineTokens tokens={tokens} fallback={line.text} />
       </span>
     </div>

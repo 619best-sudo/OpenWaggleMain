@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Components } from 'react-markdown'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { toolCallTitle } from 'turing-harness/tool-titles'
 import { relativeToProject } from '@/features/chat/lib/project-paths'
 import { parseToolArgs } from '@/features/chat/lib/tool-args'
 import {
@@ -17,7 +18,6 @@ import {
 import { summarizeToolTarget } from '@/features/chat/lib/tool-display'
 import { getToolMediaOutput } from '@/features/chat/lib/tool-media-output'
 import { useActiveProjectPath } from '@/features/chat/lib/use-active-project-path'
-import { toolCallTitle } from 'turing-harness/tool-titles'
 import { cn } from '@/shared/lib/cn'
 import { safeMarkdownComponents } from '@/shared/lib/markdown-link-components'
 import { safeMarkdownRehypePlugins, safeMarkdownUrlTransform } from '@/shared/lib/markdown-safety'
@@ -27,6 +27,7 @@ import type { ChatRow, PhaseTimelinePhaseRow, PhaseTimelineToolDetail } from '..
 import { FileContentView, ToolArgs, ToolResult, UnifiedDiffView } from './ToolCallBlockParts'
 import { ToolMediaPreview } from './ToolMediaPreview'
 import { UserQuestionCard } from './UserQuestionCard'
+import { ViewFileButton } from './ViewFileButton'
 
 interface PhaseTimelineCardProps {
   row: Extract<ChatRow, { type: 'phase' }>
@@ -43,15 +44,15 @@ const UNIX_PATH_PATTERN = /(^|[\s(])((?:\/[\w.-]+)+)/gm
 const phaseMarkdownComponents: Components = {
   ...safeMarkdownComponents,
   p: ({ children }) => (
-    <p className="my-0 text-[14px] leading-[1.72] text-text-primary">{children}</p>
+    <p className="my-0 text-[13px] leading-[1.72] text-text-primary">{children}</p>
   ),
   ol: ({ children }) => (
-    <ol className="my-0 list-decimal pl-5 text-[14px] leading-[1.72] text-text-primary space-y-1.5">
+    <ol className="my-0 list-decimal pl-5 text-[13px] leading-[1.72] text-text-primary space-y-1.5">
       {children}
     </ol>
   ),
   ul: ({ children }) => (
-    <ul className="my-0 list-disc pl-5 text-[14px] leading-[1.72] text-text-primary space-y-1.5">
+    <ul className="my-0 list-disc pl-5 text-[13px] leading-[1.72] text-text-primary space-y-1.5">
       {children}
     </ul>
   ),
@@ -69,7 +70,7 @@ const phaseMarkdownComponents: Components = {
     </code>
   ),
   pre: ({ children }) => (
-    <pre className="overflow-x-auto rounded-[10px] border border-border/35 bg-bg-secondary/20 p-3 text-[13px] leading-[1.65]">
+    <pre className="overflow-x-auto rounded-[10px] border border-border/35 bg-bg-secondary/20 p-3 text-[12px] leading-[1.65]">
       {children}
     </pre>
   ),
@@ -245,6 +246,13 @@ function ToolStrip({
   )
   const resultError = useMemo(() => getResultError(result), [result])
   const media = useMemo(() => (result ? getToolMediaOutput(result.content) : null), [result])
+  // Target for the header's "View file" pill: read/write/edit only, path
+  // resolved the same way the concern-overlay resolves it (harness
+  // `details.path` first, the arg as fallback).
+  const viewFilePath = useMemo(
+    () => (FILE_VIEW_TOOLS.has(tool.toolName) ? resolveToolPath(tool) : null),
+    [tool],
+  )
   const hasExpandableDetails =
     tool.toolName === 'read' ||
     tool.toolName === 'write' ||
@@ -272,61 +280,67 @@ function ToolStrip({
     <div className="group">
       <div className="rounded-[14px] border border-border/40 bg-bg-primary/75 p-[1.5px]">
         <div className="rounded-[12px] border border-border/45 bg-bg-secondary/[0.18]">
-          <button
-            type="button"
-            aria-expanded={hasExpandableDetails ? expanded : undefined}
-            onClick={() => {
-              if (hasExpandableDetails) {
-                setExpanded((value) => !value)
-              }
-            }}
-            className={cn(
-              'flex w-full items-center gap-2.5 rounded-[12px] px-3 py-2 text-left font-mono text-[12px] text-text-secondary transition-colors',
-              hasExpandableDetails && 'cursor-pointer hover:bg-bg-secondary/35',
-              !hasExpandableDetails && 'cursor-default',
-            )}
-          >
-            {action && (
-              <span
-                className={cn(
-                  'px-1.5 py-0.5 rounded-[6px] font-semibold uppercase tracking-[0.08em] text-[10px]',
-                  getToolTone(tool.toolName),
-                )}
-              >
-                {action}
-              </span>
-            )}
-            {/* The filename sizes to its content (not flex-1) so the +/- counts sit
+          {/* Header row: the expand toggle is the BUTTON and the "View file"
+              pill its SIBLING — the row used to be one <button>, and a nested
+              button is invalid HTML. */}
+          <div className="flex items-center">
+            <button
+              type="button"
+              aria-expanded={hasExpandableDetails ? expanded : undefined}
+              onClick={() => {
+                if (hasExpandableDetails) {
+                  setExpanded((value) => !value)
+                }
+              }}
+              className={cn(
+                'flex min-w-0 flex-1 items-center gap-2.5 rounded-[12px] px-3 py-2 text-left font-mono text-[11px] text-text-secondary transition-colors',
+                hasExpandableDetails && 'cursor-pointer hover:bg-bg-secondary/35',
+                !hasExpandableDetails && 'cursor-default',
+              )}
+            >
+              {action && (
+                <span
+                  className={cn(
+                    'px-1.5 py-0.5 rounded-[6px] font-semibold uppercase tracking-[0.08em] text-[10px]',
+                    getToolTone(tool.toolName),
+                  )}
+                >
+                  {action}
+                </span>
+              )}
+              {/* The filename sizes to its content (not flex-1) so the +/- counts sit
                 directly beside it rather than being pushed to the far right. */}
-            <span className="min-w-0 truncate text-text-primary/88">{display}</span>
-            {diff && (
-              <span className="flex items-center gap-1.5 text-[11px] font-medium tabular-nums shrink-0">
-                {diff.additions > 0 && (
-                  <span
-                    aria-label={`${String(diff.additions)} lines added`}
-                    title={`${String(diff.additions)} lines added`}
-                    className="rounded-full bg-success/10 px-1.5 py-0.5 text-success"
-                  >
-                    +{diff.additions}
-                  </span>
-                )}
-                {diff.deletions > 0 && (
-                  <span
-                    aria-label={`${String(diff.deletions)} lines removed`}
-                    title={`${String(diff.deletions)} lines removed`}
-                    className="rounded-full bg-error/10 px-1.5 py-0.5 text-error"
-                  >
-                    -{diff.deletions}
-                  </span>
-                )}
-              </span>
-            )}
-            {/* Absorbs the remaining width, keeping the status indicator right-aligned. */}
-            <span className="flex-1" />
-            {tool.status === 'running' && (
-              <span className="animate-pulse text-text-tertiary">...</span>
-            )}
-          </button>
+              <span className="min-w-0 truncate text-text-primary/88">{display}</span>
+              {diff && (
+                <span className="flex items-center gap-1.5 text-[10px] font-medium tabular-nums shrink-0">
+                  {diff.additions > 0 && (
+                    <span
+                      aria-label={`${String(diff.additions)} lines added`}
+                      title={`${String(diff.additions)} lines added`}
+                      className="rounded-full bg-success/10 px-1.5 py-0.5 text-success"
+                    >
+                      +{diff.additions}
+                    </span>
+                  )}
+                  {diff.deletions > 0 && (
+                    <span
+                      aria-label={`${String(diff.deletions)} lines removed`}
+                      title={`${String(diff.deletions)} lines removed`}
+                      className="rounded-full bg-error/10 px-1.5 py-0.5 text-error"
+                    >
+                      -{diff.deletions}
+                    </span>
+                  )}
+                </span>
+              )}
+              {/* Absorbs the remaining width, keeping the status indicator right-aligned. */}
+              <span className="flex-1" />
+              {tool.status === 'running' && (
+                <span className="animate-pulse text-text-tertiary">...</span>
+              )}
+            </button>
+            {viewFilePath && <ViewFileButton path={viewFilePath} className="mr-2.5" />}
+          </div>
 
           {expanded && hasExpandableDetails && (
             // Flush: the code card spans the strip's full width with no
@@ -437,8 +451,8 @@ function PlanReviewActions({
 
   return (
     <div className="mt-3 rounded-[12px] border border-border/35 bg-bg-primary/55 p-3">
-      <div className="text-[14px] font-medium leading-[1.5] text-text-primary">Review Plan</div>
-      <div className="mt-1 text-[14px] leading-[1.5] text-text-secondary">
+      <div className="text-[13px] font-medium leading-[1.5] text-text-primary">Review Plan</div>
+      <div className="mt-1 text-[13px] leading-[1.5] text-text-secondary">
         Approve to start implementation, edit to regenerate the plan, or reject to stop here.
       </div>
 
@@ -522,7 +536,7 @@ function PlanReviewActions({
         </div>
       )}
 
-      {error ? <div className="mt-2 text-[14px] leading-[1.5] text-error">{error}</div> : null}
+      {error ? <div className="mt-2 text-[13px] leading-[1.5] text-error">{error}</div> : null}
     </div>
   )
 }
@@ -547,7 +561,7 @@ function PlanList({
   return (
     <div className="rounded-[16px] border border-border/40 bg-bg-primary/75 p-[1.5px]">
       <div className="rounded-[14px] border border-border/45 bg-bg-secondary/[0.18] px-4 py-3.5">
-        <div className="mb-2 text-[14px] font-medium leading-[1.5] text-text-primary">
+        <div className="mb-2 text-[13px] font-medium leading-[1.5] text-text-primary">
           Execution Plan
         </div>
         <div className="flex flex-col gap-3">
@@ -557,7 +571,7 @@ function PlanList({
               <div key={item.id || i} className="flex flex-col gap-1">
                 <div
                   className={cn(
-                    'flex items-start text-[14px] leading-[1.5] text-text-primary',
+                    'flex items-start text-[13px] leading-[1.5] text-text-primary',
                     showNumbers ? 'gap-2' : 'gap-0',
                   )}
                 >
@@ -572,7 +586,7 @@ function PlanList({
                   <MarkdownBlock
                     content={String(item.summary)}
                     className={cn(
-                      'text-text-secondary [&_p]:text-[14px] [&_p]:leading-[1.5] [&_p]:text-text-secondary [&_ol]:text-[14px] [&_ol]:leading-[1.5] [&_ol]:text-text-secondary [&_ul]:text-[14px] [&_ul]:leading-[1.5] [&_ul]:text-text-secondary',
+                      'text-text-secondary [&_p]:text-[13px] [&_p]:leading-[1.5] [&_p]:text-text-secondary [&_ol]:text-[13px] [&_ol]:leading-[1.5] [&_ol]:text-text-secondary [&_ul]:text-[13px] [&_ul]:leading-[1.5] [&_ul]:text-text-secondary',
                       showNumbers && 'pl-6',
                     )}
                   />
@@ -580,7 +594,7 @@ function PlanList({
                 {Array.isArray(item.files) && item.files.length > 0 && (
                   <div
                     className={cn(
-                      'flex flex-wrap items-center gap-1.5 pt-0.5 text-[14px] leading-[1.5] text-text-tertiary',
+                      'flex flex-wrap items-center gap-1.5 pt-0.5 text-[13px] leading-[1.5] text-text-tertiary',
                       showNumbers && 'pl-6',
                     )}
                   >
@@ -589,7 +603,7 @@ function PlanList({
                       typeof file === 'string' ? (
                         <code
                           key={`${String(item.id || i)}-file-${String(index)}`}
-                          className="rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 font-mono text-[14px] leading-[1.5] text-text-secondary"
+                          className="rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 font-mono text-[13px] leading-[1.5] text-text-secondary"
                         >
                           {file}
                         </code>
@@ -637,7 +651,7 @@ function PlanSetList({ planSet }: { planSet: unknown }) {
   return (
     <div className="rounded-[16px] border border-border/40 bg-bg-primary/75 p-[1.5px]">
       <div className="rounded-[14px] border border-border/45 bg-bg-secondary/[0.18] px-4 py-3.5">
-        <div className="mb-2 text-[14px] font-medium leading-[1.5] text-text-primary">
+        <div className="mb-2 text-[13px] font-medium leading-[1.5] text-text-primary">
           Execution Plan{ordered.length > 1 ? ` · ${ordered.length} plans` : ''}
         </div>
         <div className="flex flex-col gap-4">
@@ -646,13 +660,13 @@ function PlanSetList({ planSet }: { planSet: unknown }) {
             const tasks = Array.isArray(plan.tasks) ? plan.tasks : []
             return (
               <div key={plan.id || planIndex} className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-[14px] font-medium leading-[1.5] text-text-primary">
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bg-secondary/70 px-1.5 text-[12px] text-text-tertiary">
+                <div className="flex items-center gap-2 text-[13px] font-medium leading-[1.5] text-text-primary">
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-bg-secondary/70 px-1.5 text-[11px] text-text-tertiary">
                     {planIndex + 1}
                   </span>
                   <span className="min-w-0 flex-1">{String(plan.title || plan.id || 'Plan')}</span>
                   {typeof plan.repo === 'string' && plan.repo ? (
-                    <code className="rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 font-mono text-[12px] text-text-secondary">
+                    <code className="rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 font-mono text-[11px] text-text-secondary">
                       {plan.repo}
                     </code>
                   ) : null}
@@ -662,13 +676,13 @@ function PlanSetList({ planSet }: { planSet: unknown }) {
                     if (!task || typeof task !== 'object') return null
                     return (
                       <div key={task.id || taskIndex} className="flex flex-col gap-1">
-                        <div className="flex items-start gap-2 text-[14px] leading-[1.5] text-text-primary">
+                        <div className="flex items-start gap-2 text-[13px] leading-[1.5] text-text-primary">
                           <span className="w-4 shrink-0 text-text-tertiary">{taskIndex + 1}.</span>
                           <span className="min-w-0 flex-1">
                             {String(task.title || task.summary || 'Step')}
                           </span>
                           {typeof task.complexity === 'string' ? (
-                            <span className="shrink-0 rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 text-[12px] text-text-tertiary">
+                            <span className="shrink-0 rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 text-[11px] text-text-tertiary">
                               {task.complexity}
                             </span>
                           ) : null}
@@ -676,7 +690,7 @@ function PlanSetList({ planSet }: { planSet: unknown }) {
                         {task.summary && task.summary !== task.title ? (
                           <MarkdownBlock
                             content={String(task.summary)}
-                            className="pl-6 text-text-secondary [&_p]:text-[14px] [&_p]:leading-[1.5] [&_p]:text-text-secondary"
+                            className="pl-6 text-text-secondary [&_p]:text-[13px] [&_p]:leading-[1.5] [&_p]:text-text-secondary"
                           />
                         ) : null}
                       </div>
@@ -702,7 +716,7 @@ function QaPlanList({ qaPlan }: { qaPlan: unknown }) {
   return (
     <div className="rounded-[16px] border border-border/40 bg-bg-primary/75 p-[1.5px]">
       <div className="rounded-[14px] border border-border/45 bg-bg-secondary/[0.18] px-4 py-3.5">
-        <div className="mb-2 text-[14px] font-medium leading-[1.5] text-text-primary">
+        <div className="mb-2 text-[13px] font-medium leading-[1.5] text-text-primary">
           QA Plan{typeof stack === 'string' && stack ? ` · ${stack}` : ''}
         </div>
         <div className="flex flex-col gap-2">
@@ -712,19 +726,19 @@ function QaPlanList({ qaPlan }: { qaPlan: unknown }) {
             const failed = check.passed === false
             return (
               <div key={check.id || index} className="flex flex-col gap-0.5">
-                <div className="flex items-start gap-2 text-[14px] leading-[1.5] text-text-primary">
+                <div className="flex items-start gap-2 text-[13px] leading-[1.5] text-text-primary">
                   <span className="w-4 shrink-0" aria-hidden>
                     {passed ? '✓' : failed ? '✗' : '•'}
                   </span>
                   <span className="min-w-0 flex-1">{String(check.description || 'Check')}</span>
                   {typeof check.method === 'string' ? (
-                    <span className="shrink-0 rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 text-[12px] text-text-tertiary">
+                    <span className="shrink-0 rounded-sm bg-bg-secondary/70 px-1.5 py-0.5 text-[11px] text-text-tertiary">
                       {check.method}
                     </span>
                   ) : null}
                 </div>
                 {typeof check.evidence === 'string' && check.evidence ? (
-                  <span className="pl-6 text-[13px] leading-[1.5] text-text-tertiary">
+                  <span className="pl-6 text-[12px] leading-[1.5] text-text-tertiary">
                     {check.evidence}
                   </span>
                 ) : null}
@@ -794,7 +808,7 @@ export function PhaseTimelineCard({
       <div className="flex items-center gap-2">
         <h3
           className={cn(
-            'text-[14px] font-semibold text-text-primary',
+            'text-[13px] font-semibold text-text-primary',
             phase.status === 'running' && 'animate-pulse',
           )}
         >
@@ -851,7 +865,7 @@ export function PhaseTimelineCard({
       {summaryContent && (
         <MarkdownBlock
           content={summaryContent}
-          className="[&_p]:text-[14px] [&_p]:leading-[1.65] [&_ol]:text-[14px] [&_ol]:leading-[1.65] [&_ul]:text-[14px] [&_ul]:leading-[1.65]"
+          className="[&_p]:text-[13px] [&_p]:leading-[1.65] [&_ol]:text-[13px] [&_ol]:leading-[1.65] [&_ul]:text-[13px] [&_ul]:leading-[1.65]"
         />
       )}
     </section>

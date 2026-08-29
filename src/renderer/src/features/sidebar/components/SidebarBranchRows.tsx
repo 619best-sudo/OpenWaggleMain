@@ -31,8 +31,8 @@ interface BranchMenuController {
 
 function DraftBranchRow({ sourceNodeId }: { readonly sourceNodeId: string }) {
   return (
-    <div className="mx-4 flex h-9 items-center gap-2 rounded-md border-2 border-dashed border-home-border pl-8 pr-4 text-left text-text-tertiary">
-      <span className="min-w-0 flex-1 truncate text-[12px]">Draft branch from {sourceNodeId}</span>
+    <div className="mx-2 flex h-[30px] items-center gap-2 rounded-md border border-dashed border-home-border pl-10 pr-2 text-left text-text-tertiary">
+      <span className="min-w-0 flex-1 truncate text-[11px]">Draft branch from {sourceNodeId}</span>
     </div>
   )
 }
@@ -70,7 +70,7 @@ function BranchRenameInput({
       }}
       variant="transparent"
       inputSize="sm"
-      className="min-w-0 flex-1 px-0 text-[11px] text-text-primary"
+      className="min-w-0 flex-1 px-0 text-[10px] text-text-primary"
     />
   )
 }
@@ -115,7 +115,7 @@ function BranchActionsPopover({
           variant="unstyled"
           type="button"
           onClick={() => rename.start(branch)}
-          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[12px] text-text-secondary transition-colors hover:bg-bg-hover"
+          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-text-secondary transition-colors hover:bg-bg-hover"
         >
           <Edit3 className="size-3 shrink-0" />
           <span>Rename</span>
@@ -125,7 +125,7 @@ function BranchActionsPopover({
         variant="unstyled"
         type="button"
         onClick={onArchive}
-        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[12px] text-text-secondary transition-colors hover:bg-bg-hover"
+        className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-text-secondary transition-colors hover:bg-bg-hover"
       >
         <Archive className="size-3 shrink-0" />
         <span>{branch.isMain ? 'Archive session' : 'Archive'}</span>
@@ -153,7 +153,7 @@ function SidebarBranchItem({
   return (
     <div
       className={cn(
-        'group mx-4 flex h-9 items-center gap-2 rounded-md pl-8 pr-3 text-left transition-colors',
+        'group mx-2 flex h-[30px] items-center gap-2 rounded-md pl-10 pr-2 text-left transition-colors',
         row.isActive
           ? 'bg-bg-active text-text-primary font-medium'
           : 'text-text-tertiary hover:bg-bg-hover hover:text-text-secondary',
@@ -173,7 +173,7 @@ function SidebarBranchItem({
           variant="unstyled"
           type="button"
           onClick={() => actions.select(sessionId, row.branch)}
-          className="min-w-0 flex-1 truncate text-left text-[12px]"
+          className="min-w-0 flex-1 truncate text-left text-[11px]"
         >
           {row.branch.name}
         </Button>
@@ -234,7 +234,7 @@ export function SidebarBranchRows({ sessionId, rows, actions }: SidebarBranchRow
   if (rows.length === 0) return null
 
   return (
-    <div className="mb-1 mt-1 space-y-1">
+    <div className="mb-0.5">
       {rows.map((row) =>
         row.type === 'draft' ? (
           <DraftBranchRow key="draft" sourceNodeId={String(row.sourceNodeId)} />

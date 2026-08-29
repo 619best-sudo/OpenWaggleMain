@@ -12,7 +12,7 @@ const SELECT_BASE_CLASS =
   'rounded-lg border border-input-card-border bg-bg-secondary text-text-secondary outline-none transition-[border-color,box-shadow] focus:border-accent/50 focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--color-accent)_18%,transparent)]'
 
 const SELECT_SIZE_CLASS = {
-  sm: 'h-8 px-2.5 text-[13px]',
+  sm: 'h-8 px-2.5 text-[12px]',
   md: 'px-3 py-2 text-sm',
 }
 

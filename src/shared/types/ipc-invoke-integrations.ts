@@ -22,6 +22,7 @@ import type {
   GitCommitResult,
   GitFileDiff,
   GitStatusSummary,
+  GitWorktreeResult,
 } from './git'
 import type { SupportedModelId } from './llm'
 import type { AgentPhaseState } from './phase'
@@ -75,6 +76,14 @@ export interface IpcIntegrationInvokeChannelMap {
   'git:diff': {
     args: [projectPath: string]
     return: GitFileDiff[]
+  }
+  'git:revert-all': {
+    args: [projectPath: string]
+    return: GitWorktreeResult
+  }
+  'git:stage-all': {
+    args: [projectPath: string]
+    return: GitWorktreeResult
   }
   'git:branches:list': {
     args: [projectPath: string]

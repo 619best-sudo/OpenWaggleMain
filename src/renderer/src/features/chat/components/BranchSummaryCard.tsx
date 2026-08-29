@@ -17,7 +17,7 @@ export function BranchSummaryCard({ id, summary, onBranchFromMessage }: BranchSu
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <span className="block text-[12px] font-semibold text-text-secondary">
+            <span className="block text-[11px] font-semibold text-text-secondary">
               Branch summary
             </span>
             {onBranchFromMessage ? (
@@ -32,7 +32,7 @@ export function BranchSummaryCard({ id, summary, onBranchFromMessage }: BranchSu
               </Button>
             ) : null}
           </div>
-          <div className="mt-2 text-[13px] text-text-secondary">
+          <div className="mt-2 text-[12px] text-text-secondary">
             <StreamingText text={summary} />
           </div>
         </div>

@@ -37,7 +37,8 @@ export function renderTextWithMentions(text: string): ReactNode[] {
       <span
         key={key}
         className={cn(
-          'rounded bg-info/10 px-1.5 py-0.5 text-[13px] text-info',
+          'rounded-[5px] border border-inline-file-border bg-inline-file-bg px-1.5 py-0.5',
+          'text-[12px] font-medium text-inline-file-text',
           'inline-flex items-center gap-1',
           'select-none cursor-default',
         )}

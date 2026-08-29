@@ -89,7 +89,7 @@ function PlanReviewHeading({
           {decision ? (
             <span
               className={cn(
-                'rounded px-1.5 py-0.5 text-[11px] uppercase tracking-wide',
+                'rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide',
                 DECISION_BADGE[decision].tone,
               )}
             >
@@ -97,16 +97,16 @@ function PlanReviewHeading({
             </span>
           ) : null}
         </div>
-        <div className="shrink-0 text-[12px] text-text-secondary">
+        <div className="shrink-0 text-[11px] text-text-secondary">
           Draft {revision}
           {stepCount > 0 ? ` · ${stepCount} step${stepCount === 1 ? '' : 's'}` : ''}
         </div>
       </div>
       {plan?.summary ? (
-        <div className="mt-1 text-[13px] leading-[1.5] text-text-secondary">{plan.summary}</div>
+        <div className="mt-1 text-[12px] leading-[1.5] text-text-secondary">{plan.summary}</div>
       ) : null}
       {priorComments ? (
-        <div className="mt-2 border-l-2 border-border/60 pl-2.5 text-[13px] leading-[1.5] text-text-secondary">
+        <div className="mt-2 border-l-2 border-border/60 pl-2.5 text-[12px] leading-[1.5] text-text-secondary">
           <span className="text-text-tertiary">Your last note </span>
           {priorComments}
         </div>
@@ -119,8 +119,8 @@ function PlanReviewHeading({
 function SubmittedComments({ comments }: { readonly comments: string }) {
   if (!comments.trim()) return null
   return (
-    <div className="mt-3.5 border-t border-border/30 pt-3 text-[13px] leading-[1.5] text-text-secondary">
-      <span className="text-[12px] uppercase tracking-wide text-text-tertiary">
+    <div className="mt-3.5 border-t border-border/30 pt-3 text-[12px] leading-[1.5] text-text-secondary">
+      <span className="text-[11px] uppercase tracking-wide text-text-tertiary">
         What you asked for
       </span>
       <div className="mt-1">{comments.trim()}</div>
@@ -205,7 +205,7 @@ export function PlanReviewCard({
       )}
       data-testid="plan-review-card"
     >
-      <div className="rounded-[15px] bg-bg-secondary/20 px-3.5 py-3 text-[14px] leading-[1.5] ring-1 ring-inset ring-border/20">
+      <div className="rounded-[15px] bg-bg-secondary/20 px-3.5 py-3 text-[13px] leading-[1.5] ring-1 ring-inset ring-border/20">
         <PlanReviewHeading
           decision={decision}
           revision={request.revision}

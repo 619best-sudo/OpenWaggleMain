@@ -56,6 +56,23 @@ export interface GitCommitFailure {
 
 export type GitCommitResult = GitCommitSuccess | GitCommitFailure
 
+export const GIT_WORKTREE_ERROR_CODES = ['not-git-repo', 'no-commits', 'command-failed'] as const
+
+export type GitWorktreeErrorCode = (typeof GIT_WORKTREE_ERROR_CODES)[number]
+
+export interface GitWorktreeSuccess {
+  readonly ok: true
+  readonly summary: string
+}
+
+export interface GitWorktreeFailure {
+  readonly ok: false
+  readonly code: GitWorktreeErrorCode
+  readonly message: string
+}
+
+export type GitWorktreeResult = GitWorktreeSuccess | GitWorktreeFailure
+
 export interface GitFileDiff {
   readonly path: string
   readonly diff: string

@@ -92,7 +92,7 @@ export function CommitDialog({
         <div className="home-divider-b flex items-center justify-between gap-4 bg-bg-secondary/50 px-4 py-3">
           <div className="flex items-center gap-3">
             <h2 className="text-sm font-semibold text-text-primary">Commit changes</h2>
-            <div className="home-divider-l flex items-center gap-3 pl-3 text-[13px] text-text-secondary">
+            <div className="home-divider-l flex items-center gap-3 pl-3 text-[12px] text-text-secondary">
               {status ? (
                 <div className="flex items-center">
                   <span className="font-medium text-text-primary">
@@ -114,7 +114,7 @@ export function CommitDialog({
             <Button
               variant="unstyled"
               type="button"
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-secondary"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-secondary"
               onClick={onRefresh}
               title="Refresh status"
               disabled={isRefreshing}

@@ -38,7 +38,7 @@ export function SessionForkSelector({
           </span>
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-semibold text-text-primary">Fork to new session</h3>
-            <p className="mt-1 text-[12px] text-text-tertiary">
+            <p className="mt-1 text-[11px] text-text-tertiary">
               Select a previous user message. The new session starts before it and prefills the
               composer with that text.
             </p>
@@ -47,7 +47,7 @@ export function SessionForkSelector({
 
         <div className="home-panel-frame-soft mt-4 max-h-[360px] overflow-y-auto rounded-lg bg-bg">
           {targets.length === 0 ? (
-            <div className="px-3 py-6 text-center text-[13px] text-text-tertiary">
+            <div className="px-3 py-6 text-center text-[12px] text-text-tertiary">
               No user messages are available to fork.
             </div>
           ) : (
@@ -62,10 +62,10 @@ export function SessionForkSelector({
                   'hover:bg-bg-hover focus:bg-bg-hover focus:outline-none',
                 )}
               >
-                <span className="block text-[12px] font-medium text-text-secondary">
+                <span className="block text-[11px] font-medium text-text-secondary">
                   {String(target.entryId)}
                 </span>
-                <span className="mt-1 line-clamp-3 block text-[12px] leading-5 text-text-tertiary">
+                <span className="mt-1 line-clamp-3 block text-[11px] leading-5 text-text-tertiary">
                   {previewText(target.text)}
                 </span>
               </Button>
@@ -78,7 +78,7 @@ export function SessionForkSelector({
             variant="unstyled"
             type="button"
             onClick={onClose}
-            className="home-panel-frame-soft h-8 rounded-md px-3 text-[12px] text-text-secondary transition-colors hover:bg-bg-hover"
+            className="home-panel-frame-soft h-8 rounded-md px-3 text-[11px] text-text-secondary transition-colors hover:bg-bg-hover"
           >
             Cancel
           </Button>

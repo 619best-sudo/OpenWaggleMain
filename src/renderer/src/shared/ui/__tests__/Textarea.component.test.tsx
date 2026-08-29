@@ -60,7 +60,7 @@ describe('Textarea', () => {
 
     expect(screen.getByRole('textbox')).toHaveClass('!text-transparent')
     expect(container.querySelector('pre')).toHaveClass('m-0')
-    expect(container.querySelector('code')).toHaveClass('text-[13px]')
+    expect(container.querySelector('code')).toHaveClass('text-[12px]')
     expect(screen.getByText('"mcpServers"')).toHaveStyle({ color: '#79c0ff' })
   })
 
@@ -75,8 +75,8 @@ describe('Textarea', () => {
       expect(codeToTokensBaseMock).toHaveBeenCalled()
     })
 
-    expect(screen.getByRole('textbox')).toHaveClass('font-mono', 'text-[12px]', 'leading-5')
-    expect(container.querySelector('code')).toHaveClass('font-mono', 'text-[12px]', 'leading-5')
+    expect(screen.getByRole('textbox')).toHaveClass('font-mono', 'text-[11px]', 'leading-5')
+    expect(container.querySelector('code')).toHaveClass('font-mono', 'text-[11px]', 'leading-5')
   })
 
   it('logs and falls back when the syntax highlighter cannot load', async () => {

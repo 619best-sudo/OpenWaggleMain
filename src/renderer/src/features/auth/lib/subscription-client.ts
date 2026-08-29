@@ -1,5 +1,5 @@
-import { resolveAuthUrl } from './auth-client'
 import type { GithubRepoStatsSnapshot } from '@shared/types/feedback'
+import { resolveAuthUrl } from './auth-client'
 
 export interface AppSubscriptionSnapshot {
   readonly tier: {
@@ -81,7 +81,12 @@ export interface AppLeaderboardSnapshot {
       }
       readonly notes: readonly string[]
     }
-    readonly metrics: Readonly<Record<string, { readonly label: string; readonly formula: string; readonly notes: readonly string[] }>>
+    readonly metrics: Readonly<
+      Record<
+        string,
+        { readonly label: string; readonly formula: string; readonly notes: readonly string[] }
+      >
+    >
   }
   readonly overall: AppLeaderboardList
   readonly tokens: AppLeaderboardList
@@ -296,9 +301,10 @@ export async function fetchBillingTierCatalog(): Promise<readonly AppPublicSubsc
     throw new Error('Unable to reach the billing catalog. Check that the backend is running.')
   }
 
-  const payload = (await response.json().catch(() => null)) as
-    | { tiers?: readonly AppPublicSubscriptionTier[]; message?: string | string[] }
-    | null
+  const payload = (await response.json().catch(() => null)) as {
+    tiers?: readonly AppPublicSubscriptionTier[]
+    message?: string | string[]
+  } | null
   if (!response.ok) {
     throw new Error(getErrorMessage(payload, 'Failed to load billing plans.'))
   }

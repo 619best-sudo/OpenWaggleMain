@@ -37,7 +37,7 @@ export function ShownAttachments({ attachments }: ShownAttachmentsProps) {
               className="max-h-[160px] rounded-[10px] object-contain ring-1 ring-border/40"
             />
             {attachment.note ? (
-              <figcaption className="text-[12px] leading-[1.45] text-text-secondary">
+              <figcaption className="text-[11px] leading-[1.45] text-text-secondary">
                 {attachment.note}
               </figcaption>
             ) : null}
@@ -45,7 +45,7 @@ export function ShownAttachments({ attachments }: ShownAttachmentsProps) {
         ) : (
           <span
             key={attachment.path}
-            className="max-w-[220px] truncate rounded bg-bg-hover px-1.5 py-0.5 font-mono text-[11px] text-text-secondary"
+            className="max-w-[220px] truncate rounded bg-bg-hover px-1.5 py-0.5 font-mono text-[10px] text-text-secondary"
             title={attachment.path}
           >
             {fileName(attachment.path)}
@@ -116,7 +116,7 @@ export function AttachmentPicker({
 }: AttachmentPickerProps) {
   return (
     <div className="mt-3 flex flex-col gap-1.5 rounded-[12px] border border-border/35 bg-bg-primary/65 p-3">
-      <div className="text-[13px] leading-[1.45] text-text-tertiary">
+      <div className="text-[12px] leading-[1.45] text-text-tertiary">
         {request.hint
           ? request.hint
           : request.multiple
@@ -137,7 +137,7 @@ export function AttachmentPicker({
         {attachments.map((attachment) => (
           <span
             key={attachment.path}
-            className="flex items-center gap-1 rounded bg-bg-hover px-1.5 py-0.5 text-[11px] text-text-secondary"
+            className="flex items-center gap-1 rounded bg-bg-hover px-1.5 py-0.5 text-[10px] text-text-secondary"
           >
             <span className="max-w-[220px] truncate font-mono" title={attachment.path}>
               {fileName(attachment.path)}

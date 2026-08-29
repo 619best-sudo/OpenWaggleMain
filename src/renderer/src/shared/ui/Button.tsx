@@ -46,10 +46,10 @@ const BUTTON_VARIANT_CLASS = {
 
 const BUTTON_SIZE_CLASS = {
   none: '',
-  xs: 'px-2 py-1 text-[11px]',
-  sm: 'px-2.5 py-1.5 text-[12px]',
-  md: 'px-3 py-2 text-[13px]',
-  lg: 'px-7 py-3.5 text-[15px]',
+  xs: 'px-2 py-1 text-[10px]',
+  sm: 'px-2.5 py-1.5 text-[11px]',
+  md: 'px-3 py-2 text-[12px]',
+  lg: 'px-7 py-3.5 text-[13.5px]',
   'icon-xs': 'size-5 p-0',
   'icon-sm': 'size-6 p-0',
   'icon-md': 'size-8 p-0',

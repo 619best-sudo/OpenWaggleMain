@@ -2,15 +2,15 @@ import type { AgentSendPayload, HydratedAgentSendPayload } from '@shared/types/a
 import type { McpSettingsView } from '@shared/types/mcp'
 import type { SessionDetail, SessionNode } from '@shared/types/session'
 import type { ToolPermissionMode } from '@shared/types/settings'
-import { pipe } from 'effect/Function'
 import * as Effect from 'effect/Effect'
+import { pipe } from 'effect/Function'
+import { createLogger } from '../../logger'
 import {
   AgentKernelService,
   type AgentKernelStandardsContext,
 } from '../../ports/agent-kernel-service'
 import type { ProjectedSessionNodeInput } from '../../ports/session-repository'
 import { SessionRepository } from '../../ports/session-repository'
-import { createLogger } from '../../logger'
 import { hydratePayloadAttachments } from '../run-handler-utils'
 import type { AgentRunInput } from './types'
 
@@ -33,7 +33,7 @@ export function hydrateAgentRunPayload(payload: AgentSendPayload) {
  * field pick — no synthesis. Only the fields the snapshot extractor reads are
  * carried; the rest (sessionId, branchId, message) are irrelevant to continuity.
  */
-function toProjectedNode(node: SessionNode): ProjectedSessionNodeInput {
+export function toProjectedNode(node: SessionNode): ProjectedSessionNodeInput {
   return {
     id: node.id,
     parentId: node.parentId,
@@ -81,20 +81,24 @@ export function runAgentKernel(
     const loadResult = yield* pipe(
       sessionRepo.getTree(input.sessionId),
       Effect.map((tree) =>
-        tree?.nodes?.length ? (tree.nodes.map(toProjectedNode) as readonly ProjectedSessionNodeInput[]) : undefined,
+        tree?.nodes?.length
+          ? (tree.nodes.map(toProjectedNode) as readonly ProjectedSessionNodeInput[])
+          : undefined,
       ),
       Effect.catchAll((error) => {
-        logger.warn('Failed to load persisted transcript nodes for thread continuity; proceeding without handoff', {
-          sessionId: input.sessionId,
-          runId: input.runId,
-          error: error instanceof Error ? error.message : String(error),
-        })
+        logger.warn(
+          'Failed to load persisted transcript nodes for thread continuity; proceeding without handoff',
+          {
+            sessionId: input.sessionId,
+            runId: input.runId,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        )
         return Effect.succeed(undefined)
       }),
       Effect.either,
     )
-    const persistedTranscriptNodes =
-      loadResult._tag === 'Right' ? loadResult.right : undefined
+    const persistedTranscriptNodes = loadResult._tag === 'Right' ? loadResult.right : undefined
 
     return yield* agentKernel.run({
       session: preflight.session,
@@ -110,6 +114,7 @@ export function runAgentKernel(
       ...(preflight.mcpSettings ? { mcpSettings: preflight.mcpSettings } : {}),
       ...(preflight.standardsContext ? { standardsContext: preflight.standardsContext } : {}),
       ...(persistedTranscriptNodes ? { persistedTranscriptNodes } : {}),
+      ...(input.resumeRun ? { resumeRun: input.resumeRun } : {}),
     })
   })
 }

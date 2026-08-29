@@ -23,8 +23,23 @@ const MIN_GUTTER_CHARS = 2
 const LINE_HEIGHT_PX = 20.625
 /** Height of the compact diff viewport, matching `max-h-[320px]` below. */
 const COMPACT_VIEWPORT_PX = 320
-/** Gutter (1.25) + mark column (1.5) + code-cell padding (1), in rem. */
+/** Gutter (1.25) + accent bar + mark column (1.25) + code-cell padding (1), in rem. */
 const ROW_PADDING_REM = 3.75
+/**
+ * Horizontal padding on the gutter cell (`px-2.5` → 0.625rem a side), in rem.
+ */
+const GUTTER_PADDING_REM = 1.25
+/**
+ * Chrome drawn INSIDE the gutter's box: the 3px accent bar plus the 1px divider.
+ *
+ * `box-sizing: border-box` is global, so a `min-width` of `Nch + padding` leaves
+ * the text only `Nch - 4px` of room. A gutter showing the widest number then
+ * overflows its minimum and the cell grows — which is why the divider jumped
+ * sideways exactly when the numbering crossed 9→10 or 99→100: the wide rows were
+ * 4px wider than the narrow ones. Counting the chrome here keeps every gutter
+ * the same width whatever digits it holds.
+ */
+const GUTTER_CHROME_PX = 4
 
 /**
  * Is this meta line the `--- a/file` / `+++ b/file` header? Those repeat the file
@@ -146,7 +161,7 @@ function UnifiedDiffViewImpl({
             return (
               <div
                 key={`${String(index)}-hunk`}
-                className="whitespace-pre bg-code-view-gutter-bg px-3 text-code-view-gutter-text"
+                className="whitespace-pre border-y border-code-view-border bg-code-view-gutter-bg px-3 text-[11px] text-code-view-gutter-text"
               >
                 {line.content}
               </div>
@@ -156,43 +171,48 @@ function UnifiedDiffViewImpl({
             <div
               key={`${String(index)}-${line.type}`}
               className={cn(
-                'flex whitespace-pre border-l-[3px]',
-                // Bold left accent + saturated wash: an added/removed row reads as
-                // green/red instantly, while the code keeps its syntax colours.
-                line.type === 'add' && 'border-l-code-view-add-accent bg-code-view-add-bg',
-                line.type === 'remove' && 'border-l-code-view-remove-accent bg-code-view-remove-bg',
-                line.type === 'context' && 'border-l-transparent',
+                'flex whitespace-pre',
+                // The wash alone marks the row; the accent bar rides on the
+                // sticky gutter below so it stays pinned during horizontal
+                // scroll instead of sliding off with the code.
+                line.type === 'add' && 'bg-code-view-add-bg',
+                line.type === 'remove' && 'bg-code-view-remove-bg',
               )}
             >
-              {/* Gutter: its own pinned column with its own background. */}
+              {/* Gutter: its own pinned column, carrying the accent bar on its
+                  left edge. A context row's bar takes the GUTTER's colour, not
+                  `transparent` — transparent showed the card background through
+                  the strip, which on the light theme drew a white line down the
+                  whole left edge of every diff. */}
               <span
                 className={cn(
-                  'sticky left-0 z-10 shrink-0 select-none border-r border-code-view-border bg-code-view-gutter-bg px-2.5 text-right tabular-nums',
-                  line.type === 'add' && 'font-semibold text-code-view-add-text',
-                  line.type === 'remove' && 'font-semibold text-code-view-remove-text',
-                  line.type === 'context' && 'text-code-view-gutter-text',
+                  'sticky left-0 z-10 shrink-0 select-none border-l-[3px] border-r border-r-code-view-border bg-code-view-gutter-bg px-2.5 text-right tabular-nums',
+                  line.type === 'add' &&
+                    'border-l-code-view-add-accent font-medium text-code-view-add-text',
+                  line.type === 'remove' &&
+                    'border-l-code-view-remove-accent font-medium text-code-view-remove-text',
+                  line.type === 'context' &&
+                    'border-l-code-view-gutter-bg text-code-view-gutter-text',
                 )}
-                style={{ minWidth: `calc(${String(gutterWidth)}ch + 1.25rem)` }}
+                style={{
+                  minWidth: `calc(${String(gutterWidth)}ch + ${String(GUTTER_PADDING_REM)}rem + ${String(GUTTER_CHROME_PX)}px)`,
+                }}
                 aria-hidden
               >
                 {lineNumber ?? ''}
               </span>
-              {/* The +/- mark keeps the row's semantic colour. */}
+              {/* The +/- mark: a fixed, centred column so code starts at the
+                  same x on every row, whichever type it is. */}
               <span
                 className={cn(
-                  'w-4 shrink-0 select-none pl-2 text-center font-bold',
+                  'w-5 shrink-0 select-none text-center',
                   line.type === 'add' && 'text-code-view-add-text',
                   line.type === 'remove' && 'text-code-view-remove-text',
-                  line.type === 'context' && 'text-code-view-gutter-text',
                 )}
               >
                 {line.type === 'context' ? '' : line.content.slice(0, 1)}
               </span>
-              {/* `font-semibold`: at 12.5px, normal-weight mono on a dark surface
-                  reads washed out — the weight is what makes the syntax colours
-                  land. Applied to the code cell only, so the gutter keeps its own
-                  weights. */}
-              <span className="pr-4 font-semibold text-[color:var(--color-code-card-text)]">
+              <span className="pr-4 text-[color:var(--color-code-card-text)]">
                 <CodeLineTokens
                   tokens={highlighted?.[windowIndex]}
                   fallback={line.content.slice(1)}

@@ -158,7 +158,11 @@ async function sendThroughActiveMode(params: ChatSendWorkflowParams, payload: Ag
 
 function machineModeEnabledForSend(params: ChatSendWorkflowParams) {
   if (!params.machineModeEnabled) return false
-  if (params.machineOwningId && params.activeSessionId && params.machineOwningId !== params.activeSessionId) {
+  if (
+    params.machineOwningId &&
+    params.activeSessionId &&
+    params.machineOwningId !== params.activeSessionId
+  ) {
     return false
   }
   return true

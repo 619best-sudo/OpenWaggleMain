@@ -1,6 +1,7 @@
 import type { AgentSendPayload } from '@shared/types/agent'
 import type { SessionId } from '@shared/types/brand'
 import type { MachineExecutionState } from '@shared/types/machine'
+import type { SessionResumeState } from '@shared/types/resume'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/waggle'
@@ -27,6 +28,10 @@ export interface ComposerSectionParams {
   readonly activeSessionId: SessionId | null
   readonly waggleStatus: WaggleCollaborationStatus
   readonly followUpSuggestion: TuringFollowUpSuggestion | null
+  readonly resumeState: SessionResumeState | null
+  readonly resumeBusy: boolean
+  readonly onResumeRun: (answer?: string) => void
+  readonly onDismissResume: () => void
   readonly commandPaletteOpen: boolean
   readonly slashSkills: readonly SkillDiscoveryItem[]
   readonly forkSelectorOpen: boolean
@@ -66,6 +71,10 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     activeSessionId,
     waggleStatus,
     followUpSuggestion,
+    resumeState,
+    resumeBusy,
+    onResumeRun,
+    onDismissResume,
     commandPaletteOpen,
     slashSkills,
     forkSelectorOpen,
@@ -128,6 +137,10 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     machinePlan,
     waggleStatus,
     followUpSuggestion,
+    resumeState,
+    resumeBusy,
+    onResumeRun,
+    onDismissResume,
     commandPaletteOpen,
     slashSkills,
     forkSelectorOpen,

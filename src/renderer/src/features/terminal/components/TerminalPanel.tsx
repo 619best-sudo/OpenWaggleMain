@@ -58,7 +58,7 @@ function TerminalSessionView({
         className={cn('h-full flex-1 overflow-hidden bg-black', !active && 'hidden')}
       />
       {active && terminalStatus.errorMessage && (
-        <div className="home-divider-t px-3 py-2 text-[12px] text-error">
+        <div className="home-divider-t px-3 py-2 text-[11px] text-error">
           {terminalStatus.errorMessage}
         </div>
       )}
@@ -80,7 +80,7 @@ function TerminalTabButton({
   return (
     <div
       className={cn(
-        'group relative inline-flex h-full max-w-44 shrink-0 items-center gap-1 pl-4 pr-2.5 text-[13px] transition-colors',
+        'group relative inline-flex h-full max-w-44 shrink-0 items-center gap-1 pl-4 pr-2.5 text-[12px] transition-colors',
         active
           ? 'text-text-primary bg-bg-secondary'
           : 'bg-transparent text-text-secondary hover:bg-bg-hover hover:text-text-primary',

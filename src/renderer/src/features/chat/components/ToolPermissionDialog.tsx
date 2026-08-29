@@ -1,4 +1,4 @@
-import { X, Check, Ban } from 'lucide-react'
+import { Ban, Check, X } from 'lucide-react'
 import type { PendingToolPermissionRequest } from '@/features/chat/lib/tool-permission-request'
 import { Button } from '@/shared/ui/Button'
 
@@ -36,7 +36,7 @@ export function ToolPermissionDialog({
       <div className="mx-auto w-full max-w-[960px]">
         <div className="rounded-none rounded-tl-md rounded-tr-md border-x border-t border-border/40 bg-bg-secondary p-3.5 shadow-none">
           <div className="mb-2.5 flex items-center gap-2">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-text-primary">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-primary">
               Permission
             </p>
             <span className="rounded-md bg-warning/15 px-2 py-0.5 text-[10px] font-medium text-warning-foreground">
@@ -46,16 +46,28 @@ export function ToolPermissionDialog({
 
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
-              <p className="truncate rounded-md border border-border/20 bg-bg px-3 py-2.5 font-mono text-[12px] text-[color:var(--color-code-card-text)]">
+              <p className="truncate rounded-md border border-border/20 bg-bg px-3 py-2.5 font-mono text-[11px] text-[color:var(--color-code-card-text)]">
                 {preview}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <Button variant="secondary" size="sm" radius="md" onClick={() => void onDeny()} disabled={busy}>
+              <Button
+                variant="secondary"
+                size="sm"
+                radius="md"
+                onClick={() => void onDeny()}
+                disabled={busy}
+              >
                 <Ban className="size-3.5" />
                 Deny
               </Button>
-              <Button variant="primary" size="sm" radius="md" onClick={() => void onApprove()} disabled={busy}>
+              <Button
+                variant="primary"
+                size="sm"
+                radius="md"
+                onClick={() => void onApprove()}
+                disabled={busy}
+              >
                 <Check className="size-3.5" />
                 {busy ? 'Continuing...' : 'Approve'}
               </Button>
@@ -74,7 +86,7 @@ export function ToolPermissionDialog({
               </div>
             </div>
           </div>
-          {error ? <p className="mt-2 text-[11px] text-error">{error}</p> : null}
+          {error ? <p className="mt-2 text-[10px] text-error">{error}</p> : null}
         </div>
       </div>
     </div>

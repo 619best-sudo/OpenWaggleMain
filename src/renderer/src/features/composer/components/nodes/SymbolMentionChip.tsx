@@ -13,7 +13,7 @@ export function SymbolMentionChip({ symbolName }: SymbolMentionChipProps) {
   return (
     <span
       className={cn(
-        'bg-success/10 text-success rounded px-1.5 py-0.5 text-[13px]',
+        'bg-success/10 text-success rounded px-1.5 py-0.5 text-[12px]',
         'inline-flex items-center gap-1',
         'select-none cursor-default',
       )}

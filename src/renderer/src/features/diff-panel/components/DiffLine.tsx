@@ -63,7 +63,7 @@ export function DiffLine({ type, lineNumber, content, onClick, isSelected }: Dif
       {/* Line number */}
       <span
         className={cn(
-          'shrink-0 w-8 text-right font-mono text-[13px] leading-6 select-none',
+          'shrink-0 w-8 text-right font-mono text-[12px] leading-6 select-none',
           view.lineNumberClassName,
         )}
       >
@@ -73,7 +73,7 @@ export function DiffLine({ type, lineNumber, content, onClick, isSelected }: Dif
       {/* Mark (+/-/space) */}
       <span
         className={cn(
-          'shrink-0 w-4 font-mono text-[13px] leading-6 select-none',
+          'shrink-0 w-4 font-mono text-[12px] leading-6 select-none',
           view.markClassName,
         )}
       >
@@ -82,7 +82,7 @@ export function DiffLine({ type, lineNumber, content, onClick, isSelected }: Dif
 
       {/* Code content */}
       <span
-        className={cn('pr-3 font-mono text-[13px] leading-6 whitespace-pre', view.contentClassName)}
+        className={cn('pr-3 font-mono text-[12px] leading-6 whitespace-pre', view.contentClassName)}
       >
         {content}
       </span>

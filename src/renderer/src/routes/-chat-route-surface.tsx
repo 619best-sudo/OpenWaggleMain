@@ -1,6 +1,7 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { ChatPanelContent } from '@/features/chat/components'
 import { useChatPanelSections } from '@/features/chat/hooks'
+import { useDiffViewTargetStore } from '@/features/diff-panel/state'
 import { PanelErrorBoundary } from '@/shared/ui/PanelErrorBoundary'
 import { RightSidebarLayout } from '@/shared/ui/RightSidebarLayout'
 import { CHAT_MIN_WIDTH, DIFF_PANEL_MAX, DIFF_PANEL_MIN, useUIStore } from '@/shell'
@@ -36,7 +37,7 @@ interface ChatRouteSurfaceProps {
 function DiffSidebarFallback() {
   return (
     <output
-      className="flex size-full items-center justify-center bg-diff-bg text-[13px] text-text-tertiary"
+      className="flex size-full items-center justify-center bg-diff-bg text-[12px] text-text-tertiary"
       aria-live="polite"
     >
       Loading diff…
@@ -108,6 +109,22 @@ export function ChatRouteSurface({
     onSessionTreeOpenChange(open)
   }
 
+  // A "View file" request from a chat tool strip: open the diff panel when it
+  // is closed. The scroll itself is consumed by `DiffPanel` once its data has
+  // loaded; tracking `requestId` (not just the path) means re-clicking the
+  // same file while the panel is shut still re-fires the open.
+  const diffViewTarget = useDiffViewTargetStore((state) => state.target)
+  const lastSeenViewFileRequest = useRef(0)
+  useEffect(() => {
+    if (!diffViewTarget || diffViewTarget.requestId === lastSeenViewFileRequest.current) {
+      return
+    }
+    lastSeenViewFileRequest.current = diffViewTarget.requestId
+    if (!diffOpen) {
+      handleDiffOpenChange(true)
+    }
+  })
+
   const shouldRenderExpandedDiff =
     diffOpen && renderedRightSidebarPanel === 'diff' && isDiffExpanded
 
@@ -119,6 +136,7 @@ export function ChatRouteSurface({
             <LazyChatDiffPane
               section={sections.diff}
               isExpanded
+              visible={diffOpen}
               onClose={() => handleDiffOpenChange(false)}
               onToggleExpanded={() => setIsDiffExpanded(false)}
             />
@@ -149,6 +167,7 @@ export function ChatRouteSurface({
                 ) : (
                   <LazyChatDiffPane
                     section={sections.diff}
+                    visible={diffOpen}
                     onClose={() => handleDiffOpenChange(false)}
                     onToggleExpanded={() => setIsDiffExpanded(true)}
                   />

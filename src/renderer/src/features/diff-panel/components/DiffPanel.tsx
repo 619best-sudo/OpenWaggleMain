@@ -2,6 +2,8 @@ import { matchBy } from '@diegogbrisa/ts-match'
 import type { GitFileDiff } from '@shared/types/git'
 import type { ReviewComment } from '@shared/types/review'
 import { useEffect, useReducer, useState } from 'react'
+import { useGitWorktreeActions } from '@/features/diff-panel/hooks/useGitWorktreeActions'
+import { useDiffViewTargetStore } from '@/features/diff-panel/state/diff-view-target-store'
 import type { ReviewCommentLocation } from '@/features/diff-panel/state/review-store'
 import { useReviewStore } from '@/features/diff-panel/state/review-store'
 import { api } from '@/shared/lib/ipc'
@@ -14,6 +16,13 @@ import { FileTree } from './FileTree'
 interface DiffPanelProps {
   projectPath: string | null
   onSendMessage: (content: string) => void
+  /**
+   * Whether the panel is actually on screen. The sidebar keeps this subtree
+   * mounted at 0 width once it has been opened, and a scrollIntoView issued
+   * into that hidden frame both does nothing and CONSUMES the "View file"
+   * target — so the request is held until the panel is visible.
+   */
+  visible?: boolean
 }
 
 interface RenderableDiffFile extends GitFileDiff {
@@ -88,7 +97,7 @@ function DiffPanelContent({
             </div>
           )}
           {!isLoading && fileDiffs.length === 0 && (
-            <div className="flex items-center justify-center h-20 text-[12px] text-text-tertiary">
+            <div className="flex items-center justify-center h-20 text-[11px] text-text-tertiary">
               No uncommitted changes
             </div>
           )}
@@ -112,7 +121,7 @@ function DiffPanelContent({
   )
 }
 
-export function DiffPanel({ projectPath, onSendMessage }: DiffPanelProps) {
+export function DiffPanel({ projectPath, onSendMessage, visible = true }: DiffPanelProps) {
   const [state, dispatch] = useReducer(diffPanelReducer, {
     fileDiffs: [],
     isLoading: false,
@@ -156,6 +165,8 @@ export function DiffPanel({ projectPath, onSendMessage }: DiffPanelProps) {
 
   const { fileDiffs, isLoading } = state
 
+  const { isBusy, handleRevertAll, handleStageAll } = useGitWorktreeActions(projectPath)
+
   function handleAddSingleComment(
     filePath: string,
     startLine: number,
@@ -193,13 +204,19 @@ export function DiffPanel({ projectPath, onSendMessage }: DiffPanelProps) {
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  function handleRevertAll() {
-    // Future: implement git checkout -- . via IPC
-  }
-
-  function handleStageAll() {
-    // Future: implement git add -A via IPC
-  }
+  // A "View file" request from a chat tool strip, surfaced through the store.
+  // Consume it once the diff data is on screen: scroll if the section exists,
+  // and always clear — a file with no uncommitted change should not leave a
+  // stale target that yanks the view the next time the panel opens.
+  const viewTarget = useDiffViewTargetStore((state) => state.target)
+  const clearTarget = useDiffViewTargetStore((state) => state.clearTarget)
+  useEffect(() => {
+    // Held while hidden: a scroll into the 0-width mounted panel is invisible
+    // AND consumes the target, which is exactly the "nothing happened" bug.
+    if (!viewTarget || isLoading || !visible) return
+    handleFileClick(viewTarget.path)
+    clearTarget()
+  })
 
   const [isTreeExpanded, setIsTreeExpanded] = useState(false)
 
@@ -222,6 +239,7 @@ export function DiffPanel({ projectPath, onSendMessage }: DiffPanelProps) {
         onRevertAll={handleRevertAll}
         onStageAll={handleStageAll}
         hasChanges={fileDiffs.length > 0}
+        busy={isBusy}
         isTreeExpanded={isTreeExpanded}
         onToggleTree={() => setIsTreeExpanded(!isTreeExpanded)}
       />

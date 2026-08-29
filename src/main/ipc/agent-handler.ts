@@ -20,11 +20,14 @@ import {
   type ToolPermissionResolution,
 } from '@shared/types/tool-permission'
 import * as Effect from 'effect/Effect'
+import { extractPersistedResumeRecord } from '../adapters/turing/turing-resume-token'
 import { getPhaseForSession } from '../agent/phase-tracker'
 import { cleanupSessionRun } from '../agent/session-cleanup'
+import { toProjectedNode } from '../application/agent-run/kernel'
 import { type AgentRunResult, executeAgentRun } from '../application/agent-run-service'
 import { compactAgentSession, getAgentContextUsage } from '../application/agent-session-service'
 import { registerApprovedToolPermission } from '../application/tool-permission-approvals'
+import { SessionRepository } from '../ports/session-repository'
 import { broadcastToWindows } from '../utils/broadcast'
 import {
   clearAgentPhase,
@@ -191,6 +194,62 @@ function registerAgentRunHandlers() {
           emitRunCompleted(sessionId)
         }
       }),
+  )
+
+  /**
+   * CONTINUE A STOPPED RUN.
+   *
+   * Deliberately its own channel rather than a flag on `agent:send-message`:
+   * there is no user text here. The task, the plan and the reading all come out
+   * of the token the stopped run left behind, and the only thing the user adds
+   * is an answer, when the run stopped waiting on one.
+   *
+   * The payload is `{ text: '' }` for the same reason — the prompt is not what
+   * drives this run. The harness skips its planner entirely and picks up at the
+   * first plan step that never completed.
+   */
+  typedHandle(
+    'agent:resume-run',
+    (_event, sessionId: SessionId, model: SupportedModelId, answer?: string) =>
+      Effect.gen(function* () {
+        if (cancelSessionRuns(sessionId)) {
+          clearSessionTransportState(sessionId)
+        }
+        const abortController = new AbortController()
+        const runId = randomUUID()
+        activeRuns.register(sessionId, abortController, { model })
+        startStreamBuffer(sessionId, model, 'classic')
+
+        const result = yield* executeAgentRun({
+          sessionId,
+          runId,
+          // No user text: a resume is driven entirely by the token the stopped
+          // run left behind.
+          payload: { text: '', thinkingLevel: 'off', attachments: [] },
+          model,
+          signal: abortController.signal,
+          onEvent: (event: AgentTransportEvent) => emitTransportEvent(sessionId, event),
+          resumeRun: answer ? { answer } : {},
+        })
+
+        handleRunResult(sessionId, result)
+
+        if (activeRuns.deleteIfCurrent(sessionId, abortController)) {
+          clearAgentPhase(sessionId)
+          clearStreamBuffer(sessionId)
+          emitRunCompleted(sessionId)
+        }
+      }),
+  )
+
+  typedHandle('agent:get-resume-state', (_event, sessionId: SessionId) =>
+    Effect.gen(function* () {
+      const repo = yield* SessionRepository
+      const tree = yield* repo.getTree(sessionId).pipe(Effect.orElseSucceed(() => undefined))
+      if (!tree?.nodes?.length) return null
+      const record = extractPersistedResumeRecord(tree.nodes.map(toProjectedNode))
+      return record?.state ?? null
+    }),
   )
 
   typedHandle('agent:cancel', (_event, sessionId?: SessionId) =>

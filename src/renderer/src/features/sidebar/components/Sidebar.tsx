@@ -6,6 +6,7 @@ import {
   SidebarBrandArea,
   SidebarPrimaryActions,
   SidebarProjectsHeader,
+  SidebarRail,
   SidebarSettingsButton,
 } from './SidebarNavigation'
 import { SidebarProjectList } from './SidebarProjectList'
@@ -13,7 +14,11 @@ import { SidebarProjectList } from './SidebarProjectList'
 export function Sidebar() {
   const controller = useSidebarController()
   const markUnread = useSessionStatusStore((state) => state.markUnread)
-  const sidebarHidden = !controller.sidebarOpen || controller.activeView === 'settings'
+  // Two distinct states, not one. The settings view takes the sidebar away
+  // entirely (it has its own full-window navigation), while collapsing it keeps
+  // a 50px icon rail so the primary actions never leave.
+  const sidebarHidden = controller.activeView === 'settings'
+  const railed = !controller.sidebarOpen && !sidebarHidden
   const renderState = {
     activeBranchId: controller.activeBranchId,
     activeSessionId: controller.activeSessionId,
@@ -53,43 +58,69 @@ export function Sidebar() {
       inert={sidebarHidden ? true : undefined}
       className={cn(
         'shrink-0 overflow-hidden transition-[width] duration-200 ease-out',
-        sidebarHidden ? 'w-0' : SIDEBAR_LAYOUT.WIDTH_CLASS,
-        sidebarHidden && 'pointer-events-none',
+        sidebarHidden
+          ? 'w-0 pointer-events-none'
+          : railed
+            ? SIDEBAR_LAYOUT.RAIL_WIDTH_CLASS
+            : SIDEBAR_LAYOUT.WIDTH_CLASS,
       )}
     >
       <nav
         aria-label="Sidebar"
-        className={`home-panel-frame flex h-full ${SIDEBAR_LAYOUT.WIDTH_CLASS} shrink-0 flex-col justify-between rounded-[16px] bg-bg text-text-primary shadow-sm`}
+        className={cn(
+          'home-panel-frame flex h-full shrink-0 flex-col justify-between rounded-[16px] bg-bg-sidebar text-text-primary shadow-sm',
+          railed ? SIDEBAR_LAYOUT.RAIL_WIDTH_CLASS : SIDEBAR_LAYOUT.WIDTH_CLASS,
+        )}
       >
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <SidebarBrandArea isFullscreen={controller.isFullscreen} />
-          <SidebarPrimaryActions
+        {railed ? (
+          <SidebarRail
             activeView={controller.activeView}
+            isFullscreen={controller.isFullscreen}
+            onExpand={controller.handleToggleSidebar}
             onNewSession={controller.handleNewSession}
             onOpenMcp={controller.handleOpenMcp}
-            onOpenSkills={controller.handleOpenSkills}
-          />
-          <SidebarProjectsHeader
-            sortMenuOpen={controller.sortMenuOpen}
-            sortMode={controller.sortMode}
             onOpenProject={() => {
               void controller.handleOpenProject()
             }}
-            onSetSortMenuOpen={controller.setSortMenuOpen}
-            onSetSortMode={controller.setSortMode}
+            onOpenSettings={controller.handleOpenSettings}
+            onOpenSkills={controller.handleOpenSkills}
           />
-          <div className="no-drag sidebar-scroll flex-1 overflow-y-auto pb-4">
-            <SidebarProjectList
-              sessionGroups={controller.sessionGroups}
-              renderState={renderState}
-              displayProjectName={controller.displayProjectName}
-              projectActions={projectActions}
-              sessionActions={sessionActions}
-              branchActions={branchActions}
-            />
-          </div>
-        </div>
-        <SidebarSettingsButton onOpenSettings={controller.handleOpenSettings} />
+        ) : (
+          <>
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <SidebarBrandArea
+                isFullscreen={controller.isFullscreen}
+                onCollapse={controller.handleToggleSidebar}
+              />
+              <SidebarPrimaryActions
+                activeView={controller.activeView}
+                onNewSession={controller.handleNewSession}
+                onOpenMcp={controller.handleOpenMcp}
+                onOpenSkills={controller.handleOpenSkills}
+              />
+              <SidebarProjectsHeader
+                sortMenuOpen={controller.sortMenuOpen}
+                sortMode={controller.sortMode}
+                onOpenProject={() => {
+                  void controller.handleOpenProject()
+                }}
+                onSetSortMenuOpen={controller.setSortMenuOpen}
+                onSetSortMode={controller.setSortMode}
+              />
+              <div className="no-drag sidebar-scroll flex-1 overflow-y-auto pb-4">
+                <SidebarProjectList
+                  sessionGroups={controller.sessionGroups}
+                  renderState={renderState}
+                  displayProjectName={controller.displayProjectName}
+                  projectActions={projectActions}
+                  sessionActions={sessionActions}
+                  branchActions={branchActions}
+                />
+              </div>
+            </div>
+            <SidebarSettingsButton onOpenSettings={controller.handleOpenSettings} />
+          </>
+        )}
       </nav>
     </div>
   )

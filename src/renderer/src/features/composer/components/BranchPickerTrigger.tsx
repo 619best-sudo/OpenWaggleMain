@@ -15,7 +15,7 @@ export function BranchPickerTrigger({ currentBranch, isOpen, onToggle }: BranchP
       variant="unstyled"
       type="button"
       onClick={() => onToggle(!isOpen)}
-      className="home-panel-frame-soft flex h-6 min-w-0 max-w-[min(42vw,220px)] shrink items-center gap-1 rounded-[5px] px-2 text-[12px] text-text-secondary transition-colors hover:bg-bg-hover"
+      className="home-panel-frame-soft flex h-6 min-w-0 max-w-[220px] shrink items-center gap-1 rounded-[5px] px-2 text-[11px] text-text-secondary transition-colors hover:bg-bg-hover @max-[720px]:max-w-[140px] @max-[560px]:max-w-[96px]"
       title={currentBranch ? `Manage branches (${currentBranch})` : 'Manage branches'}
     >
       <GitBranch className="size-[13px] shrink-0 text-text-tertiary" />

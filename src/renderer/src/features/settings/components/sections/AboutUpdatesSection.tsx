@@ -103,7 +103,7 @@ export function AboutUpdatesSection() {
         <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-text-primary">
           About & Updates
         </h2>
-        <p className="max-w-[720px] text-[13px] leading-6 text-text-tertiary">
+        <p className="max-w-[720px] text-[12px] leading-6 text-text-tertiary">
           Check your installed version and manage app updates from one dedicated settings section.
         </p>
       </div>
@@ -111,8 +111,8 @@ export function AboutUpdatesSection() {
       <div className="overflow-hidden rounded-lg border border-border bg-bg-secondary">
         <div className="flex h-14 items-center justify-between border-b border-border px-5">
           <div className="flex flex-col gap-0.5">
-            <span className="text-[13px] font-medium text-text-primary">Version</span>
-            <span className="text-[12px] text-text-tertiary">Turing Machine v{version}</span>
+            <span className="text-[12px] font-medium text-text-primary">Version</span>
+            <span className="text-[11px] text-text-tertiary">Turing Machine v{version}</span>
           </div>
         </div>
 
@@ -124,8 +124,8 @@ export function AboutUpdatesSection() {
               <Loader2 className="size-3 shrink-0 animate-spin text-text-tertiary" />
             ) : null}
             <div className="flex flex-col gap-0.5">
-              <span className="text-[13px] font-medium text-text-primary">Latest version</span>
-              <span className={`text-[12px] ${statusRow.subtitleClass}`}>{statusRow.subtitle}</span>
+              <span className="text-[12px] font-medium text-text-primary">Latest version</span>
+              <span className={`text-[11px] ${statusRow.subtitleClass}`}>{statusRow.subtitle}</span>
             </div>
           </div>
           <div>

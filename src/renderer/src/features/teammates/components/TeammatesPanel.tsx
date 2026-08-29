@@ -19,8 +19,8 @@ import { useChat } from '@/features/chat/hooks/useChat'
 import { seedOptimisticSendForSession } from '@/features/chat/hooks/useSendMessage'
 import { sessionToUIMessages } from '@/features/chat/lib/useAgentChat.utils'
 import { usePreferencesStore } from '@/features/settings/state'
-import { useEscapeHotkey } from '@/shared/hooks/useEscapeHotkey'
 import { FORCED_SEND_THINKING_LEVEL } from '@/shared/constants/thinking'
+import { useEscapeHotkey } from '@/shared/hooks/useEscapeHotkey'
 import { api } from '@/shared/lib/ipc'
 import { createRendererLogger } from '@/shared/lib/logger'
 import { Button } from '@/shared/ui/Button'
@@ -52,7 +52,7 @@ function buildAgentEditorModes(draft: TeamBuilderDraft) {
 
 function AgentPill({ label }: { readonly label: string }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-border/70 bg-bg px-2.5 py-1 text-[11px] font-medium text-text-secondary">
+    <span className="inline-flex items-center rounded-full border border-border/70 bg-bg px-2.5 py-1 text-[10px] font-medium text-text-secondary">
       {label}
     </span>
   )
@@ -60,7 +60,7 @@ function AgentPill({ label }: { readonly label: string }) {
 
 function DependencyPill({ label }: { readonly label: string }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2.5 py-1 text-[11px] font-medium text-accent">
+    <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2.5 py-1 text-[10px] font-medium text-accent">
       {label}
     </span>
   )
@@ -75,7 +75,7 @@ function FieldLabel({
 }) {
   return (
     <span
-      className="block text-[14px] font-semibold tracking-tight text-text-primary"
+      className="block text-[13px] font-semibold tracking-tight text-text-primary"
       id={htmlFor ? undefined : undefined}
     >
       {children}
@@ -84,7 +84,7 @@ function FieldLabel({
 }
 
 function SectionHint({ children }: { readonly children: React.ReactNode }) {
-  return <p className="text-[13px] leading-relaxed text-text-secondary/90">{children}</p>
+  return <p className="text-[12px] leading-relaxed text-text-secondary/90">{children}</p>
 }
 
 interface CollapsibleSectionProps {
@@ -111,8 +111,8 @@ function CollapsibleSection({
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex-1 pr-4">
-          <h4 className="text-[14px] font-semibold text-text-primary">{title}</h4>
-          {description && <p className="text-[12px] text-text-secondary mt-0.5">{description}</p>}
+          <h4 className="text-[13px] font-semibold text-text-primary">{title}</h4>
+          {description && <p className="text-[11px] text-text-secondary mt-0.5">{description}</p>}
         </div>
         <div className="flex items-center gap-3">
           {action && <div onClick={(e) => e.stopPropagation()}>{action}</div>}
@@ -140,14 +140,14 @@ function StoreSectionHeader({
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-3">
-        <h3 className="text-[16px] font-bold text-text-primary">{title}</h3>
+        <h3 className="text-[14px] font-semibold text-text-primary">{title}</h3>
         {typeof count === 'number' ? (
-          <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium text-text-tertiary">
+          <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium text-text-tertiary">
             {count}
           </span>
         ) : null}
       </div>
-      <p className="max-w-[760px] text-[13px] leading-relaxed text-text-secondary">{description}</p>
+      <p className="max-w-[760px] text-[12px] leading-relaxed text-text-secondary">{description}</p>
     </div>
   )
 }
@@ -184,9 +184,11 @@ function TeamEditorDialog({
               <div className="flex size-8 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <FilePenLine className="size-4.5" />
               </div>
-              <h2 className="text-[15px] font-semibold tracking-wide text-text-primary">{title}</h2>
+              <h2 className="text-[13.5px] font-semibold tracking-wide text-text-primary">
+                {title}
+              </h2>
             </div>
-            <p className="max-w-[720px] text-[13px] leading-relaxed text-text-secondary">
+            <p className="max-w-[720px] text-[12px] leading-relaxed text-text-secondary">
               {description}
             </p>
           </div>
@@ -243,21 +245,21 @@ function TeamVisitingCard({
               {eyebrow}
             </div>
             <div className="space-y-0.5">
-              <h3 className="text-[16px] font-semibold tracking-tight text-text-primary leading-tight line-clamp-1">
+              <h3 className="text-[14px] font-semibold tracking-tight text-text-primary leading-tight line-clamp-1">
                 {title}
               </h3>
-              <p className="text-[13px] font-medium text-text-secondary">{role}</p>
+              <p className="text-[12px] font-medium text-text-secondary">{role}</p>
             </div>
           </div>
         </div>
 
-        <p className="min-h-[60px] text-[13px] leading-relaxed text-text-tertiary">{description}</p>
+        <p className="min-h-[60px] text-[12px] leading-relaxed text-text-tertiary">{description}</p>
 
         <div className="flex flex-wrap gap-2">
           {agentLabels.slice(0, 3).map((label) => (
             <span
               key={label}
-              className="inline-flex items-center rounded-full border border-border bg-bg px-2.5 py-1 text-[11px] font-semibold text-text-secondary"
+              className="inline-flex items-center rounded-full border border-border bg-bg px-2.5 py-1 text-[10px] font-semibold text-text-secondary"
             >
               {label}
             </span>
@@ -265,7 +267,7 @@ function TeamVisitingCard({
           {dependencyLabels.map((label) => (
             <span
               key={label}
-              className="inline-flex items-center rounded-full border border-border bg-bg-tertiary px-2.5 py-1 text-[11px] font-semibold text-text-tertiary"
+              className="inline-flex items-center rounded-full border border-border bg-bg-tertiary px-2.5 py-1 text-[10px] font-semibold text-text-tertiary"
             >
               {label}
             </span>
@@ -273,7 +275,7 @@ function TeamVisitingCard({
         </div>
 
         <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-          <span className="text-[12px] font-medium text-text-tertiary">Open council</span>
+          <span className="text-[11px] font-medium text-text-tertiary">Open council</span>
           <div className="flex items-center gap-2">
             {onDelete ? (
               <Button
@@ -754,14 +756,14 @@ export function TeammatesPanel() {
       <div className="space-y-10">
         <div className="flex flex-col justify-between gap-6 border-b border-white/[0.04] pb-8 md:flex-row md:items-end">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-accent">
+            <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-accent">
               Library
             </div>
             <div className="space-y-2">
-              <h2 className="bg-gradient-to-r from-amber-400 to-rose-500 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent">
+              <h2 className="bg-gradient-to-r from-amber-400 to-rose-500 bg-clip-text text-4xl font-bold tracking-tight text-transparent">
                 Council
               </h2>
-              <p className="max-w-[700px] text-[15px] leading-relaxed text-text-secondary">
+              <p className="max-w-[700px] text-[13.5px] leading-relaxed text-text-secondary">
                 Choose a council for multi-step work. Each council combines specialists,
                 instructions, and launch settings for a specific kind of task.
               </p>
@@ -847,7 +849,7 @@ export function TeammatesPanel() {
         >
           <div className="space-y-4">
             <div className="flex flex-wrap items-start justify-between gap-4 rounded-xl border border-accent/10 bg-accent/5 px-5 py-4 mb-2 shadow-sm">
-              <div className="text-[13px] leading-5 text-text-secondary">
+              <div className="text-[12px] leading-5 text-text-secondary">
                 Build your council below. Use the AI generator to auto-fill agents from a simple
                 prompt.
               </div>
@@ -1110,7 +1112,7 @@ export function TeammatesPanel() {
             </CollapsibleSection>
 
             <div className="pt-2">
-              <h3 className="text-[15px] font-semibold text-text-primary mb-4 px-1">Agents</h3>
+              <h3 className="text-[13.5px] font-semibold text-text-primary mb-4 px-1">Agents</h3>
               <div className="space-y-3">
                 {customTeam.agents.map((agent, index) => {
                   const editorMode = agentEditorModes[agent.id] ?? 'manual'
@@ -1210,10 +1212,10 @@ export function TeammatesPanel() {
 
                         <div className="space-y-1.5 flex items-center justify-between rounded-xl border border-border-light bg-bg-secondary px-5 py-3 shadow-sm">
                           <div>
-                            <span className="block text-[13px] font-semibold text-text-primary">
+                            <span className="block text-[12px] font-semibold text-text-primary">
                               Decision Maker
                             </span>
-                            <span className="block text-[11px] text-text-tertiary">
+                            <span className="block text-[10px] text-text-tertiary">
                               Can end the loop
                             </span>
                           </div>
@@ -1236,7 +1238,7 @@ export function TeammatesPanel() {
                                   onClick={() =>
                                     setAgentKind(agent.id, option.value as TeamAgentDraft['kind'])
                                   }
-                                  className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors border ${
+                                  className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors border ${
                                     agent.kind === option.value
                                       ? 'bg-bg-hover border-border text-text-primary shadow-sm'
                                       : 'bg-transparent border-transparent text-text-secondary hover:bg-bg-hover/50'
@@ -1297,7 +1299,7 @@ export function TeammatesPanel() {
                                     <button
                                       key={option.value}
                                       onClick={() => toggleRunWhen(agent.id, option.value)}
-                                      className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors border ${
+                                      className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors border ${
                                         isSelected
                                           ? 'bg-bg-hover border-border text-text-primary shadow-sm'
                                           : 'bg-bg-secondary border-border-light text-text-secondary hover:bg-bg-elevated'
@@ -1375,7 +1377,7 @@ export function TeammatesPanel() {
                                           option.value as TeamAgentDraft['createPrompt'],
                                       }))
                                     }
-                                    className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+                                    className={`px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
                                       agent.createPrompt === option.value
                                         ? 'bg-bg-elevated border border-border text-text-primary shadow-sm'
                                         : 'bg-transparent border border-transparent text-text-secondary hover:text-text-primary'
@@ -1424,7 +1426,7 @@ export function TeammatesPanel() {
             </div>
           </div>
           <div className="mt-8 flex items-center justify-between gap-3 border-t border-border-light pt-6">
-            <div className="text-[12px] text-text-tertiary">
+            <div className="text-[11px] text-text-tertiary">
               {customTeam.agents.length} agent{customTeam.agents.length === 1 ? '' : 's'}{' '}
               configured.
             </div>
@@ -1470,11 +1472,11 @@ export function TeammatesPanel() {
             </div>
 
             <div className="rounded-xl border border-border-light bg-bg-tertiary px-5 py-4 shadow-sm">
-              <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-text-tertiary">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-tertiary">
                 <Sparkles className="size-3.5" />
                 Loop policy
               </div>
-              <p className="text-[13px] leading-7 text-text-secondary">
+              <p className="text-[12px] leading-7 text-text-secondary">
                 {activeBuiltInTeammate.loopPolicy.endConditionSummary} The decision maker can be
                 called up to {String(activeBuiltInTeammate.loopPolicy.maxDecisionMakerCalls)} times
                 before the loop must stop decisively.
@@ -1555,7 +1557,7 @@ export function TeammatesPanel() {
 
             <div className="space-y-4">
               <div className="space-y-1">
-                <h3 className="text-[15px] font-semibold text-text-primary">Agent prompts</h3>
+                <h3 className="text-[13.5px] font-semibold text-text-primary">Agent prompts</h3>
                 <SectionHint>
                   Update each built-in agent prompt before launch if this run needs different
                   instructions.
@@ -1569,17 +1571,17 @@ export function TeammatesPanel() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="text-[14px] font-semibold text-text-primary">
+                        <div className="text-[13px] font-semibold text-text-primary">
                           {agent.label}
                         </div>
-                        <div className="mt-2 text-[12px] uppercase tracking-[0.16em] text-text-tertiary">
+                        <div className="mt-2 text-[11px] uppercase tracking-[0.16em] text-text-tertiary">
                           {agent.kind}
                         </div>
                       </div>
                       {agent.isDecisionMaker ? <AgentPill label="Decision Maker" /> : null}
                     </div>
                     {agent.whyToRun ? (
-                      <p className="mt-3 text-[12px] leading-6 text-text-tertiary">
+                      <p className="mt-3 text-[11px] leading-6 text-text-tertiary">
                         {agent.whyToRun}
                       </p>
                     ) : null}

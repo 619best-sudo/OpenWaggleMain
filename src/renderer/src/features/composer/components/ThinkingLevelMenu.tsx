@@ -95,7 +95,7 @@ function ThinkingLevelTrigger({
       )}
       title={title}
     >
-      <span className="text-[12px] text-text-secondary">{label}</span>
+      <span className="text-[11px] text-text-secondary">{label}</span>
       <span className="text-[9px] text-text-muted">&#x2228;</span>
     </Button>
   )
@@ -119,7 +119,7 @@ function ThinkingLevelOptions({
       type="button"
       onClick={() => onSelect(level)}
       className={cn(
-        'flex w-full items-center justify-between px-3 py-1.5 text-left text-[12px] transition-colors hover:bg-bg-hover',
+        'flex w-full items-center justify-between px-3 py-1.5 text-left text-[11px] transition-colors hover:bg-bg-hover',
         effectiveThinkingLevel === level ? 'text-success' : 'text-text-secondary',
       )}
     >

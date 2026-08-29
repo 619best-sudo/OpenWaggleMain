@@ -23,16 +23,16 @@ interface SubmittedAnswerProps {
 export function SubmittedAnswer({ answer, attachments }: SubmittedAnswerProps) {
   return (
     <div className="mt-3.5 border-t border-border/30 pt-3">
-      <div className="text-[12px] uppercase tracking-wide text-text-tertiary">Your answer</div>
+      <div className="text-[11px] uppercase tracking-wide text-text-tertiary">Your answer</div>
       {answer ? (
-        <div className="mt-1 text-[14px] leading-[1.5] text-text-primary">{answer}</div>
+        <div className="mt-1 text-[13px] leading-[1.5] text-text-primary">{answer}</div>
       ) : null}
       {attachments.length ? (
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {attachments.map((attachment) => (
             <span
               key={attachment.path}
-              className="max-w-[240px] truncate rounded bg-bg-hover px-1.5 py-0.5 font-mono text-[11px] text-text-secondary"
+              className="max-w-[240px] truncate rounded bg-bg-hover px-1.5 py-0.5 font-mono text-[10px] text-text-secondary"
               title={attachment.path}
             >
               {attachment.path.split('/').pop() ?? attachment.path}
@@ -60,13 +60,13 @@ interface QuestionCardFooterProps {
 export function QuestionCardFooter({ disabled, helperText, onSubmit }: QuestionCardFooterProps) {
   return (
     <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/30 pt-3">
-      <div className="text-[14px] leading-[1.5] text-text-tertiary">
+      <div className="text-[13px] leading-[1.5] text-text-tertiary">
         {helperText ?? 'Answer here to resume the run immediately.'}
       </div>
       <Button
         variant="primary"
         size="sm"
-        className="h-[32px] rounded-full px-4 text-[14px] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+        className="h-[32px] rounded-full px-4 text-[13px] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
         onClick={onSubmit}
         disabled={disabled}
       >

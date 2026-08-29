@@ -92,7 +92,6 @@ export function useComposerSubmission({
       text: (text ?? input).trim(),
       thinkingLevel: FORCED_SEND_THINKING_LEVEL,
       attachments,
-      mcpServers: useComposerStore.getState().mcpServers,
     })
   }
 
@@ -101,7 +100,6 @@ export function useComposerSubmission({
       text,
       thinkingLevel: FORCED_SEND_THINKING_LEVEL,
       attachments: useComposerStore.getState().attachments,
-      mcpServers: useComposerStore.getState().mcpServers,
     })
   }
 
@@ -111,7 +109,6 @@ export function useComposerSubmission({
       text: state.input.trim(),
       thinkingLevel: FORCED_SEND_THINKING_LEVEL,
       attachments: state.attachments,
-      mcpServers: state.mcpServers,
     })
   }
 

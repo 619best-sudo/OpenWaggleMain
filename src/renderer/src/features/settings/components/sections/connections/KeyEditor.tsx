@@ -78,14 +78,14 @@ function KeyEditorHeader({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[13px] font-medium text-text-secondary">Pi Auth Key</span>
+      <span className="text-[12px] font-medium text-text-secondary">Pi Auth Key</span>
       <div className="flex items-center gap-2">
         {providerInfo.apiKeyManagementUrl && (
           <a
             href={providerInfo.apiKeyManagementUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-[12px] font-medium text-link-yellow hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-link-yellow hover:opacity-90 transition-opacity"
           >
             Get API key
             <ExternalLink className="size-3" />
@@ -130,7 +130,7 @@ function KeyInput({
             : `Enter your ${providerInfo.displayName} API key`
         }
         monospace
-        className="rounded-lg border-input-card-border pr-9 text-[13px] placeholder:text-text-muted focus:border-border-light"
+        className="rounded-lg border-input-card-border pr-9 text-[12px] placeholder:text-text-muted focus:border-border-light"
       />
       <Button
         variant="unstyled"
@@ -167,7 +167,7 @@ function KeyEditorButtons({
         onClick={actions.onTest}
         disabled={!state.draftValue || state.isTesting}
         className={cn(
-          'flex items-center gap-1.5 rounded-md px-3 py-2 text-[12px] font-medium transition-colors',
+          'flex items-center gap-1.5 rounded-md px-3 py-2 text-[11px] font-medium transition-colors',
           state.draftValue && !state.isTesting
             ? 'bg-bg-tertiary text-text-secondary hover:bg-bg-hover border border-input-card-border'
             : 'bg-bg-tertiary text-text-muted cursor-not-allowed border border-input-card-border',
@@ -188,7 +188,7 @@ function KeyEditorButtons({
         onClick={actions.onSave}
         disabled={!state.draftValue}
         className={cn(
-          'rounded-md px-3 py-2 text-[12px] font-medium transition-colors',
+          'rounded-md px-3 py-2 text-[11px] font-medium transition-colors',
           state.draftValue
             ? 'bg-accent text-accent-foreground hover:bg-accent/90'
             : 'bg-bg-tertiary text-text-muted cursor-not-allowed border border-input-card-border',
@@ -201,7 +201,7 @@ function KeyEditorButtons({
           variant="unstyled"
           type="button"
           onClick={actions.onClear}
-          className="rounded-md border border-input-card-border bg-bg-tertiary px-3 py-2 text-[12px] font-medium text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-secondary"
+          className="rounded-md border border-input-card-border bg-bg-tertiary px-3 py-2 text-[11px] font-medium text-text-tertiary transition-colors hover:bg-bg-hover hover:text-text-secondary"
         >
           Clear
         </Button>
@@ -215,7 +215,7 @@ function KeyTestResult({ result }: { readonly result: KeyEditorProps['testResult
   return (
     <div
       className={cn(
-        'flex items-center gap-1.5 text-[12px]',
+        'flex items-center gap-1.5 text-[11px]',
         result.success ? 'text-success' : 'text-error',
       )}
     >
@@ -236,7 +236,7 @@ function KeyTestResult({ result }: { readonly result: KeyEditorProps['testResult
 
 function EnvironmentKeyNotice() {
   return (
-    <p className="text-[11px] text-text-tertiary">
+    <p className="text-[10px] text-text-tertiary">
       Pi currently sees this provider through environment variables, cloud credentials, or a custom
       models.json provider.
     </p>

@@ -42,11 +42,11 @@ export function ChatErrorDisplay({
           <AlertCircle className="size-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold tracking-[0.01em] text-error">
+          <p className="text-[12px] font-semibold tracking-[0.01em] text-error">
             {info.userMessage}
           </p>
           {info.suggestion && (
-            <p className="mt-1 text-[13px] leading-5 text-text-secondary/88">{info.suggestion}</p>
+            <p className="mt-1 text-[12px] leading-5 text-text-secondary/88">{info.suggestion}</p>
           )}
         </div>
         <button

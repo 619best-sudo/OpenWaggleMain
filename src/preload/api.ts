@@ -67,6 +67,8 @@ export const api: OpenWaggleApi = {
   resolvePlanReview: invoke('agent:resolve-plan-review'),
   getPendingPlanReview: invoke('agent:get-pending-plan-review'),
   getPendingUserQuestion: invoke('agent:get-pending-user-question'),
+  getResumeState: invoke('agent:get-resume-state'),
+  resumeRun: invoke('agent:resume-run'),
   onAgentEventBatch: on('agent:event-batch'),
 
   getAgentPhase: invoke('agent:get-phase'),
@@ -135,6 +137,8 @@ export const api: OpenWaggleApi = {
   getGitStatus: invoke('git:status'),
   commitGit: invoke('git:commit'),
   getGitDiff: invoke('git:diff'),
+  revertAllGitChanges: invoke('git:revert-all'),
+  stageAllGitChanges: invoke('git:stage-all'),
   listGitBranches: invoke('git:branches:list'),
   checkoutGitBranch: invoke('git:branches:checkout'),
   createGitBranch: invoke('git:branches:create'),

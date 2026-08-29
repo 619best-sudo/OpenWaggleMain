@@ -85,7 +85,7 @@ export function WaggleCollaborationStatus({
     <div className="mx-auto w-full max-w-[960px] px-5 pb-2 space-y-1.5">
       <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg-secondary/50 px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="shrink-0 text-[13px] font-semibold text-text-primary">Panel</span>
+          <span className="shrink-0 text-[12px] font-semibold text-text-primary">Panel</span>
           {config.agents.map((agent) => {
             return (
               <div
@@ -94,7 +94,7 @@ export function WaggleCollaborationStatus({
                 title={agent.label}
               >
                 <div className={cn('size-2 rounded-full', AGENT_BG[agent.color])} />
-                <span className="max-w-[140px] truncate text-[12px] font-medium text-text-secondary">
+                <span className="max-w-[140px] truncate text-[11px] font-medium text-text-secondary">
                   {agent.label}
                 </span>
               </div>
@@ -103,12 +103,12 @@ export function WaggleCollaborationStatus({
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          <span className="hidden rounded-full border border-border bg-bg px-2.5 py-1 text-[11px] font-medium text-text-tertiary sm:inline-flex">
+          <span className="hidden rounded-full border border-border bg-bg px-2.5 py-1 text-[10px] font-medium text-text-tertiary sm:inline-flex">
             {modeLabel}
           </span>
           <span
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+              'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium',
               status === 'running'
                 ? 'border-accent/20 bg-accent/5 text-text-secondary'
                 : 'border-border bg-bg text-text-tertiary',
@@ -139,11 +139,11 @@ export function WaggleCollaborationStatus({
                   <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
                     Suggested Next Waggle
                   </span>
-                  <span className="inline-flex items-center rounded-md border border-border/70 bg-bg px-2 py-1 text-[12px] font-medium text-text-primary">
+                  <span className="inline-flex items-center rounded-md border border-border/70 bg-bg px-2 py-1 text-[11px] font-medium text-text-primary">
                     {followUpSuggestion.nextWaggle}
                   </span>
                   {followUpSuggestion.fallbackWaggle ? (
-                    <span className="text-[11px] text-text-tertiary">
+                    <span className="text-[10px] text-text-tertiary">
                       fallback{' '}
                       <span className="font-medium text-text-secondary">
                         {followUpSuggestion.fallbackWaggle}
@@ -156,7 +156,7 @@ export function WaggleCollaborationStatus({
                   <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-text-tertiary">
                     User Prompt
                   </div>
-                  <div className="text-[11px] leading-5 text-text-secondary">
+                  <div className="text-[10px] leading-5 text-text-secondary">
                     {followUpSuggestion.userPrompt}
                   </div>
                 </div>
@@ -186,7 +186,7 @@ export function WaggleCollaborationStatus({
               className="flex items-center gap-2 rounded-md border border-warning/20 bg-warning/5 px-2.5 py-1.5"
             >
               <AlertTriangle className="size-3 shrink-0 text-warning" />
-              <span className="text-[11px] text-warning/90">
+              <span className="text-[10px] text-warning/90">
                 {conflict.currentAgent} edited {conflict.path} (previously by{' '}
                 {conflict.previousAgent})
               </span>
@@ -198,10 +198,10 @@ export function WaggleCollaborationStatus({
       {artifacts.length > 0 && (
         <div className="rounded-lg border border-border bg-bg-secondary/70 px-3 py-2.5">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-text-secondary">
+            <span className="text-[10px] font-medium uppercase tracking-wide text-text-secondary">
               Waggle Artifacts
             </span>
-            <span className="text-[11px] text-text-tertiary">{artifacts.length} registered</span>
+            <span className="text-[10px] text-text-tertiary">{artifacts.length} registered</span>
           </div>
           <div className="mb-2 rounded-md border border-border-light bg-bg px-2.5 py-2 text-[10px] leading-4 text-text-tertiary">
             When using MCPs, always map artifact starter payload values into the tool schema
@@ -216,7 +216,7 @@ export function WaggleCollaborationStatus({
                   key={artifact.id}
                   className="rounded-md border border-border-light bg-bg px-2.5 py-2"
                 >
-                  <div className="flex items-center gap-2 text-[11px]">
+                  <div className="flex items-center gap-2 text-[10px]">
                     <span className="rounded-full border border-border-light bg-bg-secondary px-2 py-0.5 font-medium uppercase tracking-wide text-text-secondary">
                       {artifact.kind}
                     </span>
@@ -227,7 +227,7 @@ export function WaggleCollaborationStatus({
                     </span>
                   </div>
                   <div
-                    className="mt-1 truncate text-[11px] text-text-secondary"
+                    className="mt-1 truncate text-[10px] text-text-secondary"
                     title={artifact.path}
                   >
                     {artifact.path}

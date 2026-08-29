@@ -116,10 +116,7 @@ describe('app-auth-store', () => {
     const syncedAccessToken = useAppAuthStore.getState().user?.accessToken
     expect(typeof syncedAccessToken).toBe('string')
     expect(syncedAccessToken).not.toBe('stale-access-token')
-    expect(apiMock.setProviderApiKey).toHaveBeenLastCalledWith(
-      'turing-machine',
-      syncedAccessToken,
-    )
+    expect(apiMock.setProviderApiKey).toHaveBeenLastCalledWith('turing-machine', syncedAccessToken)
   })
 
   it('signs in and mirrors the access token into the provider auth store', async () => {

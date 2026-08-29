@@ -1,3 +1,18 @@
+/*
+ * OpenWaggle colour system.
+ *
+ * The surfaces and the text are NEUTRAL — a near-white ramp on light, a
+ * near-black one on dark — and the accent is monochrome. The app has no brand
+ * hue, so prose is never tinted and nothing in the chrome competes for
+ * attention on colour alone.
+ *
+ * Colour is spent in three bounded places:
+ *   1. Badges and icons (`--theme-badge-*`) — small, always paired with a
+ *      label, where a hue can encode a category without touching text.
+ *   2. Diffs — green/red for added/removed lines, which is load-bearing.
+ *   3. The inline prompt card — the one surface that must interrupt reading.
+ * Anything else that wants emphasis gets a shape, a weight, or an icon.
+ */
 :root {
   --theme-base-light: #0f0a0a;
   --theme-base-dark: #0a0a0a;
@@ -60,19 +75,29 @@ html[data-theme="light"] {
   --theme-code-view-gutter-bg: #eef0f5;
   --theme-code-view-gutter-text: #8b93a3;
 
-  --theme-code-view-add-bg: #d6f7e4;
-  --theme-code-view-add-accent: #0fa958;
-  --theme-code-view-add-text: #07733c;
+  /*
+   * Washes are TINTED, not saturated: they sit under syntax-coloured code, and a
+   * strong green/red block fights every token on top of it. The saturation lives
+   * in the 3px accent bar and the +/- mark, which are small enough to be vivid
+   * without staining the code.
+   */
+  --theme-code-view-add-bg: #e6f4ea;
+  --theme-code-view-add-accent: #2b9a62;
+  --theme-code-view-add-text: #15653d;
 
-  --theme-code-view-remove-bg: #ffdfe4;
-  --theme-code-view-remove-accent: #e5344f;
-  --theme-code-view-remove-text: #a81430;
+  --theme-code-view-remove-bg: #fbe7e9;
+  --theme-code-view-remove-accent: #d24a56;
+  --theme-code-view-remove-text: #9d2b36;
 
-  --theme-code-view-concern-bg: #fff3d4;
-  --theme-code-view-concern-accent: #e0951b;
+  --theme-code-view-concern-bg: #fbf0d8;
+  --theme-code-view-concern-accent: #c08d1c;
 
   --theme-bg-app: #f5f5f6;
   --theme-bg: #ffffff;
+  /* The two big reading surfaces, split so they can drift apart: the sidebar
+     sits a step back from the canvas, the transcript a step forward. */
+  --theme-bg-sidebar: #fbfbfc;
+  --theme-bg-chat: #ffffff;
   --theme-bg-secondary: #f6f6f8;
   --theme-bg-tertiary: #eeeff2;
   --theme-bg-hover: #e5e7eb;
@@ -85,8 +110,17 @@ html[data-theme="light"] {
   --theme-home-border-vibrant: #c9ccd3;
   --theme-home-frame-border-width: 1px;
   --theme-home-divider-width: 1px;
-  --theme-home-frame-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
-  --theme-home-frame-soft-shadow: inset 0 1px 0 rgb(255 255 255 / 55%);
+  /*
+   * The elevated-box edge, built from RINGS (0 blur) rather than shadows:
+   *   outer hairline  — separates the panel from the canvas
+   *   the border      — the panel's own edge
+   *   inner highlight — a bright 1px line just inside it
+   * Read together those three lines are the "double border"; the inner
+   * highlight is what sells the lift, because a lit edge is what a raised
+   * surface does in the real world. Blur is deliberately absent.
+   */
+  --theme-home-frame-shadow: inset 0 0 0 1px rgb(255 255 255 / 100%), 0 0 0 1px rgb(15 10 10 / 5%);
+  --theme-home-frame-soft-shadow: inset 0 0 0 1px rgb(255 255 255 / 75%);
 
   --theme-text-primary: #181415;
   --theme-text-secondary: #3b3436;
@@ -107,6 +141,43 @@ html[data-theme="light"] {
   --theme-accent-dim: #342b2d;
   --theme-accent-foreground: #fbf8f8;
   --theme-info: var(--theme-base-light);
+
+  /*
+   * Badge tones — the ONLY place a category may take a hue. Each is a tinted
+   * wash plus a text colour, sized for a chip with an icon in it. They must
+   * never be applied to body text, headings or filenames.
+   */
+  --theme-badge-blue-bg: #e4edfa;
+  --theme-badge-blue-text: #2b6cb0;
+  --theme-badge-amber-bg: #faeeda;
+  --theme-badge-amber-text: #98590a;
+  --theme-badge-green-bg: #e2f1e7;
+  --theme-badge-green-text: #2c7a4c;
+  --theme-badge-violet-bg: #ebe6f8;
+  --theme-badge-violet-text: #6449bc;
+  --theme-badge-teal-bg: #e0eff0;
+  --theme-badge-teal-text: #1f727c;
+  --theme-badge-neutral-bg: #eeeff2;
+  --theme-badge-neutral-text: #60585a;
+
+  /* Inline chips inside prose — neutral by design. */
+  --theme-inline-code-bg: #f1f2f5;
+  --theme-inline-code-border: #e2e4ea;
+  --theme-inline-code-text: #3b3436;
+  --theme-inline-file-bg: #eceef3;
+  --theme-inline-file-border: #d7dae2;
+  --theme-inline-file-text: #181415;
+
+  /*
+   * The inline prompt card — a permission request or a question the run is
+   * BLOCKED on. It is the one surface allowed to interrupt: an amber-tinted
+   * ground with a saturated left edge, so it separates from the transcript's
+   * neutral cards at a glance instead of reading as one more tool strip.
+   */
+  --theme-prompt-bg: #fff8e8;
+  --theme-prompt-border: #f0dcae;
+  --theme-prompt-accent: #b5791a;
+  --theme-prompt-heading: #6d4708;
 
   --theme-input-card-border: #dde0e6;
   --theme-button-border: #d0d4dc;
@@ -191,20 +262,23 @@ html[data-theme="dark"] {
      stays readable instead of dissolving into the surround. */
   --theme-code-view-gutter-text: #8f939f;
 
-  --theme-code-view-add-bg: #123a27;
-  --theme-code-view-add-accent: #2ee27f;
-  --theme-code-view-add-text: #5ff0a1;
+  /* Tinted, not saturated — see the note in the light block. */
+  --theme-code-view-add-bg: #14261d;
+  --theme-code-view-add-accent: #35b26f;
+  --theme-code-view-add-text: #74d6a0;
 
   /* Luminance-matched to the add wash, so neither row type shouts louder. */
-  --theme-code-view-remove-bg: #3d1520;
-  --theme-code-view-remove-accent: #ff4d64;
-  --theme-code-view-remove-text: #ff8f9d;
+  --theme-code-view-remove-bg: #2b171d;
+  --theme-code-view-remove-accent: #d94757;
+  --theme-code-view-remove-text: #ef959e;
 
-  --theme-code-view-concern-bg: #3a2c0e;
-  --theme-code-view-concern-accent: #f0b429;
+  --theme-code-view-concern-bg: #2c2513;
+  --theme-code-view-concern-accent: #d6a233;
 
   --theme-bg-app: #0a0a0a;
   --theme-bg: #111112;
+  --theme-bg-sidebar: #0e0e10;
+  --theme-bg-chat: #111112;
   --theme-bg-secondary: #151518;
   --theme-bg-tertiary: #1c1c20;
   --theme-bg-hover: #232329;
@@ -215,14 +289,14 @@ html[data-theme="dark"] {
   --theme-border-light: #1e1e24;
   --theme-home-border: #1c1c21;
   --theme-home-border-vibrant: #28282f;
-  --theme-home-frame-border-width: 2px;
-  --theme-home-divider-width: 2px;
-  --theme-home-frame-shadow:
-    0 0 0 1px color-mix(in srgb, var(--theme-home-border) 45%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, var(--theme-home-border-vibrant) 35%, transparent);
-  --theme-home-frame-soft-shadow:
-    0 0 0 1px color-mix(in srgb, var(--theme-home-border-vibrant) 30%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, var(--theme-home-border) 20%, transparent);
+  --theme-home-frame-border-width: 1px;
+  --theme-home-divider-width: 1px;
+  /* Same three lines as light, inverted: a black outer ring bites the panel out
+     of the canvas, then the border, then a faint white inner highlight. On a
+     near-black app the highlight has to stay under ~6% or the edge reads as a
+     glow instead of a bevel. */
+  --theme-home-frame-shadow: inset 0 0 0 1px rgb(255 255 255 / 5%), 0 0 0 1px rgb(0 0 0 / 55%);
+  --theme-home-frame-soft-shadow: inset 0 0 0 1px rgb(255 255 255 / 3.5%);
 
   --theme-text-primary: #f2f2f4;
   --theme-text-secondary: #d0d0d5;
@@ -243,6 +317,32 @@ html[data-theme="dark"] {
   --theme-accent-dim: #c8c0c0;
   --theme-accent-foreground: #121011;
   --theme-info: #f1eaea;
+
+  --theme-badge-blue-bg: #16263c;
+  --theme-badge-blue-text: #7fb2f5;
+  --theme-badge-amber-bg: #33260f;
+  --theme-badge-amber-text: #e3ab5c;
+  --theme-badge-green-bg: #14301f;
+  --theme-badge-green-text: #6ecf92;
+  --theme-badge-violet-bg: #262043;
+  --theme-badge-violet-text: #ab93f0;
+  --theme-badge-teal-bg: #102c30;
+  --theme-badge-teal-text: #5cc4cf;
+  --theme-badge-neutral-bg: #1c1c20;
+  --theme-badge-neutral-text: #a6a6ae;
+
+  --theme-inline-code-bg: #1b1b1f;
+  --theme-inline-code-border: #2a2a31;
+  --theme-inline-code-text: #d0d0d5;
+  --theme-inline-file-bg: #202026;
+  --theme-inline-file-border: #33333c;
+  --theme-inline-file-text: #f2f2f4;
+
+  /* See the light block: the one surface allowed to interrupt. */
+  --theme-prompt-bg: #241c0d;
+  --theme-prompt-border: #4a3a16;
+  --theme-prompt-accent: #e0a83f;
+  --theme-prompt-heading: #f0cd8a;
 
   --theme-input-card-border: #2b2b31;
   --theme-button-border: #303038;

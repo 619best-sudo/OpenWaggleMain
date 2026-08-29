@@ -1,4 +1,5 @@
 import type { PendingToolPermissionRequest } from '@/features/chat/lib/tool-permission-request'
+import { cn } from '@/shared/lib/cn'
 import { Button } from '@/shared/ui/Button'
 
 interface ToolPermissionInlineCardProps {
@@ -165,7 +166,7 @@ function renderPermissionPrompt(request: PendingToolPermissionRequest) {
     <>
       Allow <span className="font-semibold text-text-primary">{request.toolName}</span> to {verb}{' '}
       <span
-        className="inline-block max-w-full break-words rounded-[6px] border border-border/40 bg-bg-primary/80 px-1.5 py-0.5 align-bottom font-mono text-[14px] font-medium leading-[1.5] text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.02)] dark:shadow-none"
+        className="inline-block max-w-full break-words rounded-[6px] border border-border/40 bg-bg-primary/80 px-1.5 py-0.5 align-bottom font-mono text-[13px] font-medium leading-[1.5] text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.02)] dark:shadow-none"
         {...(wasTruncated ? { title: trimmedTarget } : {})}
       >
         {shown}
@@ -185,14 +186,22 @@ export function ToolPermissionInlineCard({
   const prompt = renderPermissionPrompt(request)
 
   return (
-    <div className="relative overflow-hidden rounded-[18px] bg-bg-primary p-[3px] shadow-sm ring-1 ring-border/40">
-      <div className="flex items-center justify-between gap-3 rounded-[15px] bg-bg-secondary/20 px-3.5 py-2.5 ring-1 ring-inset ring-border/20">
-        <div className="min-w-0 flex-1 text-[14px] leading-[1.5] text-text-secondary">{prompt}</div>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-[16px] border border-prompt-border bg-prompt-bg',
+        // A prompt BLOCKS the run: it is not one more card in the transcript,
+        // so it takes its own tinted ground and a saturated left edge rather
+        // than the neutral surface every other block shares.
+        'border-l-[3px] border-l-prompt-accent',
+      )}
+    >
+      <div className="flex items-center justify-between gap-3 px-3.5 py-2.5">
+        <div className="min-w-0 flex-1 text-[13px] leading-[1.5] text-text-secondary">{prompt}</div>
         <div className="flex shrink-0 items-center gap-1.5">
           <Button
             variant="ghost"
             size="sm"
-            className="h-[32px] rounded-full px-3.5 text-[14px] font-medium hover:bg-bg-hover hover:text-text-primary"
+            className="h-[32px] rounded-full px-3.5 text-[13px] font-medium hover:bg-bg-hover hover:text-text-primary"
             onClick={() => void onDeny()}
             disabled={busy}
           >
@@ -201,7 +210,7 @@ export function ToolPermissionInlineCard({
           <Button
             variant="primary"
             size="sm"
-            className="h-[32px] rounded-full px-3.5 text-[14px] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+            className="h-[32px] rounded-full px-3.5 text-[13px] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
             onClick={() => void onApprove()}
             disabled={busy}
           >
@@ -210,7 +219,7 @@ export function ToolPermissionInlineCard({
         </div>
       </div>
       {error ? (
-        <div className="mt-1.5 px-3 pb-1 text-[14px] leading-[1.5] text-error">{error}</div>
+        <div className="mt-1.5 px-3 pb-1 text-[13px] leading-[1.5] text-error">{error}</div>
       ) : null}
     </div>
   )

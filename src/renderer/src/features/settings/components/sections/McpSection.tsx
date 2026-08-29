@@ -55,9 +55,9 @@ function McpDialogShell({
               <div className="flex size-7 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 {icon}
               </div>
-              <h2 className="text-[15px] font-semibold text-text-primary">{title}</h2>
+              <h2 className="text-[13.5px] font-semibold text-text-primary">{title}</h2>
             </div>
-            <p className="max-w-[560px] text-[13px] leading-5 text-text-tertiary">{description}</p>
+            <p className="max-w-[560px] text-[12px] leading-5 text-text-tertiary">{description}</p>
           </div>
           <Button
             variant="unstyled"
@@ -115,7 +115,7 @@ export function McpSection({ showHeading = true }: { readonly showHeading?: bool
       <div className="overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-[inset_0_1px_0_var(--theme-panel-shadow-highlight)]">
         <div className="flex items-center justify-between border-b border-border bg-bg-secondary px-4 py-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-[13px] font-medium text-text-primary">Connected Servers</h3>
+            <h3 className="text-[12px] font-medium text-text-primary">Connected Servers</h3>
             <span className="rounded-full border border-border/60 bg-bg-tertiary px-2 py-0.5 text-[10px] text-text-muted">
               {servers.length} total
             </span>
@@ -126,7 +126,7 @@ export function McpSection({ showHeading = true }: { readonly showHeading?: bool
               size="sm"
               onClick={() => setShowAdvancedModal(true)}
               leftIcon={<Code2 className="size-3.5" />}
-              className="h-7 text-[11px] px-2.5"
+              className="h-7 text-[10px] px-2.5"
             >
               Advanced
             </Button>
@@ -135,7 +135,7 @@ export function McpSection({ showHeading = true }: { readonly showHeading?: bool
               size="sm"
               onClick={() => setShowAddModal(true)}
               leftIcon={<Plus className="size-3.5" />}
-              className="h-7 text-[11px] px-2.5"
+              className="h-7 text-[10px] px-2.5"
             >
               Add Server
             </Button>

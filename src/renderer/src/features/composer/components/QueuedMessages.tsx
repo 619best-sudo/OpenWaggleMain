@@ -33,7 +33,7 @@ export function QueuedMessages({
       {/* Header */}
       <div className="flex items-center gap-1.5 px-1">
         <Timer className="size-3 text-text-tertiary" />
-        <span className="text-[11px] font-semibold text-text-tertiary">
+        <span className="text-[10px] font-semibold text-text-tertiary">
           {isCompacting ? 'Queued until compaction finishes' : 'Queued'}
         </span>
         <span className="flex size-[18px] items-center justify-center rounded-full bg-text-tertiary/12 text-[10px] font-semibold text-text-tertiary">
@@ -45,7 +45,7 @@ export function QueuedMessages({
       <div className="flex flex-col gap-1">
         {queue.map((item) => (
           <div key={item.id} className="flex items-center gap-2 rounded-lg bg-bg/50 p-[8px_10px]">
-            <div className="flex-1 text-[12px] leading-[1.5] text-text-muted whitespace-pre-wrap">
+            <div className="flex-1 text-[11px] leading-[1.5] text-text-muted whitespace-pre-wrap">
               {item.payload.text || `${String(item.payload.attachments.length)} attachment(s)`}
             </div>
             <div className="flex items-center gap-1">

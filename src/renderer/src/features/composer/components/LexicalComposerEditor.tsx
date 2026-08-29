@@ -57,14 +57,14 @@ export function LexicalComposerEditor({
           <ContentEditable
             aria-label="Message input"
             className={cn(
-              'w-full min-h-[24px] resize-none bg-transparent text-[14px] text-text-primary',
+              'w-full min-h-[24px] resize-none bg-transparent text-[13px] text-text-primary',
               'focus:outline-none focus-visible:shadow-none',
               'disabled:opacity-50',
             )}
           />
         }
         placeholder={
-          <div className="pointer-events-none absolute top-[14px] left-4 select-none text-[14px] text-text-primary/50">
+          <div className="pointer-events-none absolute top-[14px] left-4 select-none text-[13px] text-text-primary/50">
             {placeholder}
           </div>
         }

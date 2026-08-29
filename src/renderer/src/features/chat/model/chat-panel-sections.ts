@@ -3,6 +3,7 @@ import type { SessionBranchId, SessionId } from '@shared/types/brand'
 import type { UIMessage } from '@shared/types/chat-ui'
 import type { MachineExecutionState } from '@shared/types/machine'
 import type { PendingPlanReviewRequest, PlanReviewResolution } from '@shared/types/plan-review'
+import type { SessionResumeState } from '@shared/types/resume'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import type { PendingUserQuestionRequest } from '@shared/types/user-question'
@@ -65,6 +66,15 @@ export interface ChatComposerSectionState {
   readonly machinePlan: MachineExecutionState | null
   readonly waggleStatus: WaggleCollaborationStatus
   readonly followUpSuggestion: TuringFollowUpSuggestion | null
+  /**
+   * A previous run in this session that stopped before finishing its plan, and
+   * can be carried on. Null when the last run settled — there is nothing to
+   * offer. See `useResumeRun`.
+   */
+  readonly resumeState: SessionResumeState | null
+  readonly resumeBusy: boolean
+  onResumeRun: (answer?: string) => void
+  onDismissResume: () => void
   readonly commandPaletteOpen: boolean
   readonly slashSkills: readonly SkillDiscoveryItem[]
   readonly isLoading: boolean

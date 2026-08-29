@@ -72,7 +72,7 @@ export function PlanReviewFooter({
           type="button"
           variant="primary"
           size="sm"
-          className="h-[32px] rounded-full px-3.5 text-[14px] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+          className="h-[32px] rounded-full px-3.5 text-[13px] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
           onClick={() => onSubmit('approved')}
           disabled={disabled}
         >
@@ -82,7 +82,7 @@ export function PlanReviewFooter({
           type="button"
           variant="secondary"
           size="sm"
-          className="h-[32px] rounded-full px-3.5 text-[14px]"
+          className="h-[32px] rounded-full px-3.5 text-[13px]"
           onClick={() => onSubmit('revise')}
           disabled={disabled || noRevisionsLeft}
           title={noRevisionsLeft ? 'No revisions remaining' : undefined}
@@ -93,17 +93,17 @@ export function PlanReviewFooter({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-[32px] rounded-full px-3.5 text-[14px] hover:bg-bg-hover hover:text-text-primary"
+          className="h-[32px] rounded-full px-3.5 text-[13px] hover:bg-bg-hover hover:text-text-primary"
           onClick={() => onSubmit('cancelled')}
           disabled={disabled}
         >
           Cancel
         </Button>
-        <span className="text-[12px] text-text-tertiary">
+        <span className="text-[11px] text-text-tertiary">
           {statusLabel(editedCount, revisionsRemaining)}
         </span>
       </div>
-      {error ? <div className="text-[13px] text-error">{error}</div> : null}
+      {error ? <div className="text-[12px] text-error">{error}</div> : null}
     </div>
   )
 }

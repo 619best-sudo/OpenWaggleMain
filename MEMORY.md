@@ -67,6 +67,7 @@ Load `.agents/skills/electron-runtime/SKILL.md` for details.
 - Waggle and standard mode share session, branch, draft, archive, transcript, active-run, composer, settings, diff, and git semantics unless Pi imposes a narrow technical constraint.
 - The `game-factory` preset depends on a config-level loop contract plus role prompts: builders declare required handoff sections through agent output contracts, QA declares verdict/failure sections, Waggle core injects those labels into prompts, and Pi stop policy treats missing contract sections as a failed turn.
 - Composer branch/config changes are branch-scoped; child branches inherit parent config by default.
+- MCP gating is enable/disable only: the '/' command palette (and Settings) toggle which servers are enabled, and every enabled server joins every run (`selectMcpServers(enabledNames)` in `turing-classic-run`). There is no per-run composer MCP picker and no `AgentSendPayload.mcpServers`; do not reintroduce one. The QA hops' surface gating still drops off-surface tools.
 - Manual compaction mirrors Pi TUI slash-command UX: `/compact` and `/compact <custom instructions>`, not context-meter-triggered compaction.
 - Provider auth UI is method-based. Keep provider-level availability separate from API-key configured state and OAuth connected state.
 - Compact composer interactions stay in-row unless the maintainer explicitly asks for a larger workflow.

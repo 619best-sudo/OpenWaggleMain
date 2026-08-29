@@ -37,8 +37,8 @@ export function ModelSelectorDropdown({
     >
       {models.length === 0 ? (
         <div className="px-3 py-4 text-center">
-          <p className="text-[12px] text-text-tertiary">No models configured.</p>
-          <p className="mt-1 text-[11px] text-text-muted">
+          <p className="text-[11px] text-text-tertiary">No models configured.</p>
+          <p className="mt-1 text-[10px] text-text-muted">
             Go to Settings → Connections to enable models.
           </p>
         </div>

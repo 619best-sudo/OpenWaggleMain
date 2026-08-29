@@ -36,10 +36,10 @@ export function WaggleAgentSlotCard({
               <Brain className="size-4" />
             </div>
             <div className="flex items-center gap-2">
-              <h3 className="text-[13px] font-semibold tracking-wide text-text-primary uppercase">
+              <h3 className="text-[12px] font-semibold tracking-wide text-text-primary uppercase">
                 Expert
               </h3>
-              <span className="inline-flex min-w-6 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[11px] font-semibold text-text-secondary shadow-sm">
+              <span className="inline-flex min-w-6 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[10px] font-semibold text-text-secondary shadow-sm">
                 {dotLabel}
               </span>
             </div>
@@ -59,7 +59,7 @@ export function WaggleAgentSlotCard({
 
         <div className="space-y-5 flex-1 flex flex-col">
           <label className="block space-y-1.5">
-            <span className="text-[12px] font-medium text-text-secondary">Name</span>
+            <span className="text-[11px] font-medium text-text-secondary">Name</span>
             <TextInput
               type="text"
               value={agent.label}
@@ -73,7 +73,7 @@ export function WaggleAgentSlotCard({
           </label>
 
           <label className="block space-y-1.5 flex-1 flex flex-col">
-            <span className="text-[12px] font-medium text-text-secondary">System Prompt</span>
+            <span className="text-[11px] font-medium text-text-secondary">System Prompt</span>
             <Textarea
               value={agent.roleDescription}
               onChange={(e) =>
@@ -82,12 +82,12 @@ export function WaggleAgentSlotCard({
               rows={ROWS}
               placeholder="Describe this Expert's specific role, perspective, and rules..."
               resize="none"
-              className="w-full flex-1 rounded-md border border-border-light bg-bg p-2.5 text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-accent/50 focus:outline-none shadow-sm leading-relaxed"
+              className="w-full flex-1 rounded-md border border-border-light bg-bg p-2.5 text-[12px] text-text-primary placeholder:text-text-tertiary focus:border-accent/50 focus:outline-none shadow-sm leading-relaxed"
             />
           </label>
 
           <label className="block space-y-1.5">
-            <span className="text-[12px] font-medium text-text-secondary">
+            <span className="text-[11px] font-medium text-text-secondary">
               Run Only When Prompt Mentions
             </span>
             <Textarea
@@ -102,9 +102,9 @@ export function WaggleAgentSlotCard({
               rows={2}
               placeholder={'Optional keywords, one per line\nanimation\nmotion'}
               resize="none"
-              className="w-full rounded-md border border-border-light bg-bg p-2.5 text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-accent/50 focus:outline-none shadow-sm leading-relaxed"
+              className="w-full rounded-md border border-border-light bg-bg p-2.5 text-[12px] text-text-primary placeholder:text-text-tertiary focus:border-accent/50 focus:outline-none shadow-sm leading-relaxed"
             />
-            <p className="text-[11px] leading-5 text-text-tertiary">
+            <p className="text-[10px] leading-5 text-text-tertiary">
               Leave blank to always include this Expert. If filled, this slot stays in the run only
               when the user request mentions any listed keyword.
             </p>

@@ -39,9 +39,9 @@ export function ModelGroupAccordion({ group, state, actions }: ModelGroupAccordi
         >
           <Icon className="size-4 shrink-0" style={{ color: iconColor }} />
           <div className="flex-1 min-w-0">
-            <span className="text-[13px] font-medium text-text-primary">{group.label}</span>
+            <span className="text-[12px] font-medium text-text-primary">{group.label}</span>
             {group.models.length > 0 && (
-              <span className="ml-2 text-[11px] text-text-muted">
+              <span className="ml-2 text-[10px] text-text-muted">
                 {enabledCount}/{group.models.length} selected
               </span>
             )}
@@ -58,7 +58,7 @@ export function ModelGroupAccordion({ group, state, actions }: ModelGroupAccordi
             type="button"
             onClick={() => actions.onSelectAll(group)}
             aria-label={`Select all ${group.label} models`}
-            className="text-[11px] text-accent hover:text-accent/80 transition-colors"
+            className="text-[10px] text-accent hover:text-accent/80 transition-colors"
           >
             All
           </Button>
@@ -67,7 +67,7 @@ export function ModelGroupAccordion({ group, state, actions }: ModelGroupAccordi
             type="button"
             onClick={() => actions.onClear(group)}
             aria-label={`Deselect all ${group.label} models`}
-            className="text-[11px] text-text-tertiary hover:text-text-secondary transition-colors"
+            className="text-[10px] text-text-tertiary hover:text-text-secondary transition-colors"
           >
             None
           </Button>
@@ -78,7 +78,7 @@ export function ModelGroupAccordion({ group, state, actions }: ModelGroupAccordi
       {state.isExpanded && (
         <div className="px-4 pb-2 border-t border-border/50">
           {group.models.length === 0 ? (
-            <p className="py-3 text-[12px] text-text-muted">Loading models&hellip;</p>
+            <p className="py-3 text-[11px] text-text-muted">Loading models&hellip;</p>
           ) : (
             <div className="space-y-px pt-1">
               {group.models.map((model) => (

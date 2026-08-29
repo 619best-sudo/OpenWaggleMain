@@ -35,7 +35,7 @@ function ProjectPickerTrigger({
       variant="unstyled"
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-[16px] font-semibold text-accent-foreground transition-colors hover:bg-accent-dim"
+      className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-[14px] font-semibold text-accent-foreground transition-colors hover:bg-accent-dim"
       title="Open project picker"
     >
       <FolderOpen className="size-4.5" strokeWidth={ICON_STROKE_WIDTH} />
@@ -59,7 +59,7 @@ function StarterPromptButton({
       variant="unstyled"
       type="button"
       onClick={() => onClick?.(prompt.label)}
-      className="home-panel-frame-soft flex min-h-11 w-full items-center justify-center gap-3 rounded-md bg-bg-secondary px-4 py-3 text-center text-[14px] font-medium text-text-primary/82 transition-all hover:bg-bg-hover hover:text-text-primary"
+      className="home-panel-frame-soft flex min-h-11 w-full items-center justify-center gap-3 rounded-md bg-bg-secondary px-4 py-3 text-center text-[13px] font-medium text-text-primary/82 transition-all hover:bg-bg-hover hover:text-text-primary"
     >
       <prompt.icon
         className="size-4 shrink-0"
@@ -91,10 +91,10 @@ export function WelcomeScreen({
         <div className="flex w-full max-w-[760px] flex-col items-center justify-center">
           <div className="flex w-full flex-col items-center">
             <div className="max-w-[620px] space-y-3">
-              <h1 className="text-[40px] font-bold tracking-tight text-text-primary">
+              <h1 className="text-[34px] font-bold tracking-tight text-text-primary">
                 What are we building?
               </h1>
-              <p className="text-[16px] text-text-primary/78">
+              <p className="text-[14px] text-text-primary/78">
                 Start typing to build, refactor, or debug.
               </p>
             </div>
@@ -120,7 +120,7 @@ export function WelcomeScreen({
                       setProjectMenuOpen(false)
                       onOpenProject?.()
                     }}
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] text-text-primary/82 transition-colors hover:bg-bg-hover hover:text-text-primary"
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[12px] text-text-primary/82 transition-colors hover:bg-bg-hover hover:text-text-primary"
                   >
                     <FolderOpen className="size-3.5 shrink-0" />
                     Select folder…
@@ -128,7 +128,7 @@ export function WelcomeScreen({
 
                   {recentProjects.length > 0 && (
                     <div className="home-divider-t mt-1 pt-1">
-                      <div className="px-2.5 py-1 text-[11px] uppercase tracking-wide text-text-tertiary">
+                      <div className="px-2.5 py-1 text-[10px] uppercase tracking-wide text-text-tertiary">
                         Recent projects
                       </div>
                       {recentProjects.map((path) => (
@@ -137,12 +137,12 @@ export function WelcomeScreen({
                           key={path}
                           type="button"
                           onClick={() => handleChooseProject(path)}
-                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] text-text-primary/82 transition-colors hover:bg-bg-hover hover:text-text-primary"
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[12px] text-text-primary/82 transition-colors hover:bg-bg-hover hover:text-text-primary"
                         >
                           <FolderOpen className="size-3.5 shrink-0 text-text-secondary" />
                           <span className="min-w-0 flex-1 truncate">{projectName(path)}</span>
                           {path === projectPath ? (
-                            <span className="text-[11px] text-text-tertiary">Current</span>
+                            <span className="text-[10px] text-text-tertiary">Current</span>
                           ) : null}
                         </Button>
                       ))}
@@ -156,7 +156,7 @@ export function WelcomeScreen({
                   onClick={() => {
                     onOpenProject?.()
                   }}
-                  className="home-panel-frame-soft inline-flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium text-text-primary/82 transition-colors hover:text-text-primary"
+                  className="home-panel-frame-soft inline-flex items-center gap-2 rounded-md px-4 py-2 text-[13px] font-medium text-text-primary/82 transition-colors hover:text-text-primary"
                   title="Open project picker"
                 >
                   <FolderOpen className="size-4 shrink-0" />

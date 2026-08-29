@@ -7,17 +7,18 @@
  * expansion read as grey-on-black instead of as code.
  *
  * Rules this palette follows:
- * - Every role gets a DISTINCT hue drawn from the app's accent families
- *   (`--theme-agent-*`, `--theme-terminal-*`, `--theme-provider-anthropic`), so
- *   syntax colouring reads as part of the product rather than a foreign theme.
- * - Punctuation and braces are NOT grey. They use a warm near-foreground tint
- *   derived from `--theme-tool-call-file-text`, so `{`/`}`/`(`/`)` stay visible
- *   as structure without competing with identifiers.
+ * - THREE hues, and they are the badge hues (`--theme-badge-*`), not a palette
+ *   of their own: blue for the language (keywords, storage, tags), violet for
+ *   literal strings, amber for numeric and language constants. Everything
+ *   structural — identifiers, functions, types, properties — is plain
+ *   foreground. The surrounding UI is neutral on purpose; an eight-hue syntax
+ *   theme would fight it.
+ * - None of the three is green or red: the diff views own those for added and
+ *   removed rows, so a token stays legible on top of an add/remove wash.
+ * - Punctuation and braces are NOT grey. They sit just below the foreground so
+ *   `{`/`}`/`(`/`)` read as structure without competing with identifiers.
  * - Only comments are deliberately dim. Nothing else falls below the
  *   foreground's contrast band.
- * - Hues avoid pure green/red, which the diff views own for added/removed rows;
- *   strings sit in a yellow-green and tags in a rose so they stay legible on
- *   top of the add/remove washes.
  *
  * Colours are literal hex rather than `var(--theme-*)` because shiki parses and
  * blends theme colours at tokenize time. Values mirror the tokens named above;
@@ -51,7 +52,7 @@ const CODE_ROLES: readonly CodeRole[] = [
   {
     // Comments are the ONE role allowed to be dim.
     scope: ['comment', 'punctuation.definition.comment', 'string.comment'],
-    dark: '#8c92a0',
+    dark: '#797984',
     // Dimmer than the light foreground but still ≥4.5:1 on the code surface AND
     // on the add/remove washes — a comment inside a changed line stays readable.
     light: '#6e676a',
@@ -74,8 +75,8 @@ const CODE_ROLES: readonly CodeRole[] = [
       'keyword.operator.comparison',
       'keyword.operator.logical',
     ],
-    dark: '#cfc4c4',
-    light: '#6b5a5d',
+    dark: '#a6a6ae',
+    light: '#60585a',
   },
   {
     scope: [
@@ -90,8 +91,8 @@ const CODE_ROLES: readonly CodeRole[] = [
       'variable.language.super',
       'variable.language.this',
     ],
-    dark: '#c896ff',
-    light: '#7b3fd0',
+    dark: '#7fb2f5',
+    light: '#2b6cb0',
   },
   {
     scope: [
@@ -104,8 +105,8 @@ const CODE_ROLES: readonly CodeRole[] = [
       'meta.decorator',
       'entity.name.label',
     ],
-    dark: '#7aa2ff',
-    light: '#1f5fd8',
+    dark: '#ececee',
+    light: '#231d1e',
   },
   {
     scope: [
@@ -116,8 +117,8 @@ const CODE_ROLES: readonly CodeRole[] = [
       'punctuation.definition.string',
       'constant.other.symbol',
     ],
-    dark: '#a7e08a',
-    light: '#3f7a1c',
+    dark: '#ab93f0',
+    light: '#6449bc',
   },
   {
     scope: [
@@ -129,8 +130,8 @@ const CODE_ROLES: readonly CodeRole[] = [
       'keyword.other.unit',
       'constant.character.escape',
     ],
-    dark: '#f5b544',
-    light: '#9a5c05',
+    dark: '#e3ab5c',
+    light: '#98590a',
   },
   {
     scope: [
@@ -142,8 +143,8 @@ const CODE_ROLES: readonly CodeRole[] = [
       'support.class',
       'meta.type',
     ],
-    dark: '#e0b48f',
-    light: '#8a5320',
+    dark: '#ececee',
+    light: '#231d1e',
   },
   {
     scope: [
@@ -153,13 +154,13 @@ const CODE_ROLES: readonly CodeRole[] = [
       'support.type.property-name',
       'entity.other.attribute-name',
     ],
-    dark: '#6fd7e8',
-    light: '#0b6b7d',
+    dark: '#ececee',
+    light: '#231d1e',
   },
   {
     scope: ['entity.name.tag', 'punctuation.definition.tag'],
-    dark: '#f28fa0',
-    light: '#b02a45',
+    dark: '#7fb2f5',
+    light: '#2b6cb0',
   },
   {
     scope: [
@@ -174,29 +175,29 @@ const CODE_ROLES: readonly CodeRole[] = [
   },
   {
     scope: ['invalid', 'invalid.illegal'],
-    dark: '#ff8f9d',
-    light: '#a81430',
+    dark: '#ff909c',
+    light: '#a52532',
   },
   // Markdown, which shows up often in read/write of docs.
   {
     scope: ['markup.heading', 'entity.name.section'],
-    dark: '#7aa2ff',
-    light: '#1f5fd8',
+    dark: '#7fb2f5',
+    light: '#2b6cb0',
     fontStyle: 'bold',
   },
   { scope: ['markup.bold'], dark: '#ececee', light: '#231d1e', fontStyle: 'bold' },
   { scope: ['markup.italic'], dark: '#ececee', light: '#231d1e', fontStyle: 'italic' },
   {
     scope: ['markup.inline.raw', 'markup.fenced_code', 'markup.raw'],
-    dark: '#a7e08a',
-    light: '#3f7a1c',
+    dark: '#ab93f0',
+    light: '#6449bc',
   },
   {
     scope: ['markup.underline.link', 'string.other.link'],
-    dark: '#6fd7e8',
-    light: '#0b6b7d',
+    dark: '#7fb2f5',
+    light: '#2b6cb0',
   },
-  { scope: ['markup.list', 'punctuation.definition.list'], dark: '#cfc4c4', light: '#6b5a5d' },
+  { scope: ['markup.list', 'punctuation.definition.list'], dark: '#a6a6ae', light: '#6a6870' },
 ]
 
 /** Build one theme variant from the shared role map. */

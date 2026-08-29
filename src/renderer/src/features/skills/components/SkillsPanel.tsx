@@ -1,8 +1,8 @@
+import { PROJECT_SKILLS_DIR_SEGMENTS } from '@shared/constants/project-config'
 import type { SkillCatalogResult, SkillDiscoveryItem } from '@shared/types/standards'
 import { Download, RefreshCw, Sparkles, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { PROJECT_SKILLS_DIR_SEGMENTS } from '@shared/constants/project-config'
 import { useProject } from '@/features/sessions/hooks'
 import { useSkills } from '@/features/skills/hooks/useSkills'
 import { cn } from '@/shared/lib/cn'
@@ -67,7 +67,7 @@ function SkillsPanelHeader({
     <div className="flex items-center justify-between border-b border-border px-5 py-3">
       <div>
         <h2 className="text-sm font-semibold text-text-primary">Skills</h2>
-        <p className="text-[12px] text-text-tertiary">Discover and manage project skills.</p>
+        <p className="text-[11px] text-text-tertiary">Discover and manage project skills.</p>
       </div>
       <SkillsPanelActions onRefresh={onRefresh} onOpenImport={onOpenImport} />
     </div>
@@ -107,7 +107,7 @@ function SkillListItem({
         <div className="flex items-center gap-2">
           <span
             className={cn(
-              'truncate text-[14px] font-medium',
+              'truncate text-[13px] font-medium',
               selected ? 'text-info' : 'text-text-primary',
             )}
           >
@@ -123,7 +123,7 @@ function SkillListItem({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="truncate text-[12px] text-text-tertiary">
+          <span className="truncate text-[11px] text-text-tertiary">
             {skill.description || 'No description provided.'}
           </span>
         </div>
@@ -187,7 +187,7 @@ function SkillsList({
     <div className="mb-4 mt-2 overflow-hidden rounded-xl border border-border bg-bg-secondary shadow-[inset_0_1px_0_var(--theme-panel-shadow-highlight)]">
       <div className="flex items-center justify-between border-b border-border bg-bg-secondary px-4 py-3">
         <div className="flex items-center gap-2">
-          <h3 className="text-[12px] font-semibold text-text-secondary uppercase tracking-wider">
+          <h3 className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
             Discovered Skills
           </h3>
         </div>

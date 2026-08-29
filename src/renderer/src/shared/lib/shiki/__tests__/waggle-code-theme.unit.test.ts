@@ -48,18 +48,30 @@ describe.each([WAGGLE_CODE_THEME_DARK, WAGGLE_CODE_THEME_LIGHT])('%s', (theme) =
     expect(brace).not.toBe(plain)
   })
 
-  it('gives each syntax role a distinct hue', async () => {
+  it('separates the three hued roles from each other and from plain text', async () => {
     const tokens = await tokenize(theme)
-    const roles = [
+    // The palette is deliberately narrow: keyword/number/string carry the only
+    // three hues, and structural roles (identifiers, properties, types) stay on
+    // the foreground colour. So this asserts the hues are distinct — NOT that
+    // every role differs, which would re-introduce the eight-colour theme.
+    const hued = [
       colorOf(tokens, 'const'), // keyword
       colorOf(tokens, '42'), // number
       colorOf(tokens, '"hi"'), // string
-      colorOf(tokens, 'bar'), // property
-      colorOf(tokens, '{'), // punctuation
-      colorOf(tokens, '// note'), // comment
     ]
+    const plain = colorOf(tokens, ' foo ')
 
-    expect(roles.every((color) => !!color)).toBe(true)
-    expect(new Set(roles).size).toBe(roles.length)
+    expect(hued.every((color) => !!color)).toBe(true)
+    expect(new Set(hued).size).toBe(hued.length)
+    expect(hued).not.toContain(plain)
+  })
+
+  it('keeps comments dim and distinct from every hued role', async () => {
+    const tokens = await tokenize(theme)
+    const comment = colorOf(tokens, '// note')
+
+    expect(comment).toBeDefined()
+    expect(comment).not.toBe(colorOf(tokens, ' foo '))
+    expect(comment).not.toBe(colorOf(tokens, 'const'))
   })
 })

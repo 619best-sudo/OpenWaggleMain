@@ -3,7 +3,10 @@ import type { RunMode } from '@shared/types/background-run'
 import type { SessionId } from '@shared/types/brand'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { AgentTransportEvent } from '@shared/types/stream'
-import type { AgentKernelPromptDelivery } from '../../ports/agent-kernel-service'
+import type {
+  AgentKernelPromptDelivery,
+  AgentKernelResumeRun,
+} from '../../ports/agent-kernel-service'
 
 export interface AgentRunInput {
   readonly sessionId: SessionId
@@ -22,6 +25,13 @@ export interface AgentRunInput {
   readonly signal: AbortSignal
   readonly onEvent: (event: AgentTransportEvent) => void
   readonly onTitleAssigned?: (title: string) => void
+  /**
+   * Continue this session's STOPPED run instead of starting a fresh one. The
+   * token is read from the session's own persisted nodes inside the kernel, so
+   * all that travels here is the intent and the user's answer (when the stopped
+   * run was waiting on one).
+   */
+  readonly resumeRun?: AgentKernelResumeRun
 }
 
 interface AgentRunResultBase {
