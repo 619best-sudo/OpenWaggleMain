@@ -8,6 +8,8 @@ interface UsageTitleInput {
   readonly contextWindow: number | null
   readonly percent: number | null
   readonly failed: boolean
+  /** What the kernel's snapshot measures (e.g. 'Next request'). */
+  readonly label?: string
 }
 
 interface ContextMeterValueInput {
@@ -45,17 +47,17 @@ export function buildContextMeterValue({
   const contextWindow = snapshot?.contextWindow ?? fallbackContextWindow
   const percent = resolveUsageValue(snapshot?.percent, fallbackContextWindow, hasActiveSession)
   const tokens = resolveUsageValue(snapshot?.tokens, fallbackContextWindow, hasActiveSession)
-  const normalizedPercent = clampContextPercent(percent)
 
   return {
     contextWindow,
-    dashOffset:
-      CONTEXT_METER.GEOMETRY.CIRCUMFERENCE -
-      (normalizedPercent / CONTEXT_METER.THRESHOLDS.PERCENT_MAX) *
-        CONTEXT_METER.GEOMETRY.CIRCUMFERENCE,
-    displayValue: String(Math.round(normalizedPercent)),
+    // Both halves of the reading, the way Claude Code shows it: the absolute
+    // token count against the window, and the percent that count works out to.
+    // The count alone means nothing without the window; the percent alone hides
+    // how much room a 1M-window model actually has left.
+    displayTokens: formatTokens(tokens ?? 0),
+    displayPercent: formatPercent(clampContextPercent(percent)),
     strokeColor: getContextStrokeColor(percent, contextWindow !== null),
-    title: formatUsageTitle({ tokens, contextWindow, percent, failed }),
+    title: formatUsageTitle({ tokens, contextWindow, percent, failed, label: snapshot?.label }),
   }
 }
 
@@ -80,14 +82,31 @@ function clampContextPercent(percent: number | null) {
   return Math.max(0, Math.min(CONTEXT_METER.THRESHOLDS.PERCENT_MAX, percent))
 }
 
-function formatUsageTitle({ tokens, contextWindow, percent, failed }: UsageTitleInput) {
+/**
+ * Whole percent, except in the first one — where rounding would print a flat
+ * `0%` for every reading between "nothing at all" and "a fifth of a percent".
+ * That distinction is the whole meter under the turing kernel, whose bounded
+ * context is genuinely a fraction of a percent of a 262k window; a Pi
+ * transcript sits far above the decimal band and reads as whole numbers.
+ */
+function formatPercent(percent: number) {
+  if (percent === 0 || percent >= 1) return String(Math.round(percent))
+  return percent.toFixed(1)
+}
+
+function formatUsageTitle({ tokens, contextWindow, percent, failed, label }: UsageTitleInput) {
+  // The kernel labels its own numerator: Pi measures the live transcript, the
+  // turing kernel measures the context the NEXT run will carry. Without the
+  // label, a turing thread's small number would read as a nearly-empty Pi
+  // transcript rather than as the bounded thing it is.
+  const prefix = label ?? 'Context'
   if (failed && contextWindow) {
-    return `Context: 0 / ${formatTokens(contextWindow)} tokens (usage unavailable)`
+    return `${prefix}: 0 / ${formatTokens(contextWindow)} tokens (usage unavailable)`
   }
-  if (failed) return 'Context usage unavailable'
-  if (!contextWindow) return 'Context usage'
+  if (failed) return `${prefix} usage unavailable`
+  if (!contextWindow) return `${prefix} usage`
   if (tokens === null || percent === null) {
-    return `Context: 0 / ${formatTokens(contextWindow)} tokens (0.0%)`
+    return `${prefix}: 0 / ${formatTokens(contextWindow)} tokens (0.0%)`
   }
-  return `Context: ${formatTokens(tokens)} / ${formatTokens(contextWindow)} tokens (${percent.toFixed(1)}%)`
+  return `${prefix}: ${formatTokens(tokens)} / ${formatTokens(contextWindow)} tokens (${percent.toFixed(1)}%)`
 }

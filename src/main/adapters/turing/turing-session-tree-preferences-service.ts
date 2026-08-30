@@ -24,11 +24,7 @@ const DEFAULT_PROJECT_PATH = process.cwd()
 const DEFAULT_TREE_FILTER_MODE: SessionTreeFilterMode = 'default'
 
 function resolveSettingsPath(projectPath?: string | null): string {
-  return join(
-    projectPath?.trim() || DEFAULT_PROJECT_PATH,
-    PROJECT_CONFIG_DIR,
-    SETTINGS_FILE_NAME,
-  )
+  return join(projectPath?.trim() || DEFAULT_PROJECT_PATH, PROJECT_CONFIG_DIR, SETTINGS_FILE_NAME)
 }
 
 function readSettingsObject(filePath: string): Record<string, unknown> {

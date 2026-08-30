@@ -174,37 +174,92 @@ describe('auditVisualVerification', () => {
 // AppDelegate, a util and a plist rather than in anything view-shaped.
 // ---------------------------------------------------------------------------
 // A device server was connected in every one of these sessions (turing_bridge_status).
-const AVAILABLE = ['mobile_take_screenshot','mobile_launch_app','mobile_open_url','browser_navigate','browser_take_screenshot']
+const AVAILABLE = [
+  'mobile_take_screenshot',
+  'mobile_launch_app',
+  'mobile_open_url',
+  'browser_navigate',
+  'browser_take_screenshot',
+]
 
 const SESSIONS = [
-  { id:'fd8329e4 deep-link', userText:'Chottu link deep linking not working in iOS, can you check why ? earlier it was working we have not made any change to this side of the code',
-    writtenPaths:['/p/cards_mobile_app/ios/Runner/AppDelegate.swift'],
-    toolNames:['bash','read','grep','edit','file_memory','project_memory'], expect:true },
-  { id:'dd22faeb deep-link', userText:'Chottu link deep linking not working in iOS, can you check why ?',
-    writtenPaths:['/p/cards_mobile_app/ios/Runner/Info.plist'],
-    toolNames:['bash','read','file_memory','edit'], expect:true },
-  { id:'b2d328f1 turn1 polling', userText:'bug: on polling in the contacts page, the status is not changing as we get the new status. Had to refresh page to update.  can you check',
-    writtenPaths:['/p/cards_mobile_app/lib/features/lead_capture/utils/lead_utils.dart'],
-    toolNames:['read','grep','bash','edit'], expect:true },
-  { id:'b2d328f1 full (user forced a device server)', userText:'bug: on polling in the contacts page, the status is not changing',
-    writtenPaths:['/p/cards_mobile_app/lib/features/lead_capture/utils/lead_utils.dart'],
-    toolNames:['read','grep','bash','edit','mobile_take_screenshot','media_analysis','mobile_launch_app'], expect:false },
-  { id:'CONTROL fresh feature request', userText:'add a settings screen with a dark mode toggle',
-    writtenPaths:['/p/lib/services/settings_service.dart'], toolNames:['read','edit','bash'], expect:false },
-  { id:'CONTROL backend refactor', userText:'this function is not working, refactor the parser',
-    writtenPaths:['/p/server/parser.ts'], toolNames:['read','edit','bash'], expect:true },
-  { id:'CONTROL no runtime tooling connected', userText:'the login is not working',
-    writtenPaths:['/p/lib/auth.dart'], toolNames:['read','edit'], available:[], expect:false },
-  { id:'CONTROL question, no edits', userText:'why is deep linking not working?',
-    writtenPaths:[], toolNames:['read','grep'], expect:false },
+  {
+    id: 'fd8329e4 deep-link',
+    userText:
+      'Chottu link deep linking not working in iOS, can you check why ? earlier it was working we have not made any change to this side of the code',
+    writtenPaths: ['/p/cards_mobile_app/ios/Runner/AppDelegate.swift'],
+    toolNames: ['bash', 'read', 'grep', 'edit', 'file_memory', 'project_memory'],
+    expect: true,
+  },
+  {
+    id: 'dd22faeb deep-link',
+    userText: 'Chottu link deep linking not working in iOS, can you check why ?',
+    writtenPaths: ['/p/cards_mobile_app/ios/Runner/Info.plist'],
+    toolNames: ['bash', 'read', 'file_memory', 'edit'],
+    expect: true,
+  },
+  {
+    id: 'b2d328f1 turn1 polling',
+    userText:
+      'bug: on polling in the contacts page, the status is not changing as we get the new status. Had to refresh page to update.  can you check',
+    writtenPaths: ['/p/cards_mobile_app/lib/features/lead_capture/utils/lead_utils.dart'],
+    toolNames: ['read', 'grep', 'bash', 'edit'],
+    expect: true,
+  },
+  {
+    id: 'b2d328f1 full (user forced a device server)',
+    userText: 'bug: on polling in the contacts page, the status is not changing',
+    writtenPaths: ['/p/cards_mobile_app/lib/features/lead_capture/utils/lead_utils.dart'],
+    toolNames: [
+      'read',
+      'grep',
+      'bash',
+      'edit',
+      'mobile_take_screenshot',
+      'media_analysis',
+      'mobile_launch_app',
+    ],
+    expect: false,
+  },
+  {
+    id: 'CONTROL fresh feature request',
+    userText: 'add a settings screen with a dark mode toggle',
+    writtenPaths: ['/p/lib/services/settings_service.dart'],
+    toolNames: ['read', 'edit', 'bash'],
+    expect: false,
+  },
+  {
+    id: 'CONTROL backend refactor',
+    userText: 'this function is not working, refactor the parser',
+    writtenPaths: ['/p/server/parser.ts'],
+    toolNames: ['read', 'edit', 'bash'],
+    expect: true,
+  },
+  {
+    id: 'CONTROL no runtime tooling connected',
+    userText: 'the login is not working',
+    writtenPaths: ['/p/lib/auth.dart'],
+    toolNames: ['read', 'edit'],
+    available: [],
+    expect: false,
+  },
+  {
+    id: 'CONTROL question, no edits',
+    userText: 'why is deep linking not working?',
+    writtenPaths: [],
+    toolNames: ['read', 'grep'],
+    expect: false,
+  },
 ]
 
 describe('replay of the real sessions', () => {
   for (const s of SESSIONS) {
     it(`${s.id} -> ${s.expect ? 'FLAGGED' : 'silent'}`, () => {
       const a = auditVisualVerification({
-        writtenPaths: s.writtenPaths, toolNames: s.toolNames,
-        userText: s.userText, availableToolNames: s.available ?? AVAILABLE,
+        writtenPaths: s.writtenPaths,
+        toolNames: s.toolNames,
+        userText: s.userText,
+        availableToolNames: s.available ?? AVAILABLE,
       })
       expect(a.unverified, `${s.id} trigger=${a.trigger}`).toBe(s.expect)
     })
@@ -212,24 +267,42 @@ describe('replay of the real sessions', () => {
 })
 
 describe('build vs test: the line that decides a false positive', () => {
-  const base = { writtenPaths:['/p/server/parser.ts'], toolNames:['read','edit','bash'],
-    userText:'this function is not working, refactor the parser', availableToolNames:AVAILABLE }
+  const base = {
+    writtenPaths: ['/p/server/parser.ts'],
+    toolNames: ['read', 'edit', 'bash'],
+    userText: 'this function is not working, refactor the parser',
+    availableToolNames: AVAILABLE,
+  }
   it('a test run clears it — the code was actually executed', () => {
-    expect(auditVisualVerification({...base, executedCommands:['npm test']}).unverified).toBe(false)
-    expect(auditVisualVerification({...base, executedCommands:['npx vitest run x']}).unverified).toBe(false)
-    expect(auditVisualVerification({...base, executedCommands:['flutter test']}).unverified).toBe(false)
+    expect(auditVisualVerification({ ...base, executedCommands: ['npm test'] }).unverified).toBe(
+      false,
+    )
+    expect(
+      auditVisualVerification({ ...base, executedCommands: ['npx vitest run x'] }).unverified,
+    ).toBe(false)
+    expect(
+      auditVisualVerification({ ...base, executedCommands: ['flutter test'] }).unverified,
+    ).toBe(false)
   })
   it('a BUILD does not clear it — compiling is not running', () => {
-    for (const cmd of ['flutter build ios','npx tsc --noEmit','cargo check','npm run build']) {
-      expect(auditVisualVerification({...base, executedCommands:[cmd]}).unverified, cmd).toBe(true)
+    for (const cmd of ['flutter build ios', 'npx tsc --noEmit', 'cargo check', 'npm run build']) {
+      expect(auditVisualVerification({ ...base, executedCommands: [cmd] }).unverified, cmd).toBe(
+        true,
+      )
     }
   })
   it('the real deep-link session is still caught after the mitigation', () => {
     // Its actual commands: archaeology and file reads, no execution at all.
     const a = auditVisualVerification({
-      writtenPaths:['/p/ios/Runner/AppDelegate.swift'], toolNames:['bash','read','edit'],
-      userText:'Chottu link deep linking not working in iOS', availableToolNames:AVAILABLE,
-      executedCommands:['git log --oneline -20','cat ios/Runner/Info.plist','sed -n 290,330p AppDelegate.swift'],
+      writtenPaths: ['/p/ios/Runner/AppDelegate.swift'],
+      toolNames: ['bash', 'read', 'edit'],
+      userText: 'Chottu link deep linking not working in iOS',
+      availableToolNames: AVAILABLE,
+      executedCommands: [
+        'git log --oneline -20',
+        'cat ios/Runner/Info.plist',
+        'sed -n 290,330p AppDelegate.swift',
+      ],
     })
     expect(a.unverified).toBe(true)
     expect(a.trigger).toBe('runtime-symptom')
@@ -244,18 +317,20 @@ describe('machine mode (planMode) runs reach the gate', () => {
   it('flags the solar-system run: wrote index.html, never rendered it', () => {
     const a = auditVisualVerification({
       writtenPaths: ['/Users/shashankv/Projects/Test/index.html'],
-      toolNames: ['write','read'], executedCommands: [],
-      userText: 'create a realistic animation of solar system, use svg of planet to give realistic look. make it all in index.html.',
+      toolNames: ['write', 'read'],
+      executedCommands: [],
+      userText:
+        'create a realistic animation of solar system, use svg of planet to give realistic look. make it all in index.html.',
       availableToolNames: AVAILABLE,
     })
     expect(a.unverified).toBe(true)
-    expect(a.trigger).toBe('view-layer')   // fresh development, not a bug report
+    expect(a.trigger).toBe('view-layer') // fresh development, not a bug report
   })
 
   it('clears the same run once it renders the page', () => {
     const a = auditVisualVerification({
       writtenPaths: ['/Users/shashankv/Projects/Test/index.html'],
-      toolNames: ['write','read','activity_inspect'],
+      toolNames: ['write', 'read', 'activity_inspect'],
       userText: 'create a realistic animation of solar system',
       availableToolNames: AVAILABLE,
     })
@@ -289,7 +364,13 @@ describe('first-party device and web tools', () => {
   it('does not count driving or launching as a capture', () => {
     // Same rule as the structural-inspection cases above: acting on the screen
     // is not seeing it.
-    for (const name of ['mobile_tap', 'mobile_launch', 'mobile_devices', 'drive_click', 'drive_fill']) {
+    for (const name of [
+      'mobile_tap',
+      'mobile_launch',
+      'mobile_devices',
+      'drive_click',
+      'drive_fill',
+    ]) {
       expect(isVisualCaptureTool(name), name).toBe(false)
     }
   })
@@ -303,7 +384,11 @@ describe('first-party device and web tools', () => {
   it('does not read an unrelated tool that merely contains "drive" as browser control', () => {
     // Substring matching would have made a Google Drive MCP tool look like a
     // browser session.
-    for (const name of ['google_drive_search', 'mcp__gdrive__google_drive_list', 'driver_options']) {
+    for (const name of [
+      'google_drive_search',
+      'mcp__gdrive__google_drive_list',
+      'driver_options',
+    ]) {
       expect(isRuntimeObservationTool(name), name).toBe(false)
       expect(isVisualCaptureTool(name), name).toBe(false)
     }
@@ -311,8 +396,18 @@ describe('first-party device and web tools', () => {
 
   it('clears the replayed run: a Flutter screen edited and screenshotted on a simulator', () => {
     const audit = auditVisualVerification({
-      writtenPaths: ['/Users/shashankv/Documents/Projects/cards_mobile_app/lib/screens/profile/profile_screen.dart'],
-      toolNames: ['read', 'edit', 'bash', 'mobile_launch', 'mobile_look', 'mobile_tap', 'mobile_look'],
+      writtenPaths: [
+        '/Users/shashankv/Documents/Projects/cards_mobile_app/lib/screens/profile/profile_screen.dart',
+      ],
+      toolNames: [
+        'read',
+        'edit',
+        'bash',
+        'mobile_launch',
+        'mobile_look',
+        'mobile_tap',
+        'mobile_look',
+      ],
       executedCommands: ['flutter build ios --simulator'],
       userText: 'change the title of delete account popup',
       availableToolNames: ['mobile', 'drive'],
@@ -323,7 +418,9 @@ describe('first-party device and web tools', () => {
 
   it('still flags the same run when it only launched the app and never looked', () => {
     const audit = auditVisualVerification({
-      writtenPaths: ['/Users/shashankv/Documents/Projects/cards_mobile_app/lib/screens/profile/profile_screen.dart'],
+      writtenPaths: [
+        '/Users/shashankv/Documents/Projects/cards_mobile_app/lib/screens/profile/profile_screen.dart',
+      ],
       toolNames: ['read', 'edit', 'bash', 'mobile_launch'],
       executedCommands: ['flutter build ios --simulator'],
       userText: 'change the title of delete account popup',

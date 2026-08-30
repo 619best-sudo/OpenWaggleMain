@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ProjectedSessionNodeInput } from '../../../ports/session-repository'
 import {
   buildThreadSnapshotNode,
+  buildTuringContextUsageSnapshot,
   createThreadSnapshotAgentHost,
   extractPersistedThreadSnapshot,
   extractPersistedThreadSnapshots,
@@ -64,7 +65,7 @@ function makeFakeSession() {
 }
 
 function snapshotNodes(
-  entries: { timestamp: number; summary: string; userQuery?: string }[],
+  entries: { timestamp: number; summary: string; userQuery?: string; task?: string }[],
 ): ProjectedSessionNodeInput[] {
   return entries.map((entry, index) => ({
     ...buildThreadSnapshotNode(
@@ -72,6 +73,7 @@ function snapshotNodes(
         ...persistedSnapshot,
         timestamp: entry.timestamp,
         summary: entry.summary,
+        ...(entry.task ? { task: entry.task } : {}),
         ...(entry.userQuery ? { userQuery: entry.userQuery } : {}),
       },
       entry.timestamp,
@@ -259,5 +261,141 @@ describe('turing-thread-snapshot', () => {
         }),
       }),
     )
+  })
+})
+
+describe('buildTuringContextUsageSnapshot (composer meter)', () => {
+  const WINDOW = 262_144
+
+  /** A wrapped runtime prompt of a known size, as a run would have recorded it. */
+  function envelope(chars: number) {
+    return 'E'.repeat(chars)
+  }
+
+  it('reads zero on a thread with no completed runs — nothing is carried yet', () => {
+    expect(
+      buildTuringContextUsageSnapshot({
+        persistedTranscriptNodes: undefined,
+        contextWindow: WINDOW,
+      }),
+    ).toEqual({ tokens: 0, contextWindow: WINDOW, percent: 0, label: 'Next request' })
+  })
+
+  it("counts the newest run's wrapped envelope", () => {
+    const snapshot = buildTuringContextUsageSnapshot({
+      persistedTranscriptNodes: snapshotNodes([
+        { timestamp: 1, summary: 'first', userQuery: 'one', task: envelope(400) },
+        { timestamp: 2, summary: 'second', userQuery: 'two', task: envelope(4_000) },
+      ]),
+      contextWindow: WINDOW,
+    })
+    // Only the NEWEST envelope rides the next request; the older one is gone.
+    // The ledger's two rendered steps ride along with it, so the estimate sits
+    // above the 1k tokens the envelope alone accounts for.
+    expect(snapshot.tokens).toBeGreaterThan(4_000 / 4)
+    expect(snapshot.tokens).toBeLessThan(4_400 / 4)
+  })
+
+  it('grows as the step ledger fills, because the continuity block grows', () => {
+    const steps = (count: number) =>
+      snapshotNodes(
+        Array.from({ length: count }, (_, i) => ({
+          timestamp: i + 1,
+          summary: `did step ${String(i)}`,
+          userQuery: `asked step ${String(i)}`,
+          task: envelope(400),
+        })),
+      )
+
+    const one = buildTuringContextUsageSnapshot({
+      persistedTranscriptNodes: steps(1),
+      contextWindow: WINDOW,
+    })
+    const four = buildTuringContextUsageSnapshot({
+      persistedTranscriptNodes: steps(4),
+      contextWindow: WINDOW,
+    })
+    expect(four.tokens).toBeGreaterThan(one.tokens)
+    expect(four.percent).toBeGreaterThan(one.percent ?? 0)
+  })
+
+  it('plateaus at the ledger cap — a longer thread does not keep growing', () => {
+    const steps = (count: number) =>
+      snapshotNodes(
+        Array.from({ length: count }, (_, i) => ({
+          timestamp: i + 1,
+          summary: `did step ${String(i)}`,
+          userQuery: `asked step ${String(i)}`,
+          task: envelope(400),
+        })),
+      )
+
+    const atCap = buildTuringContextUsageSnapshot({
+      persistedTranscriptNodes: steps(LEDGER_MAX_STEPS),
+      contextWindow: WINDOW,
+    })
+    const wellPast = buildTuringContextUsageSnapshot({
+      persistedTranscriptNodes: steps(LEDGER_MAX_STEPS + 6),
+      contextWindow: WINDOW,
+    })
+    // This is the whole point of the harness: context is bounded, so the meter
+    // must stop climbing rather than imply an ever-fuller window. Not byte-
+    // identical — the ledger renders step ORDINALS, so 9..14 costs a few more
+    // characters than 1..8 — but flat to within a rounding error, against the
+    // ~75% a 14-step thread would have added if the ledger were unbounded.
+    expect(wellPast.tokens).toBeGreaterThanOrEqual(atCap.tokens)
+    expect(wellPast.tokens).toBeLessThan(atCap.tokens * 1.02)
+  })
+
+  it('carries no continuity when the newest run paused on a question', () => {
+    const nodes = snapshotNodes([
+      { timestamp: 1, summary: 'first', userQuery: 'one', task: envelope(400) },
+      { timestamp: 2, summary: 'second', userQuery: 'two', task: envelope(400) },
+    ])
+    const pausedNodes = snapshotNodes([
+      { timestamp: 1, summary: 'first', userQuery: 'one', task: envelope(400) },
+    ]).concat({
+      ...buildThreadSnapshotNode(
+        {
+          ...persistedSnapshot,
+          timestamp: 2,
+          task: envelope(400),
+          summary: 'asked the user something',
+          disposition: 'pending_user_question',
+          recommendedFollowUpMode: 'fresh',
+        },
+        2,
+      ),
+      createdOrder: 2,
+    })
+
+    const paused = buildTuringContextUsageSnapshot({
+      persistedTranscriptNodes: pausedNodes,
+      contextWindow: WINDOW,
+    })
+    const continuing = buildTuringContextUsageSnapshot({
+      persistedTranscriptNodes: nodes,
+      contextWindow: WINDOW,
+    })
+    // Same envelope on both; the paused thread injects no ledger, so it must
+    // read strictly smaller — the gate in `buildLedgerFollowUpContext`.
+    expect(paused.tokens).toBeLessThan(continuing.tokens)
+    expect(paused.tokens).toBe(Math.round(400 / 4))
+  })
+
+  it('caps the percent at 100 and never reports a negative window', () => {
+    const huge = buildTuringContextUsageSnapshot({
+      persistedTranscriptNodes: snapshotNodes([
+        { timestamp: 1, summary: 'big', userQuery: 'big', task: envelope(WINDOW * 8) },
+      ]),
+      contextWindow: WINDOW,
+    })
+    expect(huge.percent).toBe(100)
+
+    const noWindow = buildTuringContextUsageSnapshot({
+      persistedTranscriptNodes: undefined,
+      contextWindow: 0,
+    })
+    expect(noWindow.percent).toBeNull()
   })
 })

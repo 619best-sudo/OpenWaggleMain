@@ -144,7 +144,10 @@ describe('device tool actions reach the visual audit', () => {
       }),
       messages as never,
       789,
-      { userText: 'change the title of delete account popup', availableToolNames: ['mobile', 'drive'] },
+      {
+        userText: 'change the title of delete account popup',
+        availableToolNames: ['mobile', 'drive'],
+      },
     )
 
   it('does not warn when the run screenshotted the screen it changed', () => {

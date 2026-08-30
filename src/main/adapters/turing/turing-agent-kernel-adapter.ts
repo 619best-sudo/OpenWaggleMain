@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { Layer } from 'effect'
 import * as Effect from 'effect/Effect'
+import { resolveModel } from 'turing-harness'
 import {
   type AgentKernelForkSessionResult,
   type AgentKernelNavigateTreeResult,
@@ -12,7 +13,9 @@ import {
   type NavigateAgentKernelSessionInput,
 } from '../../ports/agent-kernel-service'
 import { runTuringSession } from './turing-classic-run'
+import { resolveTuringModelSlug } from './turing-llm-config'
 import { buildSessionSnapshotFromMessages } from './turing-message-projection'
+import { buildTuringContextUsageSnapshot } from './turing-thread-snapshot'
 
 function toAgentKernelError(error: unknown) {
   return error instanceof Error ? error : new Error(String(error))
@@ -36,11 +39,13 @@ function currentSnapshot(input: AgentKernelSessionInput) {
  * turing-harness implementation of the {@link AgentKernelService} port.
  *
  * Covers the classic (single-agent) run path — the primary prompt→response flow
- * — by driving a turing-harness {@link runTuringSession}. The pi-native session
+ * — by driving a turing-harness {@link runTuringSession}. `getContextUsage` is
+ * real here: it estimates the context the next run's first hop will carry, from
+ * the persisted per-run snapshot nodes. The pi-native session
  * operations that turing-harness has no equivalent for (branching session tree
- * navigation, forking, context compaction, token-usage accounting) are provided
- * as graceful no-ops so the app stays fully functional; waggle (multi-model)
- * runs are explicitly rejected rather than silently downgraded.
+ * navigation, forking, context compaction) are provided as graceful no-ops so
+ * the app stays fully functional; waggle (multi-model) runs are explicitly
+ * rejected rather than silently downgraded.
  */
 export const TuringHarnessAgentKernelLive = Layer.succeed(
   AgentKernelService,
@@ -70,7 +75,17 @@ export const TuringHarnessAgentKernelLive = Layer.succeed(
         catch: toAgentKernelError,
       }),
 
-    getContextUsage: () => Effect.succeed(null),
+    // The composer meter for a turing thread: the size of the context the NEXT
+    // run will carry (wrapped envelope + the step ledger's continuity block)
+    // against the resolved model's window. Unknown slugs get the harness's
+    // permissive default descriptor — the same fallback the chain runs against.
+    getContextUsage: (input) =>
+      Effect.succeed(
+        buildTuringContextUsageSnapshot({
+          persistedTranscriptNodes: input.persistedTranscriptNodes,
+          contextWindow: resolveModel(resolveTuringModelSlug(input.model)).contextWindow,
+        }),
+      ),
 
     getSessionSnapshot: (input) =>
       Effect.succeed({

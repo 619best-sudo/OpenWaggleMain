@@ -171,6 +171,13 @@ export interface AgentKernelSessionInput {
   readonly session: SessionDetail
   readonly model: SupportedModelId
   readonly skillToggles?: Readonly<Record<string, boolean>>
+  /**
+   * The session's persisted custom nodes (thread-snapshot ledger, resume
+   * tokens, bridge artifacts). Only the turing kernel reads them — its
+   * `getContextUsage` estimates the step ledger the next run's first hop will
+   * carry. The Pi kernel rebuilds context from its own JSONL and ignores this.
+   */
+  readonly persistedTranscriptNodes?: readonly ProjectedSessionNodeInput[]
 }
 
 export interface CompactAgentKernelSessionInput extends AgentKernelSessionInput {

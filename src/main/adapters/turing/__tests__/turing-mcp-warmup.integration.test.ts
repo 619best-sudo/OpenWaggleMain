@@ -269,7 +269,10 @@ describe('MCP + skill loading', () => {
     const { getSharedMcpPool } = await import('../turing-memory-prewarm')
     const pool = getSharedMcpPool(projectPath)
     try {
-      expect(pool.pooledIds().sort()).toEqual(['turing-machine:mcp:alpha', 'turing-machine:mcp:beta'])
+      expect(pool.pooledIds().sort()).toEqual([
+        'turing-machine:mcp:alpha',
+        'turing-machine:mcp:beta',
+      ])
 
       // User toggles beta off; the page fires reconcile with the new view.
       const after = buildView([

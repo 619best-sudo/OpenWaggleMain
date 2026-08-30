@@ -17,8 +17,8 @@ import { describe, expect, it } from 'vitest'
 import {
   assertUnambiguousEscalationRules,
   MODEL_ROUTING,
-  routeModel,
   routedModelSlugs,
+  routeModel,
 } from '../turing-model-routing'
 import {
   allConfiguredModelSlugs,
@@ -175,9 +175,9 @@ describe('the escalation grid', () => {
     // ui+attachment+medium is more specific than attachment+medium, so it wins even
     // though the broader rule is declared first in the file. Both resolve to
     // terra-pro under the hy3-everywhere-except-images policy.
-    expect(routeModel({ kind: 'write', rating: 'medium', category: 'ui', hasAttachment: true })).toBe(
-      'openai/gpt-5.6-terra-pro',
-    )
+    expect(
+      routeModel({ kind: 'write', rating: 'medium', category: 'ui', hasAttachment: true }),
+    ).toBe('openai/gpt-5.6-terra-pro')
     expect(
       routeModel({ kind: 'write', rating: 'medium', category: 'code', hasAttachment: true }),
     ).toBe('openai/gpt-5.6-terra-pro')

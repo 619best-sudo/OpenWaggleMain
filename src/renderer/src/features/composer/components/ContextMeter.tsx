@@ -76,13 +76,19 @@ export function ContextMeter() {
           className="font-mono text-[10px] font-semibold leading-none tabular-nums"
           style={{ color: meter.strokeColor }}
         >
-          {meter.displayValue}
+          {meter.displayTokens}
         </span>
         {meter.contextWindow ? (
           <span className="font-mono text-[10px] font-semibold leading-none text-text-secondary tabular-nums @max-[620px]:hidden">
             / {formatContextWindow(meter.contextWindow)}
           </span>
         ) : null}
+        <span
+          className="font-mono text-[10px] font-semibold leading-none tabular-nums"
+          style={{ color: meter.strokeColor }}
+        >
+          {meter.displayPercent}%
+        </span>
       </div>
     </div>
   )

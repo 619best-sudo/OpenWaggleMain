@@ -1,6 +1,7 @@
 import { SessionId, type SessionNodeId } from '@shared/types/brand'
 import type { SupportedModelId } from '@shared/types/llm'
 import type { AgentTransportEvent } from '@shared/types/stream'
+import { pipe } from 'effect'
 import * as Effect from 'effect/Effect'
 import { createLogger } from '../logger'
 import {
@@ -14,6 +15,7 @@ import { ProviderService } from '../ports/provider-service'
 import { SessionProjectionRepository } from '../ports/session-projection-repository'
 import { SessionRepository } from '../ports/session-repository'
 import { SettingsService } from '../services/settings-service'
+import { toProjectedNode } from './agent-run/kernel'
 
 const logger = createLogger('agent-session-service')
 
@@ -108,6 +110,18 @@ export function getAgentContextUsage(input: AgentSessionCommandInput) {
       return null
     }
 
+    // Same non-fatal tree read as the run path (see `runAgentKernel`): the
+    // turing meter estimates the persisted step ledger, and Pi ignores the
+    // nodes entirely. A failed read must degrade the meter, not the request —
+    // hence catchAll to `undefined` rather than a failure through the channel.
+    const sessionRepo = yield* SessionRepository
+    const persistedTranscriptNodes = yield* pipe(
+      Effect.map(sessionRepo.getTree(input.sessionId), (tree) =>
+        tree?.nodes?.length ? tree.nodes.map(toProjectedNode) : undefined,
+      ),
+      Effect.catchAll(() => Effect.succeed(undefined)),
+    )
+
     const agentKernel = yield* AgentKernelService
     const settingsService = yield* SettingsService
     const settings = yield* settingsService.get()
@@ -118,6 +132,7 @@ export function getAgentContextUsage(input: AgentSessionCommandInput) {
       session,
       model: input.model,
       ...(skillToggles ? { skillToggles } : {}),
+      ...(persistedTranscriptNodes ? { persistedTranscriptNodes } : {}),
     })
   })
 }

@@ -144,17 +144,36 @@ function backendModelSlug(provider: string, modelId: string, modelRef: string): 
   return provider === 'openrouter' ? modelId : modelRef
 }
 
-export function resolveTuringLlmConfig(modelRef: string): TuringLlmConfig {
+/**
+ * The concrete model slug this app model ref resolves to on the route the
+ * harness will actually take (backend sentinel → product default; direct
+ * turing-machine → the driver default; explicit provider refs pass through).
+ *
+ * Split out of {@link resolveTuringLlmConfig} because reading the slug must not
+ * read the credentials: the composer's context meter calls this on every
+ * session change, and a meter poll has no business touching the token store.
+ */
+export function resolveTuringModelSlug(modelRef: string): string {
   const parsed = parseModelRef(modelRef)
   const provider = parsed?.provider ?? 'openrouter'
   const modelId = parsed?.modelId ?? modelRef
+
+  if (!isDirectOpenRouterEnabled()) return backendModelSlug(provider, modelId, modelRef)
+  if (provider === 'turing-machine') return DIRECT_OPENROUTER_FALLBACK_MODEL
+  // `openrouter/<slug>` -> `<slug>`; other providers are already OpenRouter slugs.
+  return provider === 'openrouter' ? modelId : modelRef
+}
+
+export function resolveTuringLlmConfig(modelRef: string): TuringLlmConfig {
+  const provider = parseModelRef(modelRef)?.provider ?? 'openrouter'
+  const modelSlug = resolveTuringModelSlug(modelRef)
 
   if (!isDirectOpenRouterEnabled()) {
     return {
       // The harness appends `/chat/completions`, landing on the backend route.
       baseUrl: resolveTuringMachineBaseUrl(),
       apiKey: resolveBackendToken(),
-      modelSlug: backendModelSlug(provider, modelId, modelRef),
+      modelSlug,
       escalationModelSlug: firstNonEmpty(env.OPENWAGGLE_TURING_ESCALATION_MODEL),
     }
   }
@@ -170,7 +189,7 @@ export function resolveTuringLlmConfig(modelRef: string): TuringLlmConfig {
           env.OPENWAGGLE_OPENROUTER_API_KEY,
           env.OPENROUTER_API_KEY,
         ) ?? '',
-      modelSlug: DIRECT_OPENROUTER_FALLBACK_MODEL,
+      modelSlug,
       escalationModelSlug: firstNonEmpty(env.OPENWAGGLE_TURING_ESCALATION_MODEL),
     }
   }
@@ -185,8 +204,7 @@ export function resolveTuringLlmConfig(modelRef: string): TuringLlmConfig {
         env.OPENWAGGLE_OPENROUTER_API_KEY,
         env.OPENROUTER_API_KEY,
       ) ?? '',
-    // `openrouter/<slug>` -> `<slug>`; other providers are already OpenRouter slugs.
-    modelSlug: provider === 'openrouter' ? modelId : modelRef,
+    modelSlug,
     escalationModelSlug: firstNonEmpty(env.OPENWAGGLE_TURING_ESCALATION_MODEL),
   }
 }

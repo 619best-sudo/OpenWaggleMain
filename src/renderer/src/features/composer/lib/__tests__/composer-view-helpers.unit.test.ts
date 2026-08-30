@@ -79,7 +79,9 @@ describe('composer view helpers', () => {
       }),
     ).toMatchObject({
       contextWindow: 100_000,
-      displayValue: '25',
+      // Both halves, the way Claude Code reads: "25k / 100k" and "25%".
+      displayTokens: '25k',
+      displayPercent: '25',
       strokeColor: 'var(--color-success)',
       title: 'Context: 25k / 100k tokens (25.0%)',
     })
@@ -91,7 +93,11 @@ describe('composer view helpers', () => {
         hasActiveSession: false,
         failed: false,
       }),
-    ).toMatchObject({ displayValue: '0', title: 'Context: 0 / 200k tokens (0.0%)' })
+    ).toMatchObject({
+      displayTokens: '0',
+      displayPercent: '0',
+      title: 'Context: 0 / 200k tokens (0.0%)',
+    })
 
     expect(
       buildContextMeterValue({
@@ -101,8 +107,48 @@ describe('composer view helpers', () => {
         failed: true,
       }),
     ).toMatchObject({
-      displayValue: '0',
+      displayTokens: '0',
+      displayPercent: '0',
       title: 'Context: 0 / 200k tokens (usage unavailable)',
+    })
+  })
+
+  it('names what the kernel measures in the tooltip, so a small number is not misread', () => {
+    expect(
+      buildContextMeterValue({
+        // What the turing kernel reports: the context the NEXT run carries, not
+        // a transcript filling the window.
+        snapshot: {
+          tokens: 3_400,
+          contextWindow: 262_144,
+          percent: 1.3,
+          label: 'Next request',
+        },
+        fallbackContextWindow: 256_000,
+        hasActiveSession: true,
+        failed: false,
+      }),
+    ).toMatchObject({
+      displayTokens: '3k',
+      displayPercent: '1',
+      // The snapshot's own window wins — no fallback bounce.
+      contextWindow: 262_144,
+      title: 'Next request: 3k / 262k tokens (1.3%)',
+    })
+
+    // A real bounded turing thread lands under one percent; rounding that to
+    // `0` would erase the only movement the meter has.
+    expect(
+      buildContextMeterValue({
+        snapshot: { tokens: 489, contextWindow: 262_144, percent: 0.1865, label: 'Next request' },
+        fallbackContextWindow: null,
+        hasActiveSession: true,
+        failed: false,
+      }),
+    ).toMatchObject({
+      displayTokens: '489',
+      displayPercent: '0.2',
+      title: 'Next request: 489 / 262k tokens (0.2%)',
     })
   })
 

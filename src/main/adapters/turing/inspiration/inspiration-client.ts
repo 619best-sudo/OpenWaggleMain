@@ -49,7 +49,7 @@ export interface FetchInspirationInput {
    */
   readonly domain?: string
   /** `page` for a whole screen (one coherent design); `section` for parts. */
-  readonly scope?: 'page' | 'section' 
+  readonly scope?: 'page' | 'section'
   /** Full base incl. `/turing-machine` (default: resolveTuringMachineBaseUrl()). */
   readonly baseUrl?: string
   /** Bearer access token (user JWT). No token ⇒ null without a request. */

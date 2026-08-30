@@ -134,7 +134,15 @@ const VIEW_PATH_SEGMENTS = [
 ]
 
 /** Filename markers that say "view" when the directory does not. */
-const VIEW_FILENAME_MARKERS = ['_screen', '_page', '_widget', '_view', '.component.', '-screen', '-page']
+const VIEW_FILENAME_MARKERS = [
+  '_screen',
+  '_page',
+  '_widget',
+  '_view',
+  '.component.',
+  '-screen',
+  '-page',
+]
 
 function extensionOf(filePath: string): string {
   const base = filePath.slice(filePath.lastIndexOf('/') + 1)
