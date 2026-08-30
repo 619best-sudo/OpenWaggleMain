@@ -24,7 +24,11 @@ import * as Effect from 'effect/Effect'
 import { env } from '../../../env'
 import { ProviderLookupError } from '../../../errors'
 import { ProviderService } from '../../../ports/provider-service'
-import { isDirectOpenRouterEnabled, resolveBackendToken } from '../turing-llm-config'
+import {
+  isDirectOpenRouterEnabled,
+  resolveBackendToken,
+  TURING_MACHINE_MODEL_REF,
+} from '../turing-llm-config'
 import { hasStoredApiKey, readStoredApiKey } from './turing-credentials'
 
 const ALL_THINKING_LEVELS: readonly ThinkingLevel[] = [
@@ -37,7 +41,6 @@ const ALL_THINKING_LEVELS: readonly ThinkingLevel[] = [
 ]
 
 const TURING_MACHINE_PROVIDER_ID = 'turing-machine'
-const TURING_MACHINE_MODEL_REF = 'turing-machine/turing-machine'
 
 /**
  * Whether the catalogued (model-serving) providers are usable, which is a

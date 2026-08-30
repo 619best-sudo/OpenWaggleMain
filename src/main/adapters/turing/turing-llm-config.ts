@@ -43,8 +43,18 @@ const DEFAULT_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
  */
 const DIRECT_OPENROUTER_FALLBACK_MODEL = TURING_MODELS.driver
 
-/** Sentinel that hands upstream model choice to the backend. */
+/**
+ * Sentinel that once handed upstream model choice to the backend.
+ *
+ * It no longer does: the backend is a transparent passthrough that forwards
+ * `model` to OpenRouter verbatim, so this string must be resolved to a real
+ * slug HERE — see {@link resolveTuringModelSlug}. Anything that ships the
+ * sentinel on the wire reaches OpenRouter as a model that does not exist.
+ */
 const TURING_MACHINE_SENTINEL_MODEL = 'turing-machine'
+
+/** The app model ref for the product's own "let us pick" entry. */
+export const TURING_MACHINE_MODEL_REF = 'turing-machine/turing-machine'
 
 /** Env var holding a shared (non-JWT) backend token, for headless/dev use. */
 const TURING_MACHINE_TOKEN_ENV = 'OPENWAGGLE_TURING_MACHINE_TOKEN'

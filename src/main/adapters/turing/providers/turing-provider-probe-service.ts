@@ -16,7 +16,12 @@ import * as Effect from 'effect/Effect'
 import { env } from '../../../env'
 import { ProviderProbeService } from '../../../ports/provider-probe-service'
 import { resolveTuringMachineBaseUrl } from '../../pi/pi-provider-catalog'
-import { isDirectOpenRouterEnabled, resolveBackendToken } from '../turing-llm-config'
+import {
+  isDirectOpenRouterEnabled,
+  resolveBackendToken,
+  resolveTuringModelSlug,
+  TURING_MACHINE_MODEL_REF,
+} from '../turing-llm-config'
 import { readStoredApiKey } from './turing-credentials'
 
 const PROVIDER_PROBE_PROMPT = 'Reply with exactly OK and nothing else.'
@@ -97,13 +102,26 @@ async function callOpenRouterChat(input: {
 
 /**
  * Map a `(providerId, modelId)` probe request to the slug to send. Catalogued
- * providers store the full upstream slug in `modelId` already. `turing-machine`
- * becomes the backend sentinel (backend picks the model), or — on the direct
- * path, where no such sentinel exists — the same fallback the harness uses.
+ * providers store the full upstream slug in `modelId` already.
+ *
+ * `turing-machine` is resolved through {@link resolveTuringModelSlug}, the same
+ * function the run path uses, because this module's whole premise is that a
+ * passing probe means runs will work. It used to send the literal
+ * `turing-machine` sentinel and expect the backend to choose the model — but the
+ * backend is now a transparent passthrough that forwards `model` to OpenRouter
+ * verbatim, so the sentinel arrived upstream as a nonexistent model and every
+ * probe and `generateText` on the product's own entry failed. The direct-path
+ * branch is gone for the same reason it should never have existed: it hardcoded
+ * a second copy of the driver slug that `turing-models.config` owns.
+ *
+ * Callers reach here with either form of the ref — the Connections screen passes
+ * the catalog's `testModel` (`turing-machine`), the team services pass the model
+ * ref (`turing-machine/turing-machine`) — so the provider id, not the shape of
+ * `modelId`, is what selects this branch.
  */
 function resolveModelSlug(providerId: string, modelId: string): string {
   if (providerId === 'turing-machine') {
-    return isDirectOpenRouterEnabled() ? 'xiaomi/mimo-v2.5' : 'turing-machine'
+    return resolveTuringModelSlug(TURING_MACHINE_MODEL_REF)
   }
   return modelId
 }
