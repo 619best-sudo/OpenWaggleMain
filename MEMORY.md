@@ -16,6 +16,7 @@ Durable OpenWaggle project memory. Keep this compact and technical. Do not add p
 - Pi SDK imports belong in `src/main/adapters/pi/` only.
 - Provider/model/auth metadata must mirror Pi through `AuthStorage`, `ModelRegistry`, project-scoped runtime services, and OpenWaggle-owned ports.
 - OpenWaggle must not maintain a parallel `src/main/providers/` registry.
+- Turing-harness thread continuity is a bounded STEP LEDGER (last 8 runs), projected from the per-run `openwaggle.turing-thread-snapshot` nodes that already accumulate in the persisted tree, merged with the warm session's live slot, injected as `followUpContext.recentRuns` into the first hop's opening only. `ThreadRunSnapshot.task` is the full WRAPPED runtime prompt — the host must stamp the raw user text as `userQuery` when persisting, or the ledger echoes the envelope. Cross-run gate: no continuity when the newest snapshot recommends `fresh` (pending question). Edits to `../turing-harness/src` require `npm run build` there (no `prepare:turing-harness` script exists anymore) and an electron-vite restart, since the main bundle inlines its `dist/`.
 
 ## Pi Runtime Memory
 

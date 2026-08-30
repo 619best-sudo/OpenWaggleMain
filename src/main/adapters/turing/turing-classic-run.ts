@@ -77,7 +77,7 @@ import {
 import {
   buildThreadSnapshotNode,
   createThreadSnapshotAgentHost,
-  extractPersistedThreadSnapshot,
+  extractPersistedThreadSnapshots,
 } from './turing-thread-snapshot'
 import { auditVisualVerification, describesRuntimeSymptom } from './turing-visual-verification'
 
@@ -502,12 +502,21 @@ export function buildRunTranscriptNode(
   })
 }
 
+/**
+ * Persist this run's snapshot as the per-run ledger entry. The harness records
+ * `task` as the full WRAPPED prompt (standards context, MCP listings, the raw
+ * text under `USER TASK:`), so the raw user query must be stamped separately —
+ * the step ledger injected into the next run renders `userQuery`, and without
+ * this the continuity would echo the whole envelope once per step. Spread into
+ * a copy so the harness's in-memory state object is never mutated.
+ */
 function buildThreadSnapshotPersistedNode(
   snapshot: HarnessAgentState['lastThreadSnapshot'],
   timestampMs: number,
+  userQuery: string,
 ) {
   if (!snapshot) return undefined
-  return buildThreadSnapshotNode(snapshot, timestampMs)
+  return buildThreadSnapshotNode({ ...snapshot, userQuery }, timestampMs)
 }
 
 export async function runTuringSession(input: AgentKernelRunInput): Promise<AgentKernelRunResult> {
@@ -524,7 +533,10 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     standardsContext: input.standardsContext,
   })
   const turingSession = warmProject.session
-  const persistedThreadSnapshot = extractPersistedThreadSnapshot(input.persistedTranscriptNodes)
+  // The step ledger: the last N persisted run snapshots, oldest → newest. Each
+  // run persists exactly one snapshot node, so this IS the per-message history
+  // the next run's first hop sees (rendered with `userQuery` + outcome).
+  const persistedThreadSnapshots = extractPersistedThreadSnapshots(input.persistedTranscriptNodes)
   const mcpPool = getSharedMcpPool(projectPath)
 
   // Start MCP connection. Skills register synchronously (instant); MCP servers
@@ -605,7 +617,7 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     bridge = undefined
   }
 
-  const agentHost = createThreadSnapshotAgentHost(turingSession, persistedThreadSnapshot)
+  const agentHost = createThreadSnapshotAgentHost(turingSession, persistedThreadSnapshots)
   const agent: HarnessAgent = new HarnessAgent(agentHost, {
     model: llmConfig.modelSlug,
     // Reproduce before you edit. `describesRuntimeSymptom` is the same classifier
@@ -1174,9 +1186,13 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
     userText: input.payload.text,
     availableToolNames,
   })
+  // The raw text THIS run was asked with. A resume run has an empty payload
+  // (its prompt is the continuation itself) — its ledger line reads as the
+  // answer it carried or a generic "continued", never as the wrapped prompt.
   const threadSnapshotNode = buildThreadSnapshotPersistedNode(
     agent.state.lastThreadSnapshot,
     Date.now(),
+    input.payload.text.trim() || input.resumeRun?.answer?.trim() || '(continued the previous run)',
   )
   // HOW THIS RUN STOPPED. A run that stopped short of its plan leaves the token
   // that carries it on; a run that finished leaves a TOMBSTONE, so an older
