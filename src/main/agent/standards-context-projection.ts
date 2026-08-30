@@ -10,13 +10,16 @@
  * to exactly those.
  *
  * `buildTuringStandardsContext` is the variant used by both the prewarm path
- * (project open / model change) and the turing classic-run path. It activates
- * ALL toggle-enabled skills rather than message-derived ones, because:
- *   1. Skills register as tools the agent can call across all four phases, so
- *      their availability should not depend on the first message's text.
- *   2. Prewarm runs before any message exists, so it has no text to analyze.
- *   3. A stable "all enabled skills" set gives a stable runtime signature, so
- *      the bridge WeakMap fast-path hits on every run after the first prewarm.
+ * (project open / model change) and the turing classic-run path. Its default
+ * (no options) activates ALL toggle-enabled skills, because:
+ *   1. Prewarm runs before any message exists, so it has no text to analyze.
+ *   2. A stable "all enabled skills" set gives a stable runtime signature, so
+ *      the bridge WeakMap fast-path hits on every prewarm after the first.
+ *
+ * The classic-run preflight passes `selectedSkillIds` (composer "/" mentions ∪
+ * the session's sticky selection, see `session-tool-selection.ts`): skills then
+ * register as tools for a run ONLY when the user explicitly selected them, so
+ * unselected skills never reach the model's tool list.
  */
 import type { Settings } from '@shared/types/settings'
 import type {
@@ -63,19 +66,29 @@ function projectActiveSkill(skill: ActiveSkillInstruction): AgentKernelActiveSki
 }
 
 /**
- * Build the turing-path standards context: AGENTS.md + scoped instructions, but
- * with `activeSkills` set to ALL toggle-enabled skills (ignoring message-driven
- * activation). Used by both prewarm and the turing classic-run preflight so the
- * runtime signature is stable and the bridge fast-path hits.
+ * Build the turing-path standards context: AGENTS.md + scoped instructions, with
+ * `activeSkills` set to ALL toggle-enabled skills by default (prewarm path), or
+ * scoped to `options.selectedSkillIds` ∩ enabled when the run path passes an
+ * explicit selection (composer "/" gating — see `session-tool-selection.ts`).
  *
  * User text is intentionally empty: the loader's AGENTS.md / scoped-instruction
  * resolution still runs (it does not depend on text), but message-driven skill
- * activation is skipped — we override `activeSkills` immediately afterward with
- * the full enabled set.
+ * activation is skipped — skill selection is supplied via `options`, not
+ * heuristics.
  */
+export interface TuringStandardsOptions {
+  /**
+   * Explicitly selected skill ids (composer mentions ∪ sticky session
+   * selection). Intersected with the toggle-enabled set; ids are matched
+   * case-insensitively. Omit for the prewarm default (all enabled).
+   */
+  readonly selectedSkillIds?: readonly string[]
+}
+
 export async function buildTuringStandardsContext(
   projectPath: string | null,
   settings: Settings,
+  options?: TuringStandardsOptions,
 ): Promise<AgentKernelStandardsContext> {
   if (!projectPath) {
     return projectStandardsContextForTuring(EMPTY_STANDARDS_CONTEXT)
@@ -83,10 +96,14 @@ export async function buildTuringStandardsContext(
 
   const loaded = await loadAgentStandardsContext(projectPath, '', settings, [])
   const toggles = settings.skillTogglesByProject[projectPath] ?? {}
+  const selected = options?.selectedSkillIds
+    ? new Set(options.selectedSkillIds.map((id) => id.toLowerCase()))
+    : undefined
   const activeSkills = await loadAllEnabledSkills(
     projectPath,
     loaded.catalogSkills.map((s) => s.id),
     toggles,
+    selected,
   )
   return projectStandardsContextForTuring({
     ...loaded,
@@ -95,18 +112,23 @@ export async function buildTuringStandardsContext(
 }
 
 /**
- * Load the bodies of every toggle-enabled skill in the project. Errors loading a
- * single skill are pushed into warnings (mirrors `loadActiveSkills` in
+ * Load the bodies of the toggle-enabled skills in the project, scoped to
+ * `selected` when given (composer selection gating). Errors loading a single
+ * skill are pushed into warnings (mirrors `loadActiveSkills` in
  * standards-context.ts) so one bad skill folder doesn't break the whole run.
  */
 async function loadAllEnabledSkills(
   projectPath: string,
   catalogSkillIds: readonly string[],
   toggles: Readonly<Record<string, boolean>>,
+  selected?: ReadonlySet<string>,
 ): Promise<ActiveSkillInstruction[]> {
   const enabledIds = catalogSkillIds.filter((id) => toggles[id] ?? true)
+  const scopedIds = selected
+    ? enabledIds.filter((id) => selected.has(id.toLowerCase()))
+    : enabledIds
   const out: ActiveSkillInstruction[] = []
-  for (const skillId of enabledIds) {
+  for (const skillId of scopedIds) {
     try {
       const skill = await loadSkillInstructions(projectPath, skillId, toggles)
       // `loadSkillInstructions` reads the toggle but defaults to enabled; the

@@ -1,0 +1,24 @@
+import { Plug } from 'lucide-react'
+import { cn } from '@/shared/lib/cn'
+
+const ICON_SIZE = 12
+
+interface McpMentionChipProps {
+  serverName: string
+}
+
+export function McpMentionChip({ serverName }: McpMentionChipProps) {
+  return (
+    <span
+      className={cn(
+        'bg-accent/10 text-accent rounded px-1.5 py-0.5 text-[12px]',
+        'inline-flex items-center gap-1',
+        'select-none cursor-default',
+      )}
+      title={`/${serverName}`}
+    >
+      <Plug size={ICON_SIZE} className="shrink-0" />
+      <span className="truncate max-w-[200px]">{serverName}</span>
+    </span>
+  )
+}

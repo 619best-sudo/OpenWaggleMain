@@ -564,17 +564,33 @@ export async function runTuringSession(input: AgentKernelRunInput): Promise<Agen
       mcpPool,
     },
   )
-  // Enabled = used: every ENABLED MCP server joins the run's chain. The
-  // command palette's '/' items (and Settings) are the only MCP gate — a
-  // server the user enabled is a server they want the model to have. The
-  // harness still distinguishes connection from selection internally, so we
-  // feed it the enabled set explicitly; late-attaching servers inherit the
-  // selection. Disabled servers never reach the pool at all (the bridge only
-  // attaches enabled ones), so out-of-chain and unconnected coincide here.
+  // Selection = composer intent. Preflight already narrowed `mcpSettings` to
+  // the servers this run should attach: the user's "/" mentions in the message
+  // ∪ the session's sticky selection, ∩ enabled (see `session-tool-selection.ts`
+  // + preflight). So "enabled" here means "explicitly selected for this run",
+  // not merely "on in Settings" — a run whose user never mentioned an MCP gets
+  // an empty selection and zero MCP tools. The harness distinguishes connection
+  // from selection internally; we feed it the selected set explicitly and
+  // late-attaching servers inherit it.
   const enabledMcpNames = (input.mcpSettings?.servers ?? [])
     .filter((summary) => summary.enabled)
     .map((summary) => summary.name)
   const mcpSelection = turingSession.selectMcpServers(enabledMcpNames)
+  // [DEBUG] What we're feeding the kernel: user text + the narrowed MCP set +
+  // every skill that will register as a tool. Chain check: `PREFLIGHT resolved
+  // MCPs + skills for send` → this → the harness's `[DEBUG] LLM REQUEST` must
+  // agree. Easy to grep: "MCP+SKILL SELECTION for run".
+  logger.info('MCP+SKILL SELECTION for run', {
+    userTextPreview: (input.payload.text ?? '').slice(0, 500),
+    userTextHasSlash: /\//.test(input.payload.text ?? ''),
+    mcpSelected: mcpSelection.selected,
+    mcpDropped: mcpSelection.dropped,
+    activeSkills: (input.standardsContext?.activeSkills ?? []).map((s) => ({
+      id: s.id,
+      name: s.name,
+    })),
+    activeSkillCount: input.standardsContext?.activeSkills.length ?? 0,
+  })
   logger.info('MCP selection applied for run', {
     selected: mcpSelection.selected,
     connectedOnly: mcpSelection.dropped,

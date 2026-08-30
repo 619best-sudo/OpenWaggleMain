@@ -86,6 +86,7 @@ export interface ChatComposerSectionState {
   readonly forkTargets: readonly SessionForkTarget[]
   onStopCollaboration: () => void
   onSelectSkill: (skillId: string, skillName?: string) => void
+  onSelectMcp: (serverName: string) => void
   onStartWaggle: (config: WaggleConfig) => void
   onStartTeam: (teammate: TeammateDefinition) => void
   onSetMachineModeEnabled: (enabled: boolean) => void

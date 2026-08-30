@@ -9,6 +9,7 @@ import type { MutableRefObject } from 'react'
 import { cn } from '@/shared/lib/cn'
 import { createRendererLogger } from '@/shared/lib/logger'
 import { FileMentionNode } from './nodes/FileMentionNode'
+import { McpMentionNode } from './nodes/McpMentionNode'
 import { SkillMentionNode } from './nodes/SkillMentionNode'
 import { SymbolMentionNode } from './nodes/SymbolMentionNode'
 import { AutoResizePlugin } from './plugins/AutoResizePlugin'
@@ -43,7 +44,7 @@ export function LexicalComposerEditor({
   const initialConfig = {
     namespace: 'composer',
     theme: EDITOR_THEME,
-    nodes: [FileMentionNode, SkillMentionNode, SymbolMentionNode],
+    nodes: [FileMentionNode, McpMentionNode, SkillMentionNode, SymbolMentionNode],
     editable: !disabled,
     onError: (error: Error) => {
       logger.error('Lexical editor error', { message: error.message })
@@ -64,7 +65,7 @@ export function LexicalComposerEditor({
           />
         }
         placeholder={
-          <div className="pointer-events-none absolute top-[14px] left-4 select-none text-[13px] text-text-primary/50">
+          <div className="pointer-events-none absolute top-[14px] left-4 right-4 select-none truncate text-[13px] text-text-primary/50">
             {placeholder}
           </div>
         }

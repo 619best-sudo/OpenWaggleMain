@@ -5,13 +5,15 @@ import type { SessionResumeState } from '@shared/types/resume'
 import type { SkillDiscoveryItem } from '@shared/types/standards'
 import type { TeammateDefinition } from '@shared/types/teammate'
 import type { WaggleCollaborationStatus, WaggleConfig } from '@shared/types/waggle'
-import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical'
+import type { LexicalNode } from 'lexical'
+import { $createParagraphNode, $createTextNode, $getRoot, $isElementNode } from 'lexical'
 import type { AgentChatStatus, AgentCompactionStatus } from '@/features/chat/hooks/useAgentChat'
 import type { useStreamingPhase } from '@/features/chat/hooks/useStreamingPhase'
-import { $createSkillMentionNode } from '@/features/composer/components'
+import { $createMcpMentionNode, $createSkillMentionNode } from '@/features/composer/components'
 import { replaceComposerText } from '@/features/composer/lib/set-composer-text'
 import { useComposerStore } from '@/features/composer/state'
 import type { TuringFollowUpSuggestion } from '@/features/waggle/lib/turing-follow-up'
+import { useUIStore } from '@/shell/ui-store'
 import type { SessionForkTarget } from '../lib/session-fork-targets'
 import type { ChatComposerSectionState } from '../model'
 
@@ -100,29 +102,92 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     handleCloneToNewSession,
   } = params
 
-  function handleSelectSkill(skillId: string, skillName?: string) {
+  /**
+   * Insert a mention badge into the composer at the palette trigger, preserving
+   * the rest of the draft. The text-content listener in KeyboardPlugin opens
+   * the palette when the draft ends with `/` or `#` (or is exactly that
+   * character), and the trigger that opened it is stored in `useUIStore`. We
+   * strip just that trigger — bare or `… /`-style trailing — instead of
+   * clearing the editor (the old root.clear() wiped everything the user had
+   * typed). When the preceding character isn't whitespace (e.g. `green/`) we
+   * also prepend a space: the run pipeline's skill-reference regex requires a
+   * word boundary before `/`/`#`, so the badge would otherwise render fine but
+   * the run would silently skip it. Returns false when no Lexical editor is
+   * mounted (fallback path).
+   */
+  function insertMentionIntoEditor(buildMention: () => LexicalNode): boolean {
     const composerStore = useComposerStore.getState()
     const editor = composerStore.lexicalEditor
+    if (!editor) return false
+    // The trigger character opens the palette; we strip the matching one from
+    // the editor. Default to `/` if nothing was recorded (e.g. some race where
+    // the store was cleared before the click landed).
+    const trigger = useUIStore.getState().commandPaletteTrigger ?? '/'
 
-    if (editor) {
-      editor.update(() => {
-        const root = $getRoot()
-        root.clear()
-        const paragraph = $createParagraphNode()
-        const mentionNode = $createSkillMentionNode(skillId, skillName ?? skillId)
-        paragraph.append(mentionNode)
-        paragraph.append($createTextNode(' '))
+    editor.update(() => {
+      const root = $getRoot()
+      const textNodes = root.getAllTextNodes()
+      const lastText = textNodes[textNodes.length - 1]
+      let needsLeadingSpace = false
+      if (lastText) {
+        const content = lastText.getTextContent()
+        if (content === trigger) {
+          lastText.remove()
+        } else if (content.endsWith(` ${trigger}`)) {
+          lastText.spliceText(content.length - 2, 2, '')
+        } else if (content.length > 0 && !/\s/.test(content[content.length - 1])) {
+          // The user typed the trigger directly after a word (e.g. "green#") —
+          // strip the trigger and remember to inject a space so the parser can
+          // match.
+          if (content.endsWith(trigger)) {
+            lastText.setTextContent(content.slice(0, -1))
+          }
+          needsLeadingSpace = true
+        }
+      }
+      const lastChild = root.getLastChild()
+      const paragraph = $isElementNode(lastChild) ? lastChild : $createParagraphNode()
+      if (paragraph !== lastChild) {
         root.append(paragraph)
-        root.selectEnd()
-      })
-      editor.focus()
-    } else {
-      // Fallback: plain text (no Lexical editor available)
-      const currentInput = composerStore.input
-      const nextInput = currentInput === '/' ? `/${skillId} ` : `/${skillId} ${currentInput}`
-      composerStore.setInput(nextInput)
-      composerStore.setCursorIndex(nextInput.length)
-    }
+      }
+      paragraph.append(
+        ...(needsLeadingSpace ? [$createTextNode(' ')] : []),
+        buildMention(),
+        $createTextNode(' '),
+      )
+      root.selectEnd()
+    })
+    editor.focus()
+    return true
+  }
+
+  /** Plain-text fallback when no Lexical editor is available. */
+  function appendMentionToFallbackInput(mentionText: string) {
+    const composerStore = useComposerStore.getState()
+    const current = composerStore.input
+    const trigger = useUIStore.getState().commandPaletteTrigger ?? '/'
+    // Strip the trigger the same way the editor path does — exact trigger, a
+    // trailing `… /`/`… #`, or the glued-on `green/`/`green#` case.
+    let base: string
+    if (current === trigger) base = ''
+    else if (current.endsWith(` ${trigger}`)) base = current.slice(0, -2)
+    else if (current.endsWith(trigger)) base = current.slice(0, -1)
+    else base = current
+    const nextInput = `${base}${base.length > 0 && !/\s$/.test(base) ? ' ' : ''}${mentionText}`
+    composerStore.setInput(nextInput)
+    composerStore.setCursorIndex(nextInput.length)
+  }
+
+  function handleSelectSkill(skillId: string, skillName?: string) {
+    const inserted = insertMentionIntoEditor(() =>
+      $createSkillMentionNode(skillId, skillName ?? skillId),
+    )
+    if (!inserted) appendMentionToFallbackInput(`/${skillId} `)
+  }
+
+  function handleSelectMcp(serverName: string) {
+    const inserted = insertMentionIntoEditor(() => $createMcpMentionNode(serverName))
+    if (!inserted) appendMentionToFallbackInput(`/${serverName} `)
   }
 
   function onUseFollowUpPrompt(suggestion: TuringFollowUpSuggestion) {
@@ -152,6 +217,7 @@ export function useComposerSection(params: ComposerSectionParams): ChatComposerS
     teamStatus,
     onStopCollaboration: handleStopCollaboration,
     onSelectSkill: handleSelectSkill,
+    onSelectMcp: handleSelectMcp,
     onStartWaggle: handleStartWaggle,
     onStartTeam: handleStartTeam,
     onSetMachineModeEnabled: handleSetMachineModeEnabled,

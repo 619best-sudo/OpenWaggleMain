@@ -4,13 +4,22 @@ import type { Settings, ToolPermissionMode } from '@shared/types/settings'
 import * as Effect from 'effect/Effect'
 import { makeErrorInfo } from '../../agent/error-classifier'
 import { buildTuringStandardsContext } from '../../agent/standards-context-projection'
+import { createLogger } from '../../logger'
 import type { AgentKernelStandardsContext } from '../../ports/agent-kernel-service'
 import { McpConfigService } from '../../ports/mcp-config-service'
 import { ProviderService } from '../../ports/provider-service'
 import { SessionProjectionRepository } from '../../ports/session-projection-repository'
 import { SettingsService } from '../../services/settings-service'
 import { assignSessionTitleFromUserText } from '../run-handler-utils'
+import {
+  extractRunToolMentions,
+  getSessionToolSelection,
+  narrowMcpSettingsToServers,
+  recordSessionToolSelection,
+} from './session-tool-selection'
 import type { AgentRunInput, AgentRunResult } from './types'
+
+const logger = createLogger('agent-run-preflight')
 
 interface AgentRunPreflightSuccess {
   readonly ok: true
@@ -19,15 +28,17 @@ interface AgentRunPreflightSuccess {
   readonly skillToggles?: Record<string, boolean>
   readonly toolPermissionMode: ToolPermissionMode
   /**
-   * MCP settings view for the session's project. Resolved here (cheap: a JSON
-   * file read + merge) so the turing kernel can attach MCP servers without a
-   * per-run config re-scan on the critical path.
+   * MCP settings view for the session's project, NARROWED to the servers this
+   * run should attach: composer "/" mentions ∪ the session's sticky selection,
+   * ∩ enabled. Resolved here (cheap: a JSON file read + merge) so the turing
+   * kernel can attach MCP servers without a per-run config re-scan on the
+   * critical path.
    */
   readonly mcpSettings?: McpSettingsView
   /**
-   * Standards context (AGENTS.md + scoped instructions + all toggle-enabled
-   * skills) for the turing kernel. Built here so prewarm and the run path share
-   * the same stable runtime signature, letting the bridge WeakMap fast-path hit.
+   * Standards context (AGENTS.md + scoped instructions + the run's selected
+   * skills) for the turing kernel. Skills are gated the same way as MCPs: only
+   * explicitly selected (or sticky-selected) skills register as tools.
    */
   readonly standardsContext?: AgentKernelStandardsContext
 }
@@ -58,16 +69,69 @@ export function loadAgentRunPreflight(input: AgentRunInput) {
       yield* Effect.sync(() => input.onTitleAssigned?.(assignedTitle))
     }
 
-    // Resolve MCP settings + turing standards context. Both are best-effort: a
-    // resolution failure must not block the run — the kernel proceeds without
-    // extensions and the warnings land in the run result. This runs on the
-    // pre-run path but is cheap (JSON read + directory scan), and the bridge
-    // fast-path skips the expensive MCP re-spawn when prewarm already attached.
+    // Resolve MCP settings first (mention matching needs the server list), then
+    // derive the run's tool selection, then build the standards context against
+    // it. All best-effort: a resolution failure must not block the run — the
+    // kernel proceeds without extensions and the warnings land in the run
+    // result. This runs on the pre-run path but is cheap (JSON read + directory
+    // scan), and the bridge fast-path skips the expensive MCP re-spawn when
+    // prewarm already attached.
     const projectPath = session.projectPath ?? undefined
-    const [mcpSettingsResult, standardsResult] = yield* Effect.all(
-      [resolveMcpSettings(projectPath), resolveTuringStandards(projectPath, settings)],
-      { concurrency: 'unbounded' },
+    const mcpSettingsView = yield* resolveMcpSettings(projectPath)
+
+    // Per-run tool gating: only skills/MCPs the user explicitly selected via
+    // composer "/" mentions are attached. The selection is STICKY for the
+    // session (follow-ups without a mention keep the prior set) and pruned by
+    // the Settings toggles (mention ∩ enabled; toggling off de-selects).
+    const mentions = extractRunToolMentions(input.payload.text, mcpSettingsView)
+    const sticky = getSessionToolSelection(input.sessionId)
+    const wantedSkillIds = [...new Set([...sticky.skillIds, ...mentions.skillIds])]
+    const wantedMcpNames = [...new Set([...sticky.mcpNames, ...mentions.mcpNamesEnabled])]
+
+    const standardsResult = yield* resolveTuringStandards(projectPath, settings, wantedSkillIds)
+
+    const enabledMcpNames = new Set(
+      (mcpSettingsView?.servers ?? [])
+        .filter((summary) => summary.enabled)
+        .map((summary) => summary.name),
     )
+    const selectedMcpNames = wantedMcpNames.filter((name) => enabledMcpNames.has(name))
+    const narrowedMcpSettings = mcpSettingsView
+      ? narrowMcpSettingsToServers(mcpSettingsView, selectedMcpNames)
+      : undefined
+
+    // Sticky bookkeeping: remember what actually attached so follow-ups keep it
+    // (replace semantics also prune entries the user toggled off in Settings).
+    recordSessionToolSelection(input.sessionId, {
+      skillIds: (standardsResult?.activeSkills ?? []).map((skill) => skill.id),
+      mcpNames: selectedMcpNames,
+    })
+
+    // [DEBUG] The earliest possible view of "what will be sent" — fires once per
+    // send before any tool registration or LLM call. Chain check: this log →
+    // `MCP+SKILL SELECTION for run` (turing-classic-run) → `[DEBUG] LLM REQUEST`
+    // (turing-harness wire log) must show the same narrowing at each stage.
+    // Easy to grep: "PREFLIGHT resolved MCPs + skills for send".
+    const narrowedServers = narrowedMcpSettings?.servers ?? []
+    logger.info('PREFLIGHT resolved MCPs + skills for send', {
+      sessionId: input.sessionId,
+      userTextPreview: (input.payload.text ?? '').slice(0, 500),
+      userTextHasSlash: /\//.test(input.payload.text ?? ''),
+      mentionedSkillIds: mentions.skillIds,
+      mentionedMcpNames: mentions.mcpNamesMentioned,
+      mentionedMcpDisabled: mentions.mcpNamesMentioned.filter(
+        (name) => !mentions.mcpNamesEnabled.includes(name),
+      ),
+      stickySkillIds: sticky.skillIds,
+      stickyMcpNames: sticky.mcpNames,
+      selectedMcpNames,
+      mcpEnabled: narrowedServers.map((summary) => summary.name),
+      activeSkills: (standardsResult?.activeSkills ?? []).map((skill) => ({
+        id: skill.id,
+        name: skill.name,
+      })),
+      activeSkillCount: standardsResult?.activeSkills.length ?? 0,
+    })
 
     return {
       ok: true,
@@ -77,7 +141,7 @@ export function loadAgentRunPreflight(input: AgentRunInput) {
       ...(session.projectPath && settings.skillTogglesByProject[session.projectPath]
         ? { skillToggles: settings.skillTogglesByProject[session.projectPath] }
         : {}),
-      ...(mcpSettingsResult ? { mcpSettings: mcpSettingsResult } : {}),
+      ...(narrowedMcpSettings ? { mcpSettings: narrowedMcpSettings } : {}),
       ...(standardsResult ? { standardsContext: standardsResult } : {}),
     } satisfies AgentRunPreflightSuccess
   })
@@ -99,14 +163,20 @@ function resolveMcpSettings(projectPath: string | undefined) {
 
 /**
  * Resolve the turing-path standards context (AGENTS.md + scoped instructions +
- * all toggle-enabled skills). Failures are swallowed — the run proceeds without
+ * the run's selected skills). Failures are swallowed — the run proceeds without
  * skills/standards injected into the runtime prompt.
  */
-function resolveTuringStandards(projectPath: string | undefined, settings: Settings) {
+function resolveTuringStandards(
+  projectPath: string | undefined,
+  settings: Settings,
+  selectedSkillIds: readonly string[],
+) {
   return Effect.gen(function* () {
     if (!projectPath) return undefined
     const result = yield* Effect.either(
-      Effect.promise(() => buildTuringStandardsContext(projectPath, settings)),
+      Effect.promise(() =>
+        buildTuringStandardsContext(projectPath, settings, { selectedSkillIds }),
+      ),
     )
     return result._tag === 'Right' ? result.right : undefined
   })

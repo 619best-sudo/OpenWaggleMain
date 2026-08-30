@@ -60,7 +60,7 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
     teamStatus,
     onStopCollaboration,
     onSelectSkill,
-    onStartWaggle,
+    onSelectMcp,
     onSetMachineModeEnabled,
     onClearTeamMode,
     onSendWithWaggle,
@@ -72,10 +72,8 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
     onSummarizeBranch,
     onStartCustomBranchSummary,
     onCancelBranchSummary,
-    onOpenForkSelector,
     onCloseForkSelector,
     onSelectForkTarget,
-    onCloneToNewSession,
   } = section
 
   useScopedComposerDrafts(activeSessionId)
@@ -178,10 +176,7 @@ export function ChatComposerStack({ section, onOpenSessionTree }: ChatComposerSt
           <CommandPalette
             slashSkills={slashSkills}
             onSelectSkill={onSelectSkill}
-            onStartWaggle={onStartWaggle}
-            onOpenSessionTree={onOpenSessionTree}
-            onForkToNewSession={onOpenForkSelector}
-            onCloneToNewSession={onCloneToNewSession}
+            onSelectMcp={onSelectMcp}
           />
         </div>
       )}

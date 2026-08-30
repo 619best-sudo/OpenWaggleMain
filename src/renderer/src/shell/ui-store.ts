@@ -32,6 +32,13 @@ interface UIState {
   toastMessage: string | null
   toastData: ToastData | null
   commandPaletteOpen: boolean
+  /**
+   * Which trigger character opened the palette. Drives section ordering
+   * (`/` puts MCPs first, `#` puts skills first) and the trigger that produced
+   * each insert (carried through to the composer). `null` when closed or
+   * opened without a typed trigger (e.g. the global Mod+K hotkey).
+   */
+  commandPaletteTrigger: '/' | '#' | null
   feedbackModalOpen: boolean
   feedbackErrorContext: AgentErrorInfo | null
   feedbackCooldownActive: boolean
@@ -47,7 +54,7 @@ interface UIState {
   showToast: (message: string, variant?: ToastData['variant']) => void
   showPersistentToast: (data: ToastData) => void
   clearToast: () => void
-  openCommandPalette: () => void
+  openCommandPalette: (trigger?: '/' | '#') => void
   closeCommandPalette: () => void
   toggleCommandPalette: () => void
   openFeedbackModal: (errorContext?: AgentErrorInfo) => void
@@ -69,6 +76,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   toastMessage: null,
   toastData: null,
   commandPaletteOpen: false,
+  commandPaletteTrigger: null,
   feedbackModalOpen: false,
   feedbackErrorContext: null,
   feedbackCooldownActive: false,
@@ -127,16 +135,19 @@ export const useUIStore = create<UIState>((set, get) => ({
     set({ toastMessage: null, toastData: null })
   },
 
-  openCommandPalette() {
-    set({ commandPaletteOpen: true })
+  openCommandPalette(trigger) {
+    set({ commandPaletteOpen: true, commandPaletteTrigger: trigger ?? null })
   },
 
   closeCommandPalette() {
-    set({ commandPaletteOpen: false })
+    set({ commandPaletteOpen: false, commandPaletteTrigger: null })
   },
 
   toggleCommandPalette() {
-    set({ commandPaletteOpen: !get().commandPaletteOpen })
+    const next = !get().commandPaletteOpen
+    // Mod+K path: no typed trigger — leave trigger null so the palette opens
+    // with the default ordering (MCPs first, see useCommandPaletteItems).
+    set({ commandPaletteOpen: next, commandPaletteTrigger: next ? null : null })
   },
 
   openFeedbackModal(errorContext) {

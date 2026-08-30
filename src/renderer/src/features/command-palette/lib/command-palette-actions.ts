@@ -1,36 +1,8 @@
-import { compactCommandText } from '@/features/composer/commands'
-import { setEditorText } from '@/features/composer/lib'
-import { useComposerStore } from '@/features/composer/state'
-import { useUIStore } from '@/shell/ui-store'
-
-export function createOptionalCommandPaletteAction(
-  closeCommandPalette: () => void,
-  action?: () => void,
-) {
-  if (!action) return undefined
-  return () => {
-    closeCommandPalette()
-    action()
-  }
-}
-
-export function insertCompactCommand() {
-  const commandText = `${compactCommandText()} `
-  const composerStore = useComposerStore.getState()
-  const editor = composerStore.lexicalEditor
-
-  if (!editor) {
-    composerStore.setInput(commandText)
-    composerStore.setCursorIndex(commandText.length)
-    return
-  }
-
-  setEditorText(editor, commandText)
-  editor.focus()
-}
-
-export function openFeedbackModal() {
-  const store = useUIStore.getState()
-  store.closeCommandPalette()
-  store.openFeedbackModal()
-}
+/**
+ * Plain content-insertion actions used by the composer mention palette.
+ *
+ * The palette is now strictly a mention selector (MCPs + skills). Other legacy
+ * actions (`/compact`, Feedback, session tree, fork, clone) used to live here
+ * too but were removed when the palette was narrowed — they had no other
+ * surface in the app, so removing them was the user's explicit ask.
+ */

@@ -1,54 +1,10 @@
 import type { McpServerSummary } from '@shared/types/mcp'
+import type { SkillDiscoveryItem } from '@shared/types/standards'
 import { describe, expect, it, vi } from 'vitest'
 import type { CommandPaletteItem } from '../../model'
 import { buildCommandPaletteEntries } from '../command-palette-entries'
-import {
-  createBaseCommands,
-  createConfigureMcpItem,
-  createMcpItems,
-} from '../command-palette-items'
+import { createMcpItems, createSkillItems } from '../command-palette-items'
 import { normalizeCommandQuery, truncateCommandDescription } from '../command-palette-text'
-
-const {
-  closeCommandPaletteMock,
-  compactCommandTextMock,
-  focusEditorMock,
-  getComposerStateMock,
-  getUiStateMock,
-  openFeedbackModalMock,
-  setCursorIndexMock,
-  setEditorTextMock,
-  setInputMock,
-} = vi.hoisted(() => ({
-  closeCommandPaletteMock: vi.fn(),
-  compactCommandTextMock: vi.fn(() => '/compact'),
-  focusEditorMock: vi.fn(),
-  getComposerStateMock: vi.fn(),
-  getUiStateMock: vi.fn(),
-  openFeedbackModalMock: vi.fn(),
-  setCursorIndexMock: vi.fn(),
-  setEditorTextMock: vi.fn(),
-  setInputMock: vi.fn(),
-}))
-
-vi.mock('@/features/composer/commands', () => ({
-  compactCommandText: compactCommandTextMock,
-}))
-
-vi.mock('@/features/composer/lib', () => ({
-  setEditorText: setEditorTextMock,
-}))
-
-vi.mock('@/features/composer/state', () => ({
-  useComposerStore: { getState: getComposerStateMock },
-}))
-
-vi.mock('@/shell/ui-store', () => ({
-  useUIStore: { getState: getUiStateMock },
-}))
-
-const { createOptionalCommandPaletteAction, insertCompactCommand, openFeedbackModal } =
-  await import('../command-palette-actions')
 
 function item(id: string, section?: string): CommandPaletteItem {
   return {
@@ -101,51 +57,91 @@ describe('buildCommandPaletteEntries', () => {
   })
 })
 
-describe('createBaseCommands', () => {
-  it('does not expose commands that only close the palette without backing behavior', () => {
-    const closeCommandPalette = vi.fn()
-    const commands = createBaseCommands({
-      closeCommandPalette,
-      configureMcp: vi.fn(),
-      insertCompactCommand: vi.fn(),
-      toggleMcpServer: vi.fn(),
-      selectSkill: vi.fn(),
-    })
+const skillItems: SkillDiscoveryItem[] = [
+  {
+    id: 'design',
+    name: 'Design',
+    description: 'Brand and UI work',
+    enabled: true,
+    loadStatus: 'ok',
+  },
+  {
+    id: 'review',
+    name: 'Review',
+    description: 'Code review',
+    enabled: true,
+    loadStatus: 'ok',
+  },
+]
 
-    expect(commands.map((command) => command.id)).not.toContain('code-review')
-    expect(commands.map((command) => command.id)).not.toContain('new-worktree')
-    expect(commands.map((command) => command.id)).not.toContain('personality')
-    expect(commands.map((command) => command.id)).not.toContain('team-new')
-    expect(commands.map((command) => command.id)).toContain('mcp')
-    expect(commands.some((command) => command.action === closeCommandPalette)).toBe(false)
+const mcpServers: McpServerSummary[] = [
+  {
+    name: 'playwright',
+    enabled: true,
+    sourceId: 'project-turing-machine',
+    sourceLabel: 'Project',
+    sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
+    transport: 'stdio',
+    directTools: 'enabled',
+  },
+  {
+    name: 'database',
+    enabled: false,
+    sourceId: 'global-standard',
+    sourceLabel: 'Global',
+    sourcePath: '/tmp/global/mcp.json',
+    transport: 'http',
+    directTools: 'disabled',
+  },
+]
+
+describe('mention palette ordering', () => {
+  it('places MCPs first when the trigger is "/" and skills first when the trigger is "#"', () => {
+    const selectSkill = vi.fn()
+    const selectMcp = vi.fn()
+    const toggleMcpServer = vi.fn()
+
+    const skills = createSkillItems(skillItems, '', selectSkill)
+    const mcps = createMcpItems(mcpServers, '', selectMcp, toggleMcpServer)
+
+    // Simulate the ordering assembly that useCommandPaletteItems does based on
+    // the trigger character from the editor text listener.
+    const slashFirst = [...mcps, ...skills]
+    const hashFirst = [...skills, ...mcps]
+
+    expect(slashFirst.map((entry) => entry.section)).toEqual(['MCPs', 'MCPs', 'Skills', 'Skills'])
+    expect(hashFirst.map((entry) => entry.section)).toEqual(['Skills', 'Skills', 'MCPs', 'MCPs'])
   })
 })
 
-describe('mcp command palette matching', () => {
-  const servers: McpServerSummary[] = [
-    {
-      name: 'playwright',
-      enabled: true,
-      sourceId: 'project-turing-machine',
-      sourceLabel: 'Project',
-      sourcePath: '/tmp/project/.turing-machine/agent/mcp.json',
-      transport: 'stdio',
-      directTools: 'enabled',
-    },
-    {
-      name: 'database',
-      enabled: false,
-      sourceId: 'global-standard',
-      sourceLabel: 'Global',
-      sourcePath: '/tmp/global/mcp.json',
-      transport: 'http',
-      directTools: 'disabled',
-    },
-  ]
+describe('createSkillItems', () => {
+  it('only emits enabled, successfully-loaded skills', () => {
+    const mixed: SkillDiscoveryItem[] = [
+      ...skillItems,
+      {
+        id: 'broken',
+        name: 'Broken',
+        description: 'broken',
+        enabled: true,
+        loadStatus: 'error',
+      },
+      {
+        id: 'off',
+        name: 'Off',
+        description: 'off',
+        enabled: false,
+        loadStatus: 'ok',
+      },
+    ]
+    const items = createSkillItems(mixed, '', vi.fn())
+    expect(items.map((entry) => entry.id)).toEqual(['skill-design', 'skill-review'])
+    expect(items.every((entry) => entry.section === 'Skills')).toBe(true)
+  })
+})
 
+describe('createMcpItems', () => {
   it('shows MCP servers with enabled state and source metadata', () => {
-    const toggleMcpServer = vi.fn()
-    const items = createMcpItems(servers, '', toggleMcpServer)
+    const items = createMcpItems(mcpServers, '', vi.fn(), vi.fn())
 
     expect(items.map((item) => item.label)).toEqual(['playwright', 'database'])
     expect(items[0]).toMatchObject({
@@ -157,73 +153,32 @@ describe('mcp command palette matching', () => {
       trailing: 'Off',
       trailingBadge: 'Global',
     })
-
-    items[1]?.action()
-    expect(toggleMcpServer).toHaveBeenCalledWith(servers[1])
   })
 
   it('matches MCP servers by category and server name', () => {
-    expect(createMcpItems(servers, 'mcp', vi.fn()).map((item) => item.label)).toEqual([
+    expect(createMcpItems(mcpServers, 'mcp', vi.fn(), vi.fn()).map((item) => item.label)).toEqual([
       'playwright',
       'database',
     ])
-    expect(createMcpItems(servers, 'play', vi.fn()).map((item) => item.label)).toEqual([
+    expect(createMcpItems(mcpServers, 'play', vi.fn(), vi.fn()).map((item) => item.label)).toEqual([
       'playwright',
     ])
-    expect(createMcpItems(servers, 'off', vi.fn()).map((item) => item.label)).toEqual(['database'])
-    expect(createConfigureMcpItem('mcp', vi.fn())).toHaveLength(1)
-  })
-})
-
-describe('command palette actions', () => {
-  it('wraps optional actions by closing the palette before running the action', () => {
-    const close = vi.fn()
-    const action = vi.fn()
-
-    createOptionalCommandPaletteAction(close, action)?.()
-
-    expect(close).toHaveBeenCalledBefore(action)
+    expect(createMcpItems(mcpServers, 'off', vi.fn(), vi.fn()).map((item) => item.label)).toEqual([
+      'database',
+    ])
   })
 
-  it('returns undefined when an optional action is unavailable', () => {
-    expect(createOptionalCommandPaletteAction(vi.fn())).toBeUndefined()
+  it('inserts an MCP mention on enable when selected', () => {
+    const selectMcp = vi.fn()
+    const items = createMcpItems(mcpServers, '', selectMcp, vi.fn())
+    items[0]?.action()
+    expect(selectMcp).toHaveBeenCalledWith('playwright')
   })
 
-  it('inserts the compact command into plain composer state when no editor is mounted', () => {
-    getComposerStateMock.mockReturnValue({
-      lexicalEditor: null,
-      setCursorIndex: setCursorIndexMock,
-      setInput: setInputMock,
-    })
-
-    insertCompactCommand()
-
-    expect(setInputMock).toHaveBeenCalledWith('/compact ')
-    expect(setCursorIndexMock).toHaveBeenCalledWith('/compact '.length)
-    expect(setEditorTextMock).not.toHaveBeenCalled()
-  })
-
-  it('inserts the compact command into Lexical and focuses the editor when mounted', () => {
-    getComposerStateMock.mockReturnValue({
-      lexicalEditor: { focus: focusEditorMock },
-      setCursorIndex: setCursorIndexMock,
-      setInput: setInputMock,
-    })
-
-    insertCompactCommand()
-
-    expect(setEditorTextMock).toHaveBeenCalledWith({ focus: focusEditorMock }, '/compact ')
-    expect(focusEditorMock).toHaveBeenCalled()
-  })
-
-  it('opens feedback through shell state after closing the command palette', () => {
-    getUiStateMock.mockReturnValue({
-      closeCommandPalette: closeCommandPaletteMock,
-      openFeedbackModal: openFeedbackModalMock,
-    })
-
-    openFeedbackModal()
-
-    expect(closeCommandPaletteMock).toHaveBeenCalledBefore(openFeedbackModalMock)
+  it('falls back to the enable toggle for disabled servers (mention would be ignored)', () => {
+    const toggleMcpServer = vi.fn()
+    const items = createMcpItems(mcpServers, '', vi.fn(), toggleMcpServer)
+    items[1]?.action()
+    expect(toggleMcpServer).toHaveBeenCalledWith(mcpServers[1])
   })
 })

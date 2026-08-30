@@ -80,12 +80,18 @@ export function KeyboardPlugin({ onSubmit }: KeyboardPluginProps): null {
     )
   }, [editor, onSubmit])
 
-  // Slash detection via text content listener
+  // Mention-palette trigger detection: typing `/` opens the palette with MCPs
+  // first, `#` opens with skills first. Same predicate shape (exactly the
+  // trigger, or `… /` / `… #` at the very end) so both keys behave consistently
+  // — pasting a literal `/` at the start of the editor or after a space also
+  // opens the palette, matching the pre-refactor `/` behavior.
   useEffect(() => {
     return editor.registerTextContentListener((text) => {
       const trimmed = text.trimStart()
       if (trimmed === '/' || text.endsWith(' /')) {
-        useUIStore.getState().openCommandPalette()
+        useUIStore.getState().openCommandPalette('/')
+      } else if (trimmed === '#' || text.endsWith(' #')) {
+        useUIStore.getState().openCommandPalette('#')
       }
     })
   }, [editor])
