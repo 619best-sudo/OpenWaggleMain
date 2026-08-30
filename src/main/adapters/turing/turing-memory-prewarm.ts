@@ -8,6 +8,7 @@ import {
   McpToolCache,
   type PoolLogger,
   type Session,
+  setBrowserBootstrap,
 } from 'turing-harness'
 import type { ProjectMemoryStatus } from '../../../shared/types/project-memory'
 import { createLogger } from '../../logger'
@@ -338,28 +339,27 @@ async function prewarmMcpPool(projectPath: string, runtime: PrewarmRuntime): Pro
  * is what lets a spare session stay MCP-free while the pool is shared + hot.
  */
 /**
- * One-time Chromium bootstrap for the Playwright MCP.
+ * Chromium bootstrap, run at the moment a browser is actually wanted.
  *
- * `@playwright/mcp` needs a browser binary that neither it nor the app ships. This
- * runs `npx playwright install chromium` the first time a Playwright server is
- * about to cold-spawn, gated by `playwrightChromiumEnsured` so it never repeats in
- * a process lifetime. Playwright's own installer is idempotent, so even if the
- * guard raced it would be a fast skip, not a re-download. Best-effort: a failure
- * logs and moves on — the missing binary then surfaces as a normal tool error.
+ * The harness drives its own browser now (`playwright-core` + the system
+ * Chrome); the Playwright MCP is a fallback, not the path. So this no longer
+ * keys off "an MCP server is about to spawn" — it is registered with the
+ * harness as {@link setBrowserBootstrap} and fires only when a launch has
+ * already FAILED, which on a machine with Chrome installed is never.
+ *
+ * That ordering is the point: `npx playwright install chromium` is a ~150MB
+ * download, and paying it at startup on the chance a run wants a browser is
+ * exactly the cost the lazy hook avoids. Playwright's installer is idempotent,
+ * so a redundant call is a fast skip. Best-effort: a failure logs and moves on,
+ * and the harness reports "could not start a browser" as a normal tool error.
  */
 let playwrightChromiumEnsured = false
 
-async function ensurePlaywrightChromiumOnce(
-  servers: readonly { readonly command?: string; readonly args?: readonly string[] }[],
-): Promise<void> {
+async function ensurePlaywrightChromiumOnce(): Promise<void> {
   if (playwrightChromiumEnsured) return
-  const isPlaywrightServer = servers.some(
-    (s) => s.args?.some((arg) => arg.includes('@playwright/mcp')) === true,
-  )
-  if (!isPlaywrightServer) return
   playwrightChromiumEnsured = true
 
-  logger.info('Bootstrapping Playwright Chromium (one-time, for @playwright/mcp)')
+  logger.info('No browser could be launched; installing Chromium (one-time)')
   await new Promise<void>((resolve) => {
     const child = spawn('npx', ['playwright', 'install', 'chromium'], {
       stdio: 'ignore',
@@ -369,6 +369,18 @@ async function ensurePlaywrightChromiumOnce(
     child.on('error', () => resolve())
   })
 }
+
+/**
+ * Hand the harness its provisioning hook. Called once at module load: the
+ * harness holds it and invokes it only from a failed launch.
+ */
+setBrowserBootstrap(() =>
+  ensurePlaywrightChromiumOnce().catch((error: unknown) => {
+    logger.warn('Chromium bootstrap failed; the browser tools will report it', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }),
+)
 
 export async function reconcileMcpPool(
   projectPath: string,
@@ -400,19 +412,6 @@ export async function reconcileMcpPool(
   }
 
   if (servers.length === 0) return
-
-  // Lazy one-time Chromium bootstrap for Playwright MCP. `@playwright/mcp` ships
-  // the server but NOT the browser binary; without it the first tool call dies
-  // with "Executable doesn't exist". We run `npx playwright install chromium`
-  // once per process lifetime, only when a Playwright server is actually about to
-  // cold-spawn, so non-Playwright projects pay nothing. Idempotent on Playwright's
-  // side too (it skips when the binary is already present), so a redundant trigger
-  // is a fast no-op rather than a re-download.
-  await ensurePlaywrightChromiumOnce(servers).catch((error: unknown) => {
-    logger.warn('Playwright Chromium bootstrap failed (non-fatal)', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-  })
 
   // npm cache priming is the POOL's job now: it happens inside the cold-spawn
   // path, so it delays only the server actually spawning. Doing it here meant an

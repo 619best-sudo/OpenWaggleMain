@@ -3,11 +3,20 @@
  *
  * Out of the box the app ships with no MCP servers at all — every server has to
  * be added by hand on the MCP page or pulled in by installing a waggle preset's
- * dependencies. Playwright (browser automation) is the one the agent reaches
- * for constantly, so it's written into the GLOBAL MCP config once, on first
- * launch, and applies to every project. Device automation needs no server — the
- * agent harness drives devices through its built-in mobilecli-backed toolkit.
- * Everything else stays opt-in.
+ * dependencies. Nothing is seeded, and that is deliberate.
+ *
+ * Playwright USED to be seeded here, because browser automation was the one
+ * thing the agent could not do without a server. It no longer needs one: the
+ * harness drives its own browser (`playwright-core` + the system Chrome) for
+ * `drive`, `web_search`/`web_fetch`, `media_analysis` captures and
+ * `activity_inspect`, the same way it already drove devices through mobilecli.
+ * Seeding it now would install a server nobody asked for, whose ~24 tools the
+ * registry then scopes into QA hops across every project — the exact cost the
+ * first-party browser was built to remove. A user who WANTS the MCP can still
+ * add it on the MCP page, and the harness will use it as a fallback.
+ *
+ * The list is kept (empty) rather than deleted because the mechanism is sound
+ * and the next genuinely-required server should reuse it, not reinvent it.
  *
  * Three properties this must hold:
  *
@@ -35,8 +44,11 @@ const logger = createLogger('seed-default-mcp')
  * `WAGGLE_APP_MCP_RECIPES` table the waggle dependency installer uses, so the
  * spawn command lives in exactly one place — change the recipe and both paths
  * follow.
+ *
+ * EMPTY on purpose (see the module header): nothing the agent needs requires an
+ * MCP server any more.
  */
-const DEFAULT_MCP_RECIPE_IDS = ['playwright'] as const
+const DEFAULT_MCP_RECIPE_IDS: readonly string[] = []
 
 /** The global config file every project inherits: `~/.config/mcp/mcp.json`. */
 const SEED_SOURCE_ID = 'global-standard'
@@ -112,7 +124,15 @@ interface DefaultMcpSeedPlan {
  * Pure planner — exported for tests. Decides what (if anything) to write into
  * the global MCP source given the current merged view.
  */
-export function planDefaultMcpSeed(view: McpSettingsView): DefaultMcpSeedPlan {
+export function planDefaultMcpSeed(
+  view: McpSettingsView,
+  /**
+   * Which recipes to seed. Defaults to the production list — empty — and is
+   * injectable so the never-clobber / never-rewrite properties stay covered by
+   * tests without the app having to actually seed something to prove them.
+   */
+  recipeIds: readonly string[] = DEFAULT_MCP_RECIPE_IDS,
+): DefaultMcpSeedPlan {
   const source = view.sources.find((entry) => entry.id === SEED_SOURCE_ID)
   if (!source) {
     return { rawJson: null, seeded: [], skipped: [] }
@@ -126,7 +146,7 @@ export function planDefaultMcpSeed(view: McpSettingsView): DefaultMcpSeedPlan {
 
   const seeded: string[] = []
   const skipped: string[] = []
-  for (const recipeId of DEFAULT_MCP_RECIPE_IDS) {
+  for (const recipeId of recipeIds) {
     const recipe = getWaggleAppMcpInstallRecipe(recipeId)
     if (!recipe) continue
     // Check the whole merged view, not just this file: a server the user

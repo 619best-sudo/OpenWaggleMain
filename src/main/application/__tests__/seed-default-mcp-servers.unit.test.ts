@@ -17,6 +17,17 @@ import { createPiMcpConfigServiceForTests } from '../../adapters/pi/pi-mcp-confi
 import { resolveOpenWaggleMcpServers } from '../../adapters/turing/turing-openwaggle-bridge'
 import { planDefaultMcpSeed } from '../seed-default-mcp-servers'
 
+/**
+ * The recipe these tests plan with.
+ *
+ * Production seeds NOTHING now — the harness drives its own browser, so no MCP
+ * server is required out of the box. The planner's real properties (never
+ * clobber a server the user has, never rewrite a config that failed to parse)
+ * are still worth holding, so they are exercised against an explicit recipe
+ * rather than deleted along with the default.
+ */
+const SEEDABLE = ['playwright'] as const
+
 function buildView(options: {
   readonly globalRawJson?: string | null
   readonly servers?: readonly { name: string; enabled: boolean }[]
@@ -59,7 +70,7 @@ function buildView(options: {
 
 describe('planDefaultMcpSeed', () => {
   it('seeds playwright into an empty global config', () => {
-    const plan = planDefaultMcpSeed(buildView({}))
+    const plan = planDefaultMcpSeed(buildView({}), SEEDABLE)
 
     expect(plan.seeded).toEqual(['playwright'])
     expect(plan.skipped).toEqual([])
@@ -82,7 +93,7 @@ describe('planDefaultMcpSeed', () => {
       mcpServers: { figma: { command: 'npx', args: ['-y', 'figma-ui-mcp'] } },
     })
 
-    const plan = planDefaultMcpSeed(buildView({ globalRawJson: existing }))
+    const plan = planDefaultMcpSeed(buildView({ globalRawJson: existing }), SEEDABLE)
 
     const written = JSON.parse(plan.rawJson as string)
     expect(written.settings).toEqual({ toolPrefix: 'short' })
@@ -95,7 +106,7 @@ describe('planDefaultMcpSeed', () => {
       mcpServers: { playwright: { command: 'my-own-playwright', args: ['--custom'] } },
     })
 
-    const plan = planDefaultMcpSeed(buildView({ globalRawJson: existing }))
+    const plan = planDefaultMcpSeed(buildView({ globalRawJson: existing }), SEEDABLE)
 
     expect(plan.skipped).toEqual(['playwright'])
     expect(plan.seeded).toEqual([])
@@ -111,7 +122,7 @@ describe('planDefaultMcpSeed', () => {
       },
     })
 
-    const plan = planDefaultMcpSeed(buildView({ globalRawJson: existing }))
+    const plan = planDefaultMcpSeed(buildView({ globalRawJson: existing }), SEEDABLE)
 
     expect(plan.skipped).toEqual(['playwright'])
     expect(plan.seeded).toEqual([])
@@ -121,9 +132,22 @@ describe('planDefaultMcpSeed', () => {
   it('skips a server already provided by another config source', () => {
     // Configured in a project source — adding it globally too would shadow or
     // duplicate the user's own definition.
-    const plan = planDefaultMcpSeed(buildView({ servers: [{ name: 'figma', enabled: true }] }))
+    const plan = planDefaultMcpSeed(
+      buildView({ servers: [{ name: 'figma', enabled: true }] }),
+      SEEDABLE,
+    )
 
     expect(plan.seeded).toEqual(['playwright'])
+  })
+
+  it('seeds nothing by default — no MCP server is required any more', () => {
+    // The harness drives its own browser (playwright-core + system Chrome) for
+    // drive, web_search/web_fetch, media_analysis and activity_inspect, so a
+    // fresh install must not acquire a Playwright MCP nobody asked for.
+    const plan = planDefaultMcpSeed(buildView({}))
+
+    expect(plan.seeded).toEqual([])
+    expect(plan.rawJson).toBeNull()
   })
 
   it('writes nothing when the default is already present', () => {
@@ -131,6 +155,7 @@ describe('planDefaultMcpSeed', () => {
       buildView({
         servers: [{ name: 'playwright', enabled: true }],
       }),
+      SEEDABLE,
     )
 
     expect(plan.rawJson).toBeNull()
@@ -140,13 +165,13 @@ describe('planDefaultMcpSeed', () => {
 
   it('refuses to rewrite a config that is not valid JSON', () => {
     // Destroying a hand-edited file is far worse than not seeding.
-    expect(() => planDefaultMcpSeed(buildView({ globalRawJson: '{ "mcpServers": ' }))).toThrow(
-      /not valid JSON/,
-    )
+    expect(() =>
+      planDefaultMcpSeed(buildView({ globalRawJson: '{ "mcpServers": ' }), SEEDABLE),
+    ).toThrow(/not valid JSON/)
   })
 
   it('writes nothing when the global source is unavailable', () => {
-    const plan = planDefaultMcpSeed(buildView({ globalRawJson: null }))
+    const plan = planDefaultMcpSeed(buildView({ globalRawJson: null }), SEEDABLE)
 
     expect(plan.rawJson).toBeNull()
     expect(plan.seeded).toEqual([])
@@ -162,7 +187,7 @@ describe('seeded defaults reach the runtime', () => {
       const service = createPiMcpConfigServiceForTests({ homeDir: home, agentDir })
 
       const before = await service.getView(project)
-      const plan = planDefaultMcpSeed(before)
+      const plan = planDefaultMcpSeed(before, SEEDABLE)
       expect(plan.seeded).toEqual(['playwright'])
 
       await service.writeSourceConfig({
@@ -196,7 +221,7 @@ describe('seeded defaults reach the runtime', () => {
 
       // Re-planning now finds them and writes nothing — the seed is idempotent
       // even if the settings flag were somehow lost.
-      expect(planDefaultMcpSeed(after).rawJson).toBeNull()
+      expect(planDefaultMcpSeed(after, SEEDABLE).rawJson).toBeNull()
     })
   })
 })

@@ -60,6 +60,9 @@ vi.mock('turing-harness', () => {
 
   return {
     Harness: MockHarness,
+    // Registered at module load: the module hands the harness its Chromium
+    // provisioning hook, which the harness invokes only from a failed launch.
+    setBrowserBootstrap: vi.fn(),
     FileMemory: {
       open: vi.fn(async () => ({
         getSummarySyncData: () => ({
